@@ -60,6 +60,7 @@ const handleSearch = () => {
 const orderPlan = (planId: number) => {
   router.post('/customer/orders', {
     order_type: 'hosting',
+    billing_cycle: 'annual',
     items: [{
       item_type: 'hosting',
       item_id: planId,
@@ -120,7 +121,7 @@ const orderPlan = (planId: number) => {
               <div class="text-3xl font-bold text-blue-600">
                 {{ formatPrice(getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
               </div>
-              <div class="text-sm text-muted-foreground">per month</div>
+              <div class="text-sm text-muted-foreground">per year</div>
             </div>
           </CardHeader>
 

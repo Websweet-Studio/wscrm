@@ -87,7 +87,7 @@ const otherDomains = computed(() => {
     <nav class="container mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
         <Link href="/" class="flex items-center space-x-2">
-          <AppLogo />
+          <img src="/1.png" alt="WebSweetStudio" class="w-8 h-8 object-contain" />
           <span class="text-xl font-bold">Ws.</span>
         </Link>
         <div class="flex items-center space-x-4">
@@ -321,7 +321,7 @@ const otherDomains = computed(() => {
       <div class="container mx-auto px-6">
         <div class="flex flex-col md:flex-row justify-between items-center">
           <Link href="/" class="flex items-center space-x-2 mb-4 md:mb-0">
-            <AppLogo />
+            <img src="/1.png" alt="WebSweetStudio" class="w-8 h-8 object-contain" />
             <span class="text-xl font-bold text-white">Ws.</span>
           </Link>
           <div class="flex space-x-6 text-sm">

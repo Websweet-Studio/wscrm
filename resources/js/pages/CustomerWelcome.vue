@@ -46,7 +46,7 @@ const benefits = [
     <nav class="container mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-2">
-          <AppLogo />
+          <img src="/1.png" alt="WebSweetStudio" class="w-8 h-8 object-contain" />
           <span class="text-xl font-bold">Ws.</span>
         </div>
         <div class="flex items-center space-x-4">
@@ -163,7 +163,7 @@ const benefits = [
       <div class="container mx-auto px-6">
         <div class="flex flex-col md:flex-row justify-between items-center">
           <div class="flex items-center space-x-2 mb-4 md:mb-0">
-            <AppLogo />
+            <img src="/1.png" alt="WebSweetStudio" class="w-8 h-8 object-contain" />
             <span class="text-xl font-bold text-white">Ws.</span>
           </div>
           <div class="flex space-x-6 text-sm">

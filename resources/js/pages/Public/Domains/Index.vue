@@ -74,7 +74,7 @@ const isPopular = (extension: string) => {
     <nav class="container mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
         <Link href="/" class="flex items-center space-x-2">
-          <AppLogo />
+          <img src="/1.png" alt="WebSweetStudio" class="w-8 h-8 object-contain" />
           <span class="text-xl font-bold">Ws.</span>
         </Link>
         <div class="flex items-center space-x-4">
@@ -96,62 +96,95 @@ const isPopular = (extension: string) => {
 
     <div class="container mx-auto px-6 py-8">
       <!-- Hero Section -->
-      <div class="text-center space-y-6 py-16 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl mb-12">
-        <div class="space-y-4">
-          <h1 class="text-4xl font-bold tracking-tight">Find Your Perfect Domain</h1>
-          <p class="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Search for available domains and register them instantly. Your online presence starts here.
+      <div class="text-center space-y-8 py-20 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-3xl mb-16 border border-blue-100">
+        <div class="space-y-6">
+          <div class="inline-flex items-center px-4 py-2 bg-white/80 rounded-full border border-blue-200 text-sm font-medium text-blue-700">
+            <Star class="h-4 w-4 mr-2 text-yellow-500" />
+            Start your online journey today
+          </div>
+          <h1 class="text-5xl font-bold tracking-tight bg-gradient-to-br from-blue-900 via-blue-700 to-purple-700 bg-clip-text text-transparent">
+            Find Your Perfect Domain
+          </h1>
+          <p class="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            Search for available domains and register them instantly. Your online presence starts here with the perfect domain name.
           </p>
         </div>
 
-        <!-- Domain Search -->
-        <Card class="max-w-2xl mx-auto">
-          <CardContent class="pt-6">
-            <div class="flex items-center space-x-2">
-              <div class="relative flex-1">
-                <Globe class="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <!-- Enhanced Domain Search -->
+        <Card class="max-w-3xl mx-auto shadow-xl border-0 bg-white/90 backdrop-blur-sm">
+          <CardContent class="pt-8 pb-8">
+            <div class="flex flex-col sm:flex-row items-center gap-3">
+              <div class="relative flex-1 w-full">
+                <Globe class="absolute left-4 top-1/2 transform -translate-y-1/2 h-6 w-6 text-blue-500" />
                 <Input
                   v-model="domainSearch"
-                  placeholder="Enter your domain name (e.g., mywebsite.com)"
-                  class="pl-11 h-12 text-lg"
+                  placeholder="Enter your domain name (e.g., myawesomesite.com)"
+                  class="pl-12 pr-4 h-14 text-lg border-2 border-blue-200 focus:border-blue-500 rounded-xl"
                   @keyup.enter="searchDomain"
                 />
               </div>
-              <Button @click="searchDomain" size="lg" class="px-8">
+              <Button @click="searchDomain" size="lg" class="px-8 h-14 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all">
                 <Search class="h-5 w-5 mr-2" />
-                Search
+                Search Domain
               </Button>
+            </div>
+            <div class="mt-4 flex flex-wrap justify-center gap-2 text-sm text-muted-foreground">
+              <span>Popular searches:</span>
+              <button class="text-blue-600 hover:text-blue-800 font-medium">.com</button>
+              <span>•</span>
+              <button class="text-blue-600 hover:text-blue-800 font-medium">.id</button>
+              <span>•</span>
+              <button class="text-blue-600 hover:text-blue-800 font-medium">.org</button>
+              <span>•</span>
+              <button class="text-blue-600 hover:text-blue-800 font-medium">.net</button>
             </div>
           </CardContent>
         </Card>
       </div>
 
       <!-- Popular Extensions -->
-      <div class="space-y-6 mb-12">
-        <div class="text-center space-y-2">
+      <div class="space-y-8 mb-16">
+        <div class="text-center space-y-3">
           <h2 class="text-3xl font-bold">Popular Domain Extensions</h2>
-          <p class="text-muted-foreground">Most trusted and widely used domain extensions</p>
+          <p class="text-muted-foreground max-w-2xl mx-auto">Start your online presence with these most trusted and widely used domain extensions</p>
         </div>
 
-        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 max-w-6xl mx-auto">
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 max-w-7xl mx-auto">
           <Card v-for="domain in getPopularExtensions()" :key="domain.id" 
-                class="relative overflow-hidden hover:shadow-lg transition-all cursor-pointer group border-2 hover:border-blue-200">
-            <div v-if="isPremium(domain.extension)" class="absolute top-2 right-2">
-              <Crown class="h-4 w-4 text-yellow-500" />
+                class="relative overflow-hidden hover:shadow-xl transition-all cursor-pointer group border-2 hover:border-blue-300 hover:scale-105">
+            
+            <!-- Premium Badge -->
+            <div v-if="isPremium(domain.extension)" class="absolute top-3 right-3 z-10">
+              <Badge class="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-semibold">
+                <Crown class="h-3 w-3 mr-1" />
+                Premium
+              </Badge>
             </div>
             
-            <CardContent class="pt-6 text-center space-y-4">
-              <div class="text-3xl font-bold text-blue-600">.{{ domain.extension }}</div>
+            <CardContent class="pt-8 pb-6 text-center space-y-6">
+              <!-- Extension Name -->
+              <div class="space-y-2">
+                <div class="text-4xl font-bold text-blue-600 tracking-tight">.{{ domain.extension }}</div>
+                <div class="text-xs text-muted-foreground uppercase tracking-wider">Domain Extension</div>
+              </div>
               
-              <div class="space-y-1">
-                <div class="text-2xl font-bold">{{ formatPrice(domain.selling_price) }}</div>
-                <div class="text-sm text-muted-foreground">per year</div>
+              <!-- Pricing -->
+              <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg space-y-3">
+                <div class="space-y-1">
+                  <div class="text-sm text-muted-foreground font-medium">First Year</div>
+                  <div class="text-3xl font-bold text-blue-600">{{ formatPrice(domain.selling_price) }}</div>
+                </div>
+                
+                <div class="border-t pt-2 space-y-1">
+                  <div class="text-xs text-muted-foreground">Renewal: {{ formatPrice(domain.renewal_price_with_tax) }}/year</div>
+                </div>
               </div>
 
-              <Button asChild class="w-full group-hover:bg-blue-600 transition-colors">
+              <!-- CTA Button -->
+              <Button asChild class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 group-hover:shadow-lg transition-all">
                 <Link href="/customer/register">
                   <ShoppingCart class="h-4 w-4 mr-2" />
-                  Register
+                  Get Started
                 </Link>
               </Button>
             </CardContent>
@@ -160,67 +193,93 @@ const isPopular = (extension: string) => {
       </div>
 
       <!-- All Extensions -->
-      <div class="space-y-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-bold">All Domain Extensions</h2>
-            <p class="text-muted-foreground">Browse all available domain extensions</p>
+      <div class="space-y-8">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <h2 class="text-2xl font-bold">Complete Domain Pricing</h2>
+            <p class="text-muted-foreground">Compare prices and find the perfect extension for your needs</p>
           </div>
           
           <!-- Extension Search -->
-          <Card class="w-80">
+          <Card class="w-full lg:w-80">
             <CardContent class="pt-4">
               <div class="flex items-center space-x-2">
                 <div class="relative flex-1">
                   <Search class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     v-model="search"
-                    placeholder="Filter extensions..."
+                    placeholder="Search extensions (e.g., com, id, org)..."
                     class="pl-8"
                     @keyup.enter="handleSearch"
                   />
                 </div>
-                <Button @click="handleSearch" size="sm">Search</Button>
+                <Button @click="handleSearch" size="sm" class="shrink-0">Filter</Button>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          <Card v-for="domain in domainPrices" :key="domain.id" 
-                class="hover:shadow-md transition-all cursor-pointer group border hover:border-blue-200">
-            <CardContent class="pt-6">
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-2">
-                  <div class="text-2xl font-bold text-blue-600">.{{ domain.extension }}</div>
-                  <Badge v-if="isPremium(domain.extension)" variant="secondary" class="text-xs">
-                    <Crown class="h-3 w-3 mr-1" />
-                    Premium
-                  </Badge>
-                </div>
-              </div>
-
-              <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                  <span class="text-sm text-muted-foreground">Registration</span>
-                  <span class="font-semibold">{{ formatPrice(domain.selling_price) }}</span>
-                </div>
-                
-                <div class="flex justify-between items-center">
-                  <span class="text-sm text-muted-foreground">Renewal</span>
-                  <span class="font-semibold">{{ formatPrice(domain.renewal_price_with_tax) }}</span>
-                </div>
-
-                <Button asChild class="w-full mt-4 group-hover:bg-blue-600 transition-colors">
-                  <Link href="/customer/register">
-                    <ShoppingCart class="h-4 w-4 mr-2" />
-                    Register
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <!-- Table View for Better Comparison -->
+        <Card>
+          <CardHeader>
+            <CardTitle class="flex items-center">
+              <Globe class="h-5 w-5 mr-2 text-blue-600" />
+              Domain Extension Pricing
+            </CardTitle>
+            <CardDescription>
+              All prices are shown per year. Registration is for the first year, renewal applies from the second year onwards.
+            </CardDescription>
+          </CardHeader>
+          <CardContent class="p-0">
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-muted/50 border-b">
+                  <tr>
+                    <th class="text-left py-4 px-6 font-semibold">Extension</th>
+                    <th class="text-right py-4 px-6 font-semibold">Registration</th>
+                    <th class="text-right py-4 px-6 font-semibold">Renewal</th>
+                    <th class="text-center py-4 px-6 font-semibold">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="domain in domainPrices" :key="domain.id" 
+                      class="border-b hover:bg-muted/20 transition-colors">
+                    <td class="py-4 px-6">
+                      <div class="flex items-center space-x-3">
+                        <div class="text-xl font-bold text-blue-600">.{{ domain.extension }}</div>
+                        <Badge v-if="isPremium(domain.extension)" 
+                               class="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs">
+                          <Crown class="h-3 w-3 mr-1" />
+                          Premium
+                        </Badge>
+                      </div>
+                    </td>
+                    <td class="py-4 px-6 text-right">
+                      <div class="space-y-1">
+                        <div class="text-lg font-bold text-green-600">{{ formatPrice(domain.selling_price) }}</div>
+                        <div class="text-xs text-muted-foreground">first year</div>
+                      </div>
+                    </td>
+                    <td class="py-4 px-6 text-right">
+                      <div class="space-y-1">
+                        <div class="text-lg font-semibold">{{ formatPrice(domain.renewal_price_with_tax) }}</div>
+                        <div class="text-xs text-muted-foreground">per year</div>
+                      </div>
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                      <Button asChild size="sm" class="bg-blue-600 hover:bg-blue-700 text-white">
+                        <Link href="/customer/register">
+                          <ShoppingCart class="h-4 w-4 mr-1" />
+                          Register
+                        </Link>
+                      </Button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <!-- Why Choose Our Domains -->
@@ -288,7 +347,7 @@ const isPopular = (extension: string) => {
       <div class="container mx-auto px-6">
         <div class="flex flex-col md:flex-row justify-between items-center">
           <Link href="/" class="flex items-center space-x-2 mb-4 md:mb-0">
-            <AppLogo />
+            <img src="/1.png" alt="WebSweetStudio" class="w-8 h-8 object-contain" />
             <span class="text-xl font-bold text-white">Ws.</span>
           </Link>
           <div class="flex space-x-6 text-sm">

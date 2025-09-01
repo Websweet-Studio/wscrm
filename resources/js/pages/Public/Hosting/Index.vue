@@ -96,7 +96,7 @@ const filteredPlans = computed(() => {
     <nav class="container mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
         <Link href="/" class="flex items-center space-x-2">
-          <AppLogo />
+          <img src="/1.png" alt="WebSweetStudio" class="w-8 h-8 object-contain" />
           <span class="text-xl font-bold">Ws.</span>
         </Link>
         <div class="flex items-center space-x-4">
@@ -302,9 +302,9 @@ const filteredPlans = computed(() => {
                         <div class="text-2xl font-bold text-blue-600">
                           {{ formatPrice(getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
                         </div>
-                        <div class="text-xs text-muted-foreground">per month</div>
+                        <div class="text-xs text-muted-foreground">per year</div>
                         <div v-if="plan.discount_percent > 0" class="text-xs text-green-600 font-semibold">
-                          Save {{ formatPrice(plan.selling_price - getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}/month
+                          Save {{ formatPrice(plan.selling_price - getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}/year
                         </div>
                       </div>
                     </td>
@@ -369,7 +369,7 @@ const filteredPlans = computed(() => {
       <div class="container mx-auto px-6">
         <div class="flex flex-col md:flex-row justify-between items-center">
           <Link href="/" class="flex items-center space-x-2 mb-4 md:mb-0">
-            <AppLogo />
+            <img src="/1.png" alt="WebSweetStudio" class="w-8 h-8 object-contain" />
             <span class="text-xl font-bold text-white">Ws.</span>
           </Link>
           <div class="flex space-x-6 text-sm">
