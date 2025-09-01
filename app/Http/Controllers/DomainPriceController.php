@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DomainPrice;
+use App\Services\DomainAvailabilityService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -50,29 +51,68 @@ class DomainPriceController extends Controller
         ]);
     }
 
-    public function publicSearch(Request $request)
+    public function publicSearch(Request $request, DomainAvailabilityService $domainService)
     {
         $request->validate([
             'domain' => 'required|string|max:255',
         ]);
 
-        $domain = $request->domain;
+        $inputDomain = $request->domain;
         $extension = '';
+        $baseDomain = $inputDomain;
         
-        if (str_contains($domain, '.')) {
-            $parts = explode('.', $domain);
+        // Parse domain and extension
+        if (str_contains($inputDomain, '.')) {
+            $parts = explode('.', $inputDomain);
             $extension = end($parts);
-            $domain = implode('.', array_slice($parts, 0, -1));
+            $baseDomain = implode('.', array_slice($parts, 0, -1));
         }
 
+        // Get available extensions from database
         $availableExtensions = DomainPrice::where('is_active', true)
             ->orderBy('selling_price')
             ->get();
 
+        // Check domain availability using RNA API
+        $availabilityResults = [];
+        
+        try {
+            if ($extension) {
+                // Check specific domain if extension provided
+                $availabilityResults[$inputDomain] = $domainService->checkAvailability($inputDomain);
+            } else {
+                // Check popular extensions for the base domain
+                $popularExtensions = ['com', 'net', 'org', 'id', 'co.id'];
+                $availabilityResults = $domainService->checkWithSuggestions($baseDomain, $popularExtensions);
+            }
+        } catch (\Exception $e) {
+            // Log error but continue without availability data
+            \Log::error('Domain availability check failed', [
+                'domain' => $inputDomain,
+                'error' => $e->getMessage()
+            ]);
+        }
+
         return Inertia::render('Public/Domains/Search', [
-            'domain' => $domain,
+            'domain' => $baseDomain,
+            'requestedDomain' => $inputDomain,
             'requestedExtension' => $extension,
             'domainPrices' => $availableExtensions,
+            'availabilityResults' => $availabilityResults,
         ]);
+    }
+
+    /**
+     * API endpoint for checking domain availability
+     */
+    public function checkAvailability(Request $request, DomainAvailabilityService $domainService)
+    {
+        $request->validate([
+            'domain' => 'required|string|max:255',
+        ]);
+
+        $result = $domainService->checkAvailability($request->domain);
+
+        return response()->json($result);
     }
 }

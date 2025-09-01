@@ -53,16 +53,21 @@ const searchDomain = () => {
 
 const getPopularExtensions = () => {
   return props.domainPrices
-    .filter(domain => ['com', 'net', 'org', 'info', 'id'].includes(domain.extension))
+    .filter(domain => {
+      const cleanExt = domain.extension.replace('.', '');
+      return ['com', 'net', 'org', 'info', 'id'].includes(cleanExt);
+    })
     .sort((a, b) => a.selling_price - b.selling_price);
 };
 
 const isPremium = (extension: string) => {
-  return ['com', 'net', 'org'].includes(extension);
+  const cleanExt = extension.replace('.', '');
+  return ['com', 'net', 'org'].includes(cleanExt);
 };
 
 const isPopular = (extension: string) => {
-  return ['com', 'net', 'org', 'id', 'co.id'].includes(extension);
+  const cleanExt = extension.replace('.', '');
+  return ['com', 'net', 'org', 'id', 'co.id'].includes(cleanExt);
 };
 </script>
 

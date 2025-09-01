@@ -20,8 +20,10 @@ interface DomainPrice {
 
 interface Props {
   domain: string;
+  requestedDomain?: string;
   requestedExtension: string;
   domainPrices: DomainPrice[];
+  availabilityResults: Record<string, any>;
 }
 
 const props = defineProps<Props>();
@@ -43,12 +45,11 @@ const searchAgain = () => {
 };
 
 const isPremium = (extension: string) => {
-  return ['com', 'net', 'org'].includes(extension);
+  // Remove dot if present for comparison
+  const cleanExt = extension.replace('.', '');
+  return ['com', 'net', 'org'].includes(cleanExt);
 };
 
-const isPopular = (extension: string) => {
-  return ['com', 'net', 'org', 'id', 'co.id'].includes(extension);
-};
 
 const requestedDomain = computed(() => {
   return props.requestedExtension ? 
@@ -56,27 +57,51 @@ const requestedDomain = computed(() => {
     props.domain;
 });
 
-// Simulate domain availability (in real app, this would come from API)
+// Get domain availability from RNA API results
 const getDomainStatus = (extension: string) => {
-  // Simple simulation: .com domains are often taken, others more likely available
-  const isTaken = extension === 'com' && Math.random() > 0.3;
+  const fullDomain = `${props.domain}.${extension}`;
+  const apiResult = props.availabilityResults[fullDomain];
+  
+  if (apiResult && apiResult.success) {
+    return {
+      available: apiResult.available,
+      status: apiResult.available ? 'available' : 'taken',
+      loading: false
+    };
+  }
+  
+  // Fallback if API data not available
   return {
-    available: !isTaken,
-    status: isTaken ? 'taken' : 'available'
+    available: false,
+    status: 'checking',
+    loading: true
   };
 };
 
-const popularDomains = computed(() => {
-  return props.domainPrices
-    .filter(domain => isPopular(domain.extension))
-    .sort((a, b) => a.selling_price - b.selling_price);
-});
 
-const otherDomains = computed(() => {
-  return props.domainPrices
-    .filter(domain => !isPopular(domain.extension))
-    .sort((a, b) => a.selling_price - b.selling_price);
-});
+const getExtensionPrice = (extension: string): number => {
+  // Try with dot prefix first
+  let domain = props.domainPrices.find(d => d.extension === '.' + extension);
+  
+  // If not found, try without dot (in case extension already has dot)
+  if (!domain) {
+    domain = props.domainPrices.find(d => d.extension === extension);
+  }
+  
+  return domain?.selling_price || 0;
+};
+
+const getExtensionRenewalPrice = (extension: string): number => {
+  // Try with dot prefix first
+  let domain = props.domainPrices.find(d => d.extension === '.' + extension);
+  
+  // If not found, try without dot (in case extension already has dot)
+  if (!domain) {
+    domain = props.domainPrices.find(d => d.extension === extension);
+  }
+  
+  return domain?.renewal_price_with_tax || 0;
+};
 </script>
 
 <template>
@@ -171,7 +196,7 @@ const otherDomains = computed(() => {
                 
                 <div v-if="getDomainStatus(requestedExtension).available" class="text-right">
                   <div class="text-2xl font-bold text-blue-600">
-                    {{ formatPrice(domainPrices.find(d => d.extension === requestedExtension)?.selling_price || 0) }}
+                    {{ formatPrice(getExtensionPrice(requestedExtension)) }}
                   </div>
                   <Button asChild size="lg">
                     <Link href="/customer/register">
@@ -186,103 +211,6 @@ const otherDomains = computed(() => {
         </Card>
       </div>
 
-      <!-- Popular Extensions -->
-      <div class="mb-8">
-        <h2 class="text-2xl font-bold mb-4">Popular Extensions</h2>
-        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card v-for="domainPrice in popularDomains" :key="domainPrice.id"
-                :class="['hover:shadow-md transition-all', 
-                         getDomainStatus(domainPrice.extension).available ? 'cursor-pointer hover:border-green-300' : 'opacity-75']">
-            <CardContent class="pt-6">
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-3">
-                  <div class="text-xl font-bold">{{ domain }}.{{ domainPrice.extension }}</div>
-                  <Badge v-if="isPremium(domainPrice.extension)" variant="secondary" class="text-xs">
-                    <Crown class="h-3 w-3 mr-1" />
-                    Premium
-                  </Badge>
-                </div>
-                
-                <div v-if="getDomainStatus(domainPrice.extension).available" class="text-green-600">
-                  <Check class="h-5 w-5" />
-                </div>
-                <div v-else class="text-red-600">
-                  <X class="h-5 w-5" />
-                </div>
-              </div>
-
-              <div v-if="getDomainStatus(domainPrice.extension).available" class="space-y-3">
-                <div class="flex justify-between items-center">
-                  <span class="text-sm text-muted-foreground">First year</span>
-                  <span class="font-bold text-lg text-blue-600">{{ formatPrice(domainPrice.selling_price) }}</span>
-                </div>
-                
-                <div class="flex justify-between items-center text-sm">
-                  <span class="text-muted-foreground">Renewal</span>
-                  <span>{{ formatPrice(domainPrice.renewal_price_with_tax) }}/year</span>
-                </div>
-
-                <Button asChild class="w-full">
-                  <Link href="/customer/register">
-                    <ShoppingCart class="h-4 w-4 mr-2" />
-                    Register
-                  </Link>
-                </Button>
-              </div>
-              
-              <div v-else class="space-y-3">
-                <div class="text-center text-muted-foreground py-4">
-                  <AlertCircle class="h-6 w-6 mx-auto mb-2" />
-                  <div class="text-sm">Domain not available</div>
-                </div>
-                <Button variant="outline" class="w-full" disabled>
-                  Not Available
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      <!-- Other Extensions -->
-      <div class="mb-8">
-        <h2 class="text-2xl font-bold mb-4">Other Extensions</h2>
-        <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-          <Card v-for="domainPrice in otherDomains" :key="domainPrice.id"
-                :class="['hover:shadow-sm transition-all', 
-                         getDomainStatus(domainPrice.extension).available ? 'cursor-pointer hover:border-green-200' : 'opacity-60']">
-            <CardContent class="pt-4 pb-4">
-              <div class="flex items-center justify-between mb-3">
-                <div class="font-semibold">{{ domain }}.{{ domainPrice.extension }}</div>
-                <div v-if="getDomainStatus(domainPrice.extension).available" class="text-green-500">
-                  <Check class="h-4 w-4" />
-                </div>
-                <div v-else class="text-red-500">
-                  <X class="h-4 w-4" />
-                </div>
-              </div>
-
-              <div v-if="getDomainStatus(domainPrice.extension).available" class="space-y-2">
-                <div class="text-center">
-                  <div class="font-bold text-blue-600">{{ formatPrice(domainPrice.selling_price) }}</div>
-                  <div class="text-xs text-muted-foreground">first year</div>
-                </div>
-                
-                <Button asChild size="sm" class="w-full">
-                  <Link href="/customer/register">Register</Link>
-                </Button>
-              </div>
-              
-              <div v-else class="text-center">
-                <div class="text-sm text-muted-foreground mb-2">Not Available</div>
-                <Button variant="outline" size="sm" class="w-full" disabled>
-                  Taken
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
 
       <!-- Help Section -->
       <Card class="bg-blue-50">

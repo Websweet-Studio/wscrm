@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'rna' => [
+        'api_key' => env('RNA_API'),
+        'base_url' => env('RNA_BASE_URL', 'https://api.rdash.id/v1'),
+    ],
+
 ];
