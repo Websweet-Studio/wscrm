@@ -72,7 +72,7 @@ This is a **Laravel 12 + Vue 3 + Inertia.js** application with the following set
 - **Lucide Vue Next**: Icon system
 - **TailwindCSS 4.x**: Utility-first styling with Vite plugin
 - **Theme System**: Light/dark mode with `useAppearance` composable
-- **Responsive Sidebar**: App shell with collapsible navigation
+- **Sidebar Layout**: Fixed 256px sidebar with flexbox main content layout
 
 ### Testing Strategy
 - **Pest PHP** for backend feature and unit tests
@@ -103,6 +103,14 @@ This is a **Laravel 12 + Vue 3 + Inertia.js** application with the following set
 - Create migrations: `php artisan make:migration create_table_name`
 - Create models: `php artisan make:model ModelName -m` (with migration)
 - Update seeders in `database/seeders/` if needed
+
+### Sidebar Layout System
+- **Fixed Sidebar**: Uses `fixed inset-y-0 left-0 w-64` for 256px fixed sidebar
+- **Main Content**: Uses `ml-64` (256px left margin) to provide space for sidebar
+- **Layout Structure**: Simple flexbox layout in `AppSidebarLayout.vue`
+- **Navigation**: Direct Link components instead of complex sidebar context providers
+- **User Menu**: Standard Button with DropdownMenu in sidebar footer
+- **Responsive**: Fixed desktop layout, mobile responsive via standard Tailwind breakpoints
 
 ===
 

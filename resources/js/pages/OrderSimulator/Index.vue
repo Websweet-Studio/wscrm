@@ -294,7 +294,7 @@ const getCategoryName = (category: string) => {
               <CardDescription>Pilih layanan yang Anda butuhkan (dapat memilih lebih dari satu)</CardDescription>
             </CardHeader>
             <CardContent>
-              <div class="grid gap-3 md:grid-cols-2">
+              <div class="space-y-3">
                 <div 
                   v-for="service in servicePlans" 
                   :key="service.id"

@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Customer;
 use App\Models\HostingPlan;
 use App\Models\DomainPrice;
+use App\Models\ServicePlan;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -34,6 +35,7 @@ class OrderController extends Controller
         $customers = Customer::select('id', 'name', 'email')->get();
         $hostingPlans = HostingPlan::active()->get();
         $domainPrices = DomainPrice::where('is_active', true)->get();
+        $servicePlans = ServicePlan::where('is_active', true)->get();
 
         return Inertia::render('Admin/Orders/Index', [
             'orders' => $orders,
@@ -41,6 +43,7 @@ class OrderController extends Controller
             'customers' => $customers,
             'hostingPlans' => $hostingPlans,
             'domainPrices' => $domainPrices,
+            'servicePlans' => $servicePlans,
         ]);
     }
 
@@ -64,7 +67,7 @@ class OrderController extends Controller
             'order_type' => 'required|in:domain,hosting,domain_hosting,app,web,domain_hosting_app_web,maintenance',
             'billing_cycle' => 'required|in:monthly,quarterly,semi_annually,annually',
             'items' => 'required|array|min:1',
-            'items.*.item_type' => 'required|in:hosting,domain,app,web,maintenance',
+            'items.*.item_type' => 'required|in:hosting,domain,service,app,web,maintenance',
             'items.*.item_id' => 'required|integer',
             'items.*.domain_name' => 'nullable|string|max:255',
             'items.*.quantity' => 'required|integer|min:1',
@@ -84,6 +87,10 @@ class OrderController extends Controller
                     case 'domain':
                         $domain = DomainPrice::findOrFail($item['item_id']);
                         $totalAmount += $domain->selling_price * $item['quantity'];
+                        break;
+                    case 'service':
+                        $service = ServicePlan::findOrFail($item['item_id']);
+                        $totalAmount += $service->price * $item['quantity'];
                         break;
                     case 'app':
                     case 'web':
@@ -112,6 +119,10 @@ class OrderController extends Controller
                     case 'domain':
                         $domain = DomainPrice::findOrFail($item['item_id']);
                         $price = $domain->selling_price;
+                        break;
+                    case 'service':
+                        $service = ServicePlan::findOrFail($item['item_id']);
+                        $price = $service->price;
                         break;
                     case 'app':
                     case 'web':

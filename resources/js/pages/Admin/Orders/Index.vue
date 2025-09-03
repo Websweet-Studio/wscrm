@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
@@ -27,6 +27,14 @@ interface DomainPrice {
   id: number;
   extension: string;
   register_price: number;
+}
+
+interface ServicePlan {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  description: string;
 }
 
 interface OrderItem {
@@ -63,6 +71,7 @@ interface Props {
   customers: Customer[];
   hostingPlans: HostingPlan[];
   domainPrices: DomainPrice[];
+  servicePlans: ServicePlan[];
 }
 
 const props = defineProps<Props>();
@@ -78,7 +87,7 @@ const createForm = useForm({
   order_type: 'domain' as 'domain' | 'hosting' | 'domain_hosting' | 'app' | 'web' | 'domain_hosting_app_web' | 'maintenance',
   billing_cycle: 'monthly' as 'monthly' | 'quarterly' | 'semi_annually' | 'annually',
   items: [{
-    item_type: 'hosting' as 'hosting' | 'domain' | 'app' | 'web' | 'maintenance',
+    item_type: 'hosting' as 'hosting' | 'domain' | 'service' | 'app' | 'web' | 'maintenance',
     item_id: '',
     domain_name: '',
     quantity: 1,
@@ -371,10 +380,13 @@ const deleteOrder = (order: Order) => {
     </div>
 
     <!-- Create Order Modal -->
-    <Dialog v-model:open="showCreateModal">
+    <Dialog :open="showCreateModal" @update:open="showCreateModal = $event">
       <DialogContent class="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Create New Order</DialogTitle>
+          <DialogDescription>
+            Create a new order for a customer with multiple items and services.
+          </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="submitCreate" class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
@@ -462,6 +474,7 @@ const deleteOrder = (order: Order) => {
                   >
                     <option value="hosting">Hosting</option>
                     <option value="domain">Domain</option>
+                    <option value="service">Service Plan</option>
                     <option value="app">App</option>
                     <option value="web">Web</option>
                     <option value="maintenance">Maintenance</option>
@@ -481,7 +494,12 @@ const deleteOrder = (order: Order) => {
                     </template>
                     <template v-if="item.item_type === 'domain'">
                       <option v-for="domain in domainPrices" :key="domain.id" :value="domain.id">
-                        .{{ domain.extension }} - {{ formatPrice(domain.selling_price) }}
+                        .{{ domain.extension }} - {{ formatPrice(domain.register_price) }}
+                      </option>
+                    </template>
+                    <template v-if="item.item_type === 'service'">
+                      <option v-for="service in servicePlans" :key="service.id" :value="service.id">
+                        {{ service.name }} - {{ service.price > 0 ? formatPrice(service.price) : 'Custom Price' }}
                       </option>
                     </template>
                     <template v-if="item.item_type === 'app'">
@@ -537,10 +555,13 @@ const deleteOrder = (order: Order) => {
     </Dialog>
 
     <!-- Edit Order Modal -->
-    <Dialog v-model:open="showEditModal">
+    <Dialog :open="showEditModal" @update:open="showEditModal = $event">
       <DialogContent class="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit Order Status</DialogTitle>
+          <DialogDescription>
+            Update the status of this order to track its progress.
+          </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="submitEdit" class="space-y-4">
           <div>
