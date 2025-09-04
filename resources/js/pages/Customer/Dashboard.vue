@@ -264,16 +264,42 @@ const logout = () => {
               class="flex items-center justify-between py-2 px-3 bg-white/50 dark:bg-black/20 rounded-md"
             >
               <div>
-                <div class="font-medium">{{ invoice.invoice_number }}</div>
+                <Link 
+                  :href="`/customer/invoices/${invoice.id}`"
+                  class="font-medium hover:underline"
+                >
+                  {{ invoice.invoice_number }}
+                </Link>
                 <div class="text-sm text-muted-foreground">Due {{ formatDate(invoice.due_date) }}</div>
               </div>
               <div class="text-right">
                 <div class="font-bold text-orange-800 dark:text-orange-200">{{ formatPrice(invoice.amount) }}</div>
+                <Link 
+                  :href="`/customer/invoices/${invoice.id}/payment`"
+                  class="text-xs text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-200"
+                >
+                  Pay Now
+                </Link>
               </div>
             </div>
           </div>
-          <div class="mt-4">
-            <Button size="sm">Pay Now</Button>
+          <div class="mt-4 flex gap-2">
+            <Button 
+              :as="Link" 
+              href="/customer/invoices" 
+              variant="outline" 
+              size="sm"
+            >
+              View All Invoices
+            </Button>
+            <Button 
+              v-if="unpaidInvoices.length > 0"
+              :as="Link" 
+              :href="`/customer/invoices/${unpaidInvoices[0].id}/payment`"
+              size="sm"
+            >
+              Pay Now
+            </Button>
           </div>
         </CardContent>
       </Card>

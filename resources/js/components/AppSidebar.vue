@@ -3,7 +3,7 @@ import NavUser from '@/components/NavUser.vue';
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Server, Globe, Users, ShoppingCart, Settings, DollarSign, Package, Calculator } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Server, Globe, Users, ShoppingCart, Settings, DollarSign, Package, Calculator, CreditCard } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import AppLogoIcon from './AppLogoIcon.vue';
 import { useSidebar } from '@/composables/useSidebar';
@@ -52,6 +52,11 @@ const mainNavItems: NavItem[] = [
         href: '/admin/domain-prices',
         icon: DollarSign,
     },
+    {
+        title: 'Bank Management',
+        href: '/admin/banks',
+        icon: CreditCard,
+    },
 ];
 
 const footerNavItems: NavItem[] = [
@@ -94,7 +99,7 @@ const footerNavItems: NavItem[] = [
         </div>
 
         <!-- Navigation -->
-        <nav class="flex-1 p-4">
+        <nav class="flex-1 p-4 overflow-y-auto">
             <div class="space-y-1">
                 <Link 
                     v-for="item in mainNavItems" 

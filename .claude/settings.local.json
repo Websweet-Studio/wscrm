@@ -70,7 +70,15 @@
       "Read(/D:\\wscrm\\database\\seeders/**)",
       "Read(/D:\\wscrm\\database\\factories/**)",
       "Read(/D:\\wscrm\\database\\migrations/**)",
-      "Read(/D:\\wscrm\\database\\migrations/**)"
+      "Read(/D:\\wscrm\\database\\migrations/**)",
+      "Read(/D:\\wscrm/**)",
+      "Read(/D:\\wscrm\\resources\\js\\layouts\\app/**)",
+      "Read(/D:\\wscrm\\resources\\js\\components/**)",
+      "Read(/D:\\wscrm\\resources\\js\\components/**)",
+      "Read(/D:\\wscrm\\resources\\js\\components/**)",
+      "Read(/D:\\wscrm\\resources\\js\\components/**)",
+      "Read(/D:\\wscrm\\resources\\js\\pages/**)",
+      "Read(/D:\\wscrm\\app\\Http\\Controllers/**)"
     ],
     "deny": [],
     "ask": []

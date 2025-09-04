@@ -20,6 +20,7 @@ class Invoice extends Model
         'due_date',
         'paid_at',
         'payment_method',
+        'bank_id',
         'notes',
     ];
 
@@ -40,6 +41,11 @@ class Invoice extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function bank(): BelongsTo
+    {
+        return $this->belongsTo(Bank::class);
     }
 
     public function scopePaid($query)
