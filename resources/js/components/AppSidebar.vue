@@ -99,7 +99,7 @@ const footerNavItems: NavItem[] = [
         </div>
 
         <!-- Navigation -->
-        <nav class="flex-1 p-4 overflow-y-auto">
+        <nav class="flex-1 p-4 overflow-y-auto custom-scrollbar">
             <div class="space-y-1">
                 <Link 
                     v-for="item in mainNavItems" 
@@ -124,3 +124,28 @@ const footerNavItems: NavItem[] = [
         </div>
     </aside>
 </template>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* Firefox */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db transparent;
+}
+</style>

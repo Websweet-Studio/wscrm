@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Server, Globe, Shield, Users, Star, CheckCircle } from 'lucide-vue-next';
+import { Server, Globe, Shield, Users, Star, CheckCircle, LayoutGrid } from 'lucide-vue-next';
 import AppLogo from '@/components/AppLogo.vue';
+
+const page = usePage();
+const isAdmin = page.props.auth?.user !== null; // User yang login melalui guard 'web' adalah admin
 
 const features = [
   {
@@ -56,12 +59,22 @@ const benefits = [
           <Button variant="ghost" asChild>
             <Link href="/domains">Domains</Link>
           </Button>
-          <Button variant="outline" asChild>
-            <Link href="/customer/login">Login</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/customer/register">Get Started</Link>
-          </Button>
+          <template v-if="isAdmin">
+            <Button variant="outline" asChild>
+              <Link href="/dashboard" class="flex items-center gap-2">
+                <LayoutGrid class="w-4 h-4" />
+                Dashboard
+              </Link>
+            </Button>
+          </template>
+          <template v-else>
+            <Button variant="outline" asChild>
+              <Link href="/customer/login">Login</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/customer/register">Get Started</Link>
+            </Button>
+          </template>
         </div>
       </div>
     </nav>
