@@ -78,7 +78,19 @@
       "Read(/D:\\wscrm\\resources\\js\\components/**)",
       "Read(/D:\\wscrm\\resources\\js\\components/**)",
       "Read(/D:\\wscrm\\resources\\js\\pages/**)",
-      "Read(/D:\\wscrm\\app\\Http\\Controllers/**)"
+      "Read(/D:\\wscrm\\app\\Http\\Controllers/**)",
+      "Read(/D:\\wscrm\\resources\\js\\pages\\Services/**)",
+      "Read(/D:\\wscrm\\resources\\js\\pages\\Admin\\Orders/**)",
+      "Read(/D:\\wscrm\\resources\\js\\pages\\Admin\\Customers/**)",
+      "Read(/D:\\wscrm\\resources\\js\\components\\ui\\dialog/**)",
+      "Read(/D:\\wscrm\\resources\\js\\pages\\Admin\\Customers/**)",
+      "Read(/D:\\wscrm\\resources\\js\\pages\\Services/**)",
+      "Read(/D:\\wscrm\\resources\\js\\pages\\Services/**)",
+      "Read(/D:\\wscrm\\resources\\js\\pages\\Services/**)",
+      "Read(/D:\\wscrm\\resources\\js\\pages\\Services/**)",
+      "Read(/D:\\wscrm\\resources\\js\\pages\\Services/**)",
+      "Read(/D:\\wscrm\\resources\\js\\pages\\Admin\\Customers/**)",
+      "Read(/D:\\wscrm\\resources\\js\\pages\\Services/**)"
     ],
     "deny": [],
     "ask": []
