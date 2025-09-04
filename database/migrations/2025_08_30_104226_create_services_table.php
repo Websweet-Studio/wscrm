@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('services', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->enum('service_type', ['hosting', 'domain']);
             $table->unsignedBigInteger('plan_id')->nullable();
             $table->string('domain_name');
@@ -23,7 +23,7 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
 
-            $table->index(['user_id', 'service_type']);
+            $table->index(['customer_id', 'service_type']);
             $table->index(['status', 'expires_at']);
             $table->index('domain_name');
         });

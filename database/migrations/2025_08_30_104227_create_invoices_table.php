@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->foreignId('order_id')->nullable()->constrained()->onDelete('set null');
             $table->string('invoice_number')->unique();
             $table->decimal('amount', 12, 2);
@@ -24,7 +24,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->timestamps();
 
-            $table->index(['user_id', 'status']);
+            $table->index(['customer_id', 'status']);
             $table->index('due_date');
             $table->index('invoice_number');
         });

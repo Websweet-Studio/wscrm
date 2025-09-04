@@ -14,7 +14,7 @@ class OrderFactory extends Factory
     {
         $orderTypes = ['hosting', 'domain', 'mixed'];
         $statuses = ['pending', 'processing', 'completed', 'cancelled'];
-        $billingCycles = ['monthly', 'quarterly', 'semi_annual', 'annual'];
+        $billingCycles = ['monthly', 'quarterly', 'semi_annually', 'annually'];
 
         $orderType = fake()->randomElement($orderTypes);
         $totalAmount = $this->generateTotalAmount($orderType);

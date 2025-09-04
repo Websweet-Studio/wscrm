@@ -4,11 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { Search, Plus, Edit, Trash2 } from 'lucide-vue-next';
+import { Search, Plus, Edit, Trash2, X, ShoppingCart, Package, Clock, CheckCircle } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface Customer {
@@ -26,7 +24,7 @@ interface HostingPlan {
 interface DomainPrice {
   id: number;
   extension: string;
-  register_price: number;
+  selling_price: number;
 }
 
 interface ServicePlan {
@@ -99,6 +97,7 @@ const editForm = useForm({
 });
 
 const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'Dashboard', href: '/dashboard' },
   { title: 'Orders', href: '/admin/orders' },
 ];
 
@@ -156,8 +155,21 @@ const removeItem = (index: number) => {
 };
 
 const submitCreate = () => {
-  createForm.post('/admin/orders', {
+  console.log('Submitting create form...', createForm.data());
+  
+  // Get fresh CSRF token
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+  console.log('Using CSRF token:', csrfToken);
+  
+  createForm.transform((data) => ({
+    ...data,
+    _token: csrfToken
+  })).post('/admin/orders', {
+    headers: {
+      'X-CSRF-TOKEN': csrfToken
+    },
     onSuccess: () => {
+      console.log('Order created successfully');
       showCreateModal.value = false;
       createForm.reset();
       createForm.items = [{
@@ -167,6 +179,17 @@ const submitCreate = () => {
         quantity: 1,
       }];
     },
+    onError: (errors) => {
+      console.error('Create order error:', errors);
+      // If CSRF error, reload page
+      if (errors[419] || Object.values(errors).some(e => String(e).includes('419'))) {
+        console.warn('CSRF error detected, reloading...');
+        window.location.reload();
+      }
+    },
+    onFinish: () => {
+      console.log('Create request finished');
+    }
   });
 };
 
@@ -181,10 +204,15 @@ const submitEdit = () => {
   if (!selectedOrder.value) return;
   
   editForm.put(`/admin/orders/${selectedOrder.value.id}`, {
+    preserveState: false,
+    preserveScroll: true,
     onSuccess: () => {
       showEditModal.value = false;
       editForm.reset();
       selectedOrder.value = null;
+    },
+    onError: (errors) => {
+      console.error('Update order error:', errors);
     },
   });
 };
@@ -212,10 +240,12 @@ const deleteOrder = (order: Order) => {
         </Button>
       </div>
 
+      <!-- Statistics Cards -->
       <div class="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle class="text-sm font-medium">Total Orders</CardTitle>
+            <ShoppingCart class="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div class="text-2xl font-bold">{{ orders.total }}</div>
@@ -225,6 +255,7 @@ const deleteOrder = (order: Order) => {
         <Card>
           <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle class="text-sm font-medium">Completed</CardTitle>
+            <CheckCircle class="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div class="text-2xl font-bold text-green-600">
@@ -236,6 +267,7 @@ const deleteOrder = (order: Order) => {
         <Card>
           <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle class="text-sm font-medium">Processing</CardTitle>
+            <Package class="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div class="text-2xl font-bold text-blue-600">
@@ -247,6 +279,7 @@ const deleteOrder = (order: Order) => {
         <Card>
           <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle class="text-sm font-medium">Pending</CardTitle>
+            <Clock class="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
             <div class="text-2xl font-bold text-yellow-600">
@@ -258,6 +291,7 @@ const deleteOrder = (order: Order) => {
         <Card>
           <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle class="text-sm font-medium">Revenue</CardTitle>
+            <Package class="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div class="text-xl font-bold">{{ formatPrice(totalRevenue) }}</div>
@@ -295,84 +329,93 @@ const deleteOrder = (order: Order) => {
             <Button @click="handleSearch">Search</Button>
           </div>
 
-          <div class="space-y-4">
-            <div v-if="orders.data.length === 0" class="text-center py-8 text-muted-foreground">
-              No orders found.
-            </div>
-            
-            <div v-else class="space-y-4">
-              <div 
-                v-for="order in orders.data" 
-                :key="order.id"
-                class="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/30"
-              >
-                <div class="flex-1">
-                  <div class="flex items-center gap-3 mb-2">
-                    <h3 class="font-semibold">Order #{{ order.id }}</h3>
-                    <Badge :class="getStatusColor(order.status)">
-                      {{ order.status }}
-                    </Badge>
-                  </div>
-                  <div class="text-sm text-muted-foreground space-y-1">
-                    <div><strong>Customer:</strong> {{ order.customer.name }} ({{ order.customer.email }})</div>
-                    <div><strong>Items:</strong> {{ order.order_items.length }} item(s)</div>
-                    <div><strong>Billing:</strong> {{ order.billing_cycle.replace('_', ' ') }}</div>
-                    <div><strong>Date:</strong> {{ formatDate(order.created_at) }}</div>
-                  </div>
-                </div>
+          <!-- Order Cards -->
+          <div v-if="!orders?.data || orders.data.length === 0" class="text-center py-12 text-muted-foreground">
+            <ShoppingCart class="mx-auto h-12 w-12 text-muted-foreground/40" />
+            <h3 class="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100">No orders found</h3>
+            <p class="mt-1 text-sm text-muted-foreground">Try adjusting your search criteria.</p>
+          </div>
 
-                <div class="flex items-center gap-4">
-                  <div class="text-right">
-                    <div class="text-xl font-bold">{{ formatPrice(order.total_amount) }}</div>
-                    <div class="text-sm text-muted-foreground">Total</div>
+          <div v-else class="space-y-4">
+            <div 
+              v-for="order in orders.data" 
+              :key="order.id"
+              class="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/30 transition-colors"
+            >
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-3 mb-2">
+                  <h3 class="text-sm font-semibold text-foreground truncate">Order #{{ order.id }}</h3>
+                  <span :class="`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(order.status)}`">
+                    {{ order.status }}
+                  </span>
+                </div>
+                <div class="space-y-1 text-xs text-muted-foreground">
+                  <div class="flex items-center gap-4">
+                    <span>{{ order.customer.name }}</span>
+                    <span>{{ order.customer.email }}</span>
                   </div>
-                  <div class="flex items-center gap-2">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link :href="`/admin/orders/${order.id}`">
-                        View Details
-                      </Link>
-                    </Button>
-                    <Button size="sm" variant="outline" @click="openEditModal(order)">
-                      <Edit class="h-3 w-3" />
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      @click="deleteOrder(order)"
-                      :disabled="order.status === 'completed'"
-                    >
-                      <Trash2 class="h-3 w-3" />
-                    </Button>
+                  <div class="flex items-center gap-4">
+                    <span>Items: {{ order.order_items.length }}</span>
+                    <span>Billing: {{ order.billing_cycle.replace('_', ' ') }}</span>
+                    <span>Date: {{ formatDate(order.created_at) }}</span>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Pagination -->
-            <div v-if="orders.links && orders.links.length > 3" class="flex items-center justify-between pt-6 border-t">
-              <div class="text-sm text-muted-foreground">
-                Showing {{ ((orders.current_page - 1) * orders.per_page + 1) || 0 }} to 
-                {{ Math.min(orders.current_page * orders.per_page, orders.total) || 0 }} of 
-                {{ orders.total || 0 }} results
-              </div>
-              <div class="flex items-center gap-1">
-                <template v-for="link in orders.links" :key="link.label">
+              <div class="flex items-center gap-6 ml-4">
+                <!-- Amount -->
+                <div class="hidden md:flex text-right">
+                  <div class="text-sm font-medium text-foreground">{{ formatPrice(order.total_amount) }}</div>
+                  <div class="text-xs text-muted-foreground">Total</div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center gap-2">
+                  <Button size="sm" variant="outline" asChild>
+                    <Link :href="`/admin/orders/${order.id}`">
+                      View Details
+                    </Link>
+                  </Button>
+                  <Button size="sm" variant="outline" @click="openEditModal(order)">
+                    <Edit class="h-3 w-3" />
+                  </Button>
                   <Button 
-                    v-if="link.url" 
+                    size="sm" 
                     variant="outline" 
-                    size="sm"
-                    :disabled="!link.url"
-                    :class="link.active ? 'bg-primary text-primary-foreground' : ''"
-                    @click="router.visit(link.url)"
-                    v-html="link.label"
-                  />
-                  <span 
-                    v-else 
-                    class="px-3 py-2 text-sm text-muted-foreground"
-                    v-html="link.label"
-                  />
-                </template>
+                    @click="deleteOrder(order)"
+                    :disabled="order.status === 'completed'"
+                  >
+                    <Trash2 class="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Pagination -->
+          <div v-if="orders.links && orders.links.length > 3" class="flex items-center justify-between pt-6 border-t">
+            <div class="text-sm text-muted-foreground">
+              Showing {{ ((orders.current_page - 1) * orders.per_page + 1) || 0 }} to 
+              {{ Math.min(orders.current_page * orders.per_page, orders.total) || 0 }} of 
+              {{ orders.total || 0 }} results
+            </div>
+            <div class="flex items-center gap-1">
+              <template v-for="link in orders.links" :key="link.label">
+                <Button 
+                  v-if="link.url" 
+                  variant="outline" 
+                  size="sm"
+                  :disabled="!link.url"
+                  :class="link.active ? 'bg-primary text-primary-foreground' : ''"
+                  @click="router.visit(link.url)"
+                  v-html="link.label"
+                />
+                <span 
+                  v-else 
+                  class="px-3 py-2 text-sm text-muted-foreground"
+                  v-html="link.label"
+                />
+              </template>
             </div>
           </div>
         </CardContent>
@@ -380,14 +423,22 @@ const deleteOrder = (order: Order) => {
     </div>
 
     <!-- Create Order Modal -->
-    <Dialog :open="showCreateModal" @update:open="showCreateModal = $event">
-      <DialogContent class="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Create New Order</DialogTitle>
-          <DialogDescription>
-            Create a new order for a customer with multiple items and services.
-          </DialogDescription>
-        </DialogHeader>
+    <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center">
+      <!-- Overlay -->
+      <div class="fixed inset-0 bg-black/50" @click="showCreateModal = false"></div>
+      
+      <!-- Modal Content -->
+      <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-lg font-semibold">Create New Order</h2>
+            <p class="text-sm text-muted-foreground">Create a new order for a customer with multiple items and services.</p>
+          </div>
+          <button @click="showCreateModal = false" class="text-gray-500 hover:text-gray-700">
+            <X class="h-4 w-4" />
+          </button>
+        </div>
         <form @submit.prevent="submitCreate" class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div>
@@ -494,7 +545,7 @@ const deleteOrder = (order: Order) => {
                     </template>
                     <template v-if="item.item_type === 'domain'">
                       <option v-for="domain in domainPrices" :key="domain.id" :value="domain.id">
-                        .{{ domain.extension }} - {{ formatPrice(domain.register_price) }}
+                        .{{ domain.extension }} - {{ formatPrice(domain.selling_price) }}
                       </option>
                     </template>
                     <template v-if="item.item_type === 'service'">
@@ -542,27 +593,36 @@ const deleteOrder = (order: Order) => {
             <p v-if="createForm.errors.items" class="text-xs text-red-500 mt-1">{{ createForm.errors.items }}</p>
           </div>
 
-          <DialogFooter>
+          <!-- Footer -->
+          <div class="flex justify-end gap-2 mt-6">
             <Button type="button" variant="outline" @click="showCreateModal = false">
               Cancel
             </Button>
             <Button type="submit" :disabled="createForm.processing">
               {{ createForm.processing ? 'Creating...' : 'Create Order' }}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
 
     <!-- Edit Order Modal -->
-    <Dialog :open="showEditModal" @update:open="showEditModal = $event">
-      <DialogContent class="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Edit Order Status</DialogTitle>
-          <DialogDescription>
-            Update the status of this order to track its progress.
-          </DialogDescription>
-        </DialogHeader>
+    <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center">
+      <!-- Overlay -->
+      <div class="fixed inset-0 bg-black/50" @click="showEditModal = false"></div>
+      
+      <!-- Modal Content -->
+      <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-lg font-semibold">Edit Order Status</h2>
+            <p class="text-sm text-muted-foreground">Update the status of this order to track its progress.</p>
+          </div>
+          <button @click="showEditModal = false" class="text-gray-500 hover:text-gray-700">
+            <X class="h-4 w-4" />
+          </button>
+        </div>
         <form @submit.prevent="submitEdit" class="space-y-4">
           <div>
             <Label for="edit-status">Status *</Label>
@@ -580,16 +640,17 @@ const deleteOrder = (order: Order) => {
             <p v-if="editForm.errors.status" class="text-xs text-red-500 mt-1">{{ editForm.errors.status }}</p>
           </div>
 
-          <DialogFooter>
+          <!-- Footer -->
+          <div class="flex justify-end gap-2 mt-6">
             <Button type="button" variant="outline" @click="showEditModal = false">
               Cancel
             </Button>
             <Button type="submit" :disabled="editForm.processing">
               {{ editForm.processing ? 'Updating...' : 'Update Status' }}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   </AppLayout>
 </template>

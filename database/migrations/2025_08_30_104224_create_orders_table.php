@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->string('order_type');
             $table->decimal('total_amount', 12, 2);
             $table->enum('status', ['pending', 'processing', 'completed', 'cancelled'])->default('pending');
-            $table->enum('billing_cycle', ['monthly', 'quarterly', 'semi_annual', 'annual'])->default('annual');
+            $table->enum('billing_cycle', ['monthly', 'quarterly', 'semi_annually', 'annually'])->default('annually');
             $table->timestamps();
 
-            $table->index(['user_id', 'status']);
+            $table->index(['customer_id', 'status']);
             $table->index('created_at');
         });
     }
