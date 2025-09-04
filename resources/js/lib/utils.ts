@@ -19,3 +19,19 @@ export function formatPrice(price: number | string, currency: string = 'IDR'): s
         maximumFractionDigits: 2,
     }).format(numPrice);
 }
+
+export function formatDate(date: string | Date, format: string = 'short'): string {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    if (isNaN(dateObj.getTime())) {
+        return 'Invalid Date';
+    }
+    
+    const options: Intl.DateTimeFormatOptions = {
+        year: 'numeric',
+        month: format === 'long' ? 'long' : 'short',
+        day: 'numeric',
+    };
+    
+    return new Intl.DateTimeFormat('id-ID', options).format(dateObj);
+}

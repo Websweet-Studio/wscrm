@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { FileText, CreditCard, Eye } from 'lucide-vue-next'
-import { formatPrice, formatDate } from '@/utils/formatters'
+import { formatPrice, formatDate } from '@/lib/utils'
 
 defineProps({
   invoices: Object,

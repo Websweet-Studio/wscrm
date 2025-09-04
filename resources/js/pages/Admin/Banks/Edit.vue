@@ -4,8 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Switch } from '@/components/ui/switch';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
@@ -196,15 +195,17 @@ const submit = () => {
               <!-- Bank Type -->
               <div class="space-y-2">
                 <Label for="bank_type">Tipe Bank *</Label>
-                <Select v-model="form.bank_type">
-                  <SelectTrigger :class="{ 'border-red-500': form.errors.bank_type }">
-                    <SelectValue placeholder="Pilih tipe bank" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="local">Lokal</SelectItem>
-                    <SelectItem value="international">Internasional</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+                  v-model="form.bank_type"
+                  :class="[
+                    'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                    { 'border-red-500': form.errors.bank_type }
+                  ]"
+                >
+                  <option value="" disabled>Pilih tipe bank</option>
+                  <option value="local">Lokal</option>
+                  <option value="international">Internasional</option>
+                </select>
                 <p v-if="form.errors.bank_type" class="text-sm text-red-600">
                   {{ form.errors.bank_type }}
                 </p>
@@ -231,13 +232,16 @@ const submit = () => {
             <!-- Description -->
             <div class="space-y-2">
               <Label for="description">Deskripsi</Label>
-              <Textarea
+              <textarea
                 id="description"
                 v-model="form.description"
                 placeholder="Deskripsi tambahan tentang bank ini..."
                 rows="3"
-                :class="{ 'border-red-500': form.errors.description }"
-              />
+                :class="[
+                  'flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                  { 'border-red-500': form.errors.description }
+                ]"
+              ></textarea>
               <p v-if="form.errors.description" class="text-sm text-red-600">
                 {{ form.errors.description }}
               </p>

@@ -5,12 +5,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
+
+
+
 import { Separator } from '@/components/ui/separator'
 import { FileText, CreditCard, Building2, AlertCircle, CheckCircle } from 'lucide-vue-next'
-import { formatPrice, formatDate } from '@/utils/formatters'
+import { formatPrice, formatDate } from '@/lib/utils'
 import { ref, computed } from 'vue'
 
 const props = defineProps({
@@ -180,29 +180,29 @@ if (props.invoice.bank_id) {
               <!-- Payment Method -->
               <div class="space-y-3">
                 <Label>Metode Pembayaran</Label>
-                <RadioGroup v-model="form.payment_method" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div class="flex items-center space-x-2 border rounded-lg p-4">
-                    <RadioGroupItem value="bank_transfer" id="bank_transfer" />
+                    <input type="radio" value="bank_transfer" id="bank_transfer" v-model="form.payment_method" class="h-4 w-4 text-primary focus:ring-primary border-gray-300" />
                     <Label for="bank_transfer" class="flex-1 cursor-pointer">
                       <div class="font-medium">Transfer Bank</div>
                       <div class="text-sm text-muted-foreground">Transfer melalui ATM/Internet Banking</div>
                     </Label>
                   </div>
                   <div class="flex items-center space-x-2 border rounded-lg p-4">
-                    <RadioGroupItem value="credit_card" id="credit_card" />
+                    <input type="radio" value="credit_card" id="credit_card" v-model="form.payment_method" class="h-4 w-4 text-primary focus:ring-primary border-gray-300" />
                     <Label for="credit_card" class="flex-1 cursor-pointer">
                       <div class="font-medium">Kartu Kredit</div>
                       <div class="text-sm text-muted-foreground">Visa, Mastercard, dll</div>
                     </Label>
                   </div>
                   <div class="flex items-center space-x-2 border rounded-lg p-4">
-                    <RadioGroupItem value="e_wallet" id="e_wallet" />
+                    <input type="radio" value="e_wallet" id="e_wallet" v-model="form.payment_method" class="h-4 w-4 text-primary focus:ring-primary border-gray-300" />
                     <Label for="e_wallet" class="flex-1 cursor-pointer">
                       <div class="font-medium">E-Wallet</div>
                       <div class="text-sm text-muted-foreground">GoPay, OVO, DANA, dll</div>
                     </Label>
                   </div>
-                </RadioGroup>
+                </div>
                 <div v-if="form.errors.payment_method" class="text-sm text-red-600">
                   {{ form.errors.payment_method }}
                 </div>
@@ -211,24 +211,17 @@ if (props.invoice.bank_id) {
               <!-- Bank Selection -->
               <div class="space-y-3">
                 <Label for="bank_id">Pilih Bank</Label>
-                <Select v-model="form.bank_id" @update:model-value="updateSelectedBank">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih bank untuk pembayaran" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem v-for="bank in banks" :key="bank.id" :value="bank.id.toString()">
-                      <div class="flex items-center justify-between w-full">
-                        <div>
-                          <div class="font-medium">{{ bank.bank_name }}</div>
-                          <div class="text-sm text-muted-foreground">{{ bank.bank_code }}</div>
-                        </div>
-                        <div v-if="bank.admin_fee > 0" class="text-sm text-muted-foreground">
-                          Fee: {{ formatPrice(bank.admin_fee) }}
-                        </div>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <select 
+                  v-model="form.bank_id" 
+                  @change="updateSelectedBank"
+                  id="bank_id"
+                  class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="" disabled>Pilih bank untuk pembayaran</option>
+                  <option v-for="bank in banks" :key="bank.id" :value="bank.id.toString()">
+                    {{ bank.bank_name }} ({{ bank.bank_code }}){{ bank.admin_fee > 0 ? ' - Fee: ' + formatPrice(bank.admin_fee) : '' }}
+                  </option>
+                </select>
                 <div v-if="form.errors.bank_id" class="text-sm text-red-600">
                   {{ form.errors.bank_id }}
                 </div>
@@ -344,11 +337,12 @@ if (props.invoice.bank_id) {
             <form @submit.prevent="confirmPayment" class="space-y-4">
               <div class="space-y-2">
                 <Label for="payment_proof">Catatan Pembayaran (Opsional)</Label>
-                <Textarea
+                <textarea
                   id="payment_proof"
                   v-model="confirmForm.payment_proof"
                   placeholder="Masukkan nomor referensi transfer atau catatan lainnya..."
                   rows="3"
+                  class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 <p class="text-sm text-muted-foreground">
                   Anda dapat menambahkan nomor referensi transfer atau catatan lainnya.

@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Building2, Edit, ArrowLeft, ToggleLeft, ToggleRight, Trash2, FileText, Calendar, DollarSign } from 'lucide-vue-next';
+import { Label } from '@/components/ui/label';
 import { formatPrice, formatDate } from '@/lib/utils';
 
 interface Bank {
@@ -351,12 +352,3 @@ const deleteBank = () => {
     </div>
   </AppLayout>
 </template>
-
-<script>
-import { Label } from '@/components/ui/label';
-export default {
-  components: {
-    Label
-  }
-}
-</script>
