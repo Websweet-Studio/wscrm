@@ -4,11 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { Search, Plus, Edit, Trash2 } from 'lucide-vue-next';
+import { Search, Plus, Edit, Trash2, X } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface Customer {
@@ -364,11 +363,22 @@ const deleteService = (service: Service) => {
     </div>
 
     <!-- Create Service Modal -->
-    <Dialog v-model:open="showCreateModal">
-      <DialogContent class="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Add New Service</DialogTitle>
-        </DialogHeader>
+    <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center">
+      <!-- Overlay -->
+      <div class="fixed inset-0 bg-black/50" @click="showCreateModal = false"></div>
+      
+      <!-- Modal Content -->
+      <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-lg font-semibold">Add New Service</h2>
+            <p class="text-sm text-muted-foreground">Create a new hosting or domain service for a customer</p>
+          </div>
+          <button @click="showCreateModal = false" class="text-gray-500 hover:text-gray-700">
+            <X class="h-4 w-4" />
+          </button>
+        </div>
         <form @submit.prevent="submitCreate" class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div>
@@ -451,24 +461,36 @@ const deleteService = (service: Service) => {
             <Label for="create-auto-renew">Auto Renew</Label>
           </div>
 
-          <DialogFooter>
+          <!-- Footer -->
+          <div class="flex justify-end gap-2 mt-6">
             <Button type="button" variant="outline" @click="showCreateModal = false">
               Cancel
             </Button>
             <Button type="submit" :disabled="createForm.processing">
               {{ createForm.processing ? 'Creating...' : 'Create Service' }}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
 
     <!-- Edit Service Modal -->
-    <Dialog v-model:open="showEditModal">
-      <DialogContent class="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Edit Service</DialogTitle>
-        </DialogHeader>
+    <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center">
+      <!-- Overlay -->
+      <div class="fixed inset-0 bg-black/50" @click="showEditModal = false"></div>
+      
+      <!-- Modal Content -->
+      <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-lg font-semibold">Edit Service</h2>
+            <p class="text-sm text-muted-foreground">Update service configuration and settings</p>
+          </div>
+          <button @click="showEditModal = false" class="text-gray-500 hover:text-gray-700">
+            <X class="h-4 w-4" />
+          </button>
+        </div>
         <form @submit.prevent="submitEdit" class="space-y-4">
           <div>
             <Label for="edit-domain">Domain Name *</Label>
@@ -520,16 +542,17 @@ const deleteService = (service: Service) => {
             <Label for="edit-auto-renew">Auto Renew</Label>
           </div>
 
-          <DialogFooter>
+          <!-- Footer -->
+          <div class="flex justify-end gap-2 mt-6">
             <Button type="button" variant="outline" @click="showEditModal = false">
               Cancel
             </Button>
             <Button type="submit" :disabled="editForm.processing">
               {{ editForm.processing ? 'Updating...' : 'Update Service' }}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   </AppLayout>
 </template>

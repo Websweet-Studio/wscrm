@@ -161,8 +161,50 @@
     * {
         @apply border-border outline-ring/50;
     }
+    
+    html {
+        height: 100%;
+        overflow-x: hidden;
+    }
+    
     body {
         @apply bg-background text-foreground antialiased;
+        height: 100%;
+        min-height: 100vh;
+        overflow-x: hidden;
+        position: relative;
+    }
+    
+    /* Prevent body from becoming too tall due to modal positioning */
+    body:has([data-slot="dialog-content"]) {
+        overflow: hidden;
+        height: 100vh;
+    }
+    
+    /* Force custom modal styling to override any Dialog component CSS */
+    .service-modal-content {
+        position: relative !important;
+        background: white !important;
+        border-radius: 0.5rem !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+        width: 100% !important;
+        max-width: 42rem !important;
+        margin: 0 1rem !important;
+        padding: 1.5rem !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+        z-index: auto !important;
+        transform: none !important;
+        animation: none !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        display: block !important;
+    }
+    
+    .dark .service-modal-content {
+        background: rgb(17 24 39) !important;
     }
 }
 

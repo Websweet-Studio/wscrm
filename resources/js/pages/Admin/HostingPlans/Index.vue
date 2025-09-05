@@ -5,11 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { Search, Plus, Edit, Trash2, Server, HardDrive, Cpu, MemoryStick } from 'lucide-vue-next';
+import { Search, Plus, Edit, Trash2, Server, HardDrive, Cpu, MemoryStick, X } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface HostingPlan {
@@ -275,11 +274,23 @@ const deleteHostingPlan = (id: number) => {
     </div>
 
     <!-- Create Hosting Plan Modal -->
-    <Dialog v-model:open="showCreateModal">
-      <DialogContent class="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Add New Hosting Plan</DialogTitle>
-        </DialogHeader>
+    <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center">
+      <!-- Overlay -->
+      <div class="fixed inset-0 bg-black/50" @click="showCreateModal = false"></div>
+      
+      <!-- Modal Content -->
+      <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-lg font-semibold">Add New Hosting Plan</h2>
+            <p class="text-sm text-muted-foreground">Create a new hosting plan with specifications and pricing</p>
+          </div>
+          <button @click="showCreateModal = false" class="text-gray-500 hover:text-gray-700">
+            <X class="h-4 w-4" />
+          </button>
+        </div>
+        
         <form @submit.prevent="submitCreate" class="space-y-4">
           <div>
             <Label for="create-plan-name">Plan Name *</Label>
@@ -444,24 +455,35 @@ const deleteHostingPlan = (id: number) => {
             <Label for="create-is-active">Active</Label>
           </div>
 
-          <DialogFooter>
+          <div class="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" @click="showCreateModal = false">
               Cancel
             </Button>
             <Button type="submit" :disabled="createForm.processing">
               {{ createForm.processing ? 'Creating...' : 'Create Plan' }}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
 
     <!-- Edit Hosting Plan Modal -->
-    <Dialog v-model:open="showEditModal">
-      <DialogContent class="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit Hosting Plan</DialogTitle>
-        </DialogHeader>
+    <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center">
+      <!-- Overlay -->
+      <div class="fixed inset-0 bg-black/50" @click="showEditModal = false"></div>
+      
+      <!-- Modal Content -->
+      <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-lg font-semibold">Edit Hosting Plan</h2>
+            <p class="text-sm text-muted-foreground">Update hosting plan specifications and settings</p>
+          </div>
+          <button @click="showEditModal = false" class="text-gray-500 hover:text-gray-700">
+            <X class="h-4 w-4" />
+          </button>
+        </div>
         <form @submit.prevent="submitEdit" class="space-y-4">
           <div>
             <Label for="edit-plan-name">Plan Name *</Label>
@@ -626,16 +648,16 @@ const deleteHostingPlan = (id: number) => {
             <Label for="edit-is-active">Active</Label>
           </div>
 
-          <DialogFooter>
+          <div class="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" @click="showEditModal = false">
               Cancel
             </Button>
             <Button type="submit" :disabled="editForm.processing">
               {{ editForm.processing ? 'Updating...' : 'Update Plan' }}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   </AppLayout>
 </template>

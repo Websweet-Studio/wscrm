@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { CheckCircle, Zap, Shield, Palette, ShoppingCart, Settings, Star, Plus, Edit, Trash2, X } from 'lucide-vue-next';
+import { CheckCircle, Zap, Shield, Palette, ShoppingCart, Settings, Star, Plus, Edit, Trash2 } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface ServicePlan {
@@ -31,6 +32,7 @@ const props = defineProps<Props>();
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
 const selectedServicePlan = ref<ServicePlan | null>(null);
+
 
 // Forms
 const createForm = useForm({
@@ -296,6 +298,29 @@ const toggleFeature = (feature: string, form: any) => {
                           feature === 'seo_optimized' ? 'SEO Optimized' :
                           feature === 'contact_form' ? 'Form Kontak' :
                           feature === 'admin_panel' ? 'Panel Admin' :
+                          feature === 'instant_setup' ? 'Setup Instan' :
+                          feature === 'pre_built_templates' ? 'Template Siap Pakai' :
+                          feature === 'custom_design' ? 'Desain Custom' :
+                          feature === 'unlimited_revisions' ? 'Revisi Unlimited' :
+                          feature === 'advanced_seo' ? 'SEO Advanced' :
+                          feature === 'shopping_cart' ? 'Keranjang Belanja' :
+                          feature === 'payment_integration' ? 'Integrasi Payment' :
+                          feature === 'inventory_management' ? 'Manajemen Stok' :
+                          feature === 'order_tracking' ? 'Tracking Pesanan' :
+                          feature === 'custom_development' ? 'Pengembangan Custom' :
+                          feature === 'consultation' ? 'Konsultasi' :
+                          feature === 'maintenance' ? 'Maintenance' :
+                          feature === 'documentation' ? 'Dokumentasi' :
+                          feature === 'elementor_pro' ? 'Elementor Pro' :
+                          feature === 'wp_rocket' ? 'WP Rocket' :
+                          feature === 'crocoblock_suite' ? 'Crocoblock Suite' :
+                          feature === 'jetengine' ? 'JetEngine' :
+                          feature === 'jetwoobuilder' ? 'JetWooBuilder' :
+                          feature === '1_year_license' ? 'Lisensi 1 Tahun' :
+                          feature === 'support_included' ? 'Support Included' :
+                          feature === 'gpl_license' ? 'Lisensi GPL' :
+                          feature === 'regular_updates' ? 'Update Berkala' :
+                          feature === 'basic_support' ? 'Support Dasar' :
                           feature.replace(/_/g, ' ')
                         }}</span>
                       </li>
@@ -352,20 +377,27 @@ const toggleFeature = (feature: string, form: any) => {
       </div>
     </div>
 
-    <!-- Create Modal -->
-    <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center">
-      <!-- Overlay -->
-      <div class="fixed inset-0 bg-black/50" @click="showCreateModal = false"></div>
-      
+    <!-- Create Modal - Always Visible for Testing -->
+    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999999; display: flex; align-items: center; justify-content: center;">
+      <!-- Modal Box -->
+      <div style="background: white; width: 90%; max-width: 600px; padding: 30px; border-radius: 10px; border: 5px solid red; position: relative;">
+        <h2 style="color: black; font-size: 20px; margin: 0 0 20px 0;">🔴 ALWAYS VISIBLE TEST MODAL</h2>
+        <p style="color: black; margin-bottom: 20px;">Modal State: {{ showCreateModal }}</p>
+        <p style="color: black; margin-bottom: 20px;">If you see this, modal positioning works!</p>
+        <button @click="toggleCreateModal(false)" style="background: red; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+          Close Test Modal
+        </button>
+      </div>
+    </div>
+
+    <!-- Actual Create Modal -->
+    <div v-if="showCreateModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 999998; display: flex; align-items: center; justify-content: center;">
       <!-- Modal Content -->
-      <div class="service-modal-content relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
+      <div style="background: white; width: 90%; max-width: 600px; padding: 30px; border-radius: 10px; position: relative; max-height: 90vh; overflow-y: auto;"
         <!-- Header -->
         <div class="flex items-center justify-between mb-4">
-          <div>
-            <h2 class="text-lg font-semibold">Create New Service Plan</h2>
-            <p class="text-sm text-muted-foreground">Add a new service plan with pricing and features</p>
-          </div>
-          <button @click="showCreateModal = false" class="text-gray-500 hover:text-gray-700">
+          <h2 class="text-lg font-semibold">Create New Service Plan</h2>
+          <button @click="() => { console.log('❌ Create Modal Close Button Clicked'); toggleCreateModal(false); }" class="text-gray-500 hover:text-gray-700">
             <X class="h-4 w-4" />
           </button>
         </div>
@@ -451,7 +483,7 @@ const toggleFeature = (feature: string, form: any) => {
           </div>
 
           <div class="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" @click="showCreateModal = false">
+            <Button type="button" variant="outline" @click="() => { console.log('🚫 Create Modal Cancel Clicked'); toggleCreateModal(false); }">
               Cancel
             </Button>
             <Button type="submit" :disabled="createForm.processing">
@@ -468,13 +500,10 @@ const toggleFeature = (feature: string, form: any) => {
       <div class="fixed inset-0 bg-black/50" @click="showEditModal = false"></div>
       
       <!-- Modal Content -->
-      <div class="service-modal-content relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
+      <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6">
         <!-- Header -->
         <div class="flex items-center justify-between mb-4">
-          <div>
-            <h2 class="text-lg font-semibold">Edit Service Plan</h2>
-            <p class="text-sm text-muted-foreground">Update service plan details and settings</p>
-          </div>
+          <h2 class="text-lg font-semibold">Edit Service Plan</h2>
           <button @click="showEditModal = false" class="text-gray-500 hover:text-gray-700">
             <X class="h-4 w-4" />
           </button>
