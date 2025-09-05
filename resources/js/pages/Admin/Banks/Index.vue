@@ -3,11 +3,15 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { Building2, Plus, Edit, Eye, Trash2, ToggleLeft, ToggleRight } from 'lucide-vue-next';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { Building2, Plus, Edit, Eye, Trash2, ToggleLeft, ToggleRight, X } from 'lucide-vue-next';
 import { formatPrice } from '@/lib/utils';
+import { ref } from 'vue';
 
 interface Bank {
   id: number;
@@ -44,6 +48,49 @@ interface Props {
 
 const props = defineProps<Props>();
 
+const showCreateModal = ref(false);
+const showEditModal = ref(false);
+const selectedBank = ref<Bank | null>(null);
+
+interface BankForm {
+  bank_name: string;
+  bank_code: string;
+  account_number: string;
+  account_name: string;
+  branch: string;
+  swift_code: string;
+  description: string;
+  is_active: boolean;
+  admin_fee: number;
+  bank_type: 'local' | 'international';
+}
+
+const createForm = useForm<BankForm>({
+  bank_name: '',
+  bank_code: '',
+  account_number: '',
+  account_name: '',
+  branch: '',
+  swift_code: '',
+  description: '',
+  is_active: true,
+  admin_fee: 0,
+  bank_type: 'local',
+});
+
+const editForm = useForm<BankForm>({
+  bank_name: '',
+  bank_code: '',
+  account_number: '',
+  account_name: '',
+  branch: '',
+  swift_code: '',
+  description: '',
+  is_active: true,
+  admin_fee: 0,
+  bank_type: 'local',
+});
+
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard', href: '/dashboard' },
   { title: 'Bank Management', href: '/admin/banks' },
@@ -77,6 +124,43 @@ const deleteBank = (bank: Bank) => {
     });
   }
 };
+
+const submitCreate = () => {
+  createForm.post('/admin/banks', {
+    onSuccess: () => {
+      showCreateModal.value = false;
+      createForm.reset();
+    },
+  });
+};
+
+const openEditModal = (bank: Bank) => {
+  selectedBank.value = bank;
+  editForm.reset();
+  editForm.bank_name = bank.bank_name;
+  editForm.bank_code = bank.bank_code;
+  editForm.account_number = bank.account_number;
+  editForm.account_name = bank.account_name;
+  editForm.branch = bank.branch || '';
+  editForm.swift_code = bank.swift_code || '';
+  editForm.description = bank.description || '';
+  editForm.is_active = bank.is_active;
+  editForm.admin_fee = bank.admin_fee;
+  editForm.bank_type = bank.bank_type;
+  showEditModal.value = true;
+};
+
+const submitEdit = () => {
+  if (!selectedBank.value) return;
+  
+  editForm.put(`/admin/banks/${selectedBank.value.id}`, {
+    onSuccess: () => {
+      showEditModal.value = false;
+      editForm.reset();
+      selectedBank.value = null;
+    },
+  });
+};
 </script>
 
 <template>
@@ -92,11 +176,9 @@ const deleteBank = (bank: Bank) => {
             Kelola bank pembayaran untuk sistem invoice
           </p>
         </div>
-        <Button asChild>
-          <Link href="/admin/banks/create">
-            <Plus class="h-4 w-4 mr-2" />
-            Tambah Bank
-          </Link>
+        <Button @click="showCreateModal = true">
+          <Plus class="h-4 w-4 mr-2" />
+          Tambah Bank
         </Button>
       </div>
 
@@ -157,15 +239,11 @@ const deleteBank = (bank: Bank) => {
                   </TableCell>
                   <TableCell class="text-right">
                     <div class="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link :href="`/admin/banks/${bank.id}`">
-                          <Eye class="h-4 w-4" />
-                        </Link>
+                      <Button variant="ghost" size="sm" @click="router.visit(`/admin/banks/${bank.id}`)">
+                        <Eye class="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link :href="`/admin/banks/${bank.id}/edit`">
-                          <Edit class="h-4 w-4" />
-                        </Link>
+                      <Button variant="ghost" size="sm" @click="openEditModal(bank)">
+                        <Edit class="h-4 w-4" />
                       </Button>
                       <Button 
                         variant="ghost" 
@@ -215,16 +293,338 @@ const deleteBank = (bank: Bank) => {
               Mulai dengan menambahkan bank pembayaran pertama.
             </p>
             <div class="mt-6">
-              <Button asChild>
-                <Link href="/admin/banks/create">
-                  <Plus class="h-4 w-4 mr-2" />
-                  Tambah Bank
-                </Link>
+              <Button @click="showCreateModal = true">
+                <Plus class="h-4 w-4 mr-2" />
+                Tambah Bank
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
+    </div>
+
+    <!-- Create Bank Modal -->
+    <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center">
+      <!-- Overlay -->
+      <div class="fixed inset-0 bg-black/50" @click="showCreateModal = false"></div>
+      
+      <!-- Modal Content -->
+      <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-lg font-semibold">Tambah Bank</h2>
+            <p class="text-sm text-muted-foreground">Tambahkan bank pembayaran baru ke sistem</p>
+          </div>
+          <button @click="showCreateModal = false" class="text-gray-500 hover:text-gray-700">
+            <X class="h-4 w-4" />
+          </button>
+        </div>
+        
+        <form @submit.prevent="submitCreate" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Bank Name -->
+            <div>
+              <Label for="create-bank-name">Nama Bank *</Label>
+              <Input
+                id="create-bank-name"
+                v-model="createForm.bank_name"
+                placeholder="Contoh: Bank Central Asia"
+                :class="{ 'border-red-500': createForm.errors.bank_name }"
+                required
+              />
+              <p v-if="createForm.errors.bank_name" class="text-xs text-red-500 mt-1">{{ createForm.errors.bank_name }}</p>
+            </div>
+
+            <!-- Bank Code -->
+            <div>
+              <Label for="create-bank-code">Kode Bank *</Label>
+              <Input
+                id="create-bank-code"
+                v-model="createForm.bank_code"
+                placeholder="Contoh: BCA"
+                :class="{ 'border-red-500': createForm.errors.bank_code }"
+                required
+              />
+              <p v-if="createForm.errors.bank_code" class="text-xs text-red-500 mt-1">{{ createForm.errors.bank_code }}</p>
+            </div>
+
+            <!-- Account Number -->
+            <div>
+              <Label for="create-account-number">Nomor Rekening *</Label>
+              <Input
+                id="create-account-number"
+                v-model="createForm.account_number"
+                placeholder="Contoh: 1234567890"
+                :class="{ 'border-red-500': createForm.errors.account_number }"
+                required
+              />
+              <p v-if="createForm.errors.account_number" class="text-xs text-red-500 mt-1">{{ createForm.errors.account_number }}</p>
+            </div>
+
+            <!-- Account Name -->
+            <div>
+              <Label for="create-account-name">Nama Pemilik Rekening *</Label>
+              <Input
+                id="create-account-name"
+                v-model="createForm.account_name"
+                placeholder="Contoh: PT. Contoh Indonesia"
+                :class="{ 'border-red-500': createForm.errors.account_name }"
+                required
+              />
+              <p v-if="createForm.errors.account_name" class="text-xs text-red-500 mt-1">{{ createForm.errors.account_name }}</p>
+            </div>
+
+            <!-- Branch -->
+            <div>
+              <Label for="create-branch">Cabang</Label>
+              <Input
+                id="create-branch"
+                v-model="createForm.branch"
+                placeholder="Contoh: Jakarta Pusat"
+                :class="{ 'border-red-500': createForm.errors.branch }"
+              />
+              <p v-if="createForm.errors.branch" class="text-xs text-red-500 mt-1">{{ createForm.errors.branch }}</p>
+            </div>
+
+            <!-- SWIFT Code -->
+            <div>
+              <Label for="create-swift-code">Kode SWIFT</Label>
+              <Input
+                id="create-swift-code"
+                v-model="createForm.swift_code"
+                placeholder="Contoh: CENAIDJA"
+                :class="{ 'border-red-500': createForm.errors.swift_code }"
+              />
+              <p v-if="createForm.errors.swift_code" class="text-xs text-red-500 mt-1">{{ createForm.errors.swift_code }}</p>
+            </div>
+
+            <!-- Bank Type -->
+            <div>
+              <Label for="create-bank-type">Tipe Bank *</Label>
+              <select 
+                v-model="createForm.bank_type"
+                id="create-bank-type"
+                :class="['flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50', { 'border-red-500': createForm.errors.bank_type }]"
+                required
+              >
+                <option value="" disabled>Pilih tipe bank</option>
+                <option value="local">Lokal</option>
+                <option value="international">Internasional</option>
+              </select>
+              <p v-if="createForm.errors.bank_type" class="text-xs text-red-500 mt-1">{{ createForm.errors.bank_type }}</p>
+            </div>
+
+            <!-- Admin Fee -->
+            <div>
+              <Label for="create-admin-fee">Biaya Admin</Label>
+              <Input
+                id="create-admin-fee"
+                v-model.number="createForm.admin_fee"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0"
+                :class="{ 'border-red-500': createForm.errors.admin_fee }"
+              />
+              <p v-if="createForm.errors.admin_fee" class="text-xs text-red-500 mt-1">{{ createForm.errors.admin_fee }}</p>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <Label for="create-description">Deskripsi</Label>
+            <textarea
+              id="create-description"
+              v-model="createForm.description"
+              placeholder="Deskripsi tambahan tentang bank ini..."
+              rows="3"
+              :class="['flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50', { 'border-red-500': createForm.errors.description }]"
+            />
+            <p v-if="createForm.errors.description" class="text-xs text-red-500 mt-1">{{ createForm.errors.description }}</p>
+          </div>
+
+          <!-- Active Status -->
+          <div class="flex items-center space-x-2">
+            <Switch
+              id="create-is-active"
+              v-model:checked="createForm.is_active"
+            />
+            <Label for="create-is-active">Bank Aktif</Label>
+          </div>
+
+          <div class="flex justify-end space-x-2 pt-4">
+            <Button type="button" variant="outline" @click="showCreateModal = false">
+              Batal
+            </Button>
+            <Button type="submit" :disabled="createForm.processing">
+              {{ createForm.processing ? 'Menyimpan...' : 'Simpan Bank' }}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Bank Modal -->
+    <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center">
+      <!-- Overlay -->
+      <div class="fixed inset-0 bg-black/50" @click="showEditModal = false"></div>
+      
+      <!-- Modal Content -->
+      <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-lg font-semibold">Edit Bank</h2>
+            <p class="text-sm text-muted-foreground">Update informasi bank pembayaran</p>
+          </div>
+          <button @click="showEditModal = false" class="text-gray-500 hover:text-gray-700">
+            <X class="h-4 w-4" />
+          </button>
+        </div>
+        
+        <form @submit.prevent="submitEdit" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Bank Name -->
+            <div>
+              <Label for="edit-bank-name">Nama Bank *</Label>
+              <Input
+                id="edit-bank-name"
+                v-model="editForm.bank_name"
+                placeholder="Contoh: Bank Central Asia"
+                :class="{ 'border-red-500': editForm.errors.bank_name }"
+                required
+              />
+              <p v-if="editForm.errors.bank_name" class="text-xs text-red-500 mt-1">{{ editForm.errors.bank_name }}</p>
+            </div>
+
+            <!-- Bank Code -->
+            <div>
+              <Label for="edit-bank-code">Kode Bank *</Label>
+              <Input
+                id="edit-bank-code"
+                v-model="editForm.bank_code"
+                placeholder="Contoh: BCA"
+                :class="{ 'border-red-500': editForm.errors.bank_code }"
+                required
+              />
+              <p v-if="editForm.errors.bank_code" class="text-xs text-red-500 mt-1">{{ editForm.errors.bank_code }}</p>
+            </div>
+
+            <!-- Account Number -->
+            <div>
+              <Label for="edit-account-number">Nomor Rekening *</Label>
+              <Input
+                id="edit-account-number"
+                v-model="editForm.account_number"
+                placeholder="Contoh: 1234567890"
+                :class="{ 'border-red-500': editForm.errors.account_number }"
+                required
+              />
+              <p v-if="editForm.errors.account_number" class="text-xs text-red-500 mt-1">{{ editForm.errors.account_number }}</p>
+            </div>
+
+            <!-- Account Name -->
+            <div>
+              <Label for="edit-account-name">Nama Pemilik Rekening *</Label>
+              <Input
+                id="edit-account-name"
+                v-model="editForm.account_name"
+                placeholder="Contoh: PT. Contoh Indonesia"
+                :class="{ 'border-red-500': editForm.errors.account_name }"
+                required
+              />
+              <p v-if="editForm.errors.account_name" class="text-xs text-red-500 mt-1">{{ editForm.errors.account_name }}</p>
+            </div>
+
+            <!-- Branch -->
+            <div>
+              <Label for="edit-branch">Cabang</Label>
+              <Input
+                id="edit-branch"
+                v-model="editForm.branch"
+                placeholder="Contoh: Jakarta Pusat"
+                :class="{ 'border-red-500': editForm.errors.branch }"
+              />
+              <p v-if="editForm.errors.branch" class="text-xs text-red-500 mt-1">{{ editForm.errors.branch }}</p>
+            </div>
+
+            <!-- SWIFT Code -->
+            <div>
+              <Label for="edit-swift-code">Kode SWIFT</Label>
+              <Input
+                id="edit-swift-code"
+                v-model="editForm.swift_code"
+                placeholder="Contoh: CENAIDJA"
+                :class="{ 'border-red-500': editForm.errors.swift_code }"
+              />
+              <p v-if="editForm.errors.swift_code" class="text-xs text-red-500 mt-1">{{ editForm.errors.swift_code }}</p>
+            </div>
+
+            <!-- Bank Type -->
+            <div>
+              <Label for="edit-bank-type">Tipe Bank *</Label>
+              <select 
+                v-model="editForm.bank_type"
+                id="edit-bank-type"
+                :class="['flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50', { 'border-red-500': editForm.errors.bank_type }]"
+                required
+              >
+                <option value="" disabled>Pilih tipe bank</option>
+                <option value="local">Lokal</option>
+                <option value="international">Internasional</option>
+              </select>
+              <p v-if="editForm.errors.bank_type" class="text-xs text-red-500 mt-1">{{ editForm.errors.bank_type }}</p>
+            </div>
+
+            <!-- Admin Fee -->
+            <div>
+              <Label for="edit-admin-fee">Biaya Admin</Label>
+              <Input
+                id="edit-admin-fee"
+                v-model.number="editForm.admin_fee"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0"
+                :class="{ 'border-red-500': editForm.errors.admin_fee }"
+              />
+              <p v-if="editForm.errors.admin_fee" class="text-xs text-red-500 mt-1">{{ editForm.errors.admin_fee }}</p>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <Label for="edit-description">Deskripsi</Label>
+            <textarea
+              id="edit-description"
+              v-model="editForm.description"
+              placeholder="Deskripsi tambahan tentang bank ini..."
+              rows="3"
+              :class="['flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50', { 'border-red-500': editForm.errors.description }]"
+            />
+            <p v-if="editForm.errors.description" class="text-xs text-red-500 mt-1">{{ editForm.errors.description }}</p>
+          </div>
+
+          <!-- Active Status -->
+          <div class="flex items-center space-x-2">
+            <Switch
+              id="edit-is-active"
+              v-model:checked="editForm.is_active"
+            />
+            <Label for="edit-is-active">Bank Aktif</Label>
+          </div>
+
+          <div class="flex justify-end space-x-2 pt-4">
+            <Button type="button" variant="outline" @click="showEditModal = false">
+              Batal
+            </Button>
+            <Button type="submit" :disabled="editForm.processing">
+              {{ editForm.processing ? 'Memperbarui...' : 'Update Bank' }}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   </AppLayout>
 </template>
