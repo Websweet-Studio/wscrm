@@ -129,7 +129,7 @@ const getStatusColor = (status: string) => {
 
 const totalRevenue = props.orders.data
   .filter(order => order.status === 'completed')
-  .reduce((sum, order) => sum + order.total_amount, 0);
+  .reduce((sum, order) => sum + (parseFloat(order.total_amount) || 0), 0);
 
 const handleSearch = () => {
   router.get('/admin/orders', { 

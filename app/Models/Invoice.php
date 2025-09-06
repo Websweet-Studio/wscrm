@@ -14,10 +14,14 @@ class Invoice extends Model
     protected $fillable = [
         'customer_id',
         'order_id',
+        'service_id',
         'invoice_number',
+        'invoice_type',
         'amount',
         'status',
+        'issue_date',
         'due_date',
+        'billing_cycle',
         'paid_at',
         'payment_method',
         'bank_id',
@@ -28,6 +32,7 @@ class Invoice extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'issue_date' => 'date',
             'due_date' => 'date',
             'paid_at' => 'datetime',
         ];
@@ -41,6 +46,11 @@ class Invoice extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class);
     }
 
     public function bank(): BelongsTo
