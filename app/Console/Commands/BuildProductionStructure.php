@@ -141,16 +141,34 @@ class BuildProductionStructure extends Command
             return;
         }
 
-        foreach (File::allFiles($publicPath) as $file) {
-            $relativePath = str_replace($publicPath.DIRECTORY_SEPARATOR, '', $file->getPathname());
-            $destinationFile = $destination.DIRECTORY_SEPARATOR.$relativePath;
-            $destinationDir = dirname($destinationFile);
+        // Use system commands for efficiency
+        if (PHP_OS_FAMILY === 'Windows') {
+            // Windows - use xcopy for better hidden file support
+            exec("xcopy \"{$publicPath}\" \"{$destination}\" /E /H /Y /Q > nul 2>&1");
+        } else {
+            // Unix/Linux - use cp with recursive and hidden file flags
+            exec("cp -r {$publicPath}/. {$destination}/ 2>/dev/null");
+        }
 
-            if (! File::exists($destinationDir)) {
-                File::makeDirectory($destinationDir, 0755, true);
+        // Fallback to PHP if system commands fail
+        if (! File::exists($destination.'/index.php')) {
+            foreach (File::allFiles($publicPath) as $file) {
+                $relativePath = str_replace($publicPath.DIRECTORY_SEPARATOR, '', $file->getPathname());
+                $destinationFile = $destination.DIRECTORY_SEPARATOR.$relativePath;
+                $destinationDir = dirname($destinationFile);
+
+                if (! File::exists($destinationDir)) {
+                    File::makeDirectory($destinationDir, 0755, true);
+                }
+
+                File::copy($file->getPathname(), $destinationFile);
             }
 
-            File::copy($file->getPathname(), $destinationFile);
+            // Copy .htaccess explicitly
+            $htaccess = $publicPath.'/.htaccess';
+            if (File::exists($htaccess)) {
+                File::copy($htaccess, $destination.'/.htaccess');
+            }
         }
     }
 
@@ -165,10 +183,10 @@ class BuildProductionStructure extends Command
         $zip = new ZipArchive;
         if ($zip->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
             // Add laravel directory
-            $this->addDirectoryToZip($zip, $distPath.'/laravel', 'laravel');
+            $this->addDirectoryToZip($zip, realpath($distPath.'/laravel'), 'laravel');
 
             // Add public_html directory
-            $this->addDirectoryToZip($zip, $distPath.'/public_html', 'public_html');
+            $this->addDirectoryToZip($zip, realpath($distPath.'/public_html'), 'public_html');
 
             $zip->close();
         }
@@ -176,20 +194,33 @@ class BuildProductionStructure extends Command
 
     private function addDirectoryToZip(ZipArchive $zip, string $dir, string $zipDir): void
     {
+        if (! $dir || ! is_dir($dir)) {
+            return;
+        }
+
+        $realDir = realpath($dir);
         $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS),
+            new RecursiveDirectoryIterator($realDir, RecursiveDirectoryIterator::SKIP_DOTS),
             RecursiveIteratorIterator::SELF_FIRST
         );
 
         foreach ($iterator as $file) {
             $filePath = $file->getRealPath();
-            $relativePath = $zipDir.'/'.str_replace($dir.DIRECTORY_SEPARATOR, '', $filePath);
+
+            // Calculate relative path from base directory
+            $relativePath = str_replace($realDir, '', $filePath);
+            $relativePath = ltrim($relativePath, DIRECTORY_SEPARATOR);
             $relativePath = str_replace('\\', '/', $relativePath);
 
+            // Create zip path
+            $zipPath = $relativePath ? $zipDir.'/'.$relativePath : $zipDir;
+
             if ($file->isDir()) {
-                $zip->addEmptyDir($relativePath);
+                if ($zipPath !== $zipDir) { // Don't add the root directory
+                    $zip->addEmptyDir($zipPath);
+                }
             } elseif ($file->isFile()) {
-                $zip->addFile($filePath, $relativePath);
+                $zip->addFile($filePath, $zipPath);
             }
         }
     }

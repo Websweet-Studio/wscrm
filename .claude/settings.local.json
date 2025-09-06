@@ -128,7 +128,9 @@
       "Read(/D:\\wscrm\\app\\Http\\Controllers/**)",
       "Read(/D:\\wscrm\\resources\\js\\pages/**)",
       "Bash(npm run typecheck:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(unzip:*)",
+      "Bash(timeout 30 php artisan:*)"
     ],
     "deny": [],
     "ask": []
