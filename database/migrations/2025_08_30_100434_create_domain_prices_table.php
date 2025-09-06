@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('domain_prices', function (Blueprint $table) {
             $table->id();
-            $table->string('extension');
+            $table->string('extension', 191);
             $table->decimal('base_cost', 10, 2);
             $table->decimal('renewal_cost', 10, 2);
             $table->decimal('selling_price', 10, 2);

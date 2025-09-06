@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('order_id')->constrained()->onDelete('cascade');
             $table->enum('item_type', ['hosting', 'domain']);
             $table->unsignedBigInteger('item_id');
-            $table->string('domain_name')->nullable();
+            $table->string('domain_name', 191)->nullable();
             $table->integer('quantity')->default(1);
             $table->decimal('price', 12, 2);
             $table->timestamps();

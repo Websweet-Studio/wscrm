@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('hosting_plans', function (Blueprint $table) {
             $table->id();
-            $table->string('plan_name');
+            $table->string('plan_name', 191);
             $table->decimal('storage_gb', 8, 2);
             $table->decimal('cpu_cores', 4, 2);
             $table->decimal('ram_gb', 8, 2);
-            $table->string('bandwidth')->default('Unlimited');
+            $table->string('bandwidth', 191)->default('Unlimited');
             $table->decimal('modal_cost', 12, 2);
             $table->decimal('maintenance_cost', 12, 2);
             $table->integer('discount_percent')->default(0);

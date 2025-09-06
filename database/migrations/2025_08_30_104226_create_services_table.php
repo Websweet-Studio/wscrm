@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->enum('service_type', ['hosting', 'domain']);
             $table->unsignedBigInteger('plan_id')->nullable();
-            $table->string('domain_name');
+            $table->string('domain_name', 191);
             $table->enum('status', ['active', 'suspended', 'terminated', 'pending'])->default('pending');
             $table->date('expires_at');
             $table->boolean('auto_renew')->default(true);

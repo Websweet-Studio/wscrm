@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('service_plans', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('category')->nullable(); // 'web_package', 'addon', 'license', etc.
+            $table->string('name', 191);
+            $table->string('category', 191)->nullable(); // 'web_package', 'addon', 'license', etc.
             $table->text('description')->nullable();
             $table->decimal('price', 10, 2);
             $table->json('features')->nullable();
