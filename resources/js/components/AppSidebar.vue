@@ -3,13 +3,30 @@ import NavUser from '@/components/NavUser.vue';
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Server, Globe, Users, ShoppingCart, Settings, DollarSign, Package, Calculator, CreditCard } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Server, Users, ShoppingCart, Settings, DollarSign, Package, Calculator, ChevronDown, ChevronRight, FileText, Building, Globe } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import AppLogoIcon from './AppLogoIcon.vue';
 import { useSidebar } from '@/composables/useSidebar';
+import { ref, onMounted } from 'vue';
 
 const $page = usePage();
 const { isMinimized } = useSidebar();
+
+// Track expanded state for menu groups with persistence
+const expandedGroups = ref(new Set<string>());
+
+// Load expanded state from localStorage on mount
+onMounted(() => {
+    const saved = localStorage.getItem('sidebar-expanded-groups');
+    if (saved) {
+        try {
+            const savedGroups = JSON.parse(saved);
+            expandedGroups.value = new Set(savedGroups);
+        } catch (e) {
+            console.warn('Failed to parse saved sidebar state');
+        }
+    }
+});
 
 const mainNavItems: NavItem[] = [
     {
@@ -23,41 +40,78 @@ const mainNavItems: NavItem[] = [
         icon: Calculator,
     },
     {
-        title: 'Customers',
-        href: '/admin/customers',
+        title: 'Customer',
+        href: '#',
         icon: Users,
+        children: [
+            {
+                title: 'Customers',
+                href: '/admin/customers',
+                icon: Users,
+            },
+            {
+                title: 'Orders',
+                href: '/admin/orders',
+                icon: ShoppingCart,
+            },
+        ]
     },
     {
-        title: 'Orders',
-        href: '/admin/orders',
-        icon: ShoppingCart,
-    },
-    {
-        title: 'Services',
-        href: '/admin/services',
+        title: 'Service',
+        href: '#',
         icon: Settings,
+        children: [
+            {
+                title: 'Active Services',
+                href: '/admin/services',
+                icon: Server,
+            },
+            {
+                title: 'Service Plans',
+                href: '/admin/service-plans',
+                icon: Package,
+            },
+            {
+                title: 'Hosting Plans',
+                href: '/admin/hosting-plans',
+                icon: Server,
+            },
+        ]
     },
     {
-        title: 'Service Plans',
-        href: '/admin/service-plans',
-        icon: Package,
-    },
-    {
-        title: 'Hosting Plans',
-        href: '/admin/hosting-plans',
-        icon: Server,
-    },
-    {
-        title: 'Domain Prices',
-        href: '/admin/domain-prices',
+        title: 'Financial',
+        href: '#',
         icon: DollarSign,
-    },
-    {
-        title: 'Bank Management',
-        href: '/admin/banks',
-        icon: CreditCard,
+        children: [
+            {
+                title: 'Invoices',
+                href: '/admin/invoices',
+                icon: FileText,
+            },
+            {
+                title: 'Domain Prices',
+                href: '/admin/domain-prices',
+                icon: Globe,
+            },
+            {
+                title: 'Bank Management',
+                href: '/admin/banks',
+                icon: Building,
+            },
+        ]
     },
 ];
+
+const toggleGroup = (groupTitle: string) => {
+    if (expandedGroups.value.has(groupTitle)) {
+        expandedGroups.value.delete(groupTitle);
+    } else {
+        expandedGroups.value.add(groupTitle);
+    }
+    
+    // Save to localStorage
+    localStorage.setItem('sidebar-expanded-groups', JSON.stringify([...expandedGroups.value]));
+};
 
 const footerNavItems: NavItem[] = [
     {
@@ -101,20 +155,95 @@ const footerNavItems: NavItem[] = [
         <!-- Navigation -->
         <nav class="flex-1 p-4 overflow-y-auto custom-scrollbar">
             <div class="space-y-1">
-                <Link 
-                    v-for="item in mainNavItems" 
-                    :key="item.title"
-                    :href="item.href"
-                    :class="[
-                        'flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent transition-colors',
-                        item.href === $page.url ? 'bg-sidebar-accent font-medium' : '',
-                        isMinimized ? 'justify-center' : ''
-                    ]"
-                    :title="isMinimized ? item.title : ''"
-                >
-                    <component :is="item.icon" class="w-4 h-4 flex-shrink-0" />
-                    <span v-if="!isMinimized" class="truncate">{{ item.title }}</span>
-                </Link>
+                <template v-for="item in mainNavItems" :key="item.title">
+                    <!-- Single menu item -->
+                    <Link 
+                        v-if="!item.children"
+                        :href="item.href"
+                        :class="[
+                            'flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent transition-colors',
+                            item.href === $page.url ? 'bg-sidebar-accent font-medium' : '',
+                            isMinimized ? 'justify-center' : ''
+                        ]"
+                        :title="isMinimized ? item.title : ''"
+                    >
+                        <component :is="item.icon" class="w-4 h-4 flex-shrink-0" />
+                        <span v-if="!isMinimized" class="truncate">{{ item.title }}</span>
+                    </Link>
+
+                    <!-- Group with children -->
+                    <div v-else>
+                        <button
+                            v-if="!isMinimized"
+                            @click="toggleGroup(item.title.toLowerCase().replace(' ', '-'))"
+                            :class="[
+                                'flex items-center justify-between w-full px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent transition-colors',
+                                'text-left'
+                            ]"
+                        >
+                            <div class="flex items-center gap-2">
+                                <component :is="item.icon" class="w-4 h-4 flex-shrink-0" />
+                                <span class="truncate">{{ item.title }}</span>
+                            </div>
+                            <component 
+                                :is="expandedGroups.has(item.title.toLowerCase().replace(' ', '-')) ? ChevronDown : ChevronRight"
+                                class="w-4 h-4 flex-shrink-0"
+                            />
+                        </button>
+
+                        <!-- Minimized group header (clickable) -->
+                        <button 
+                            v-else
+                            @click="toggleGroup(item.title.toLowerCase().replace(' ', '-'))"
+                            :class="[
+                                'flex items-center justify-center px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent transition-colors',
+                                expandedGroups.has(item.title.toLowerCase().replace(' ', '-')) ? 'bg-sidebar-accent' : ''
+                            ]"
+                            :title="item.title"
+                        >
+                            <component :is="item.icon" class="w-4 h-4 flex-shrink-0" />
+                        </button>
+
+                        <!-- Minimized submenu items -->
+                        <div 
+                            v-if="isMinimized && expandedGroups.has(item.title.toLowerCase().replace(' ', '-'))"
+                            class="space-y-1 mt-1"
+                        >
+                            <Link
+                                v-for="child in item.children"
+                                :key="child.title"
+                                :href="child.href"
+                                :class="[
+                                    'flex items-center justify-center px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent/50 transition-colors',
+                                    'text-sidebar-foreground/60',
+                                    child.href === $page.url ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : ''
+                                ]"
+                                :title="child.title"
+                            >
+                                <component :is="child.icon" class="w-3.5 h-3.5 flex-shrink-0" />
+                            </Link>
+                        </div>
+
+                        <!-- Submenu items (expanded) -->
+                        <div 
+                            v-if="!isMinimized && expandedGroups.has(item.title.toLowerCase().replace(' ', '-'))"
+                            class="ml-2 mt-1 space-y-1 border-l-2 border-sidebar-accent/20 pl-3"
+                        >
+                            <Link
+                                v-for="child in item.children"
+                                :key="child.title"
+                                :href="child.href"
+                                :class="[
+                                    'flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent transition-colors',
+                                    child.href === $page.url ? 'bg-sidebar-accent font-medium' : ''
+                                ]"
+                            >
+                                <component :is="child.icon" class="w-4 h-4 flex-shrink-0" />
+                                <span class="truncate">{{ child.title }}</span>
+                            </Link>
+                        </div>
+                    </div>
+                </template>
             </div>
         </nav>
 

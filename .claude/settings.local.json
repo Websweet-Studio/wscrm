@@ -126,7 +126,9 @@
       "Read(/D:\\wscrm\\app\\Http\\Controllers/**)",
       "mcp__ide__executeCode",
       "Read(/D:\\wscrm\\app\\Http\\Controllers/**)",
-      "Read(/D:\\wscrm\\resources\\js\\pages/**)"
+      "Read(/D:\\wscrm\\resources\\js\\pages/**)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run:*)"
     ],
     "deny": [],
     "ask": []
