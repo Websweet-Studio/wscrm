@@ -19,6 +19,9 @@ interface HostingPlan {
   id: number;
   plan_name: string;
   selling_price: number;
+  storage_gb: number;
+  cpu_cores: number;
+  ram_gb: number;
 }
 
 interface DomainPrice {
@@ -568,7 +571,7 @@ const confirmDelete = () => {
                     <option value="">Pilih Item</option>
                     <template v-if="item.item_type === 'hosting'">
                       <option v-for="plan in hostingPlans" :key="plan.id" :value="plan.id">
-                        {{ plan.plan_name }} - {{ formatPrice(plan.selling_price) }}
+                        {{ plan.plan_name }} - {{ plan.storage_gb }}GB Storage, {{ plan.cpu_cores }} CPU, {{ plan.ram_gb }}GB RAM - {{ formatPrice(plan.selling_price) }}
                       </option>
                     </template>
                     <template v-if="item.item_type === 'domain'">

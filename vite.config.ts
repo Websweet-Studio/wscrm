@@ -4,17 +4,14 @@ import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
 import { defineConfig } from 'vite';
 
-export default defineConfig({
-    plugins: [
+export default defineConfig(({ command }) => {
+    const plugins = [
         laravel({
             input: ['resources/js/app.ts'],
             ssr: 'resources/js/ssr.ts',
             refresh: true,
         }),
         tailwindcss(),
-        wayfinder({
-            formVariants: true,
-        }),
         vue({
             template: {
                 transformAssetUrls: {
@@ -23,8 +20,21 @@ export default defineConfig({
                 },
             },
         }),
-    ],
-    build: {
-        emptyOutDir: true,
-    },
+    ];
+
+    // Only add wayfinder in development mode to avoid database dependency during build
+    if (command === 'serve') {
+        plugins.splice(2, 0, wayfinder({
+            formVariants: true,
+        }));
+    }
+
+    return {
+        plugins,
+        build: {
+            emptyOutDir: true,
+        },
+        // No need for special resolves in build mode
+        resolve: {}
+    };
 });
