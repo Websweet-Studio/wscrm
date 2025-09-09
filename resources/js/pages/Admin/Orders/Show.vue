@@ -105,7 +105,7 @@ const totalItemsAmount = props.order.order_items.reduce((sum, item) => sum + (it
           <p class="text-muted-foreground">Order details and customer information</p>
         </div>
         <Button variant="outline" asChild>
-          <Link href="/admin/orders">
+          <Link href="/admin/orders" class="cursor-pointer">
             Back to Orders
           </Link>
         </Button>

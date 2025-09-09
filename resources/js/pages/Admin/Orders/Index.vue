@@ -398,7 +398,7 @@ const confirmDelete = () => {
                 <!-- Actions -->
                 <div class="flex items-center gap-2">
                   <Button size="sm" variant="outline" asChild>
-                    <Link :href="`/admin/orders/${order.id}`">
+                    <Link :href="`/admin/orders/${order.id}`" class="cursor-pointer">
                       Lihat Detail
                     </Link>
                   </Button>
@@ -410,6 +410,7 @@ const confirmDelete = () => {
                     variant="outline" 
                     @click="openDeleteModal(order)"
                     :disabled="order.status === 'completed'"
+                    class="cursor-pointer"
                   >
                     <Trash2 class="h-3 w-3" />
                   </Button>
@@ -432,7 +433,7 @@ const confirmDelete = () => {
                   variant="outline" 
                   size="sm"
                   :disabled="!link.url"
-                  :class="link.active ? 'bg-primary text-primary-foreground' : ''"
+                  :class="link.active ? 'bg-primary text-primary-foreground cursor-pointer' : 'cursor-pointer'"
                   @click="router.visit(link.url)"
                   v-html="link.label"
                 />
@@ -537,6 +538,7 @@ const confirmDelete = () => {
                   size="sm" 
                   variant="outline" 
                   @click="removeItem(index)"
+                  class="cursor-pointer"
                 >
                   <Trash2 class="h-3 w-3" />
                 </Button>
@@ -624,7 +626,7 @@ const confirmDelete = () => {
             <Button type="button" variant="outline" @click="showCreateModal = false" class="cursor-pointer">
               Batal
             </Button>
-            <Button type="submit" :disabled="createForm.processing">
+            <Button type="submit" :disabled="createForm.processing" class="cursor-pointer">
               {{ createForm.processing ? 'Membuat...' : 'Buat Pesanan' }}
             </Button>
           </div>
@@ -671,7 +673,7 @@ const confirmDelete = () => {
             <Button type="button" variant="outline" @click="showEditModal = false" class="cursor-pointer">
               Batal
             </Button>
-            <Button type="submit" :disabled="editForm.processing">
+            <Button type="submit" :disabled="editForm.processing" class="cursor-pointer">
               {{ editForm.processing ? 'Memperbarui...' : 'Perbarui Status' }}
             </Button>
           </div>

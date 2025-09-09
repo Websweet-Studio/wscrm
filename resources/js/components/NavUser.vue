@@ -24,7 +24,7 @@ const user = page.props.auth.user;
             <Button 
                 variant="ghost" 
                 :class="[
-                    'w-full h-auto data-[state=open]:bg-sidebar-accent',
+                    'w-full h-auto data-[state=open]:bg-sidebar-accent cursor-pointer',
                     minimized ? 'justify-center px-2 py-2' : 'justify-start px-3 py-2'
                 ]"
                 :title="minimized ? user.name : ''"

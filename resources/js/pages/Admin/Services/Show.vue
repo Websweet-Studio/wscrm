@@ -118,7 +118,7 @@ const daysUntilExpiry = () => {
           <p class="text-muted-foreground">Detail dan informasi layanan</p>
         </div>
         <Button variant="outline" asChild>
-          <Link href="/admin/services">
+          <Link href="/admin/services" class="cursor-pointer">
             Kembali ke Layanan
           </Link>
         </Button>
@@ -228,7 +228,7 @@ const daysUntilExpiry = () => {
             
             <div class="pt-3 border-t">
               <Button size="sm" variant="outline" asChild>
-                <Link :href="`/admin/customers/${service.customer.id}`">
+                <Link :href="`/admin/customers/${service.customer.id}`" class="cursor-pointer">
                   Lihat Detail Pelanggan
                 </Link>
               </Button>
@@ -303,19 +303,19 @@ const daysUntilExpiry = () => {
         </CardHeader>
         <CardContent>
           <div class="flex flex-wrap gap-3">
-            <Button v-if="service.status === 'active'" variant="outline" size="sm">
+            <Button v-if="service.status === 'active'" variant="outline" size="sm" class="cursor-pointer">
               <Clock class="h-4 w-4 mr-2" />
               Tangguhkan Layanan
             </Button>
-            <Button v-if="service.status === 'suspended'" variant="outline" size="sm">
+            <Button v-if="service.status === 'suspended'" variant="outline" size="sm" class="cursor-pointer">
               <Settings class="h-4 w-4 mr-2" />
               Aktifkan Kembali Layanan
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" class="cursor-pointer">
               <Calendar class="h-4 w-4 mr-2" />
               Perpanjang Masa Berlaku
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" class="cursor-pointer">
               <Settings class="h-4 w-4 mr-2" />
               {{ service.auto_renew ? 'Nonaktifkan' : 'Aktifkan' }} Perpanjang Otomatis
             </Button>

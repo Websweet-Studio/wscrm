@@ -137,14 +137,14 @@ const footerNavItems: NavItem[] = [
             <Link 
                 v-if="!isMinimized" 
                 :href="dashboard()" 
-                class="flex items-center gap-2"
+                class="flex items-center gap-2 cursor-pointer"
             >
                 <AppLogo />
             </Link>
             <Link 
                 v-else 
                 :href="dashboard()" 
-                class="flex items-center justify-center"
+                class="flex items-center justify-center cursor-pointer"
             >
                 <div class="flex aspect-square size-8 items-center justify-center rounded-md">
                     <AppLogoIcon class="size-6 w-6 h-6" />
@@ -161,7 +161,7 @@ const footerNavItems: NavItem[] = [
                         v-if="!item.children"
                         :href="item.href"
                         :class="[
-                            'flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent transition-colors',
+                            'flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent transition-colors cursor-pointer',
                             item.href === $page.url ? 'bg-sidebar-accent font-medium' : '',
                             isMinimized ? 'justify-center' : ''
                         ]"
@@ -177,7 +177,7 @@ const footerNavItems: NavItem[] = [
                             v-if="!isMinimized"
                             @click="toggleGroup(item.title.toLowerCase().replace(' ', '-'))"
                             :class="[
-                                'flex items-center justify-between w-full px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent transition-colors',
+                                'flex items-center justify-between w-full px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent transition-colors cursor-pointer',
                                 'text-left'
                             ]"
                         >
@@ -196,7 +196,7 @@ const footerNavItems: NavItem[] = [
                             v-else
                             @click="toggleGroup(item.title.toLowerCase().replace(' ', '-'))"
                             :class="[
-                                'flex items-center justify-center px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent transition-colors',
+                                'flex items-center justify-center px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent transition-colors cursor-pointer',
                                 expandedGroups.has(item.title.toLowerCase().replace(' ', '-')) ? 'bg-sidebar-accent' : ''
                             ]"
                             :title="item.title"
@@ -214,7 +214,7 @@ const footerNavItems: NavItem[] = [
                                 :key="child.title"
                                 :href="child.href"
                                 :class="[
-                                    'flex items-center justify-center px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent/50 transition-colors',
+                                    'flex items-center justify-center px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent/50 transition-colors cursor-pointer',
                                     'text-sidebar-foreground/60',
                                     child.href === $page.url ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : ''
                                 ]"
@@ -234,7 +234,7 @@ const footerNavItems: NavItem[] = [
                                 :key="child.title"
                                 :href="child.href"
                                 :class="[
-                                    'flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent transition-colors',
+                                    'flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent transition-colors cursor-pointer',
                                     child.href === $page.url ? 'bg-sidebar-accent font-medium' : ''
                                 ]"
                             >

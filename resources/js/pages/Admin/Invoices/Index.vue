@@ -209,7 +209,7 @@ const getDefaultDueDate = () => {
           <h1 class="text-3xl font-bold tracking-tight">Invoice Management</h1>
           <p class="text-muted-foreground">Manage customer invoices and billing</p>
         </div>
-        <Button @click="showCreateModal = true; createForm.due_date = getDefaultDueDate()">
+        <Button @click="showCreateModal = true; createForm.due_date = getDefaultDueDate()" class="cursor-pointer">
           <Plus class="h-4 w-4 mr-2" />
           Create Invoice
         </Button>
@@ -301,7 +301,7 @@ const getDefaultDueDate = () => {
               <option value="setup">Setup</option>
               <option value="renewal">Renewal</option>
             </select>
-            <Button @click="handleSearch">Search</Button>
+            <Button @click="handleSearch" class="cursor-pointer">Search</Button>
           </div>
 
           <!-- Invoice Cards -->
@@ -357,11 +357,11 @@ const getDefaultDueDate = () => {
                 <!-- Actions -->
                 <div class="flex items-center gap-2">
                   <Button size="sm" variant="outline" asChild>
-                    <Link :href="`/admin/invoices/${invoice.id}`">
+                    <Link :href="`/admin/invoices/${invoice.id}`" class="cursor-pointer">
                       <Eye class="h-3 w-3" />
                     </Link>
                   </Button>
-                  <Button size="sm" variant="outline" @click="openEditModal(invoice)">
+                  <Button size="sm" variant="outline" @click="openEditModal(invoice)" class="cursor-pointer">
                     <Edit class="h-3 w-3" />
                   </Button>
                 </div>

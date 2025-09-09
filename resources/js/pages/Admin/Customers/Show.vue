@@ -118,7 +118,7 @@ const getStatusClass = (status: string) => {
           <p class="text-muted-foreground">Customer details and activity</p>
         </div>
         <Button variant="outline" asChild>
-          <Link :href="`/admin/customers`">
+          <Link :href="`/admin/customers`" class="cursor-pointer">
             Back to Customers
           </Link>
         </Button>
