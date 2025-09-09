@@ -49,11 +49,16 @@ interface OrderItem {
 interface Order {
     id: number;
     total_amount: number;
-    status: 'pending' | 'processing' | 'completed' | 'cancelled';
+    status: 'pending' | 'processing' | 'active' | 'suspended' | 'expired' | 'terminated' | 'cancelled';
     billing_cycle: string;
+    service_type?: string;
+    domain_name?: string;
+    expires_at?: string;
+    auto_renew?: boolean;
     created_at: string;
     customer: Customer;
     order_items: OrderItem[];
+    hosting_plan?: HostingPlan;
 }
 
 interface Props {
@@ -65,9 +70,11 @@ interface Props {
         total: number;
         links: any[];
     };
+    view?: 'orders' | 'services';
     filters?: {
         search?: string;
         status?: string;
+        service_type?: string;
     };
     customers: Customer[];
     hostingPlans: HostingPlan[];
@@ -79,7 +86,10 @@ const props = defineProps<Props>();
 
 const search = ref(props.filters?.search || '');
 const statusFilter = ref(props.filters?.status || '');
+const serviceTypeFilter = ref(props.filters?.service_type || '');
+const currentView = ref(props.view || 'orders');
 const showCreateModal = ref(false);
+const showCreateServiceModal = ref(false);
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const selectedOrder = ref<Order | null>(null);
@@ -99,13 +109,28 @@ const createForm = useForm({
     ],
 });
 
+const createServiceForm = useForm({
+    customer_id: '',
+    service_type: 'hosting' as 'hosting' | 'domain',
+    plan_id: '',
+    domain_name: '',
+    expires_at: '',
+    auto_renew: true,
+});
+
 const editForm = useForm({
-    status: 'pending' as 'pending' | 'processing' | 'completed' | 'cancelled',
+    status: 'pending' as 'pending' | 'processing' | 'active' | 'suspended' | 'expired' | 'terminated' | 'cancelled',
+    expires_at: '',
+    auto_renew: true,
+    domain_name: '',
 });
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Pesanan', href: '/admin/orders' },
+    { 
+        title: currentView.value === 'services' ? 'Layanan' : 'Pesanan', 
+        href: currentView.value === 'services' ? '/admin/orders?view=services' : '/admin/orders' 
+    },
 ];
 
 const formatPrice = (price: number) => {
@@ -127,12 +152,18 @@ const formatDate = (dateString: string) => {
 const getStatusColor = (status: string) => {
     switch (status) {
         case 'completed':
+        case 'active':
             return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
         case 'processing':
             return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
         case 'pending':
             return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+        case 'suspended':
+            return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
+        case 'expired':
+            return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
         case 'cancelled':
+        case 'terminated':
             return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
         default:
             return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
@@ -149,6 +180,14 @@ const getStatusText = (status: string) => {
             return 'Menunggu';
         case 'cancelled':
             return 'Dibatalkan';
+        case 'active':
+            return 'Aktif';
+        case 'suspended':
+            return 'Ditangguhkan';
+        case 'expired':
+            return 'Kedaluwarsa';
+        case 'terminated':
+            return 'Dihentikan';
         default:
             return status;
     }
@@ -158,12 +197,31 @@ const totalRevenue = props.orders.data
     .filter((order) => order.status === 'completed')
     .reduce((sum, order) => sum + (parseFloat(order.total_amount) || 0), 0);
 
+const switchView = (view: 'orders' | 'services') => {
+    currentView.value = view;
+    router.get(
+        '/admin/orders',
+        {
+            view,
+            search: search.value,
+            status: statusFilter.value,
+            service_type: serviceTypeFilter.value,
+        },
+        {
+            preserveState: true,
+            replace: true,
+        },
+    );
+};
+
 const handleSearch = () => {
     router.get(
         '/admin/orders',
         {
+            view: currentView.value,
             search: search.value,
             status: statusFilter.value,
+            service_type: serviceTypeFilter.value,
         },
         {
             preserveState: true,
@@ -228,10 +286,22 @@ const submitCreate = () => {
         });
 };
 
+const submitCreateService = () => {
+    createServiceForm.post('/admin/orders/create-service', {
+        onSuccess: () => {
+            showCreateServiceModal.value = false;
+            createServiceForm.reset();
+        },
+    });
+};
+
 const openEditModal = (order: Order) => {
     selectedOrder.value = order;
     editForm.reset();
     editForm.status = order.status;
+    editForm.expires_at = order.expires_at || '';
+    editForm.auto_renew = order.auto_renew || true;
+    editForm.domain_name = order.domain_name || '';
     showEditModal.value = true;
 };
 
@@ -274,19 +344,65 @@ const confirmDelete = () => {
 </script>
 
 <template>
-    <Head title="Admin - Kelola Pesanan" />
+    <Head :title="`Admin - ${currentView === 'services' ? 'Kelola Layanan' : 'Kelola Pesanan'}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6 p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">Kelola Pesanan</h1>
-                    <p class="text-muted-foreground">Lacak dan kelola pesanan pelanggan</p>
+                    <h1 class="text-3xl font-bold tracking-tight">
+                        {{ currentView === 'services' ? 'Kelola Layanan' : 'Kelola Pesanan' }}
+                    </h1>
+                    <p class="text-muted-foreground">
+                        {{ currentView === 'services' ? 'Kelola layanan aktif pelanggan' : 'Lacak dan kelola pesanan pelanggan' }}
+                    </p>
                 </div>
-                <Button @click="showCreateModal = true" class="cursor-pointer">
-                    <Plus class="mr-2 h-4 w-4" />
-                    Tambah Pesanan
-                </Button>
+                <div class="flex gap-2">
+                    <Button 
+                        v-if="currentView === 'services'" 
+                        @click="showCreateServiceModal = true" 
+                        class="cursor-pointer"
+                    >
+                        <Plus class="mr-2 h-4 w-4" />
+                        Tambah Layanan
+                    </Button>
+                    <Button 
+                        v-else
+                        @click="showCreateModal = true" 
+                        class="cursor-pointer"
+                    >
+                        <Plus class="mr-2 h-4 w-4" />
+                        Tambah Pesanan
+                    </Button>
+                </div>
+            </div>
+
+            <!-- View Switcher -->
+            <div class="flex space-x-1 border-b border-gray-200 dark:border-gray-700">
+                <button
+                    @click="switchView('orders')"
+                    :class="[
+                        'px-4 py-2 text-sm font-medium rounded-t-lg transition-colors cursor-pointer',
+                        currentView === 'orders'
+                            ? 'bg-white dark:bg-gray-800 border-l border-t border-r border-gray-200 dark:border-gray-700 text-blue-600 dark:text-blue-400'
+                            : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                    ]"
+                >
+                    <ShoppingCart class="mr-2 h-4 w-4 inline" />
+                    Pesanan
+                </button>
+                <button
+                    @click="switchView('services')"
+                    :class="[
+                        'px-4 py-2 text-sm font-medium rounded-t-lg transition-colors cursor-pointer',
+                        currentView === 'services'
+                            ? 'bg-white dark:bg-gray-800 border-l border-t border-r border-gray-200 dark:border-gray-700 text-blue-600 dark:text-blue-400'
+                            : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                    ]"
+                >
+                    <Package class="mr-2 h-4 w-4 inline" />
+                    Layanan
+                </button>
             </div>
 
             <!-- Statistics Cards -->
@@ -365,10 +481,27 @@ const confirmDelete = () => {
                             class="flex h-9 w-[180px] cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
                         >
                             <option value="">Semua Status</option>
-                            <option value="pending">Menunggu</option>
-                            <option value="processing">Diproses</option>
-                            <option value="completed">Selesai</option>
-                            <option value="cancelled">Dibatalkan</option>
+                            <template v-if="currentView === 'orders'">
+                                <option value="pending">Menunggu</option>
+                                <option value="processing">Diproses</option>
+                                <option value="cancelled">Dibatalkan</option>
+                            </template>
+                            <template v-else>
+                                <option value="active">Aktif</option>
+                                <option value="suspended">Ditangguhkan</option>
+                                <option value="expired">Kedaluwarsa</option>
+                                <option value="terminated">Dihentikan</option>
+                            </template>
+                        </select>
+                        
+                        <select
+                            v-if="currentView === 'services'"
+                            v-model="serviceTypeFilter"
+                            class="flex h-9 w-[120px] cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                        >
+                            <option value="">Semua Tipe</option>
+                            <option value="hosting">Hosting</option>
+                            <option value="domain">Domain</option>
                         </select>
                         <Button @click="handleSearch" class="cursor-pointer">Cari</Button>
                     </div>
@@ -388,11 +521,21 @@ const confirmDelete = () => {
                         >
                             <div class="min-w-0 flex-1">
                                 <div class="mb-2 flex items-center gap-3">
-                                    <h3 class="truncate text-sm font-semibold text-foreground">Pesanan #{{ order.id }}</h3>
+                                    <h3 class="truncate text-sm font-semibold text-foreground">
+                                        <span v-if="currentView === 'services' && order.domain_name">
+                                            {{ order.domain_name }}
+                                        </span>
+                                        <span v-else>
+                                            {{ currentView === 'services' ? 'Layanan' : 'Pesanan' }} #{{ order.id }}
+                                        </span>
+                                    </h3>
                                     <span
                                         :class="`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(order.status)}`"
                                     >
                                         {{ getStatusText(order.status) }}
+                                    </span>
+                                    <span v-if="currentView === 'services' && order.service_type" class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                                        {{ order.service_type === 'hosting' ? 'Hosting' : 'Domain' }}
                                     </span>
                                 </div>
                                 <div class="space-y-1 text-xs text-muted-foreground">
@@ -401,9 +544,15 @@ const confirmDelete = () => {
                                         <span>{{ order.customer.email }}</span>
                                     </div>
                                     <div class="flex items-center gap-4">
-                                        <span>Item: {{ order.order_items.length }}</span>
+                                        <span v-if="currentView === 'orders'">Item: {{ order.order_items.length }}</span>
+                                        <span v-if="currentView === 'services' && order.hosting_plan">Plan: {{ order.hosting_plan.plan_name }}</span>
                                         <span>Siklus: {{ order.billing_cycle.replace('_', ' ') }}</span>
-                                        <span>Tanggal: {{ formatDate(order.created_at) }}</span>
+                                        <span v-if="currentView === 'services' && order.expires_at">
+                                            Expire: {{ formatDate(order.expires_at) }}
+                                        </span>
+                                        <span v-else>
+                                            Tanggal: {{ formatDate(order.created_at) }}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -747,6 +896,106 @@ const confirmDelete = () => {
                         Ya, Hapus Pesanan
                     </Button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Create Service Modal -->
+        <div
+            v-if="showCreateServiceModal"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            @click.self="showCreateServiceModal = false"
+        >
+            <div class="w-full max-w-md rounded-lg bg-white p-6 dark:bg-gray-800">
+                <h3 class="mb-4 text-lg font-semibold">Tambah Layanan Baru</h3>
+
+                <form @submit.prevent="submitCreateService">
+                    <div class="space-y-4">
+                        <!-- Customer -->
+                        <div>
+                            <Label>Pelanggan *</Label>
+                            <select
+                                v-model="createServiceForm.customer_id"
+                                required
+                                class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                            >
+                                <option value="">Pilih Pelanggan</option>
+                                <option v-for="customer in customers" :key="customer.id" :value="customer.id">
+                                    {{ customer.name }} ({{ customer.email }})
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Service Type -->
+                        <div>
+                            <Label>Tipe Layanan *</Label>
+                            <select
+                                v-model="createServiceForm.service_type"
+                                required
+                                class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                            >
+                                <option value="hosting">Hosting</option>
+                                <option value="domain">Domain</option>
+                            </select>
+                        </div>
+
+                        <!-- Plan (for hosting) -->
+                        <div v-if="createServiceForm.service_type === 'hosting'">
+                            <Label>Paket Hosting *</Label>
+                            <select
+                                v-model="createServiceForm.plan_id"
+                                required
+                                class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                            >
+                                <option value="">Pilih Paket</option>
+                                <option v-for="plan in hostingPlans" :key="plan.id" :value="plan.id">
+                                    {{ plan.plan_name }} - {{ formatPrice(plan.selling_price) }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Domain Name -->
+                        <div>
+                            <Label>Nama Domain *</Label>
+                            <Input
+                                v-model="createServiceForm.domain_name"
+                                type="text"
+                                placeholder="example.com"
+                                required
+                            />
+                        </div>
+
+                        <!-- Expires At -->
+                        <div>
+                            <Label>Tanggal Kedaluwarsa *</Label>
+                            <Input
+                                v-model="createServiceForm.expires_at"
+                                type="date"
+                                required
+                            />
+                        </div>
+
+                        <!-- Auto Renew -->
+                        <div class="flex items-center gap-2">
+                            <input
+                                id="auto_renew"
+                                v-model="createServiceForm.auto_renew"
+                                type="checkbox"
+                                class="cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                            />
+                            <Label for="auto_renew">Perpanjang Otomatis</Label>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="mt-6 flex justify-end gap-2">
+                        <Button type="button" variant="outline" @click="showCreateServiceModal = false" class="cursor-pointer">
+                            Batal
+                        </Button>
+                        <Button type="submit" :disabled="createServiceForm.processing" class="cursor-pointer">
+                            {{ createServiceForm.processing ? 'Menyimpan...' : 'Simpan' }}
+                        </Button>
+                    </div>
+                </form>
             </div>
         </div>
     </AppLayout>

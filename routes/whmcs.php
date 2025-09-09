@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\OrderController;
-use App\Http\Controllers\ServiceController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -12,7 +11,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::prefix('services')->name('services.')->group(function () {
-        Route::get('/', [ServiceController::class, 'index'])->name('index');
-        Route::get('/{service}', [ServiceController::class, 'show'])->name('show');
+        Route::get('/', [OrderController::class, 'index'])->name('index');
+        Route::get('/{order}', [OrderController::class, 'show'])->name('show');
     });
 });
