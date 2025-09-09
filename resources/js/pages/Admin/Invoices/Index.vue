@@ -283,7 +283,7 @@ const getDefaultDueDate = () => {
             </div>
             <select 
               v-model="statusFilter" 
-              class="flex h-9 w-[180px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              class="flex h-9 w-[180px] rounded-md border border-input bg-background dark:bg-gray-800 px-3 py-1 text-sm shadow-sm transition-colors text-foreground dark:text-white placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
               <option value="">All Status</option>
               <option value="draft">Draft</option>
@@ -295,7 +295,7 @@ const getDefaultDueDate = () => {
             </select>
             <select 
               v-model="typeFilter" 
-              class="flex h-9 w-[180px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              class="flex h-9 w-[180px] rounded-md border border-input bg-background dark:bg-gray-800 px-3 py-1 text-sm shadow-sm transition-colors text-foreground dark:text-white placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
               <option value="">All Types</option>
               <option value="setup">Setup</option>
@@ -423,7 +423,7 @@ const getDefaultDueDate = () => {
               <select 
                 id="create-customer"
                 v-model="createForm.customer_id"
-                class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                class="flex h-9 w-full rounded-md border border-input bg-background dark:bg-gray-800 px-3 py-1 text-sm shadow-sm transition-colors text-foreground dark:text-white placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 required
               >
                 <option value="">Select Customer</option>
@@ -438,7 +438,7 @@ const getDefaultDueDate = () => {
               <select 
                 id="create-invoice-type"
                 v-model="createForm.invoice_type"
-                class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                class="flex h-9 w-full rounded-md border border-input bg-background dark:bg-gray-800 px-3 py-1 text-sm shadow-sm transition-colors text-foreground dark:text-white placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 required
               >
                 <option value="setup">Setup</option>
@@ -453,7 +453,7 @@ const getDefaultDueDate = () => {
             <select 
               id="create-service"
               v-model="createForm.service_id"
-              class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              class="flex h-9 w-full rounded-md border border-input bg-background dark:bg-gray-800 px-3 py-1 text-sm shadow-sm transition-colors text-foreground dark:text-white placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               :disabled="!createForm.customer_id"
             >
               <option value="">No specific service</option>
@@ -497,7 +497,7 @@ const getDefaultDueDate = () => {
             <select 
               id="create-billing-cycle"
               v-model="createForm.billing_cycle"
-              class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              class="flex h-9 w-full rounded-md border border-input bg-background dark:bg-gray-800 px-3 py-1 text-sm shadow-sm transition-colors text-foreground dark:text-white placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               required
             >
               <option value="monthly">Monthly</option>
@@ -566,7 +566,7 @@ const getDefaultDueDate = () => {
             <select 
               id="edit-status"
               v-model="editForm.status"
-              class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              class="flex h-9 w-full rounded-md border border-input bg-background dark:bg-gray-800 px-3 py-1 text-sm shadow-sm transition-colors text-foreground dark:text-white placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               required
             >
               <option value="draft">Draft</option>

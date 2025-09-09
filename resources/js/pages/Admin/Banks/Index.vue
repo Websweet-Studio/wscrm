@@ -418,7 +418,7 @@ const submitEdit = () => {
               <select 
                 v-model="createForm.bank_type"
                 id="create-bank-type"
-                :class="['flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50', { 'border-red-500': createForm.errors.bank_type }]"
+                :class="['flex h-10 w-full rounded-md border border-input bg-background dark:bg-gray-800 px-3 py-2 text-sm text-foreground dark:text-white ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50', { 'border-red-500': createForm.errors.bank_type }]"
                 required
               >
                 <option value="" disabled>Pilih tipe bank</option>
@@ -580,7 +580,7 @@ const submitEdit = () => {
               <select 
                 v-model="editForm.bank_type"
                 id="edit-bank-type"
-                :class="['flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50', { 'border-red-500': editForm.errors.bank_type }]"
+                :class="['flex h-10 w-full rounded-md border border-input bg-background dark:bg-gray-800 px-3 py-2 text-sm text-foreground dark:text-white ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50', { 'border-red-500': editForm.errors.bank_type }]"
                 required
               >
                 <option value="" disabled>Pilih tipe bank</option>

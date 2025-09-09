@@ -192,33 +192,34 @@ class BuildProductionStructure extends Command
     private function modifyIndexPhpForProduction(string $publicHtmlPath): void
     {
         $indexPhpPath = $publicHtmlPath.'/index.php';
-        
-        if (!File::exists($indexPhpPath)) {
+
+        if (! File::exists($indexPhpPath)) {
             $this->error('index.php not found in public_html directory');
+
             return;
         }
-        
+
         $content = File::get($indexPhpPath);
-        
+
         // Replace paths to point to ../laravel/ instead of ../
         $content = str_replace(
             "require __DIR__.'/../vendor/autoload.php';",
             "require __DIR__.'/../laravel/vendor/autoload.php';",
             $content
         );
-        
+
         $content = str_replace(
             "require_once __DIR__.'/../bootstrap/app.php';",
             "require_once __DIR__.'/../laravel/bootstrap/app.php';",
             $content
         );
-        
+
         $content = str_replace(
             "file_exists(\$maintenance = __DIR__.'/../storage/framework/maintenance.php')",
             "file_exists(\$maintenance = __DIR__.'/../laravel/storage/framework/maintenance.php')",
             $content
         );
-        
+
         File::put($indexPhpPath, $content);
     }
 
@@ -242,20 +243,20 @@ class BuildProductionStructure extends Command
             // Copy assets directory
             $assetsSource = $publicHtmlBuildPath.'/assets';
             $assetsDestination = $laravelBuildPath.'/assets';
-            
+
             if (File::exists($assetsSource)) {
                 File::makeDirectory($assetsDestination, 0755, true, true);
-                
+
                 // Copy all files in assets directory
                 foreach (File::allFiles($assetsSource) as $file) {
                     $relativePath = str_replace($assetsSource.DIRECTORY_SEPARATOR, '', $file->getPathname());
                     $destinationFile = $assetsDestination.DIRECTORY_SEPARATOR.$relativePath;
                     $destinationDir = dirname($destinationFile);
-                    
-                    if (!File::exists($destinationDir)) {
+
+                    if (! File::exists($destinationDir)) {
                         File::makeDirectory($destinationDir, 0755, true);
                     }
-                    
+
                     File::copy($file->getPathname(), $destinationFile);
                 }
             }

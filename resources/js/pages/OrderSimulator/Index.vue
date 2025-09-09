@@ -254,7 +254,7 @@ const getCategoryName = (category: string) => {
                   <select 
                     id="domain-extension"
                     v-model="form.domain_id"
-                    class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
+                    class="flex h-9 w-full rounded-md border border-input bg-background dark:bg-gray-800 px-3 py-1 text-sm shadow-sm transition-colors text-foreground dark:text-white placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
                   >
                     <option :value="null">Pilih Domain</option>
                     <option v-for="domain in domainPrices" :key="domain.id" :value="domain.id">
@@ -287,7 +287,7 @@ const getCategoryName = (category: string) => {
             <CardContent class="space-y-4">
               <select 
                 v-model="form.hosting_id"
-                class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
+                class="flex h-9 w-full rounded-md border border-input bg-background dark:bg-gray-800 px-3 py-1 text-sm shadow-sm transition-colors text-foreground dark:text-white placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
               >
                 <option :value="null">Pilih Hosting</option>
                 <option v-for="hosting in hostingPlans" :key="hosting.id" :value="hosting.id">

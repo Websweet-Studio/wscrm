@@ -1632,7 +1632,7 @@ function showLoginForm()
             </div>
         </div>
         
-        <?php if (!isset($_POST['action'])) { ?>
+        <?php if (! isset($_POST['action'])) { ?>
             <div class="success">
                 <strong>ℹ️ Info:</strong> Hasil action akan muncul di bawah setelah Anda menekan salah satu tombol action di bawah ini.
             </div>

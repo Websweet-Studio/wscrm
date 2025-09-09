@@ -14,11 +14,11 @@ class GenerateRenewalInvoices extends Command
     public function handle(InvoiceGeneratorService $invoiceGenerator): int
     {
         $days = (int) $this->option('days');
-        
+
         $this->info("Generating renewal invoices for services expiring within {$days} days...");
-        
+
         $invoicesGenerated = $invoiceGenerator->generateRenewalInvoices($days);
-        
+
         if ($invoicesGenerated > 0) {
             $this->info("Successfully generated {$invoicesGenerated} renewal invoice(s).");
         } else {

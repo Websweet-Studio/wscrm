@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('service_id')->nullable()->constrained()->onDelete('cascade')->after('order_id');
             $table->date('issue_date')->default(now())->after('amount');
             $table->string('billing_cycle')->default('monthly')->after('due_date');
-            
+
             // Update status enum to include 'pending'
             $table->enum('status', ['draft', 'pending', 'sent', 'paid', 'overdue', 'cancelled'])->default('pending')->change();
         });
@@ -29,7 +29,7 @@ return new class extends Migration
     {
         Schema::table('invoices', function (Blueprint $table) {
             $table->dropColumn(['invoice_type', 'service_id', 'issue_date', 'billing_cycle']);
-            
+
             // Revert status enum
             $table->enum('status', ['draft', 'sent', 'paid', 'overdue', 'cancelled'])->default('draft')->change();
         });
