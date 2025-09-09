@@ -27,7 +27,7 @@ class ServicePlanController extends Controller
 
         $categories = [
             'web_package' => 'Paket Website',
-            'addon' => 'Add-on Services',
+            'addon' => 'Layanan Add-on',
             'license' => 'Lisensi Premium',
             'custom_system' => 'Custom System',
         ];
@@ -66,7 +66,7 @@ class ServicePlanController extends Controller
             'is_active' => $request->is_active ?? true,
         ]);
 
-        return redirect()->back()->with('success', 'Service plan created successfully!');
+        return redirect()->back()->with('success', 'Paket layanan berhasil dibuat!');
     }
 
     public function update(Request $request, ServicePlan $servicePlan)
@@ -89,13 +89,13 @@ class ServicePlanController extends Controller
             'is_active' => $request->is_active ?? true,
         ]);
 
-        return redirect()->back()->with('success', 'Service plan updated successfully!');
+        return redirect()->back()->with('success', 'Paket layanan berhasil diperbarui!');
     }
 
     public function destroy(ServicePlan $servicePlan)
     {
         $servicePlan->delete();
 
-        return redirect()->back()->with('success', 'Service plan deleted successfully!');
+        return redirect()->back()->with('success', 'Paket layanan berhasil dihapus!');
     }
 }

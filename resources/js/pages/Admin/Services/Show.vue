@@ -49,7 +49,7 @@ const props = defineProps<Props>();
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard', href: '/dashboard' },
-  { title: 'Services', href: '/admin/services' },
+  { title: 'Layanan', href: '/admin/services' },
   { title: props.service.domain_name, href: `/admin/services/${props.service.id}` },
 ];
 
@@ -73,6 +73,24 @@ const getStatusClass = (status: string) => {
   }
 };
 
+const getStatusText = (status: string) => {
+  switch (status) {
+    case 'active': return 'Aktif';
+    case 'pending': return 'Menunggu';
+    case 'suspended': return 'Ditangguhkan';
+    case 'terminated': return 'Dihentikan';
+    default: return status;
+  }
+};
+
+const getServiceTypeText = (serviceType: string) => {
+  switch (serviceType) {
+    case 'hosting': return 'Hosting';
+    case 'domain': return 'Domain';
+    default: return serviceType;
+  }
+};
+
 const isExpiringSoon = (expiresAt: string) => {
   const expiryDate = new Date(expiresAt);
   const thirtyDaysFromNow = new Date();
@@ -90,18 +108,18 @@ const daysUntilExpiry = () => {
 </script>
 
 <template>
-  <Head :title="`Service - ${service.domain_name}`" />
+  <Head :title="`Layanan - ${service.domain_name}`" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="space-y-6 p-6">
       <div class="flex items-center justify-between">
         <div>
           <h1 class="text-3xl font-bold tracking-tight">{{ service.domain_name }}</h1>
-          <p class="text-muted-foreground">Service details and information</p>
+          <p class="text-muted-foreground">Detail dan informasi layanan</p>
         </div>
         <Button variant="outline" asChild>
           <Link href="/admin/services">
-            Back to Services
+            Kembali ke Layanan
           </Link>
         </Button>
       </div>
@@ -113,7 +131,7 @@ const daysUntilExpiry = () => {
           <CardHeader>
             <CardTitle class="flex items-center gap-2">
               <component :is="service.service_type === 'hosting' ? Server : Globe" class="h-5 w-5" />
-              Service Information
+              Informasi Layanan
             </CardTitle>
           </CardHeader>
           <CardContent class="space-y-4">
@@ -121,19 +139,19 @@ const daysUntilExpiry = () => {
               <span class="text-sm font-medium">Status</span>
               <div class="flex items-center gap-2">
                 <Badge :class="getStatusClass(service.status)">
-                  {{ service.status }}
+                  {{ getStatusText(service.status) }}
                 </Badge>
                 <Badge v-if="isExpiringSoon(service.expires_at) && service.status === 'active'" class="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
-                  Expiring Soon
+                  Segera Berakhir
                 </Badge>
               </div>
             </div>
             
             <div class="space-y-3">
               <div class="flex items-center justify-between">
-                <span class="text-sm text-muted-foreground">Service Type</span>
+                <span class="text-sm text-muted-foreground">Tipe Layanan</span>
                 <Badge :class="service.service_type === 'hosting' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'">
-                  {{ service.service_type }}
+                  {{ getServiceTypeText(service.service_type) }}
                 </Badge>
               </div>
               
@@ -143,29 +161,29 @@ const daysUntilExpiry = () => {
               </div>
               
               <div class="flex items-center justify-between">
-                <span class="text-sm text-muted-foreground">Auto Renew</span>
+                <span class="text-sm text-muted-foreground">Perpanjang Otomatis</span>
                 <Badge :variant="service.auto_renew ? 'default' : 'secondary'">
-                  {{ service.auto_renew ? 'Enabled' : 'Disabled' }}
+                  {{ service.auto_renew ? 'Aktif' : 'Nonaktif' }}
                 </Badge>
               </div>
               
               <div class="flex items-center justify-between">
-                <span class="text-sm text-muted-foreground">Expires</span>
+                <span class="text-sm text-muted-foreground">Berakhir</span>
                 <div class="text-right">
                   <div class="text-sm font-medium">{{ formatDate(service.expires_at) }}</div>
                   <div class="text-xs text-muted-foreground">
-                    {{ daysUntilExpiry() > 0 ? `${daysUntilExpiry()} days left` : 'Expired' }}
+                    {{ daysUntilExpiry() > 0 ? `${daysUntilExpiry()} hari lagi` : 'Kedaluwarsa' }}
                   </div>
                 </div>
               </div>
               
               <div class="flex items-center justify-between">
-                <span class="text-sm text-muted-foreground">Created</span>
+                <span class="text-sm text-muted-foreground">Dibuat</span>
                 <span class="text-sm">{{ formatDate(service.created_at) }}</span>
               </div>
               
               <div class="flex items-center justify-between">
-                <span class="text-sm text-muted-foreground">Last Updated</span>
+                <span class="text-sm text-muted-foreground">Terakhir Diperbarui</span>
                 <span class="text-sm">{{ formatDate(service.updated_at) }}</span>
               </div>
             </div>
@@ -177,14 +195,14 @@ const daysUntilExpiry = () => {
           <CardHeader>
             <CardTitle class="flex items-center gap-2">
               <Mail class="h-5 w-5" />
-              Customer Information
+              Informasi Pelanggan
             </CardTitle>
           </CardHeader>
           <CardContent class="space-y-4">
             <div class="space-y-3">
               <div>
                 <span class="text-sm font-medium">{{ service.customer.name }}</span>
-                <div class="text-sm text-muted-foreground">Customer ID: #{{ service.customer.id }}</div>
+                <div class="text-sm text-muted-foreground">ID Pelanggan: #{{ service.customer.id }}</div>
               </div>
               
               <div class="flex items-center gap-3">
@@ -211,7 +229,7 @@ const daysUntilExpiry = () => {
             <div class="pt-3 border-t">
               <Button size="sm" variant="outline" asChild>
                 <Link :href="`/admin/customers/${service.customer.id}`">
-                  View Customer Details
+                  Lihat Detail Pelanggan
                 </Link>
               </Button>
             </div>
@@ -224,19 +242,19 @@ const daysUntilExpiry = () => {
         <CardHeader>
           <CardTitle class="flex items-center gap-2">
             <Server class="h-5 w-5" />
-            Hosting Plan Details
+            Detail Paket Hosting
           </CardTitle>
-          <CardDescription>Technical specifications and features</CardDescription>
+          <CardDescription>Spesifikasi teknis dan fitur</CardDescription>
         </CardHeader>
         <CardContent>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div class="text-center">
               <div class="text-2xl font-bold text-blue-600">{{ service.hosting_plan.storage_gb }}GB</div>
-              <div class="text-sm text-muted-foreground">Storage</div>
+              <div class="text-sm text-muted-foreground">Penyimpanan</div>
             </div>
             <div class="text-center">
               <div class="text-2xl font-bold text-green-600">{{ service.hosting_plan.cpu_cores }}</div>
-              <div class="text-sm text-muted-foreground">CPU Cores</div>
+              <div class="text-sm text-muted-foreground">CPU Core</div>
             </div>
             <div class="text-center">
               <div class="text-2xl font-bold text-orange-600">{{ service.hosting_plan.ram_gb }}GB</div>
@@ -249,7 +267,7 @@ const daysUntilExpiry = () => {
           </div>
           
           <div v-if="service.hosting_plan.features && service.hosting_plan.features.length > 0" class="mt-6">
-            <h4 class="text-sm font-medium mb-3">Plan Features</h4>
+            <h4 class="text-sm font-medium mb-3">Fitur Paket</h4>
             <div class="grid grid-cols-2 gap-2">
               <div v-for="feature in service.hosting_plan.features" :key="feature" class="text-sm text-muted-foreground">
                 • {{ feature }}
@@ -264,7 +282,7 @@ const daysUntilExpiry = () => {
         <CardHeader>
           <CardTitle class="flex items-center gap-2">
             <Settings class="h-5 w-5" />
-            Additional Information
+            Informasi Tambahan
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -280,26 +298,26 @@ const daysUntilExpiry = () => {
       <!-- Quick Actions -->
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Common service management tasks</CardDescription>
+          <CardTitle>Tindakan Cepat</CardTitle>
+          <CardDescription>Tugas manajemen layanan umum</CardDescription>
         </CardHeader>
         <CardContent>
           <div class="flex flex-wrap gap-3">
             <Button v-if="service.status === 'active'" variant="outline" size="sm">
               <Clock class="h-4 w-4 mr-2" />
-              Suspend Service
+              Tangguhkan Layanan
             </Button>
             <Button v-if="service.status === 'suspended'" variant="outline" size="sm">
               <Settings class="h-4 w-4 mr-2" />
-              Reactivate Service
+              Aktifkan Kembali Layanan
             </Button>
             <Button variant="outline" size="sm">
               <Calendar class="h-4 w-4 mr-2" />
-              Extend Expiry
+              Perpanjang Masa Berlaku
             </Button>
             <Button variant="outline" size="sm">
               <Settings class="h-4 w-4 mr-2" />
-              {{ service.auto_renew ? 'Disable' : 'Enable' }} Auto Renew
+              {{ service.auto_renew ? 'Nonaktifkan' : 'Aktifkan' }} Perpanjang Otomatis
             </Button>
           </div>
         </CardContent>

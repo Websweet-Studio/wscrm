@@ -61,7 +61,9 @@ const statusFilter = ref(props.filters?.status || '');
 const serviceTypeFilter = ref(props.filters?.service_type || '');
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
+const showDeleteModal = ref(false);
 const selectedService = ref<Service | null>(null);
+const serviceToDelete = ref<Service | null>(null);
 
 const createForm = useForm({
   customer_id: '',
@@ -80,7 +82,7 @@ const editForm = useForm({
 });
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Services', href: '/admin/services' },
+  { title: 'Layanan', href: '/admin/services' },
 ];
 
 const formatDate = (dateString: string) => {
@@ -98,6 +100,24 @@ const getStatusColor = (status: string) => {
     case 'suspended': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
     case 'terminated': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
     default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+  }
+};
+
+const getStatusText = (status: string) => {
+  switch (status) {
+    case 'active': return 'Aktif';
+    case 'pending': return 'Menunggu';
+    case 'suspended': return 'Ditangguhkan';
+    case 'terminated': return 'Dihentikan';
+    default: return status;
+  }
+};
+
+const getServiceTypeText = (serviceType: string) => {
+  switch (serviceType) {
+    case 'hosting': return 'Hosting';
+    case 'domain': return 'Domain';
+    default: return serviceType;
   }
 };
 
@@ -154,33 +174,47 @@ const submitEdit = () => {
   });
 };
 
-const deleteService = (service: Service) => {
-  if (confirm(`Are you sure you want to delete service for ${service.domain_name}?`)) {
-    router.delete(`/admin/services/${service.id}`);
-  }
+const openDeleteModal = (service: Service) => {
+  serviceToDelete.value = service;
+  showDeleteModal.value = true;
+};
+
+const confirmDelete = () => {
+  if (!serviceToDelete.value) return;
+  
+  router.delete(`/admin/services/${serviceToDelete.value.id}`, {
+    preserveScroll: true,
+    onSuccess: () => {
+      showDeleteModal.value = false;
+      serviceToDelete.value = null;
+    },
+    onError: (errors) => {
+      console.error('Delete service error:', errors);
+    },
+  });
 };
 </script>
 
 <template>
-  <Head title="Admin - Services" />
+  <Head title="Admin - Kelola Layanan" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="space-y-6 p-6">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-3xl font-bold tracking-tight">Service Management</h1>
-          <p class="text-muted-foreground">Manage customer hosting and domain services</p>
+          <h1 class="text-3xl font-bold tracking-tight">Kelola Layanan</h1>
+          <p class="text-muted-foreground">Kelola layanan hosting dan domain pelanggan</p>
         </div>
         <Button @click="showCreateModal = true">
           <Plus class="h-4 w-4 mr-2" />
-          Add Service
+          Tambah Layanan
         </Button>
       </div>
 
       <div class="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle class="text-sm font-medium">Total Services</CardTitle>
+            <CardTitle class="text-sm font-medium">Total Layanan</CardTitle>
           </CardHeader>
           <CardContent>
             <div class="text-2xl font-bold">{{ services.total }}</div>
@@ -189,7 +223,7 @@ const deleteService = (service: Service) => {
 
         <Card>
           <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle class="text-sm font-medium">Active</CardTitle>
+            <CardTitle class="text-sm font-medium">Aktif</CardTitle>
           </CardHeader>
           <CardContent>
             <div class="text-2xl font-bold text-green-600">
@@ -200,7 +234,7 @@ const deleteService = (service: Service) => {
 
         <Card>
           <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle class="text-sm font-medium">Suspended</CardTitle>
+            <CardTitle class="text-sm font-medium">Ditangguhkan</CardTitle>
           </CardHeader>
           <CardContent>
             <div class="text-2xl font-bold text-orange-600">
@@ -211,11 +245,11 @@ const deleteService = (service: Service) => {
 
         <Card>
           <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle class="text-sm font-medium">Expiring Soon</CardTitle>
+            <CardTitle class="text-sm font-medium">Segera Berakhir</CardTitle>
           </CardHeader>
           <CardContent>
             <div class="text-2xl font-bold text-red-600">{{ expiringSoon }}</div>
-            <div class="text-xs text-muted-foreground">Next 30 days</div>
+            <div class="text-xs text-muted-foreground">30 hari ke depan</div>
           </CardContent>
         </Card>
 
@@ -233,8 +267,8 @@ const deleteService = (service: Service) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>All Services</CardTitle>
-          <CardDescription>Complete list of customer services</CardDescription>
+          <CardTitle>Semua Layanan</CardTitle>
+          <CardDescription>Daftar lengkap layanan pelanggan</CardDescription>
         </CardHeader>
         <CardContent>
           <!-- Search and Filter -->
@@ -243,7 +277,7 @@ const deleteService = (service: Service) => {
               <Search class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 v-model="search"
-                placeholder="Search services..."
+                placeholder="Cari layanan..."
                 class="pl-8"
                 @keyup.enter="handleSearch"
               />
@@ -252,26 +286,26 @@ const deleteService = (service: Service) => {
               v-model="statusFilter" 
               class="flex h-9 w-[180px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="pending">Pending</option>
-              <option value="suspended">Suspended</option>
-              <option value="terminated">Terminated</option>
+              <option value="">Semua Status</option>
+              <option value="active">Aktif</option>
+              <option value="pending">Menunggu</option>
+              <option value="suspended">Ditangguhkan</option>
+              <option value="terminated">Dihentikan</option>
             </select>
             <select 
               v-model="serviceTypeFilter" 
               class="flex h-9 w-[180px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
-              <option value="">All Types</option>
+              <option value="">Semua Tipe</option>
               <option value="hosting">Hosting</option>
               <option value="domain">Domain</option>
             </select>
-            <Button @click="handleSearch">Search</Button>
+            <Button @click="handleSearch">Cari</Button>
           </div>
 
           <div class="space-y-4">
             <div v-if="services.data.length === 0" class="text-center py-8 text-muted-foreground">
-              No services found.
+              Layanan tidak ditemukan.
             </div>
             
             <div v-else class="space-y-4">
@@ -288,32 +322,32 @@ const deleteService = (service: Service) => {
                         ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
                         : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
                     }`">
-                      {{ service.service_type }}
+                      {{ getServiceTypeText(service.service_type) }}
                     </span>
                     <Badge :class="getStatusColor(service.status)">
-                      {{ service.status }}
+                      {{ getStatusText(service.status) }}
                     </Badge>
                     <span v-if="isExpiringSoon(service.expires_at) && service.status === 'active'" 
                           class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
-                      Expiring Soon
+                      Segera Berakhir
                     </span>
                   </div>
                   <div class="text-sm text-muted-foreground space-y-1">
-                    <div><strong>Customer:</strong> {{ service.customer.name }} ({{ service.customer.email }})</div>
+                    <div><strong>Pelanggan:</strong> {{ service.customer.name }} ({{ service.customer.email }})</div>
                     <div v-if="service.hosting_plan">
-                      <strong>Plan:</strong> {{ service.hosting_plan.plan_name }} 
+                      <strong>Paket:</strong> {{ service.hosting_plan.plan_name }} 
                       ({{ service.hosting_plan.storage_gb }}GB, {{ service.hosting_plan.cpu_cores }} CPU, {{ service.hosting_plan.ram_gb }}GB RAM)
                     </div>
-                    <div><strong>Created:</strong> {{ formatDate(service.created_at) }}</div>
-                    <div><strong>Expires:</strong> {{ formatDate(service.expires_at) }}</div>
-                    <div><strong>Auto Renew:</strong> {{ service.auto_renew ? 'Yes' : 'No' }}</div>
+                    <div><strong>Dibuat:</strong> {{ formatDate(service.created_at) }}</div>
+                    <div><strong>Berakhir:</strong> {{ formatDate(service.expires_at) }}</div>
+                    <div><strong>Perpanjang Otomatis:</strong> {{ service.auto_renew ? 'Ya' : 'Tidak' }}</div>
                   </div>
                 </div>
 
                 <div class="flex items-center gap-2">
                   <Button variant="outline" size="sm" asChild>
                     <Link :href="`/admin/services/${service.id}`">
-                      View Details
+                      Lihat Detail
                     </Link>
                   </Button>
                   <Button size="sm" variant="outline" @click="openEditModal(service)">
@@ -322,7 +356,7 @@ const deleteService = (service: Service) => {
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    @click="deleteService(service)"
+                    @click="openDeleteModal(service)"
                     :disabled="service.status === 'active'"
                   >
                     <Trash2 class="h-3 w-3" />
@@ -372,8 +406,8 @@ const deleteService = (service: Service) => {
         <!-- Header -->
         <div class="flex items-center justify-between mb-4">
           <div>
-            <h2 class="text-lg font-semibold">Add New Service</h2>
-            <p class="text-sm text-muted-foreground">Create a new hosting or domain service for a customer</p>
+            <h2 class="text-lg font-semibold">Tambah Layanan Baru</h2>
+            <p class="text-sm text-muted-foreground">Buat layanan hosting atau domain baru untuk pelanggan</p>
           </div>
           <button @click="showCreateModal = false" class="text-gray-500 hover:text-gray-700">
             <X class="h-4 w-4" />
@@ -382,14 +416,14 @@ const deleteService = (service: Service) => {
         <form @submit.prevent="submitCreate" class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <Label for="create-customer">Customer *</Label>
+              <Label for="create-customer">Pelanggan *</Label>
               <select 
                 id="create-customer"
                 v-model="createForm.customer_id"
                 class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 required
               >
-                <option value="">Select Customer</option>
+                <option value="">Pilih Pelanggan</option>
                 <option v-for="customer in customers" :key="customer.id" :value="customer.id">
                   {{ customer.name }} ({{ customer.email }})
                 </option>
@@ -397,7 +431,7 @@ const deleteService = (service: Service) => {
               <p v-if="createForm.errors.customer_id" class="text-xs text-red-500 mt-1">{{ createForm.errors.customer_id }}</p>
             </div>
             <div>
-              <Label for="create-service-type">Service Type *</Label>
+              <Label for="create-service-type">Tipe Layanan *</Label>
               <select 
                 id="create-service-type"
                 v-model="createForm.service_type"
@@ -412,14 +446,14 @@ const deleteService = (service: Service) => {
           </div>
 
           <div v-if="createForm.service_type === 'hosting'">
-            <Label for="create-plan">Hosting Plan *</Label>
+            <Label for="create-plan">Paket Hosting *</Label>
             <select 
               id="create-plan"
               v-model="createForm.plan_id"
               class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               required
             >
-              <option value="">Select Hosting Plan</option>
+              <option value="">Pilih Paket Hosting</option>
               <option v-for="plan in hostingPlans" :key="plan.id" :value="plan.id">
                 {{ plan.plan_name }} ({{ plan.storage_gb }}GB, {{ plan.cpu_cores }} CPU, {{ plan.ram_gb }}GB RAM)
               </option>
@@ -428,7 +462,7 @@ const deleteService = (service: Service) => {
           </div>
 
           <div>
-            <Label for="create-domain">Domain Name *</Label>
+            <Label for="create-domain">Nama Domain *</Label>
             <Input
               id="create-domain"
               v-model="createForm.domain_name"
@@ -440,7 +474,7 @@ const deleteService = (service: Service) => {
           </div>
 
           <div>
-            <Label for="create-expires">Expires At *</Label>
+            <Label for="create-expires">Berakhir Pada *</Label>
             <Input
               id="create-expires"
               type="date"
@@ -458,16 +492,16 @@ const deleteService = (service: Service) => {
               v-model="createForm.auto_renew"
               class="rounded border border-input"
             />
-            <Label for="create-auto-renew">Auto Renew</Label>
+            <Label for="create-auto-renew">Perpanjang Otomatis</Label>
           </div>
 
           <!-- Footer -->
           <div class="flex justify-end gap-2 mt-6">
             <Button type="button" variant="outline" @click="showCreateModal = false">
-              Cancel
+              Batal
             </Button>
             <Button type="submit" :disabled="createForm.processing">
-              {{ createForm.processing ? 'Creating...' : 'Create Service' }}
+              {{ createForm.processing ? 'Membuat...' : 'Buat Layanan' }}
             </Button>
           </div>
         </form>
@@ -484,8 +518,8 @@ const deleteService = (service: Service) => {
         <!-- Header -->
         <div class="flex items-center justify-between mb-4">
           <div>
-            <h2 class="text-lg font-semibold">Edit Service</h2>
-            <p class="text-sm text-muted-foreground">Update service configuration and settings</p>
+            <h2 class="text-lg font-semibold">Edit Layanan</h2>
+            <p class="text-sm text-muted-foreground">Perbarui konfigurasi dan pengaturan layanan</p>
           </div>
           <button @click="showEditModal = false" class="text-gray-500 hover:text-gray-700">
             <X class="h-4 w-4" />
@@ -493,7 +527,7 @@ const deleteService = (service: Service) => {
         </div>
         <form @submit.prevent="submitEdit" class="space-y-4">
           <div>
-            <Label for="edit-domain">Domain Name *</Label>
+            <Label for="edit-domain">Nama Domain *</Label>
             <Input
               id="edit-domain"
               v-model="editForm.domain_name"
@@ -512,16 +546,16 @@ const deleteService = (service: Service) => {
               class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               required
             >
-              <option value="active">Active</option>
-              <option value="pending">Pending</option>
-              <option value="suspended">Suspended</option>
-              <option value="terminated">Terminated</option>
+              <option value="active">Aktif</option>
+              <option value="pending">Menunggu</option>
+              <option value="suspended">Ditangguhkan</option>
+              <option value="terminated">Dihentikan</option>
             </select>
             <p v-if="editForm.errors.status" class="text-xs text-red-500 mt-1">{{ editForm.errors.status }}</p>
           </div>
 
           <div>
-            <Label for="edit-expires">Expires At *</Label>
+            <Label for="edit-expires">Berakhir Pada *</Label>
             <Input
               id="edit-expires"
               type="date"
@@ -539,19 +573,86 @@ const deleteService = (service: Service) => {
               v-model="editForm.auto_renew"
               class="rounded border border-input"
             />
-            <Label for="edit-auto-renew">Auto Renew</Label>
+            <Label for="edit-auto-renew">Perpanjang Otomatis</Label>
           </div>
 
           <!-- Footer -->
           <div class="flex justify-end gap-2 mt-6">
             <Button type="button" variant="outline" @click="showEditModal = false">
-              Cancel
+              Batal
             </Button>
             <Button type="submit" :disabled="editForm.processing">
-              {{ editForm.processing ? 'Updating...' : 'Update Service' }}
+              {{ editForm.processing ? 'Memperbarui...' : 'Perbarui Layanan' }}
             </Button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Delete Service Modal -->
+    <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center">
+      <!-- Overlay -->
+      <div class="fixed inset-0 bg-black/50" @click="showDeleteModal = false"></div>
+      
+      <!-- Modal Content -->
+      <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-red-600">Konfirmasi Penghapusan</h2>
+          <button @click="showDeleteModal = false" class="text-gray-500 hover:text-gray-700">
+            <X class="h-4 w-4" />
+          </button>
+        </div>
+        
+        <div class="space-y-4">
+          <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+            <div class="flex items-start space-x-3">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
+                  Peringatan: Tindakan ini tidak dapat dibatalkan
+                </h3>
+                <div class="mt-2 text-sm text-red-700 dark:text-red-300">
+                  <p>Anda akan menghapus secara permanen layanan <strong>{{ serviceToDelete?.domain_name }}</strong>.</p>
+                  <div class="mt-3 space-y-1">
+                    <p><strong>Ini juga akan menghapus:</strong></p>
+                    <ul class="list-disc list-inside space-y-1 ml-2">
+                      <li>Semua konfigurasi layanan</li>
+                      <li>Semua data terkait secara permanen</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+              <strong>Layanan:</strong> {{ serviceToDelete?.domain_name }}<br>
+              <strong>Tipe:</strong> {{ serviceToDelete ? getServiceTypeText(serviceToDelete.service_type) : '' }}<br>
+              <strong>Pelanggan:</strong> {{ serviceToDelete?.customer?.name }}<br>
+              <strong>Status:</strong> {{ serviceToDelete ? getStatusText(serviceToDelete.status) : '' }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex justify-end gap-2 mt-6">
+          <Button type="button" variant="outline" @click="showDeleteModal = false">
+            Batal
+          </Button>
+          <Button 
+            type="button" 
+            class="bg-red-600 hover:bg-red-700 text-white" 
+            @click="confirmDelete"
+          >
+            Ya, Hapus Layanan
+          </Button>
+        </div>
       </div>
     </div>
   </AppLayout>

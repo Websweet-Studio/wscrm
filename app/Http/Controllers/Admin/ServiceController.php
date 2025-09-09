@@ -76,7 +76,7 @@ class ServiceController extends Controller
             'auto_renew' => $request->auto_renew ?? false,
         ]);
 
-        return redirect()->back()->with('success', 'Service created successfully!');
+        return redirect()->back()->with('success', 'Layanan berhasil dibuat!');
     }
 
     public function update(Request $request, Service $service)
@@ -90,17 +90,17 @@ class ServiceController extends Controller
 
         $service->update($request->only(['status', 'expires_at', 'auto_renew', 'domain_name']));
 
-        return redirect()->back()->with('success', 'Service updated successfully!');
+        return redirect()->back()->with('success', 'Layanan berhasil diperbarui!');
     }
 
     public function destroy(Service $service)
     {
         if ($service->status === 'active') {
-            return redirect()->back()->with('error', 'Cannot delete active services. Please suspend or terminate first.');
+            return redirect()->back()->with('error', 'Tidak dapat menghapus layanan aktif. Mohon tangguhkan atau hentikan terlebih dahulu.');
         }
 
         $service->delete();
 
-        return redirect()->back()->with('success', 'Service deleted successfully!');
+        return redirect()->back()->with('success', 'Layanan berhasil dihapus!');
     }
 }
