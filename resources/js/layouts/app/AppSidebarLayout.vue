@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import AppContent from '@/components/AppContent.vue';
-import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
-import type { BreadcrumbItemType } from '@/types';
 import { useSidebar } from '@/composables/useSidebar';
+import type { BreadcrumbItemType } from '@/types';
 
 interface Props {
     breadcrumbs?: BreadcrumbItemType[];
@@ -20,12 +18,7 @@ const { isMinimized } = useSidebar();
 <template>
     <div class="flex min-h-screen">
         <AppSidebar />
-        <div 
-            :class="[
-                'flex-1 flex flex-col transition-all duration-300',
-                isMinimized ? 'ml-16' : 'ml-64'
-            ]"
-        >
+        <div :class="['flex flex-1 flex-col transition-all duration-300', isMinimized ? 'ml-16' : 'ml-64']">
             <AppSidebarHeader :breadcrumbs="breadcrumbs" />
             <main class="flex-1 p-6">
                 <slot />

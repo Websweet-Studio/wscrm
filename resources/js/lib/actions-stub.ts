@@ -6,8 +6,8 @@ export default {
         form: () => ({
             action: '/password/email',
             method: 'post',
-        })
-    }
+        }),
+    },
 };
 
 // Export for different controller imports
@@ -16,8 +16,8 @@ export const PasswordResetLinkController = {
         form: () => ({
             action: '/password/email',
             method: 'post',
-        })
-    }
+        }),
+    },
 };
 
 export const LoginController = {
@@ -25,8 +25,8 @@ export const LoginController = {
         form: () => ({
             action: '/login',
             method: 'post',
-        })
-    }
+        }),
+    },
 };
 
 export const RegisterController = {
@@ -34,8 +34,8 @@ export const RegisterController = {
         form: () => ({
             action: '/register',
             method: 'post',
-        })
-    }
+        }),
+    },
 };
 
 export const NewPasswordController = {
@@ -43,8 +43,8 @@ export const NewPasswordController = {
         form: () => ({
             action: '/reset-password',
             method: 'post',
-        })
-    }
+        }),
+    },
 };
 
 export const EmailVerificationController = {
@@ -52,8 +52,8 @@ export const EmailVerificationController = {
         form: () => ({
             action: '/email/verification-notification',
             method: 'post',
-        })
-    }
+        }),
+    },
 };
 
 export const PasswordController = {
@@ -61,8 +61,8 @@ export const PasswordController = {
         form: () => ({
             action: '/password',
             method: 'put',
-        })
-    }
+        }),
+    },
 };
 
 export const ProfileUpdateController = {
@@ -70,8 +70,8 @@ export const ProfileUpdateController = {
         form: () => ({
             action: '/profile',
             method: 'patch',
-        })
-    }
+        }),
+    },
 };
 
 export const UserController = {
@@ -79,8 +79,8 @@ export const UserController = {
         form: () => ({
             action: '/profile',
             method: 'delete',
-        })
-    }
+        }),
+    },
 };
 
 export const ConfirmPasswordController = {
@@ -88,6 +88,6 @@ export const ConfirmPasswordController = {
         form: () => ({
             action: '/confirm-password',
             method: 'post',
-        })
-    }
+        }),
+    },
 };

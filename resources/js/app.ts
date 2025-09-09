@@ -1,11 +1,11 @@
 import '../css/app.css';
 
 import { createInertiaApp, router } from '@inertiajs/vue3';
+import axios from 'axios';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import { initializeTheme } from './composables/useAppearance';
-import axios from 'axios';
 
 // Setup CSRF token for axios
 const token = document.head.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
@@ -24,10 +24,10 @@ axios.interceptors.response.use(
             window.location.reload();
         }
         return Promise.reject(error);
-    }
+    },
 );
 
-// Setup Inertia router interceptor for 419 errors  
+// Setup Inertia router interceptor for 419 errors
 router.on('error', (event) => {
     if (event.detail.response?.status === 419) {
         console.warn('CSRF token expired in Inertia request. Reloading page...');

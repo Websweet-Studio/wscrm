@@ -1,100 +1,100 @@
-import { ref, reactive } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { reactive, ref } from 'vue';
 
 interface AvailabilityResult {
-  success: boolean
-  available: boolean
-  domain: string
-  status: string
-  loading?: boolean
-  error?: string
+    success: boolean;
+    available: boolean;
+    domain: string;
+    status: string;
+    loading?: boolean;
+    error?: string;
 }
 
 export function useDomainAvailability() {
-  const loading = ref(false)
-  const results = reactive<Record<string, AvailabilityResult>>({})
+    const loading = ref(false);
+    const results = reactive<Record<string, AvailabilityResult>>({});
 
-  const checkDomainAvailability = async (domain: string): Promise<AvailabilityResult> => {
-    if (results[domain]) {
-      return results[domain]
-    }
+    const checkDomainAvailability = async (domain: string): Promise<AvailabilityResult> => {
+        if (results[domain]) {
+            return results[domain];
+        }
 
-    // Set loading state
-    results[domain] = {
-      success: false,
-      available: false,
-      domain,
-      status: 'checking',
-      loading: true
-    }
+        // Set loading state
+        results[domain] = {
+            success: false,
+            available: false,
+            domain,
+            status: 'checking',
+            loading: true,
+        };
 
-    try {
-      const response = await fetch('/api/domains/availability', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-        },
-        body: JSON.stringify({ domain })
-      })
+        try {
+            const response = await fetch('/api/domains/availability', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({ domain }),
+            });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
-      }
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
 
-      const data = await response.json()
-      
-      results[domain] = {
-        ...data,
-        loading: false
-      }
+            const data = await response.json();
 
-      return results[domain]
-      
-    } catch (error) {
-      const errorResult: AvailabilityResult = {
-        success: false,
-        available: false,
-        domain,
-        status: 'error',
-        loading: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }
-      
-      results[domain] = errorResult
-      return errorResult
-    }
-  }
+            results[domain] = {
+                ...data,
+                loading: false,
+            };
 
-  const checkMultipleDomains = async (domains: string[]): Promise<Record<string, AvailabilityResult>> => {
-    loading.value = true
-    
-    try {
-      const promises = domains.map(domain => checkDomainAvailability(domain))
-      await Promise.all(promises)
-    } finally {
-      loading.value = false
-    }
+            return results[domain];
+        } catch (error) {
+            const errorResult: AvailabilityResult = {
+                success: false,
+                available: false,
+                domain,
+                status: 'error',
+                loading: false,
+                error: error instanceof Error ? error.message : 'Unknown error',
+            };
 
-    return results
-  }
+            results[domain] = errorResult;
+            return errorResult;
+        }
+    };
 
-  const getDomainStatus = (domain: string) => {
-    return results[domain] || {
-      success: false,
-      available: false,
-      domain,
-      status: 'unknown',
-      loading: false
-    }
-  }
+    const checkMultipleDomains = async (domains: string[]): Promise<Record<string, AvailabilityResult>> => {
+        loading.value = true;
 
-  return {
-    loading,
-    results,
-    checkDomainAvailability,
-    checkMultipleDomains,
-    getDomainStatus
-  }
+        try {
+            const promises = domains.map((domain) => checkDomainAvailability(domain));
+            await Promise.all(promises);
+        } finally {
+            loading.value = false;
+        }
+
+        return results;
+    };
+
+    const getDomainStatus = (domain: string) => {
+        return (
+            results[domain] || {
+                success: false,
+                available: false,
+                domain,
+                status: 'unknown',
+                loading: false,
+            }
+        );
+    };
+
+    return {
+        loading,
+        results,
+        checkDomainAvailability,
+        checkMultipleDomains,
+        getDomainStatus,
+    };
 }

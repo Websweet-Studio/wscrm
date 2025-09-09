@@ -161,12 +161,12 @@
     * {
         @apply border-border outline-ring/50;
     }
-    
+
     html {
         height: 100%;
         overflow-x: hidden;
     }
-    
+
     body {
         @apply bg-background text-foreground antialiased;
         height: 100%;
@@ -174,13 +174,13 @@
         overflow-x: hidden;
         position: relative;
     }
-    
+
     /* Prevent body from becoming too tall due to modal positioning */
-    body:has([data-slot="dialog-content"]) {
+    body:has([data-slot='dialog-content']) {
         overflow: hidden;
         height: 100vh;
     }
-    
+
     /* Force custom modal styling to override any Dialog component CSS */
     .service-modal-content {
         position: relative !important;
@@ -202,7 +202,7 @@
         bottom: auto !important;
         display: block !important;
     }
-    
+
     .dark .service-modal-content {
         background: rgb(17 24 39) !important;
     }
@@ -215,65 +215,67 @@
         @apply transition-all duration-200 ease-in-out;
         @apply focus:scale-[1.02] focus:shadow-lg focus:shadow-primary/10;
     }
-    
+
     /* Enhanced button hover effects */
     .auth-button {
         @apply transition-all duration-300 ease-out;
         @apply hover:shadow-lg hover:shadow-primary/20;
         @apply active:scale-95;
     }
-    
+
     /* Card entrance animation */
     .auth-card {
         animation: slideInUp 0.6s ease-out forwards;
     }
-    
+
     /* Logo hover effect */
     .auth-logo:hover {
         @apply drop-shadow-lg;
         filter: drop-shadow(0 10px 20px rgb(0 0 0 / 0.1));
     }
-    
+
     /* Form section dividers with subtle animation */
     .form-section-divider {
         @apply relative;
     }
-    
+
     .form-section-divider::after {
         content: '';
-        @apply absolute left-0 bottom-0 h-px bg-gradient-to-r from-primary/20 to-transparent;
+        @apply absolute bottom-0 left-0 h-px bg-gradient-to-r from-primary/20 to-transparent;
         width: 0;
         transition: width 0.4s ease-in-out;
     }
-    
+
     .form-section-divider:hover::after {
         width: 100%;
     }
-    
+
     /* Loading spinner enhancement */
     .loading-spinner {
-        animation: spin 1s linear infinite, pulse 2s ease-in-out infinite;
+        animation:
+            spin 1s linear infinite,
+            pulse 2s ease-in-out infinite;
     }
-    
+
     /* Input focus ring enhancement */
     .enhanced-focus {
         @apply focus-visible:ring-4 focus-visible:ring-primary/15;
         @apply focus-visible:border-primary/80;
     }
-    
+
     /* Gradient text effect */
     .gradient-text {
         @apply bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent;
         background-size: 200% auto;
         animation: shine 3s ease-in-out infinite;
     }
-    
+
     /* Section icons with subtle pulse */
     .section-icon {
         @apply transition-all duration-300;
         animation: iconPulse 4s ease-in-out infinite;
     }
-    
+
     .section-icon:hover {
         @apply scale-110 text-primary;
         filter: drop-shadow(0 0 8px rgb(var(--color-primary) / 0.4));
@@ -292,62 +294,65 @@
             transform: translateY(0);
         }
     }
-    
+
     @keyframes shine {
-        0%, 100% {
+        0%,
+        100% {
             background-position: 0% 50%;
         }
         50% {
             background-position: 100% 50%;
         }
     }
-    
+
     @keyframes iconPulse {
-        0%, 100% {
+        0%,
+        100% {
             opacity: 1;
         }
         50% {
             opacity: 0.7;
         }
     }
-    
+
     @keyframes float {
-        0%, 100% {
+        0%,
+        100% {
             transform: translateY(0px);
         }
         50% {
             transform: translateY(-10px);
         }
     }
-    
+
     /* Staggered animation delays for form elements */
     .animate-delay-100 {
         animation-delay: 100ms;
     }
-    
+
     .animate-delay-200 {
         animation-delay: 200ms;
     }
-    
+
     .animate-delay-300 {
         animation-delay: 300ms;
     }
-    
+
     .animate-delay-400 {
         animation-delay: 400ms;
     }
-    
+
     /* Glass morphism effect */
     .glass {
-        @apply backdrop-blur-xl bg-white/10;
-        box-shadow: 
+        @apply bg-white/10 backdrop-blur-xl;
+        box-shadow:
             0 8px 32px 0 rgba(31, 38, 135, 0.37),
             inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
     }
-    
+
     .dark .glass {
         @apply bg-black/20;
-        box-shadow: 
+        box-shadow:
             0 8px 32px 0 rgba(0, 0, 0, 0.37),
             inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
     }

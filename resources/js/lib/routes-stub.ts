@@ -9,39 +9,39 @@ export const profile = () => ({ url: '/profile', method: 'get' });
 export const appearance = () => ({ url: '/settings/appearance', method: 'get' });
 export const password = () => ({ url: '/settings/password', method: 'get' });
 export const verification = {
-    notice: () => ({ url: '/email/verify', method: 'get' })
+    notice: () => ({ url: '/email/verify', method: 'get' }),
 };
 
 // Admin routes
 export const admin = {
     customers: {
         index: () => ({ url: '/admin/customers', method: 'get' }),
-        show: (id: number) => ({ url: `/admin/customers/${id}`, method: 'get' })
+        show: (id: number) => ({ url: `/admin/customers/${id}`, method: 'get' }),
     },
     orders: {
-        index: () => ({ url: '/admin/orders', method: 'get' })
+        index: () => ({ url: '/admin/orders', method: 'get' }),
     },
     services: {
-        index: () => ({ url: '/admin/services', method: 'get' })
+        index: () => ({ url: '/admin/services', method: 'get' }),
     },
     invoices: {
-        index: () => ({ url: '/admin/invoices', method: 'get' })
+        index: () => ({ url: '/admin/invoices', method: 'get' }),
     },
     banks: {
-        index: () => ({ url: '/admin/banks', method: 'get' })
-    }
+        index: () => ({ url: '/admin/banks', method: 'get' }),
+    },
 };
 
-// Customer routes  
+// Customer routes
 export const customer = {
     dashboard: () => ({ url: '/customer/dashboard', method: 'get' }),
     hosting: {
-        index: () => ({ url: '/customer/hosting', method: 'get' })
+        index: () => ({ url: '/customer/hosting', method: 'get' }),
     },
     invoices: {
         index: () => ({ url: '/customer/invoices', method: 'get' }),
-        payment: (id: number) => ({ url: `/customer/invoices/${id}/payment`, method: 'get' })
-    }
+        payment: (id: number) => ({ url: `/customer/invoices/${id}/payment`, method: 'get' }),
+    },
 };
 
 // Public routes
@@ -61,5 +61,5 @@ export default {
     admin,
     customer,
     public_hosting,
-    orderSimulator
+    orderSimulator,
 };
