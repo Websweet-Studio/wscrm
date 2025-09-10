@@ -376,17 +376,17 @@ const deleteConfig = (configId: number, configName: string) => {
                             <div class="space-y-3">
                                 <Button @click="runSimulation" :disabled="isSimulating" class="w-full">
                                     <Calculator class="h-4 w-4 mr-2" />
-                                    {{ isSimulating ? 'Simulating...' : 'Run Simulation' }}
+                                    {{ isSimulating ? 'Menghitung...' : 'Jalankan Simulasi' }}
                                 </Button>
                                 
                                 <Button variant="outline" class="w-full" @click="showSaveModal = true">
                                     <Save class="h-4 w-4 mr-2" />
-                                    Save Config
+                                    Simpan Konfigurasi
                                 </Button>
                                 
-                                <Button @click="applyPricing" :disabled="isApplying || !Object.keys(simulation).length" class="w-full" variant="destructive">
+                                <Button @click="applyPricing" :disabled="isApplying || !Object.keys(simulation).length" class="w-full bg-red-600 hover:bg-red-700 text-white" variant="destructive">
                                     <DollarSign class="h-4 w-4 mr-2" />
-                                    {{ isApplying ? 'Applying...' : 'Apply Pricing' }}
+                                    {{ isApplying ? 'Menerapkan...' : 'Terapkan Harga Baru' }}
                                 </Button>
                             </div>
                         </CardContent>
