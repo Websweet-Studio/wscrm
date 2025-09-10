@@ -7,7 +7,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { AlertTriangle, BarChart3, Calendar, DollarSign, Settings, ShoppingCart, TrendingDown, TrendingUp, Users } from 'lucide-vue-next';
+import { BarChart3, Calendar, DollarSign, ShoppingCart, TrendingDown, TrendingUp, Users } from 'lucide-vue-next';
 
 interface Stats {
     customers: {
@@ -26,11 +26,6 @@ interface Stats {
         total: number;
         thisMonth: number;
         growth: number;
-    };
-    services: {
-        total: number;
-        active: number;
-        expiringSoon: number;
     };
 }
 
@@ -55,17 +50,6 @@ interface Order {
     order_items: OrderItem[];
 }
 
-interface Service {
-    id: number;
-    domain_name: string;
-    service_type: string;
-    expires_at: string;
-    customer: Customer;
-    hosting_plan?: {
-        plan_name: string;
-        storage_gb: number;
-    };
-}
 
 interface ChartDataPoint {
     date: string;
@@ -86,7 +70,6 @@ interface Props {
     recentActivities: {
         orders: Order[];
         customers: Customer[];
-        expiringServices: Service[];
     };
     chartData: {
         dailyOrders: ChartDataPoint[];
@@ -144,7 +127,7 @@ const formatGrowth = (growth: number) => {
             </div>
 
             <!-- Key Metrics Cards -->
-            <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div class="grid gap-6 md:grid-cols-3">
                 <!-- Customers Card -->
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -206,21 +189,6 @@ const formatGrowth = (growth: number) => {
                     </CardContent>
                 </Card>
 
-                <!-- Services Card -->
-                <Card>
-                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">Active Services</CardTitle>
-                        <Settings class="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div class="text-2xl font-bold">{{ stats.services.active.toLocaleString() }}</div>
-                        <div v-if="stats.services.expiringSoon > 0" class="flex items-center space-x-2 text-xs text-orange-600">
-                            <AlertTriangle class="h-3 w-3" />
-                            <span>{{ stats.services.expiringSoon }} expiring soon</span>
-                        </div>
-                        <p class="mt-1 text-xs text-muted-foreground">{{ stats.services.total }} total services</p>
-                    </CardContent>
-                </Card>
             </div>
 
             <!-- Charts Section -->
@@ -259,7 +227,7 @@ const formatGrowth = (growth: number) => {
             </div>
 
             <!-- Recent Activities Grid -->
-            <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div class="grid gap-6 md:grid-cols-2">
                 <!-- Recent Orders -->
                 <Card>
                     <CardHeader>
@@ -324,42 +292,6 @@ const formatGrowth = (growth: number) => {
                     </CardContent>
                 </Card>
 
-                <!-- Expiring Services -->
-                <Card>
-                    <CardHeader>
-                        <CardTitle class="text-lg">Services Expiring Soon</CardTitle>
-                        <CardDescription>Services expiring in next 30 days</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div v-if="recentActivities.expiringServices.length === 0" class="py-4 text-center text-muted-foreground">
-                            No services expiring soon
-                        </div>
-                        <div v-else class="space-y-3">
-                            <div
-                                v-for="service in recentActivities.expiringServices"
-                                :key="service.id"
-                                class="flex items-center justify-between rounded-md border border-orange-200 bg-orange-50 p-3 dark:border-orange-800 dark:bg-orange-950"
-                            >
-                                <div class="flex-1">
-                                    <div class="text-sm font-medium">{{ service.domain_name }}</div>
-                                    <div class="text-xs text-muted-foreground">{{ service.customer.name }}</div>
-                                    <div v-if="service.hosting_plan" class="text-xs text-muted-foreground">
-                                        {{ service.hosting_plan.plan_name }} ({{ service.hosting_plan.storage_gb }}GB)
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-xs font-medium text-orange-600">{{ formatDate(service.expires_at) }}</div>
-                                    <div class="text-xs text-muted-foreground capitalize">{{ service.service_type }}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <Button variant="outline" size="sm" asChild class="w-full">
-                                <Link href="/admin/services">View All Services</Link>
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
             </div>
 
             <!-- Quick Actions -->
@@ -369,15 +301,12 @@ const formatGrowth = (growth: number) => {
                     <CardDescription>Common administrative tasks</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div class="grid gap-4 md:grid-cols-5">
+                    <div class="grid gap-4 md:grid-cols-4">
                         <Button asChild>
                             <Link href="/admin/customers">Manage Customers</Link>
                         </Button>
                         <Button asChild>
                             <Link href="/admin/orders">View Orders</Link>
-                        </Button>
-                        <Button asChild>
-                            <Link href="/admin/services">Manage Services</Link>
                         </Button>
                         <Button asChild>
                             <Link href="/hosting">View Hosting Plans</Link>

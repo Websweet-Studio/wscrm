@@ -15,13 +15,13 @@ return new class extends Migration
         Schema::table('invoices', function (Blueprint $table) {
             $table->dropForeign(['service_id']);
             $table->dropColumn('service_id');
-            
+
             // Add order_id foreign key instead (if not exists)
-            if (!Schema::hasColumn('invoices', 'order_id')) {
+            if (! Schema::hasColumn('invoices', 'order_id')) {
                 $table->foreignId('order_id')->nullable()->constrained()->after('customer_id');
             }
         });
-        
+
         // Drop the services table since data is now in orders
         Schema::dropIfExists('services');
     }

@@ -49,7 +49,6 @@ class Invoice extends Model
         return $this->belongsTo(Order::class);
     }
 
-
     public function bank(): BelongsTo
     {
         return $this->belongsTo(Bank::class);

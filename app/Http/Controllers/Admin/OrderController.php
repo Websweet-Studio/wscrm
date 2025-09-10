@@ -19,9 +19,9 @@ class OrderController extends Controller
     public function index(): Response
     {
         $view = request('view', 'orders'); // orders or services
-        
+
         $query = Order::with(['customer', 'orderItems', 'hostingPlan']);
-        
+
         if ($view === 'services') {
             // Show service-like records (active, suspended, expired, terminated)
             $query->services();
@@ -29,14 +29,14 @@ class OrderController extends Controller
             // Show order-like records (pending, processing, cancelled)
             $query->orders();
         }
-        
+
         $orders = $query->when(request('search'), function ($query, $search) {
-                $query->where('domain_name', 'like', "%{$search}%")
-                    ->orWhereHas('customer', function ($q) use ($search) {
-                        $q->where('name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%");
-                    })->orWhere('id', 'like', "%{$search}%");
-            })
+            $query->where('domain_name', 'like', "%{$search}%")
+                ->orWhereHas('customer', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                })->orWhere('id', 'like', "%{$search}%");
+        })
             ->when(request('status'), function ($query, $status) {
                 $query->where('status', $status);
             })
@@ -67,7 +67,7 @@ class OrderController extends Controller
     {
         $order->load([
             'customer',
-            'orderItems', 
+            'orderItems',
             'hostingPlan',
             'invoices',
         ]);
@@ -185,9 +185,10 @@ class OrderController extends Controller
         $order->update($request->only(['status', 'expires_at', 'auto_renew', 'domain_name']));
 
         $message = $order->isOrder() ? 'Status pesanan berhasil diperbarui!' : 'Layanan berhasil diperbarui!';
+
         return redirect()->back()->with('success', $message);
     }
-    
+
     public function createService(Request $request)
     {
         $request->validate([
@@ -220,7 +221,7 @@ class OrderController extends Controller
         if ($order->isService() && $order->status === 'active') {
             return redirect()->back()->with('error', 'Tidak dapat menghapus layanan aktif. Mohon tangguhkan atau hentikan terlebih dahulu.');
         }
-        
+
         if ($order->isOrder() && $order->status === 'completed') {
             return redirect()->back()->with('error', 'Tidak dapat menghapus pesanan yang sudah selesai.');
         }
@@ -232,6 +233,7 @@ class OrderController extends Controller
         });
 
         $message = $order->isOrder() ? 'Pesanan berhasil dihapus!' : 'Layanan berhasil dihapus!';
+
         return redirect()->back()->with('success', $message);
     }
 }

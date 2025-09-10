@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Models\Order;
-use App\Models\Service;
 use Carbon\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -39,11 +38,6 @@ class DashboardController extends Controller
             ->where('created_at', '>=', $lastMonth)
             ->where('created_at', '<', $thisMonth)->sum('total_amount');
 
-        // Service Statistics
-        $totalServices = Service::count();
-        $activeServices = Service::active()->count();
-        $expiringSoon = Service::active()->expiringSoon(30)->count();
-
         // Recent Activities
         $recentOrders = Order::with(['customer', 'orderItems'])
             ->orderBy('created_at', 'desc')
@@ -51,13 +45,6 @@ class DashboardController extends Controller
             ->get();
 
         $recentCustomers = Customer::orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get();
-
-        $expiringServices = Service::with(['customer', 'hostingPlan'])
-            ->active()
-            ->expiringSoon(30)
-            ->orderBy('expires_at', 'asc')
             ->limit(5)
             ->get();
 
@@ -129,16 +116,10 @@ class DashboardController extends Controller
                     'thisMonth' => $revenueThisMonth,
                     'growth' => round($revenueGrowth, 1),
                 ],
-                'services' => [
-                    'total' => $totalServices,
-                    'active' => $activeServices,
-                    'expiringSoon' => $expiringSoon,
-                ],
             ],
             'recentActivities' => [
                 'orders' => $recentOrders,
                 'customers' => $recentCustomers,
-                'expiringServices' => $expiringServices,
             ],
             'chartData' => [
                 'dailyOrders' => $dailyOrders,

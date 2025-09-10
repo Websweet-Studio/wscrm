@@ -13,12 +13,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
     Route::resource('customers', CustomerController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
     Route::resource('orders', OrderController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
     Route::post('orders/create-service', [OrderController::class, 'createService'])->name('orders.create-service');
-    
+
     // Legacy service routes redirect to orders with services view
-    Route::get('services', function() {
+    Route::get('services', function () {
         return redirect()->route('admin.orders.index', ['view' => 'services']);
     })->name('services.index');
-    Route::get('services/{id}', function($id) {
+    Route::get('services/{id}', function ($id) {
         return redirect()->route('admin.orders.show', $id);
     })->name('services.show');
     Route::resource('service-plans', ServicePlanController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
