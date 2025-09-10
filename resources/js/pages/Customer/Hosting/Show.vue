@@ -46,8 +46,7 @@ const getDiscountedPrice = (price: number, discount: number) => {
 
 const orderPlan = () => {
     router.post('/customer/orders', {
-        order_type: 'hosting',
-        billing_cycle: 'annual',
+        billing_cycle: 'annually',
         items: [
             {
                 item_type: 'hosting',

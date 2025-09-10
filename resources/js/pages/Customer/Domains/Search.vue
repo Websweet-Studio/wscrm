@@ -74,7 +74,6 @@ const getDomainStatus = (extension: string) => {
 const orderDomain = (domainPriceId: number, extension: string) => {
     const fullDomain = `${props.domain}.${extension}`;
     router.post('/customer/orders', {
-        order_type: 'domain',
         items: [
             {
                 item_type: 'domain',

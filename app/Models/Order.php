@@ -14,7 +14,6 @@ class Order extends Model
 
     protected $fillable = [
         'customer_id',
-        'order_type',
         'service_type',
         'plan_id',
         'domain_name',

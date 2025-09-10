@@ -77,7 +77,6 @@ const isPremium = (extension: string) => {
 
 const orderDomain = (domainPriceId: number) => {
     router.post('/customer/orders', {
-        order_type: 'domain',
         items: [
             {
                 item_type: 'domain',

@@ -81,8 +81,7 @@ class OrderController extends Controller
     {
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
-            'order_type' => 'required|in:domain,hosting,domain_hosting,app,web,domain_hosting_app_web,maintenance',
-            'billing_cycle' => 'required|in:monthly,quarterly,semi_annually,annually',
+            'billing_cycle' => 'required|in:onetime,monthly,quarterly,semi_annually,annually',
             'items' => 'required|array|min:1',
             'items.*.item_type' => 'required|in:hosting,domain,service,app,web,maintenance',
             'items.*.item_id' => 'required|integer',
@@ -120,7 +119,6 @@ class OrderController extends Controller
 
             $order = Order::create([
                 'customer_id' => $request->customer_id,
-                'order_type' => $request->order_type,
                 'total_amount' => $totalAmount,
                 'status' => 'pending',
                 'billing_cycle' => $request->billing_cycle,
@@ -202,7 +200,6 @@ class OrderController extends Controller
 
         Order::create([
             'customer_id' => $request->customer_id,
-            'order_type' => 'service',
             'service_type' => $request->service_type,
             'plan_id' => $request->plan_id,
             'domain_name' => $request->domain_name,

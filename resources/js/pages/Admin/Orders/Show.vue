@@ -40,7 +40,6 @@ interface Order {
     total_amount: number;
     status: 'pending' | 'processing' | 'completed' | 'cancelled';
     billing_cycle: string;
-    order_type: string;
     created_at: string;
     updated_at: string;
     customer: Customer;
@@ -136,10 +135,6 @@ const totalItemsAmount = props.order.order_items.reduce((sum, item) => sum + ite
                         </div>
 
                         <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-muted-foreground">Order Type</span>
-                                <span class="text-sm font-medium capitalize">{{ order.order_type }}</span>
-                            </div>
 
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-muted-foreground">Billing Cycle</span>

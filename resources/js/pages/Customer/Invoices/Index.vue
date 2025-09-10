@@ -33,6 +33,30 @@ const getStatusText = (status) => {
     };
     return texts[status] || status;
 };
+
+const getOrderTypeDisplay = (order) => {
+    if (!order || !order.order_items || order.order_items.length === 0) {
+        return 'Mixed Order';
+    }
+    
+    const itemTypes = order.order_items.map(item => item.item_type);
+    const uniqueTypes = [...new Set(itemTypes)];
+    
+    if (uniqueTypes.length === 1) {
+        const type = uniqueTypes[0];
+        const typeMap = {
+            'hosting': 'Hosting',
+            'domain': 'Domain',
+            'service': 'Service',
+            'app': 'Aplikasi',
+            'web': 'Website',
+            'maintenance': 'Maintenance'
+        };
+        return typeMap[type] || type;
+    }
+    
+    return `Mixed (${uniqueTypes.length} types)`;
+};
 </script>
 
 <template>
@@ -85,7 +109,7 @@ const getStatusText = (status) => {
                                         <TableCell>
                                             <div v-if="invoice.order">
                                                 <div class="font-medium">{{ invoice.order.order_number }}</div>
-                                                <div class="text-sm text-muted-foreground">{{ invoice.order.order_type }}</div>
+                                                <div class="text-sm text-muted-foreground">{{ getOrderTypeDisplay(invoice.order) }}</div>
                                             </div>
                                             <div v-else class="text-sm text-muted-foreground">Service Invoice</div>
                                         </TableCell>

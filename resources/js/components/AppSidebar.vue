@@ -17,7 +17,6 @@ import {
     LayoutGrid,
     Package,
     Server,
-    Settings,
     ShoppingCart,
     Users,
 } from 'lucide-vue-next';
@@ -73,24 +72,19 @@ const mainNavItems: NavItem[] = [
         ],
     },
     {
-        title: 'Service',
+        title: 'Hosting',
         href: '#',
-        icon: Settings,
+        icon: Server,
         children: [
             {
-                title: 'Active Services',
-                href: '/admin/services',
+                title: 'Hosting Plans',
+                href: '/admin/hosting-plans',
                 icon: Server,
             },
             {
                 title: 'Service Plans',
                 href: '/admin/service-plans',
                 icon: Package,
-            },
-            {
-                title: 'Hosting Plans',
-                href: '/admin/hosting-plans',
-                icon: Server,
             },
         ],
     },

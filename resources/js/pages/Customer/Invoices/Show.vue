@@ -34,6 +34,30 @@ const getStatusText = (status) => {
     return texts[status] || status;
 };
 
+const getOrderTypeDisplay = (order) => {
+    if (!order || !order.order_items || order.order_items.length === 0) {
+        return 'Mixed Order';
+    }
+    
+    const itemTypes = order.order_items.map(item => item.item_type);
+    const uniqueTypes = [...new Set(itemTypes)];
+    
+    if (uniqueTypes.length === 1) {
+        const type = uniqueTypes[0];
+        const typeMap = {
+            'hosting': 'Hosting',
+            'domain': 'Domain',
+            'service': 'Service',
+            'app': 'Aplikasi',
+            'web': 'Website',
+            'maintenance': 'Maintenance'
+        };
+        return typeMap[type] || type;
+    }
+    
+    return `Mixed (${uniqueTypes.length} types)`;
+};
+
 const isOverdue = () => {
     if (props.invoice.status === 'paid') return false;
     return new Date(props.invoice.due_date) < new Date();
@@ -188,7 +212,7 @@ const canPay = () => {
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground">Order Type</label>
-                                <p>{{ invoice.order.order_type }}</p>
+                                <p>{{ getOrderTypeDisplay(invoice.order) }}</p>
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground">Billing Cycle</label>

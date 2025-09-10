@@ -87,13 +87,9 @@ class OrderController extends Controller
                 ];
             }
 
-            // Determine order type based on items
-            $orderType = $this->determineOrderType($request->items);
-
             // Create order
             $order = Order::create([
                 'customer_id' => Auth::guard('customer')->id(),
-                'order_type' => $orderType,
                 'total_amount' => $totalAmount,
                 'billing_cycle' => $request->billing_cycle,
                 'status' => 'pending',
@@ -108,70 +104,5 @@ class OrderController extends Controller
         });
 
         return redirect()->route('orders.index')->with('success', 'Order created successfully!');
-    }
-
-    private function determineOrderType(array $items): string
-    {
-        $hasHosting = false;
-        $hasDomain = false;
-        $hasApp = false;
-        $hasWeb = false;
-        $hasMaintenance = false;
-
-        foreach ($items as $item) {
-            switch ($item['type']) {
-                case 'hosting':
-                    $hasHosting = true;
-                    break;
-                case 'domain':
-                    $hasDomain = true;
-                    break;
-                case 'app':
-                    $hasApp = true;
-                    break;
-                case 'web':
-                    $hasWeb = true;
-                    break;
-                case 'maintenance':
-                    $hasMaintenance = true;
-                    break;
-            }
-        }
-
-        // Determine the order type based on combinations
-        if ($hasMaintenance) {
-            return 'maintenance';
-        }
-
-        if ($hasDomain && $hasHosting && ($hasApp || $hasWeb)) {
-            return 'domain_hosting_app_web';
-        }
-
-        if ($hasDomain && $hasHosting) {
-            return 'domain_hosting';
-        }
-
-        if ($hasApp && $hasWeb) {
-            return 'domain_hosting_app_web'; // Assuming app+web needs hosting+domain
-        }
-
-        if ($hasApp) {
-            return 'app';
-        }
-
-        if ($hasWeb) {
-            return 'web';
-        }
-
-        if ($hasHosting) {
-            return 'hosting';
-        }
-
-        if ($hasDomain) {
-            return 'domain';
-        }
-
-        // Default fallback
-        return 'domain_hosting';
     }
 }

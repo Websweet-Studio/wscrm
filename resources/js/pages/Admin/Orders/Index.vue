@@ -97,8 +97,7 @@ const orderToDelete = ref<Order | null>(null);
 
 const createForm = useForm({
     customer_id: '',
-    order_type: 'domain' as 'domain' | 'hosting' | 'domain_hosting' | 'app' | 'web' | 'domain_hosting_app_web' | 'maintenance',
-    billing_cycle: 'monthly' as 'monthly' | 'quarterly' | 'semi_annually' | 'annually',
+    billing_cycle: 'onetime' as 'onetime' | 'monthly' | 'quarterly' | 'semi_annually' | 'annually',
     items: [
         {
             item_type: 'hosting' as 'hosting' | 'domain' | 'service' | 'app' | 'web' | 'maintenance',
@@ -645,24 +644,6 @@ const confirmDelete = () => {
                             </select>
                             <p v-if="createForm.errors.customer_id" class="mt-1 text-xs text-red-500">{{ createForm.errors.customer_id }}</p>
                         </div>
-                        <div>
-                            <Label for="create-order-type">Tipe Pesanan *</Label>
-                            <select
-                                id="create-order-type"
-                                v-model="createForm.order_type"
-                                class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
-                                required
-                            >
-                                <option value="domain">Domain</option>
-                                <option value="hosting">Hosting</option>
-                                <option value="domain_hosting">Domain + Hosting</option>
-                                <option value="app">App</option>
-                                <option value="web">Web</option>
-                                <option value="domain_hosting_app_web">Domain + Hosting + App/Web</option>
-                                <option value="maintenance">Maintenance</option>
-                            </select>
-                            <p v-if="createForm.errors.order_type" class="mt-1 text-xs text-red-500">{{ createForm.errors.order_type }}</p>
-                        </div>
                     </div>
 
                     <div>
@@ -673,6 +654,7 @@ const confirmDelete = () => {
                             class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
                             required
                         >
+                            <option value="onetime">One Time</option>
                             <option value="monthly">Monthly</option>
                             <option value="quarterly">Quarterly</option>
                             <option value="semi_annually">Semi Annually</option>

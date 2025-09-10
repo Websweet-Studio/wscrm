@@ -12,31 +12,30 @@ class OrderFactory extends Factory
 
     public function definition(): array
     {
-        $orderTypes = ['hosting', 'domain', 'mixed'];
-        $statuses = ['pending', 'processing', 'completed', 'cancelled'];
-        $billingCycles = ['monthly', 'quarterly', 'semi_annually', 'annually'];
+        $serviceTypes = ['hosting', 'domain'];
+        $statuses = ['pending', 'processing', 'active', 'suspended', 'expired', 'cancelled', 'terminated'];
+        $billingCycles = ['onetime', 'monthly', 'quarterly', 'semi_annually', 'annually'];
 
-        $orderType = fake()->randomElement($orderTypes);
-        $totalAmount = $this->generateTotalAmount($orderType);
+        $serviceType = fake()->randomElement($serviceTypes);
+        $totalAmount = $this->generateTotalAmount($serviceType);
 
         return [
             'customer_id' => Customer::factory(),
-            'order_type' => $orderType,
+            'service_type' => $serviceType,
             'total_amount' => $totalAmount,
             'status' => fake()->randomElement($statuses),
             'billing_cycle' => fake()->randomElement($billingCycles),
+            'domain_name' => $serviceType === 'domain' ? fake()->domainName() : null,
         ];
     }
 
-    private function generateTotalAmount(string $orderType): float
+    private function generateTotalAmount(string $serviceType): float
     {
-        switch ($orderType) {
+        switch ($serviceType) {
             case 'domain':
                 return fake()->randomFloat(2, 100000, 500000); // IDR 100k-500k
             case 'hosting':
                 return fake()->randomFloat(2, 200000, 2000000); // IDR 200k-2M
-            case 'mixed':
-                return fake()->randomFloat(2, 300000, 3000000); // IDR 300k-3M
             default:
                 return fake()->randomFloat(2, 100000, 1000000);
         }
@@ -49,17 +48,17 @@ class OrderFactory extends Factory
         ]);
     }
 
-    public function completed(): static
+    public function active(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'completed',
+            'status' => 'active',
         ]);
     }
 
     public function hostingOrder(): static
     {
         return $this->state(fn (array $attributes) => [
-            'order_type' => 'hosting',
+            'service_type' => 'hosting',
             'total_amount' => fake()->randomFloat(2, 200000, 2000000),
         ]);
     }
@@ -67,7 +66,8 @@ class OrderFactory extends Factory
     public function domainOrder(): static
     {
         return $this->state(fn (array $attributes) => [
-            'order_type' => 'domain',
+            'service_type' => 'domain',
+            'domain_name' => fake()->domainName(),
             'total_amount' => fake()->randomFloat(2, 100000, 500000),
         ]);
     }
