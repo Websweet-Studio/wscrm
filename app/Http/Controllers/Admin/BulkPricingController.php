@@ -27,11 +27,22 @@ class BulkPricingController extends Controller
             $pricingTiers = PricingTier::active()->ordered()->get();
         }
 
+        // Run initial simulation with default config
+        $initialSimulation = $this->runSimulation(
+            $defaultConfig['base_price_per_gb'],
+            $defaultConfig['cost_per_gb'],
+            $defaultConfig['plan_multipliers'],
+            $defaultConfig['tier_discounts']
+        );
+
         return Inertia::render('Admin/BulkPricing/Index', [
             'pricingTiers' => $pricingTiers,
             'hostingPlans' => $hostingPlans,
             'savedConfigs' => $savedConfigs,
             'defaultConfig' => $defaultConfig,
+            'simulationResults' => [
+                'simulation' => $initialSimulation,
+            ],
         ]);
     }
 
@@ -44,63 +55,38 @@ class BulkPricingController extends Controller
             'tier_discounts' => 'required|array',
         ]);
 
-        $basePricePerGb = $request->base_price_per_gb;
-        $costPerGb = $request->cost_per_gb;
-        $planMultipliers = $request->plan_multipliers;
-        $tierDiscounts = $request->tier_discounts;
+        $simulation = $this->runSimulation(
+            $request->base_price_per_gb,
+            $request->cost_per_gb,
+            $request->plan_multipliers,
+            $request->tier_discounts
+        );
 
-        $simulation = [];
-        
-        // Get all hosting plans from database
-        $hostingPlans = HostingPlan::all();
-
-        foreach ($hostingPlans as $plan) {
-            $planType = strtolower($plan->plan_name);
-            $multiplier = $planMultipliers[$planType] ?? 1.0;
-
-            // Find matching discount tier for this plan's storage
-            $discount = 0;
-            foreach ($tierDiscounts as $tierData) {
-                if ($tierData['storage_gb'] <= $plan->storage_gb) {
-                    $discount = $tierData['discount_percentage'];
-                }
-            }
-
-            // Calculate new price
-            $pricePerGb = $basePricePerGb * $multiplier;
-            $discountedPricePerGb = $pricePerGb * (1 - $discount / 100);
-            $newTotalPrice = $discountedPricePerGb * $plan->storage_gb;
-
-            // Calculate profit
-            $totalCost = $costPerGb * $plan->storage_gb;
-            $profit = $newTotalPrice - $totalCost;
-            $profitPerGb = $profit / $plan->storage_gb;
-            $profitMargin = $totalCost > 0 ? ($profit / $totalCost) * 100 : 0;
-
-            if (!isset($simulation[$planType])) {
-                $simulation[$planType] = [];
-            }
-
-            $simulation[$planType][] = [
-                'plan_id' => $plan->id,
-                'plan_name' => $plan->plan_name,
-                'storage_gb' => $plan->storage_gb,
-                'cpu_cores' => $plan->cpu_cores,
-                'ram_gb' => $plan->ram_gb,
-                'current_price' => $plan->selling_price,
-                'discount_percentage' => $discount,
-                'price_per_gb' => $discountedPricePerGb,
-                'new_total_price' => $newTotalPrice,
-                'price_difference' => $newTotalPrice - $plan->selling_price,
-                'total_cost' => $totalCost,
-                'profit' => $profit,
-                'profit_per_gb' => $profitPerGb,
-                'profit_margin' => $profitMargin,
-            ];
-        }
-
-        return response()->json([
-            'simulation' => $simulation,
+        return Inertia::render('Admin/BulkPricing/Index', [
+            'pricingTiers' => PricingTier::orderBy('sort_order')->get(),
+            'hostingPlans' => HostingPlan::all(),
+            'savedConfigs' => BulkPricingConfig::all(),
+            'defaultConfig' => [
+                'base_price_per_gb' => 150000,
+                'cost_per_gb' => 112500,
+                'plan_multipliers' => [
+                    'starter' => 1.0,
+                    'professional' => 1.2,
+                    'business' => 1.5,
+                    'enterprise' => 2.0,
+                ],
+                'tier_discounts' => [
+                    ['storage_gb' => 1, 'discount_percentage' => 0],
+                    ['storage_gb' => 5, 'discount_percentage' => 5],
+                    ['storage_gb' => 20, 'discount_percentage' => 10],
+                    ['storage_gb' => 50, 'discount_percentage' => 15],
+                    ['storage_gb' => 100, 'discount_percentage' => 20],
+                    ['storage_gb' => 200, 'discount_percentage' => 25],
+                ],
+            ],
+            'simulationResults' => [
+                'simulation' => $simulation,
+            ],
         ]);
     }
 
@@ -209,7 +195,7 @@ class BulkPricingController extends Controller
     public function deleteConfig($id)
     {
         $config = BulkPricingConfig::findOrFail($id);
-        
+
         if ($config->is_default) {
             return redirect()->back()->withErrors(['error' => 'Tidak dapat menghapus konfigurasi default!']);
         }
@@ -217,5 +203,58 @@ class BulkPricingController extends Controller
         $config->delete();
 
         return redirect()->back()->with('success', 'Konfigurasi berhasil dihapus!');
+    }
+
+    private function runSimulation(float $basePricePerGb, float $costPerGb, array $planMultipliers, array $tierDiscounts): array
+    {
+        $simulation = [];
+        $hostingPlans = HostingPlan::all();
+
+        foreach ($hostingPlans as $plan) {
+            $planType = strtolower($plan->plan_name);
+            $multiplier = $planMultipliers[$planType] ?? 1.0;
+
+            // Find matching discount tier for this plan's storage
+            $discount = 0;
+            foreach ($tierDiscounts as $tierData) {
+                if ($tierData['storage_gb'] <= $plan->storage_gb) {
+                    $discount = $tierData['discount_percentage'];
+                }
+            }
+
+            // Calculate new price
+            $pricePerGb = $basePricePerGb * $multiplier;
+            $discountedPricePerGb = $pricePerGb * (1 - $discount / 100);
+            $newTotalPrice = $discountedPricePerGb * $plan->storage_gb;
+
+            // Calculate profit
+            $totalCost = $costPerGb * $plan->storage_gb;
+            $profit = $newTotalPrice - $totalCost;
+            $profitPerGb = $profit / $plan->storage_gb;
+            $profitMargin = $totalCost > 0 ? ($profit / $totalCost) * 100 : 0;
+
+            if (! isset($simulation[$planType])) {
+                $simulation[$planType] = [];
+            }
+
+            $simulation[$planType][] = [
+                'plan_id' => $plan->id,
+                'plan_name' => $plan->plan_name,
+                'storage_gb' => $plan->storage_gb,
+                'cpu_cores' => $plan->cpu_cores,
+                'ram_gb' => $plan->ram_gb,
+                'current_price' => $plan->selling_price,
+                'discount_percentage' => $discount,
+                'price_per_gb' => $discountedPricePerGb,
+                'new_total_price' => $newTotalPrice,
+                'price_difference' => $newTotalPrice - $plan->selling_price,
+                'total_cost' => $totalCost,
+                'profit' => $profit,
+                'profit_per_gb' => $profitPerGb,
+                'profit_margin' => $profitMargin,
+            ];
+        }
+
+        return $simulation;
     }
 }

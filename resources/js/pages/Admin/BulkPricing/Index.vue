@@ -10,7 +10,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { formatPrice } from '@/lib/utils';
 import { Head, router } from '@inertiajs/vue3';
 import { Calculator, ChevronDown, DollarSign, Download, Save, Settings, Trash2, TrendingUp, Upload } from 'lucide-vue-next';
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 
 interface PricingTier {
     id: number;
@@ -67,6 +67,9 @@ const props = defineProps<{
         plan_multipliers: Record<string, number>;
         tier_discounts: Array<{ storage_gb: number; discount_percentage: number }>;
     };
+    simulationResults?: {
+        simulation: Record<string, SimulationData[]>;
+    };
 }>();
 
 const form = reactive({
@@ -76,9 +79,17 @@ const form = reactive({
     tier_discounts: [...props.defaultConfig.tier_discounts],
 });
 
-const simulation = ref<Record<string, SimulationData[]>>({});
+const simulation = ref<Record<string, SimulationData[]>>(props.simulationResults?.simulation || {});
 const isSimulating = ref(false);
 const isApplying = ref(false);
+
+// Watch for props changes
+watch(() => props.simulationResults, (newResults) => {
+    if (newResults?.simulation) {
+        simulation.value = newResults.simulation;
+        console.log('Simulation updated from props:', simulation.value);
+    }
+}, { deep: true, immediate: true });
 const saveForm = reactive({
     name: '',
     description: '',
@@ -122,22 +133,18 @@ const runSimulation = async () => {
     isSimulating.value = true;
     
     try {
-        const response = await fetch('/admin/bulk-pricing/simulate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        router.post('/admin/bulk-pricing/simulate', form, {
+            preserveScroll: true,
+            onSuccess: () => {
+                isSimulating.value = false;
             },
-            body: JSON.stringify(form),
+            onError: (errors) => {
+                console.error('Simulation error:', errors);
+                isSimulating.value = false;
+            }
         });
-
-        if (response.ok) {
-            const data = await response.json();
-            simulation.value = data.simulation;
-        }
     } catch (error) {
         console.error('Simulation error:', error);
-    } finally {
         isSimulating.value = false;
     }
 };
@@ -217,8 +224,7 @@ const deleteConfig = (configId: number, configName: string) => {
     }
 };
 
-// Run initial simulation
-runSimulation();
+// Initial simulation data comes from props, no need to run on mount
 </script>
 
 <template>

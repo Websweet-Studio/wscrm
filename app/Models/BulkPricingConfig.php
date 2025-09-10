@@ -42,7 +42,7 @@ class BulkPricingConfig extends Model
     public static function getDefaultConfig(): array
     {
         $defaultConfig = self::default()->first();
-        
+
         if ($defaultConfig) {
             return [
                 'base_price_per_gb' => $defaultConfig->base_price_per_gb,
