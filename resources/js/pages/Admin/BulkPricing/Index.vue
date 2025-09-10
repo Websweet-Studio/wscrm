@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatPrice } from '@/lib/utils';
 import { Head, router } from '@inertiajs/vue3';
-import { Calculator, DollarSign, Settings, TrendingUp } from 'lucide-vue-next';
+import { Calculator, ChevronDown, DollarSign, Download, Save, Settings, Trash2, TrendingUp, Upload } from 'lucide-vue-next';
 import { computed, reactive, ref } from 'vue';
 
 interface PricingTier {
@@ -27,11 +29,28 @@ interface HostingPlan {
     use_bulk_pricing: boolean;
 }
 
+interface SavedConfig {
+    id: number;
+    name: string;
+    description?: string;
+    base_price_per_gb: number;
+    cost_per_gb: number;
+    plan_multipliers: Record<string, number>;
+    tier_discounts: Array<{ storage_gb: number; discount_percentage: number }>;
+    is_default: boolean;
+}
+
 interface SimulationData {
+    plan_id: number;
+    plan_name: string;
     storage_gb: number;
+    cpu_cores: number;
+    ram_gb: number;
+    current_price: number;
     discount_percentage: number;
     price_per_gb: number;
-    total_price: number;
+    new_total_price: number;
+    price_difference: number;
     total_cost: number;
     profit: number;
     profit_per_gb: number;
@@ -41,25 +60,31 @@ interface SimulationData {
 const props = defineProps<{
     pricingTiers: PricingTier[];
     hostingPlans: HostingPlan[];
+    savedConfigs: SavedConfig[];
+    defaultConfig: {
+        base_price_per_gb: number;
+        cost_per_gb: number;
+        plan_multipliers: Record<string, number>;
+        tier_discounts: Array<{ storage_gb: number; discount_percentage: number }>;
+    };
 }>();
 
 const form = reactive({
-    base_price_per_gb: 150000,
-    cost_per_gb: 112500,
-    plan_multipliers: {
-        basic: 1.0,
-        lite: 0.77,
-        premium: 1.3,
-    },
-    tier_discounts: props.pricingTiers.map(tier => ({
-        storage_gb: tier.storage_gb,
-        discount_percentage: tier.discount_percentage,
-    })),
+    base_price_per_gb: props.defaultConfig.base_price_per_gb,
+    cost_per_gb: props.defaultConfig.cost_per_gb,
+    plan_multipliers: { ...props.defaultConfig.plan_multipliers },
+    tier_discounts: [...props.defaultConfig.tier_discounts],
 });
 
 const simulation = ref<Record<string, SimulationData[]>>({});
 const isSimulating = ref(false);
 const isApplying = ref(false);
+const showSaveDialog = ref(false);
+const saveForm = reactive({
+    name: '',
+    description: '',
+    is_default: false,
+});
 
 const uniquePlanTypes = computed(() => {
     const types = new Set(props.hostingPlans.map(plan => plan.plan_name.toLowerCase()));
@@ -124,6 +149,10 @@ const applyPricing = () => {
         return;
     }
 
+    if (!confirm('Apakah Anda yakin ingin menerapkan pricing baru ini ke semua hosting plans? Perubahan tidak dapat dibatalkan.')) {
+        return;
+    }
+
     isApplying.value = true;
     
     const selectedPlanIds = props.hostingPlans.map(plan => plan.id);
@@ -132,10 +161,62 @@ const applyPricing = () => {
         ...form,
         plan_ids: selectedPlanIds,
     }, {
+        onSuccess: () => {
+            alert('Bulk pricing berhasil diterapkan!');
+        },
+        onError: () => {
+            alert('Terjadi kesalahan saat menerapkan bulk pricing!');
+        },
         onFinish: () => {
             isApplying.value = false;
         },
     });
+};
+
+const loadConfig = async (configId: number) => {
+    try {
+        const response = await fetch(`/admin/bulk-pricing/load-config/${configId}`);
+        if (response.ok) {
+            const configData = await response.json();
+            
+            // Update form with loaded config
+            Object.assign(form, configData);
+            
+            // Run simulation with new config
+            await runSimulation();
+        }
+    } catch (error) {
+        console.error('Error loading config:', error);
+        alert('Gagal memuat konfigurasi!');
+    }
+};
+
+const saveConfig = () => {
+    if (!saveForm.name.trim()) {
+        alert('Nama konfigurasi wajib diisi!');
+        return;
+    }
+
+    router.post('/admin/bulk-pricing/save-config', {
+        ...saveForm,
+        ...form,
+    }, {
+        onSuccess: () => {
+            showSaveDialog.value = false;
+            saveForm.name = '';
+            saveForm.description = '';
+            saveForm.is_default = false;
+        },
+        onError: () => {
+            alert('Gagal menyimpan konfigurasi!');
+        },
+    });
+};
+
+const deleteConfig = (configId: number, configName: string) => {
+    if (confirm(`Apakah Anda yakin ingin menghapus konfigurasi "${configName}"?`)) {
+        router.delete(`/admin/bulk-pricing/delete-config/${configId}`);
+    }
 };
 
 // Run initial simulation
@@ -253,6 +334,36 @@ runSimulation();
                         </CardContent>
                     </Card>
 
+                    <!-- Saved Configurations -->
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Konfigurasi Tersimpan</CardTitle>
+                            <CardDescription>Load konfigurasi yang sudah disimpan</CardDescription>
+                        </CardHeader>
+                        <CardContent class="space-y-3">
+                            <div v-if="savedConfigs.length === 0" class="text-sm text-muted-foreground text-center py-4">
+                                Belum ada konfigurasi tersimpan
+                            </div>
+                            <div v-else class="space-y-2">
+                                <div v-for="config in savedConfigs" :key="config.id" class="flex items-center justify-between p-2 border rounded">
+                                    <div class="flex-1">
+                                        <div class="font-medium">{{ config.name }}</div>
+                                        <div class="text-xs text-muted-foreground">{{ config.description || 'Tanpa deskripsi' }}</div>
+                                        <div v-if="config.is_default" class="text-xs text-green-600 font-medium">Default</div>
+                                    </div>
+                                    <div class="flex gap-1">
+                                        <Button size="sm" variant="outline" @click="loadConfig(config.id)">
+                                            <Upload class="h-3 w-3" />
+                                        </Button>
+                                        <Button size="sm" variant="outline" @click="deleteConfig(config.id, config.name)" :disabled="config.is_default">
+                                            <Trash2 class="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     <!-- Actions -->
                     <Card>
                         <CardContent class="pt-6">
@@ -261,6 +372,62 @@ runSimulation();
                                     <Calculator class="h-4 w-4 mr-2" />
                                     {{ isSimulating ? 'Simulating...' : 'Run Simulation' }}
                                 </Button>
+                                
+                                <Dialog v-model:open="showSaveDialog">
+                                    <DialogTrigger as-child>
+                                        <Button variant="outline" class="w-full">
+                                            <Save class="h-4 w-4 mr-2" />
+                                            Save Config
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Simpan Konfigurasi</DialogTitle>
+                                            <DialogDescription>
+                                                Simpan konfigurasi saat ini untuk digunakan kembali di kemudian hari
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <Label for="config-name">Nama Konfigurasi</Label>
+                                                <Input
+                                                    id="config-name"
+                                                    v-model="saveForm.name"
+                                                    placeholder="Masukkan nama konfigurasi"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label for="config-description">Deskripsi (Opsional)</Label>
+                                                <textarea
+                                                    id="config-description"
+                                                    v-model="saveForm.description"
+                                                    placeholder="Deskripsi konfigurasi"
+                                                    rows="3"
+                                                    class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                ></textarea>
+                                            </div>
+                                            <div class="flex items-center space-x-2">
+                                                <input
+                                                    id="is-default"
+                                                    v-model="saveForm.is_default"
+                                                    type="checkbox"
+                                                    class="rounded border-gray-300"
+                                                />
+                                                <Label for="is-default">Set sebagai konfigurasi default</Label>
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <Button variant="outline" @click="showSaveDialog = false">
+                                                Batal
+                                            </Button>
+                                            <Button @click="saveConfig">
+                                                <Save class="h-4 w-4 mr-2" />
+                                                Simpan
+                                            </Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                                
                                 <Button @click="applyPricing" :disabled="isApplying || !Object.keys(simulation).length" class="w-full" variant="destructive">
                                     <DollarSign class="h-4 w-4 mr-2" />
                                     {{ isApplying ? 'Applying...' : 'Apply Pricing' }}
@@ -291,27 +458,43 @@ runSimulation();
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
-                                                    <TableHead>Storage</TableHead>
+                                                    <TableHead>Plan</TableHead>
+                                                    <TableHead>Specs</TableHead>
+                                                    <TableHead>Harga Saat Ini</TableHead>
+                                                    <TableHead>Harga Baru</TableHead>
+                                                    <TableHead>Selisih</TableHead>
                                                     <TableHead>Discount</TableHead>
-                                                    <TableHead>Price/GB</TableHead>
-                                                    <TableHead>Total Price</TableHead>
-                                                    <TableHead>Total Cost</TableHead>
+                                                    <TableHead>Modal</TableHead>
                                                     <TableHead>Profit</TableHead>
                                                     <TableHead>Margin</TableHead>
                                                     <TableHead>Status</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                <TableRow v-for="data in planData" :key="data.storage_gb">
-                                                    <TableCell class="font-medium">{{ data.storage_gb }}GB</TableCell>
+                                                <TableRow v-for="data in planData" :key="data.plan_id">
+                                                    <TableCell class="font-medium">
+                                                        <div class="font-semibold">{{ data.plan_name }}</div>
+                                                    </TableCell>
+                                                    <TableCell class="text-sm text-muted-foreground">
+                                                        <div>{{ data.storage_gb }}GB Storage</div>
+                                                        <div>{{ data.cpu_cores }} Core CPU</div>
+                                                        <div>{{ data.ram_gb }}GB RAM</div>
+                                                    </TableCell>
+                                                    <TableCell class="font-medium">
+                                                        {{ formatPrice(data.current_price) }}
+                                                    </TableCell>
+                                                    <TableCell class="font-medium">
+                                                        {{ formatPrice(data.new_total_price) }}
+                                                    </TableCell>
+                                                    <TableCell :class="data.price_difference >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'">
+                                                        {{ data.price_difference >= 0 ? '+' : '' }}{{ formatPrice(data.price_difference) }}
+                                                    </TableCell>
                                                     <TableCell>{{ data.discount_percentage }}%</TableCell>
-                                                    <TableCell>{{ formatPrice(data.price_per_gb) }}</TableCell>
-                                                    <TableCell>{{ formatPrice(data.total_price) }}</TableCell>
                                                     <TableCell>{{ formatPrice(data.total_cost) }}</TableCell>
-                                                    <TableCell :class="data.profit >= 0 ? 'text-green-600' : 'text-red-600'">
+                                                    <TableCell :class="data.profit >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'">
                                                         {{ formatPrice(data.profit) }}
                                                     </TableCell>
-                                                    <TableCell :class="data.profit_margin >= 0 ? 'text-green-600' : 'text-red-600'">
+                                                    <TableCell :class="data.profit_margin >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'">
                                                         {{ data.profit_margin.toFixed(1) }}%
                                                     </TableCell>
                                                     <TableCell>

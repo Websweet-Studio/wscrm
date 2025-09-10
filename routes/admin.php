@@ -30,6 +30,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
     Route::get('bulk-pricing', [BulkPricingController::class, 'index'])->name('bulk-pricing.index');
     Route::post('bulk-pricing/simulate', [BulkPricingController::class, 'simulate'])->name('bulk-pricing.simulate');
     Route::post('bulk-pricing/apply', [BulkPricingController::class, 'apply'])->name('bulk-pricing.apply');
+    Route::post('bulk-pricing/save-config', [BulkPricingController::class, 'saveConfig'])->name('bulk-pricing.save-config');
+    Route::get('bulk-pricing/load-config/{id}', [BulkPricingController::class, 'loadConfig'])->name('bulk-pricing.load-config');
+    Route::delete('bulk-pricing/delete-config/{id}', [BulkPricingController::class, 'deleteConfig'])->name('bulk-pricing.delete-config');
     Route::resource('banks', BankController::class);
     Route::patch('banks/{bank}/toggle-status', [BankController::class, 'toggleStatus'])->name('banks.toggle-status');
 });
