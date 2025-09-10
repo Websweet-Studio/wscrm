@@ -16,6 +16,15 @@ class CustomerController extends Controller
     {
         $customers = Customer::with(['orders'])
             ->withCount(['orders'])
+            ->addSelect([
+                'services_count' => \DB::raw('(
+                    SELECT COUNT(*)
+                    FROM order_items oi
+                    JOIN orders o ON o.id = oi.order_id
+                    WHERE o.customer_id = customers.id
+                    AND oi.item_type IN ("hosting", "domain")
+                )')
+            ])
             ->when(request('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
@@ -75,6 +84,12 @@ class CustomerController extends Controller
 
     public function update(Request $request, Customer $customer)
     {
+        \Log::info('Update customer request', [
+            'customer_id' => $customer->id,
+            'request_data' => $request->all(),
+            'email_validation_rule' => 'unique:customers,email,'.$customer->id,
+        ]);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:customers,email,'.$customer->id,

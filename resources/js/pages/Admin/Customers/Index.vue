@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Clock, Edit, Plus, Search, Trash2, UserCheck, Users, UserX, X } from 'lucide-vue-next';
@@ -75,7 +76,7 @@ const editForm = useForm({
 });
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Dashboard', href: dashboard().url },
     { title: 'Pelanggan', href: '/admin/customers' },
 ];
 
@@ -160,22 +161,52 @@ const openEditModal = (customer: Customer) => {
     editForm.country = customer.country || '';
     editForm.postal_code = customer.postal_code || '';
     editForm.status = customer.status;
+    // Clear password fields explicitly when editing
+    editForm.password = '';
+    editForm.password_confirmation = '';
     showEditModal.value = true;
 };
 
 const submitEdit = () => {
     if (!selectedCustomer.value) return;
 
-    editForm.put(`/admin/customers/${selectedCustomer.value.id}`, {
-        preserveState: false,
+    console.log('Submitting edit form...', editForm.data());
+    console.log('Selected customer ID:', selectedCustomer.value.id);
+
+    // Transform data to remove empty password fields
+    const formData = editForm.transform((data) => {
+        const result = { ...data };
+        // Remove password fields if password is empty
+        if (!data.password) {
+            delete result.password;
+            delete result.password_confirmation;
+        }
+        console.log('Transformed data:', result);
+        return result;
+    });
+
+    formData.put(`/admin/customers/${selectedCustomer.value.id}`, {
+        preserveState: true,
         preserveScroll: true,
-        onSuccess: () => {
+        onSuccess: (page) => {
+            console.log('Customer updated successfully', page);
             showEditModal.value = false;
             editForm.reset();
             selectedCustomer.value = null;
+            // Force reload to show updated data
+            router.reload({ only: ['customers'] });
         },
         onError: (errors) => {
             console.error('Update customer error:', errors);
+            // Show detailed error info
+            if (typeof errors === 'object') {
+                Object.keys(errors).forEach(key => {
+                    console.error(`${key}: ${errors[key]}`);
+                });
+            }
+        },
+        onFinish: () => {
+            console.log('Update request finished');
         },
     });
 };

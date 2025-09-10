@@ -21,6 +21,12 @@ class LoginController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        \Log::info('Customer login attempt', [
+            'email' => $request->email,
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
@@ -28,19 +34,29 @@ class LoginController extends Controller
 
         $customer = Customer::where('email', $request->email)->first();
 
-        if (! $customer || ! Hash::check($request->password, $customer->password)) {
+        if (! $customer) {
+            \Log::warning('Customer login failed - customer not found', ['email' => $request->email]);
+            throw ValidationException::withMessages([
+                'email' => 'The provided credentials do not match our records.',
+            ]);
+        }
+
+        if (! Hash::check($request->password, $customer->password)) {
+            \Log::warning('Customer login failed - password mismatch', ['email' => $request->email, 'customer_id' => $customer->id]);
             throw ValidationException::withMessages([
                 'email' => 'The provided credentials do not match our records.',
             ]);
         }
 
         if (! $customer->isActive()) {
+            \Log::warning('Customer login failed - account not active', ['email' => $request->email, 'status' => $customer->status]);
             throw ValidationException::withMessages([
                 'email' => 'Your account has been suspended. Please contact support.',
             ]);
         }
 
         Auth::guard('customer')->login($customer, $request->boolean('remember'));
+        \Log::info('Customer login successful', ['customer_id' => $customer->id, 'email' => $customer->email]);
 
         $request->session()->regenerate();
 
