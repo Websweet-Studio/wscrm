@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\BankController;
+use App\Http\Controllers\Admin\BulkPricingController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DomainPriceController;
 use App\Http\Controllers\Admin\HostingPlanController;
@@ -26,6 +27,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
     Route::post('invoices/generate-renewals', [InvoiceController::class, 'generateRenewalInvoices'])->name('invoices.generate-renewals');
     Route::resource('domain-prices', DomainPriceController::class);
     Route::resource('hosting-plans', HostingPlanController::class);
+    Route::get('bulk-pricing', [BulkPricingController::class, 'index'])->name('bulk-pricing.index');
+    Route::post('bulk-pricing/simulate', [BulkPricingController::class, 'simulate'])->name('bulk-pricing.simulate');
+    Route::post('bulk-pricing/apply', [BulkPricingController::class, 'apply'])->name('bulk-pricing.apply');
     Route::resource('banks', BankController::class);
     Route::patch('banks/{bank}/toggle-status', [BankController::class, 'toggleStatus'])->name('banks.toggle-status');
 });

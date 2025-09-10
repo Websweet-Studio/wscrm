@@ -22,6 +22,10 @@ class HostingPlan extends Model
         'selling_price',
         'features',
         'is_active',
+        'base_price_per_gb',
+        'plan_multiplier',
+        'cost_per_gb',
+        'use_bulk_pricing',
     ];
 
     protected function casts(): array
@@ -35,6 +39,10 @@ class HostingPlan extends Model
             'selling_price' => 'decimal:2',
             'features' => 'array',
             'is_active' => 'boolean',
+            'base_price_per_gb' => 'decimal:2',
+            'plan_multiplier' => 'decimal:2',
+            'cost_per_gb' => 'decimal:2',
+            'use_bulk_pricing' => 'boolean',
         ];
     }
 
