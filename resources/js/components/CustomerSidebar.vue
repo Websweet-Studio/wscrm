@@ -3,6 +3,7 @@ import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import customer from '@/routes/customer';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
 import { BookOpen, Folder, Globe, LayoutGrid, Receipt, Server, Settings, ShoppingCart } from 'lucide-vue-next';
@@ -11,32 +12,32 @@ import AppLogo from './AppLogo.vue';
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: '/customer/dashboard',
+        href: customer.dashboard().url,
         icon: LayoutGrid,
     },
     {
         title: 'Hosting Plans',
-        href: '/customer/hosting',
+        href: customer.hosting.index().url,
         icon: Server,
     },
     {
         title: 'Domains',
-        href: '/customer/domains',
+        href: customer.domains.index().url,
         icon: Globe,
     },
     {
         title: 'My Orders',
-        href: '/customer/orders',
+        href: customer.orders.index().url,
         icon: ShoppingCart,
     },
     {
         title: 'Invoices',
-        href: '/customer/invoices',
+        href: customer.invoices.index().url,
         icon: Receipt,
     },
     {
         title: 'My Services',
-        href: '/customer/services',
+        href: customer.services.index().url,
         icon: Settings,
     },
 ];
@@ -61,7 +62,7 @@ const footerNavItems: NavItem[] = [
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link href="/customer/dashboard">
+                        <Link :href="customer.dashboard().url">
                             <AppLogo />
                         </Link>
                     </SidebarMenuButton>

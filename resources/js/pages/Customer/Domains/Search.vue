@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
+import customer from '@/routes/customer';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { AlertCircle, ArrowLeft, Check, Crown, Globe, Search, ShoppingCart, X } from 'lucide-vue-next';
@@ -30,8 +31,8 @@ const props = defineProps<Props>();
 const newSearch = ref(props.domain);
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/customer/dashboard' },
-    { title: 'Domains', href: '/customer/domains' },
+    { title: 'Dashboard', href: customer.dashboard().url },
+    { title: 'Domains', href: customer.domains.index().url },
     { title: 'Search Results', href: '#' },
 ];
 
@@ -45,7 +46,7 @@ const formatPrice = (price: number) => {
 
 const searchAgain = () => {
     if (newSearch.value.trim()) {
-        router.get('/customer/domains/search', { domain: newSearch.value });
+        router.get(customer.domains.search().url, { domain: newSearch.value });
     }
 };
 
@@ -73,7 +74,7 @@ const getDomainStatus = (extension: string) => {
 
 const orderDomain = (domainPriceId: number, extension: string) => {
     const fullDomain = `${props.domain}.${extension}`;
-    router.post('/customer/orders', {
+    router.post(customer.orders.store().url, {
         items: [
             {
                 item_type: 'domain',
@@ -102,7 +103,7 @@ const otherDomains = computed(() => {
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
-                    <Link href="/customer/domains">
+                    <Link :href="customer.domains.index().url">
                         <Button variant="outline" size="sm">
                             <ArrowLeft class="mr-2 h-4 w-4" />
                             Back to Domains
@@ -290,7 +291,7 @@ const otherDomains = computed(() => {
                                 Consider alternatives like adding words, using synonyms, or trying different extensions.
                             </p>
                             <div class="flex justify-center space-x-4">
-                                <Link href="/customer/domains">
+                                <Link :href="customer.domains.index().url">
                                     <Button variant="outline"> Browse All Extensions </Button>
                                 </Link>
                             </div>

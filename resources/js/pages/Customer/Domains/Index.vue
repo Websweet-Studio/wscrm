@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
+import customer from '@/routes/customer';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import { Crown, Globe, Search, ShoppingCart, Star, TrendingUp } from 'lucide-vue-next';
@@ -32,8 +33,8 @@ const search = ref(props.filters.search || '');
 const domainSearch = ref('');
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/customer/dashboard' },
-    { title: 'Domains', href: '/customer/domains' },
+    { title: 'Dashboard', href: customer.dashboard().url },
+    { title: 'Domains', href: customer.domains.index().url },
 ];
 
 const formatPrice = (price: number) => {
@@ -46,7 +47,7 @@ const formatPrice = (price: number) => {
 
 const handleSearch = () => {
     router.get(
-        '/customer/domains',
+        customer.domains.index().url,
         { search: search.value },
         {
             preserveState: true,
@@ -57,7 +58,7 @@ const handleSearch = () => {
 
 const searchDomain = () => {
     if (domainSearch.value.trim()) {
-        router.get('/customer/domains/search', { domain: domainSearch.value });
+        router.get(customer.domains.search().url, { domain: domainSearch.value });
     }
 };
 
@@ -76,7 +77,7 @@ const isPremium = (extension: string) => {
 };
 
 const orderDomain = (domainPriceId: number) => {
-    router.post('/customer/orders', {
+    router.post(customer.orders.store().url, {
         items: [
             {
                 item_type: 'domain',

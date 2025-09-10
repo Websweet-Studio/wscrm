@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import AppLayout from '@/layouts/AppLayout.vue';
+import CustomerLayout from '@/layouts/CustomerLayout.vue';
+import customer from '@/routes/customer';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
@@ -62,7 +63,7 @@ const props = defineProps<Props>();
 
 const logoutForm = useForm({});
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Customer Dashboard', href: '/customer/dashboard' }];
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Customer Dashboard', href: customer.dashboard().url }];
 
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -101,14 +102,14 @@ const getStatusColor = (status: string) => {
 };
 
 const logout = () => {
-    logoutForm.post(route('customer.logout'));
+    logoutForm.post(customer.logout().url);
 };
 </script>
 
 <template>
     <Head title="Customer Dashboard" />
 
-    <AppLayout :breadcrumbs="breadcrumbs">
+    <CustomerLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6 p-6">
             <div class="flex items-center justify-between">
                 <div>
@@ -171,7 +172,7 @@ const logout = () => {
                     </CardHeader>
                     <CardContent>
                         <div v-if="services.length === 0" class="py-4 text-center text-muted-foreground">
-                            No services yet. <Link href="/hosting" class="text-primary hover:underline">Browse hosting plans</Link>
+                            No services yet. <Link :href="customer.hosting.index().url" class="text-primary hover:underline">Browse hosting plans</Link>
                         </div>
                         <div v-else class="space-y-3">
                             <div
@@ -198,7 +199,7 @@ const logout = () => {
                         </div>
                         <div v-if="services.length > 0" class="mt-4">
                             <Button variant="outline" size="sm" asChild>
-                                <Link :href="route('customer.services.index')">View All Services</Link>
+                                <Link :href="customer.services.index().url">View All Services</Link>
                             </Button>
                         </div>
                     </CardContent>
@@ -212,7 +213,7 @@ const logout = () => {
                     </CardHeader>
                     <CardContent>
                         <div v-if="recentOrders.length === 0" class="py-4 text-center text-muted-foreground">
-                            No orders yet. <Link href="/hosting" class="text-primary hover:underline">Start shopping</Link>
+                            No orders yet. <Link :href="customer.hosting.index().url" class="text-primary hover:underline">Start shopping</Link>
                         </div>
                         <div v-else class="space-y-3">
                             <div
@@ -238,7 +239,7 @@ const logout = () => {
                         </div>
                         <div v-if="recentOrders.length > 0" class="mt-4">
                             <Button variant="outline" size="sm" asChild>
-                                <Link :href="route('customer.orders.index')">View All Orders</Link>
+                                <Link :href="customer.orders.index().url">View All Orders</Link>
                             </Button>
                         </div>
                     </CardContent>
@@ -261,7 +262,7 @@ const logout = () => {
                             class="flex items-center justify-between rounded-md bg-white/50 px-3 py-2 dark:bg-black/20"
                         >
                             <div>
-                                <Link :href="`/customer/invoices/${invoice.id}`" class="font-medium hover:underline">
+                                <Link :href="customer.invoices.show(invoice.id).url" class="font-medium hover:underline">
                                     {{ invoice.invoice_number }}
                                 </Link>
                                 <div class="text-sm text-muted-foreground">Due {{ formatDate(invoice.due_date) }}</div>
@@ -269,7 +270,7 @@ const logout = () => {
                             <div class="text-right">
                                 <div class="font-bold text-orange-800 dark:text-orange-200">{{ formatPrice(invoice.amount) }}</div>
                                 <Link
-                                    :href="`/customer/invoices/${invoice.id}/payment`"
+                                    :href="customer.invoices.payment(invoice.id).url"
                                     class="text-xs text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-200"
                                 >
                                     Pay Now
@@ -278,13 +279,13 @@ const logout = () => {
                         </div>
                     </div>
                     <div class="mt-4 flex gap-2">
-                        <Button :as="Link" href="/customer/invoices" variant="outline" size="sm"> View All Invoices </Button>
-                        <Button v-if="unpaidInvoices.length > 0" :as="Link" :href="`/customer/invoices/${unpaidInvoices[0].id}/payment`" size="sm">
+                        <Button :as="Link" :href="customer.invoices.index().url" variant="outline" size="sm"> View All Invoices </Button>
+                        <Button v-if="unpaidInvoices.length > 0" :as="Link" :href="customer.invoices.payment(unpaidInvoices[0].id).url" size="sm">
                             Pay Now
                         </Button>
                     </div>
                 </CardContent>
             </Card>
         </div>
-    </AppLayout>
+    </CustomerLayout>
 </template>

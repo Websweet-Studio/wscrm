@@ -133,7 +133,9 @@
       "Bash(timeout 30 php artisan:*)",
       "Bash(cat:*)",
       "Bash(pkill:*)",
-      "WebFetch(domain:localhost)"
+      "WebFetch(domain:localhost)",
+      "mcp__laravel-boost__get-absolute-url",
+      "mcp__laravel-boost__get-config"
     ],
     "deny": [],
     "ask": []
