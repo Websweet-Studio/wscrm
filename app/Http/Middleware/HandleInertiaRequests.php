@@ -38,6 +38,24 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
+        $customerBadges = [];
+        if ($customer = $request->user('customer')) {
+            // Count unpaid invoices (pending, sent, overdue)
+            $unpaidInvoicesCount = $customer->invoices()
+                ->whereIn('status', ['pending', 'sent', 'overdue'])
+                ->count();
+
+            // Count orders needing followup (pending, processing)
+            $pendingOrdersCount = $customer->orders()
+                ->whereIn('status', ['pending', 'processing'])
+                ->count();
+
+            $customerBadges = [
+                'unpaid_invoices' => $unpaidInvoicesCount,
+                'pending_orders' => $pendingOrdersCount,
+            ];
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -47,6 +65,7 @@ class HandleInertiaRequests extends Middleware
                 'customer' => $request->user('customer'), // Customer user (customer guard)
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'customerBadges' => $customerBadges,
         ];
     }
 }

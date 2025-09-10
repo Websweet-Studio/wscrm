@@ -5,9 +5,12 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import customer from '@/routes/customer';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { BookOpen, Folder, Globe, LayoutGrid, Receipt, Server, Settings, ShoppingCart } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
+
+const page = usePage();
+const customerBadges = page.props.customerBadges || {};
 
 const mainNavItems: NavItem[] = [
     {
@@ -29,11 +32,13 @@ const mainNavItems: NavItem[] = [
         title: 'My Orders',
         href: customer.orders.index().url,
         icon: ShoppingCart,
+        badge: customerBadges.pending_orders || 0,
     },
     {
         title: 'Invoices',
         href: customer.invoices.index().url,
         icon: Receipt,
+        badge: customerBadges.unpaid_invoices || 0,
     },
     {
         title: 'My Services',

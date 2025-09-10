@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuBadge } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 
@@ -17,8 +17,9 @@ const page = usePage();
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <SidebarMenuButton as-child :is-active="item.href === page.url" :tooltip="item.title">
                     <Link :href="item.href">
-                        <component :is="item.icon" />
+                        <component :is="item.icon" class="h-4 w-4" />
                         <span>{{ item.title }}</span>
+                        <SidebarMenuBadge v-if="item.badge && item.badge > 0">{{ item.badge }}</SidebarMenuBadge>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>

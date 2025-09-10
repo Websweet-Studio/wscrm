@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import AppLayout from '@/layouts/AppLayout.vue';
+import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
 
@@ -29,7 +29,10 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'My Orders', href: '/orders' }];
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Dashboard', href: '/customer/dashboard' },
+    { title: 'My Orders', href: '/customer/orders' }
+];
 
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -81,7 +84,7 @@ const getStatusText = (status: string) => {
 <template>
     <Head title="My Orders" />
 
-    <AppLayout :breadcrumbs="breadcrumbs">
+    <CustomerLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6 p-6">
             <div class="flex items-center justify-between">
                 <div>
@@ -89,7 +92,7 @@ const getStatusText = (status: string) => {
                     <p class="text-muted-foreground">Track and manage your orders</p>
                 </div>
                 <Button asChild>
-                    <Link href="/hosting">Browse Products</Link>
+                    <Link href="/customer/hosting">Browse Products</Link>
                 </Button>
             </div>
 
@@ -97,7 +100,7 @@ const getStatusText = (status: string) => {
                 <div class="text-muted-foreground">
                     <p class="mb-4 text-lg">You haven't placed any orders yet.</p>
                     <Button asChild>
-                        <Link href="/hosting">Start Shopping</Link>
+                        <Link href="/customer/hosting">Start Shopping</Link>
                     </Button>
                 </div>
             </div>
@@ -152,7 +155,7 @@ const getStatusText = (status: string) => {
 
                             <div class="flex justify-end pt-2">
                                 <Button variant="outline" size="sm" asChild>
-                                    <Link :href="`/orders/${order.id}`">View Details</Link>
+                                    <Link :href="`/customer/orders/${order.id}`">View Details</Link>
                                 </Button>
                             </div>
                         </div>
@@ -160,5 +163,5 @@ const getStatusText = (status: string) => {
                 </Card>
             </div>
         </div>
-    </AppLayout>
+    </CustomerLayout>
 </template>
