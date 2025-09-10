@@ -23,7 +23,7 @@ class CustomerController extends Controller
                     JOIN orders o ON o.id = oi.order_id
                     WHERE o.customer_id = customers.id
                     AND oi.item_type IN ("hosting", "domain")
-                )')
+                )'),
             ])
             ->when(request('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")

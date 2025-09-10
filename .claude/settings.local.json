@@ -135,7 +135,8 @@
       "Bash(pkill:*)",
       "WebFetch(domain:localhost)",
       "mcp__laravel-boost__get-absolute-url",
-      "mcp__laravel-boost__get-config"
+      "mcp__laravel-boost__get-config",
+      "mcp__laravel-boost__search-docs"
     ],
     "deny": [],
     "ask": []

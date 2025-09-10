@@ -1,16 +1,31 @@
-<script setup>
+<script setup lang="ts">
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import AppLayout from '@/layouts/AppLayout.vue';
+import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { formatDate, formatPrice } from '@/lib/utils';
+import customer from '@/routes/customer';
+import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
 import { CreditCard, Eye, FileText } from 'lucide-vue-next';
 
-defineProps({
-    invoices: Object,
-});
+interface Props {
+    invoices: {
+        data: Array<any>;
+        links?: Array<any>;
+        from?: number;
+        to?: number;
+        total?: number;
+    };
+}
+
+defineProps<Props>();
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Dashboard', href: customer.dashboard().url },
+    { title: 'Invoices', href: customer.invoices.index().url },
+];
 
 const getStatusClass = (status) => {
     const classes = {
@@ -62,18 +77,14 @@ const getOrderTypeDisplay = (order) => {
 <template>
     <Head title="Invoice Saya" />
 
-    <AppLayout>
-        <template #header>
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-xl leading-tight font-semibold text-gray-800 dark:text-gray-200">Invoice Saya</h2>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Kelola dan bayar invoice Anda</p>
-                </div>
-            </div>
-        </template>
+    <CustomerLayout :breadcrumbs="breadcrumbs">
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div class="space-y-6 p-6">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight">Invoice Saya</h1>
+                <p class="text-muted-foreground">Kelola dan bayar invoice Anda</p>
+            </div>
+            <div>
                 <Card>
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2">
@@ -138,13 +149,13 @@ const getOrderTypeDisplay = (order) => {
                                         </TableCell>
                                         <TableCell class="text-right">
                                             <div class="flex items-center justify-end gap-2">
-                                                <Button :as="Link" :href="`/customer/invoices/${invoice.id}`" variant="outline" size="sm">
+                                                <Button :as="Link" :href="customer.invoices.show(invoice.id).url" variant="outline" size="sm">
                                                     <Eye class="h-4 w-4" />
                                                 </Button>
                                                 <Button
                                                     v-if="invoice.status !== 'paid' && invoice.status !== 'cancelled'"
                                                     :as="Link"
-                                                    :href="`/customer/invoices/${invoice.id}/payment`"
+                                                    :href="customer.invoices.payment(invoice.id).url"
                                                     size="sm"
                                                 >
                                                     <CreditCard class="mr-1 h-4 w-4" />
@@ -162,17 +173,25 @@ const getOrderTypeDisplay = (order) => {
                                     Showing {{ invoices.from }} to {{ invoices.to }} of {{ invoices.total }} results
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <Link
-                                        v-for="link in invoices.links"
-                                        :key="link.label"
-                                        :href="link.url"
-                                        :class="[
-                                            'rounded-md px-3 py-2 text-sm',
-                                            link.active ? 'bg-primary text-primary-foreground' : 'border bg-background hover:bg-muted',
-                                            !link.url ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
-                                        ]"
-                                        v-html="link.label"
-                                    />
+                                    <template v-for="link in invoices.links" :key="link.label">
+                                        <Link
+                                            v-if="link.url"
+                                            :href="link.url"
+                                            :class="[
+                                                'rounded-md px-3 py-2 text-sm cursor-pointer',
+                                                link.active ? 'bg-primary text-primary-foreground' : 'border bg-background hover:bg-muted',
+                                            ]"
+                                            v-html="link.label"
+                                        />
+                                        <span
+                                            v-else
+                                            :class="[
+                                                'rounded-md px-3 py-2 text-sm cursor-not-allowed opacity-50',
+                                                'border bg-background',
+                                            ]"
+                                            v-html="link.label"
+                                        />
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -187,5 +206,5 @@ const getOrderTypeDisplay = (order) => {
                 </Card>
             </div>
         </div>
-    </AppLayout>
+    </CustomerLayout>
 </template>
