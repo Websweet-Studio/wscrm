@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Invoice;
-use App\Models\Service;
 use App\Services\InvoiceGeneratorService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,7 +14,7 @@ class InvoiceController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = Invoice::with(['customer', 'service', 'order']);
+        $query = Invoice::with(['customer', 'order']);
 
         // Search functionality
         if ($request->filled('search')) {
@@ -61,7 +60,6 @@ class InvoiceController extends Controller
                 'overdue' => $overdueAmount,
             ],
             'customers' => Customer::orderBy('name')->get(['id', 'name', 'email']),
-            'services' => Service::with('customer')->where('status', 'active')->get(['id', 'domain_name', 'service_type', 'customer_id']),
         ]);
     }
 
@@ -69,7 +67,6 @@ class InvoiceController extends Controller
     {
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
-            'service_id' => 'nullable|exists:services,id',
             'invoice_type' => 'required|in:setup,renewal',
             'amount' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
@@ -78,17 +75,12 @@ class InvoiceController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        // Get service if provided
-        $service = $validated['service_id'] ? Service::find($validated['service_id']) : null;
-
-        // Create invoice
         $invoiceNumber = $generator->generateInvoiceNumber();
 
         $invoice = Invoice::create([
             'invoice_number' => $invoiceNumber,
             'invoice_type' => $validated['invoice_type'],
             'customer_id' => $validated['customer_id'],
-            'service_id' => $validated['service_id'],
             'amount' => $validated['amount'],
             'discount' => $validated['discount'] ?? 0,
             'issue_date' => now(),
@@ -103,7 +95,7 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice): Response
     {
-        $invoice->load(['customer', 'service', 'order']);
+        $invoice->load(['customer', 'order']);
 
         return Inertia::render('Admin/Invoices/Show', [
             'invoice' => $invoice,

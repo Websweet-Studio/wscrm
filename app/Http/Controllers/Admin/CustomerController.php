@@ -14,8 +14,8 @@ class CustomerController extends Controller
 {
     public function index(): Response
     {
-        $customers = Customer::with(['orders', 'services'])
-            ->withCount(['orders', 'services'])
+        $customers = Customer::with(['orders'])
+            ->withCount(['orders'])
             ->when(request('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
@@ -37,7 +37,6 @@ class CustomerController extends Controller
     {
         $customer->load([
             'orders.orderItems',
-            'services.hostingPlan',
             'invoices',
         ]);
 
@@ -116,8 +115,7 @@ class CustomerController extends Controller
             }
             $customer->orders()->delete();
 
-            // Delete services
-            $customer->services()->delete();
+            // Services are now handled through orders - no separate deletion needed
 
             // Finally delete the customer
             $customer->delete();

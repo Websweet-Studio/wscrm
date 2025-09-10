@@ -28,7 +28,6 @@ class DatabaseSeeder extends Seeder
             ServicePlanSeeder::class,
             CustomerSeeder::class,
             OrderSeeder::class,
-            ServiceSeeder::class,
             InvoiceSeeder::class,
             BankSeeder::class,
         ]);

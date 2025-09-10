@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -79,7 +79,6 @@ const form = reactive({
 const simulation = ref<Record<string, SimulationData[]>>({});
 const isSimulating = ref(false);
 const isApplying = ref(false);
-const showSaveDialog = ref(false);
 const saveForm = reactive({
     name: '',
     description: '',
@@ -202,7 +201,6 @@ const saveConfig = () => {
         ...form,
     }, {
         onSuccess: () => {
-            showSaveDialog.value = false;
             saveForm.name = '';
             saveForm.description = '';
             saveForm.is_default = false;
@@ -373,7 +371,7 @@ runSimulation();
                                     {{ isSimulating ? 'Simulating...' : 'Run Simulation' }}
                                 </Button>
                                 
-                                <Dialog v-model:open="showSaveDialog">
+                                <Dialog>
                                     <DialogTrigger as-child>
                                         <Button variant="outline" class="w-full">
                                             <Save class="h-4 w-4 mr-2" />
@@ -416,14 +414,18 @@ runSimulation();
                                                 <Label for="is-default">Set sebagai konfigurasi default</Label>
                                             </div>
                                         </div>
-                                        <DialogFooter>
-                                            <Button variant="outline" @click="showSaveDialog = false">
-                                                Batal
-                                            </Button>
-                                            <Button @click="saveConfig">
-                                                <Save class="h-4 w-4 mr-2" />
-                                                Simpan
-                                            </Button>
+                                        <DialogFooter class="gap-2">
+                                            <DialogClose as-child>
+                                                <Button variant="outline">
+                                                    Batal
+                                                </Button>
+                                            </DialogClose>
+                                            <DialogClose as-child>
+                                                <Button @click="saveConfig">
+                                                    <Save class="h-4 w-4 mr-2" />
+                                                    Simpan
+                                                </Button>
+                                            </DialogClose>
                                         </DialogFooter>
                                     </DialogContent>
                                 </Dialog>

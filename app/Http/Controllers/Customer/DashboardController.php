@@ -13,8 +13,10 @@ class DashboardController extends Controller
     {
         $customer = Auth::guard('customer')->user();
 
-        $services = $customer->services()
-            ->with(['hostingPlan'])
+        // Services are now handled through orders - get active orders instead
+        $services = $customer->orders()
+            ->whereIn('status', ['active', 'suspended'])
+            ->with(['orderItems', 'hostingPlan'])
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();

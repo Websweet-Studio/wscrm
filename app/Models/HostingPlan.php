@@ -51,11 +51,6 @@ class HostingPlan extends Model
         return $this->hasMany(OrderItem::class, 'item_id')->where('item_type', 'hosting');
     }
 
-    public function services(): HasMany
-    {
-        return $this->hasMany(Service::class, 'plan_id');
-    }
-
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
