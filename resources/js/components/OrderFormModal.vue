@@ -50,6 +50,7 @@ interface Order {
     status: string;
     expires_at?: string;
     auto_renew?: boolean;
+    discount_amount?: number;
     order_items: any[];
 }
 
@@ -78,6 +79,7 @@ const formData = ref({
     status: 'pending' as 'pending' | 'processing' | 'active' | 'suspended' | 'expired' | 'terminated' | 'cancelled',
     expires_at: '',
     auto_renew: false,
+    discount_amount: '',
     items: [
         {
             item_type: 'hosting' as 'hosting' | 'domain' | 'service' | 'app' | 'web' | 'maintenance',
@@ -130,6 +132,7 @@ watch(() => props.order, (order) => {
             status: order.status as typeof formData.value.status,
             expires_at: formatDateForInput(order.expires_at || ''),
             auto_renew: order.auto_renew || false,
+            discount_amount: order.discount_amount?.toString() || '',
             items: order.order_items.map(item => ({
                 id: item.id,
                 item_type: item.item_type,
@@ -151,6 +154,7 @@ watch(() => props.mode, (mode) => {
             status: 'pending',
             expires_at: '',
             auto_renew: false,
+            discount_amount: '',
             items: [{
                 item_type: 'hosting',
                 item_id: '',
@@ -330,6 +334,21 @@ const close = () => {
                         />
                         <Label :for="`${mode}-auto-renew`">Perpanjang Otomatis</Label>
                     </div>
+                </div>
+
+                <!-- Discount Amount for Edit Mode -->
+                <div v-if="isEditMode">
+                    <Label :for="`${mode}-discount-amount`">Potongan Harga (Rp)</Label>
+                    <Input
+                        :id="`${mode}-discount-amount`"
+                        v-model="formData.discount_amount"
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="Masukkan nominal potongan harga"
+                    />
+                    <p v-if="errors.discount_amount" class="mt-1 text-xs text-red-500">{{ errors.discount_amount }}</p>
+                    <p class="mt-1 text-xs text-muted-foreground">Masukkan nominal dalam Rupiah (contoh: 50000 untuk Rp 50.000)</p>
                 </div>
 
                 <!-- Items Section -->

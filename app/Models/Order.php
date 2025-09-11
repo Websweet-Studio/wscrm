@@ -18,6 +18,7 @@ class Order extends Model
         'plan_id',
         'domain_name',
         'total_amount',
+        'discount_amount',
         'status',
         'billing_cycle',
         'expires_at',
@@ -30,6 +31,7 @@ class Order extends Model
     {
         return [
             'total_amount' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
             'expires_at' => 'date',
             'next_billing_date' => 'date',
             'auto_renew' => 'boolean',

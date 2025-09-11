@@ -49,6 +49,7 @@ interface OrderItem {
 interface Order {
     id: number;
     total_amount: number;
+    discount_amount?: number;
     status: 'pending' | 'processing' | 'active' | 'suspended' | 'expired' | 'terminated' | 'cancelled';
     billing_cycle: string;
     service_type?: string;
@@ -518,7 +519,12 @@ const deleteOrder = () => {
                                             Tidak ada domain
                                         </div>
                                     </td>
-                                    <td class="py-3 font-medium">{{ formatPrice(order.total_amount) }}</td>
+                                    <td class="py-3">
+                                        <div class="font-medium">{{ formatPrice(order.total_amount) }}</div>
+                                        <div v-if="order.discount_amount && order.discount_amount > 0" class="text-xs text-green-600 dark:text-green-400">
+                                            Potongan: {{ formatPrice(order.discount_amount) }}
+                                        </div>
+                                    </td>
                                     <td class="py-3">
                                         <span
                                             :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', getStatusColor(order.status)]"

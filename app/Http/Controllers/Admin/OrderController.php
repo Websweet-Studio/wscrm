@@ -176,6 +176,7 @@ class OrderController extends Controller
             'status' => 'required|in:pending,processing,active,suspended,expired,cancelled,terminated',
             'expires_at' => 'nullable|date',
             'auto_renew' => 'boolean',
+            'discount_amount' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.item_type' => 'required|in:hosting,domain,service,app,web,maintenance',
             'items.*.item_id' => 'required|integer',
@@ -191,6 +192,7 @@ class OrderController extends Controller
                 'status' => $request->status,
                 'expires_at' => $request->expires_at,
                 'auto_renew' => $request->auto_renew ?? false,
+                'discount_amount' => $request->discount_amount ?? 0,
             ]);
 
             // Delete existing order items
