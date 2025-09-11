@@ -127,6 +127,16 @@ This is a **Laravel 12 + Vue 3 + Inertia.js** application with the following set
 - **User Menu**: Standard Button with DropdownMenu in sidebar footer
 - **Responsive**: Fixed desktop layout, mobile responsive via standard Tailwind breakpoints
 
+### Modal System
+- **Custom Modal Implementation**: Use custom modal pattern like Admin Customers page instead of Dialog component
+- **Modal Structure**:
+  - Overlay: `fixed inset-0 z-50 flex items-center justify-center`
+  - Backdrop: `fixed inset-0 bg-black/50` with click-to-close handler
+  - Content: `relative bg-white rounded-lg shadow-xl max-w-[size] w-full mx-4`
+- **State Management**: Use `ref(false)` for modal visibility
+- **Native HTML Elements**: Prefer native `<input type="radio">`, `<select>` over custom UI components
+- **Example**: See `HostingOrderModal.vue` and Admin Customers modals
+
 ===
 
 <laravel-boost-guidelines>

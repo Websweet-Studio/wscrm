@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import HostingOrderModal from '@/components/HostingOrderModal.vue';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
@@ -22,8 +23,22 @@ interface HostingPlan {
     is_active: boolean;
 }
 
+interface DomainPrice {
+    id: number;
+    extension: string;
+    selling_price: number;
+}
+
+interface ExistingDomain {
+    id: number;
+    domain_name: string;
+    status: string;
+}
+
 interface Props {
     hostingPlans: HostingPlan[];
+    domainPrices: DomainPrice[];
+    existingDomains: ExistingDomain[];
     filters: {
         search?: string;
     };
@@ -32,6 +47,8 @@ interface Props {
 const props = defineProps<Props>();
 
 const search = ref(props.filters.search || '');
+const showOrderModal = ref(false);
+const selectedPlan = ref<HostingPlan | null>(null);
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/customer/dashboard' },
@@ -61,17 +78,9 @@ const handleSearch = () => {
     );
 };
 
-const orderPlan = (planId: number) => {
-    router.post('/customer/orders', {
-        billing_cycle: 'annually',
-        items: [
-            {
-                item_type: 'hosting',
-                item_id: planId,
-                quantity: 1,
-            },
-        ],
-    });
+const orderPlan = (plan: HostingPlan) => {
+    selectedPlan.value = plan;
+    showOrderModal.value = true;
 };
 </script>
 
@@ -177,7 +186,7 @@ const orderPlan = (planId: number) => {
 
                         <!-- Actions -->
                         <div class="space-y-2 pt-4">
-                            <Button @click="orderPlan(plan.id)" class="w-full" size="lg">
+                            <Button @click="orderPlan(plan)" class="w-full" size="lg">
                                 <ShoppingCart class="mr-2 h-4 w-4" />
                                 Order Now
                             </Button>
@@ -198,5 +207,15 @@ const orderPlan = (planId: number) => {
                 </p>
             </div>
         </div>
+
+        <!-- Order Modal -->
+        <HostingOrderModal
+            v-if="selectedPlan"
+            :open="showOrderModal"
+            :hosting-plan="selectedPlan"
+            :domain-prices="domainPrices"
+            :existing-domains="existingDomains"
+            @update:open="showOrderModal = $event"
+        />
     </CustomerLayout>
 </template>
