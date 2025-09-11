@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { Trash2 } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 interface OrderItem {
     id: number;
@@ -34,6 +36,24 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/customer/dashboard' },
     { title: 'My Orders', href: '/customer/orders' }
 ];
+
+const deletingOrders = ref<Set<number>>(new Set());
+
+const deleteOrder = (orderId: number) => {
+    if (confirm('Apakah Anda yakin ingin menghapus order ini?')) {
+        deletingOrders.value.add(orderId);
+        
+        router.delete(`/customer/orders/${orderId}`, {
+            onSuccess: () => {
+                deletingOrders.value.delete(orderId);
+            },
+            onError: () => {
+                deletingOrders.value.delete(orderId);
+                alert('Gagal menghapus order. Silakan coba lagi.');
+            }
+        });
+    }
+};
 
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -167,9 +187,20 @@ const getStatusText = (status: string) => {
                                 </div>
                             </div>
 
-                            <div class="flex justify-end pt-2">
+                            <div class="flex justify-end gap-2 pt-2">
                                 <Button variant="outline" size="sm" asChild>
                                     <Link :href="`/customer/orders/${order.id}`">View Details</Link>
+                                </Button>
+                                <Button 
+                                    v-if="order.status === 'pending'" 
+                                    variant="destructive" 
+                                    size="sm"
+                                    :disabled="deletingOrders.has(order.id)"
+                                    @click="deleteOrder(order.id)"
+                                    class="cursor-pointer"
+                                >
+                                    <Trash2 class="h-4 w-4 mr-1" />
+                                    {{ deletingOrders.has(order.id) ? 'Menghapus...' : 'Hapus' }}
                                 </Button>
                             </div>
                         </div>

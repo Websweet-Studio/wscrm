@@ -16,6 +16,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::post('login', [LoginController::class, 'store']);
         Route::get('register', [RegisterController::class, 'create'])->name('register');
         Route::post('register', [RegisterController::class, 'store']);
+        Route::get('terms', [LoginController::class, 'terms'])->name('terms');
     });
 
     Route::middleware('auth:customer')->group(function () {
@@ -37,6 +38,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
             Route::get('/', [OrderController::class, 'index'])->name('index');
             Route::post('/', [OrderController::class, 'store'])->name('store');
             Route::get('/{order}', [OrderController::class, 'show'])->name('show');
+            Route::delete('/{order}', [OrderController::class, 'destroy'])->name('destroy');
         });
 
         Route::prefix('services')->name('services.')->group(function () {

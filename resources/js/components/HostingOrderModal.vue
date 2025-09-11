@@ -189,7 +189,7 @@ const handleSubmit = async () => {
                         Pilih hosting dan domain untuk memulai website Anda
                     </p>
                 </div>
-                <button @click="emit('update:open', false)" class="text-gray-500 hover:text-gray-700">
+                <button @click="emit('update:open', false)" class="text-gray-500 hover:text-gray-700 cursor-pointer">
                     <X class="h-5 w-5" />
                 </button>
             </div>
@@ -239,13 +239,13 @@ const handleSubmit = async () => {
                     
                     <div class="space-y-4">
                         <div class="flex items-center space-x-2">
-                            <input type="radio" id="new" value="new" v-model="domainOption" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
-                            <Label for="new" class="font-medium">Order Domain Baru</Label>
+                            <input type="radio" id="new" value="new" v-model="domainOption" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer" />
+                            <Label for="new" class="font-medium cursor-pointer">Order Domain Baru</Label>
                         </div>
                         
                         <div v-if="existingDomains.length > 0" class="flex items-center space-x-2">
-                            <input type="radio" id="existing" value="existing" v-model="domainOption" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
-                            <Label for="existing" class="font-medium">Gunakan Domain yang Sudah Ada</Label>
+                            <input type="radio" id="existing" value="existing" v-model="domainOption" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer" />
+                            <Label for="existing" class="font-medium cursor-pointer">Gunakan Domain yang Sudah Ada</Label>
                         </div>
                     </div>
 
@@ -259,7 +259,7 @@ const handleSubmit = async () => {
                                     placeholder="namawebsite" 
                                     class="flex-1"
                                 />
-                                <select v-model="selectedExtension" class="w-32 h-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                                <select v-model="selectedExtension" class="w-32 h-9 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-sm">
                                     <option value="">Ekstensi</option>
                                     <option 
                                         v-for="domain in domainPrices.slice(0, 10)" 
@@ -285,7 +285,7 @@ const handleSubmit = async () => {
                     <!-- Existing Domain Selection -->
                     <div v-if="domainOption === 'existing' && existingDomains.length > 0" class="space-y-2 p-4 border rounded-lg bg-gray-50">
                         <Label>Pilih Domain</Label>
-                        <select v-model="selectedExistingDomain" class="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                        <select v-model="selectedExistingDomain" class="w-full h-9 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-sm">
                             <option value="">Pilih domain yang sudah ada</option>
                             <option 
                                 v-for="domain in existingDomains" 
@@ -351,13 +351,13 @@ const handleSubmit = async () => {
 
                 <!-- Action Buttons -->
                 <div class="flex justify-end gap-3 pt-4">
-                    <Button variant="outline" @click="emit('update:open', false)">
+                    <Button variant="outline" @click="emit('update:open', false)" class="cursor-pointer">
                         Batal
                     </Button>
                     <Button 
                         @click="handleSubmit" 
                         :disabled="!isFormValid || isSubmitting"
-                        class="min-w-[120px]"
+                        class="min-w-[120px] cursor-pointer"
                     >
                         {{ isSubmitting ? 'Memproses...' : 'Order Sekarang' }}
                     </Button>

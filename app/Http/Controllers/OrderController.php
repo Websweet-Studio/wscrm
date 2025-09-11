@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DomainPrice;
 use App\Models\HostingPlan;
 use App\Models\Order;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -130,5 +131,23 @@ class OrderController extends Controller
         });
 
         return redirect()->route('orders.index')->with('success', 'Order created successfully!');
+    }
+
+    public function destroy(Order $order): RedirectResponse
+    {
+        // Check if the order belongs to the authenticated customer
+        if ($order->customer_id !== Auth::guard('customer')->id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Only allow deletion of pending orders
+        if ($order->status !== 'pending') {
+            return redirect()->back()->with('error', 'Hanya order dengan status pending yang dapat dihapus.');
+        }
+
+        // Delete the order and its items (cascade delete should handle order items)
+        $order->delete();
+
+        return redirect()->route('customer.orders.index')->with('success', 'Order berhasil dihapus.');
     }
 }

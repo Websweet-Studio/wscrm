@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthCardLayout from '@/layouts/auth/AuthCardLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { X } from 'lucide-vue-next';
 
 const form = useForm({
     email: '',
@@ -119,6 +121,12 @@ const submit = () => {
                     <span class="text-muted-foreground">Don't have an account? </span>
                     <TextLink href="/customer/register" class="font-semibold text-primary transition-colors duration-200 hover:text-primary/80">
                         Create account
+                    </TextLink>
+                </div>
+
+                <div class="text-sm">
+                    <TextLink href="/customer/terms" class="text-muted-foreground transition-colors duration-200 hover:text-foreground">
+                        Syarat dan Ketentuan
                     </TextLink>
                 </div>
 

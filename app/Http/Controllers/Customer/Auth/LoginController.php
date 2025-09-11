@@ -19,6 +19,11 @@ class LoginController extends Controller
         return Inertia::render('Customer/Auth/Login');
     }
 
+    public function terms(): Response
+    {
+        return Inertia::render('Customer/Auth/Terms');
+    }
+
     public function store(Request $request): RedirectResponse
     {
         \Log::info('Customer login attempt', [
