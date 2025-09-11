@@ -75,7 +75,7 @@ const emit = defineEmits<{
 const formData = ref({
     customer_id: '',
     domain_name: '',
-    billing_cycle: 'onetime' as 'onetime' | 'monthly' | 'quarterly' | 'semi_annually' | 'annually',
+    billing_cycle: 'annual' as 'onetime' | 'monthly' | 'quarterly' | 'semi_annually' | 'annually',
     status: 'pending' as 'pending' | 'processing' | 'active' | 'suspended' | 'expired' | 'terminated' | 'cancelled',
     expires_at: '',
     auto_renew: false,
@@ -104,6 +104,53 @@ const modalDescription = computed(() => {
 });
 
 const isEditMode = computed(() => props.mode === 'edit');
+
+// Price calculation functions
+const getItemPrice = (item: OrderItem): number => {
+    if (!item.item_id || !item.item_type) return 0;
+    
+    const plans = getPlansForType(item.item_type);
+    const selectedPlan = plans.find(plan => plan.id.toString() === item.item_id.toString());
+    
+    return selectedPlan?.price || 0;
+};
+
+const getBillingCycleMultiplier = (): number => {
+    switch (formData.value.billing_cycle) {
+        case 'monthly': return 1;
+        case 'quarterly': return 3;
+        case 'semi_annual': return 6;
+        case 'annual': return 12;
+        case 'onetime':
+        default:
+            return 1;
+    }
+};
+
+// Computed properties for price calculation
+const itemsSubtotal = computed((): number => {
+    return formData.value.items.reduce((total, item) => {
+        const itemPrice = getItemPrice(item);
+        return total + (itemPrice * getBillingCycleMultiplier());
+    }, 0);
+});
+
+const discountAmount = computed((): number => {
+    const discount = parseFloat(formData.value.discount_amount) || 0;
+    return Math.max(0, discount);
+});
+
+const totalAmount = computed((): number => {
+    return Math.max(0, itemsSubtotal.value - discountAmount.value);
+});
+
+const formatPrice = (amount: number): string => {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+    }).format(amount);
+};
 
 // Function to format date for input[type="date"]
 const formatDateForInput = (dateString: string | null): string => {
@@ -150,7 +197,7 @@ watch(() => props.mode, (mode) => {
         formData.value = {
             customer_id: '',
             domain_name: '',
-            billing_cycle: 'onetime',
+            billing_cycle: 'annual',
             status: 'pending',
             expires_at: '',
             auto_renew: false,
@@ -194,19 +241,19 @@ const getPlansForType = (type: string) => {
         case 'hosting':
             return props.hostingPlans.map(plan => ({
                 id: plan.id,
-                name: `${plan.plan_name} (${plan.storage_gb}GB, ${plan.cpu_cores} CPU, ${plan.ram_gb}GB RAM)`,
+                name: `${plan.plan_name} (${plan.storage_gb}GB, ${plan.cpu_cores} CPU, ${plan.ram_gb}GB RAM) - ${formatPrice(plan.selling_price)}`,
                 price: plan.selling_price,
             }));
         case 'domain':
             return props.domainPrices.map(domain => ({
                 id: domain.id,
-                name: domain.extension,
+                name: `${domain.extension} - ${formatPrice(domain.selling_price)}`,
                 price: domain.selling_price,
             }));
         case 'service':
             return props.servicePlans.map(service => ({
                 id: service.id,
-                name: `${service.name} (${service.category})`,
+                name: `${service.name} (${service.category}) - ${formatPrice(service.price)}`,
                 price: service.price,
             }));
         default:
@@ -427,8 +474,22 @@ const close = () => {
                                 </p>
                             </div>
 
-                            <!-- Custom Price (Edit Mode Only) -->
-                            <div v-if="isEditMode" class="col-span-4">
+                            <!-- Price Display (Create Mode) / Custom Price (Edit Mode) -->
+                            <div v-if="!isEditMode" class="col-span-4">
+                                <Label>Harga</Label>
+                                <div class="flex h-9 items-center rounded-md border border-input bg-muted px-3 py-1 text-sm">
+                                    <span v-if="item.item_id && item.item_type" class="font-medium text-primary">
+                                        {{ formatPrice(getItemPrice(item)) }}
+                                        <span v-if="formData.billing_cycle !== 'onetime'" class="text-xs text-muted-foreground ml-1">
+                                            /{{ formData.billing_cycle === 'monthly' ? 'bulan' : formData.billing_cycle === 'quarterly' ? '3 bulan' : formData.billing_cycle === 'semi_annual' ? '6 bulan' : 'tahun' }}
+                                        </span>
+                                    </span>
+                                    <span v-else class="text-muted-foreground">
+                                        Pilih item untuk melihat harga
+                                    </span>
+                                </div>
+                            </div>
+                            <div v-else class="col-span-4">
                                 <Label :for="`item-price-${index}`">Harga Custom (Opsional)</Label>
                                 <Input
                                     :id="`item-price-${index}`"
@@ -442,7 +503,7 @@ const close = () => {
                             </div>
 
                             <!-- Remove Button -->
-                            <div :class="isEditMode ? 'col-span-1' : 'col-span-5'">
+                            <div class="col-span-1">
                                 <Button
                                     v-if="formData.items.length > 1"
                                     type="button"
@@ -456,6 +517,56 @@ const close = () => {
                         </div>
                     </div>
                     <p v-if="errors.items" class="mt-2 text-xs text-red-500">{{ errors.items }}</p>
+                </div>
+
+                <!-- Price Summary -->
+                <div v-if="!isEditMode" class="rounded-lg border bg-muted/30 p-4">
+                    <h3 class="text-lg font-medium mb-4">Ringkasan Harga</h3>
+                    
+                    <!-- Individual Item Prices -->
+                    <div class="space-y-2 mb-4">
+                        <div 
+                            v-for="(item, index) in formData.items" 
+                            :key="index"
+                            class="flex justify-between text-sm"
+                        >
+                            <span v-if="item.item_id && item.item_type">
+                                {{ getItemTypeText(item.item_type) }} - 
+                                {{ getPlansForType(item.item_type).find(p => p.id.toString() === item.item_id.toString())?.name?.split(' - ')[0] || 'Item' }}
+                                <span v-if="formData.billing_cycle !== 'onetime'" class="text-muted-foreground">
+                                    ({{ getBillingCycleMultiplier() }} {{ formData.billing_cycle === 'monthly' ? 'bulan' : formData.billing_cycle === 'quarterly' ? 'kuartal' : formData.billing_cycle === 'semi_annual' ? 'semester' : 'tahun' }})
+                                </span>
+                            </span>
+                            <span v-if="item.item_id && item.item_type" class="font-medium">
+                                {{ formatPrice(getItemPrice(item) * getBillingCycleMultiplier()) }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t pt-4">
+                        <!-- Subtotal -->
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Subtotal:</span>
+                            <span class="font-medium">{{ formatPrice(itemsSubtotal) }}</span>
+                        </div>
+                        
+                        <!-- Discount -->
+                        <div v-if="discountAmount > 0" class="flex justify-between text-sm text-green-600 mb-2">
+                            <span>Potongan Harga:</span>
+                            <span class="font-medium">-{{ formatPrice(discountAmount) }}</span>
+                        </div>
+                        
+                        <!-- Total -->
+                        <div class="flex justify-between text-lg font-bold pt-2 border-t">
+                            <span>Total:</span>
+                            <span class="text-primary">{{ formatPrice(totalAmount) }}</span>
+                        </div>
+                        
+                        <!-- Billing Cycle Info -->
+                        <div v-if="formData.billing_cycle !== 'onetime'" class="text-xs text-muted-foreground mt-2">
+                            Total untuk {{ formData.billing_cycle === 'monthly' ? '1 bulan' : formData.billing_cycle === 'quarterly' ? '3 bulan' : formData.billing_cycle === 'semi_annual' ? '6 bulan' : '12 bulan' }} periode
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Actions -->

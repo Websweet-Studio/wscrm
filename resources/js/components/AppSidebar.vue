@@ -50,11 +50,6 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Order Simulator',
-        href: '/order-simulator',
-        icon: Calculator,
-    },
-    {
         title: 'Customer',
         href: '#',
         icon: Users,

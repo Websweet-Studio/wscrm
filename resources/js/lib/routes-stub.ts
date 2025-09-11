@@ -46,7 +46,6 @@ export const customer = {
 
 // Public routes
 export const public_hosting = () => ({ url: '/hosting', method: 'get' });
-export const orderSimulator = () => ({ url: '/order-simulator', method: 'get' });
 
 // Export everything as default for wildcard imports
 export default {
@@ -61,5 +60,4 @@ export default {
     admin,
     customer,
     public_hosting,
-    orderSimulator,
 };
