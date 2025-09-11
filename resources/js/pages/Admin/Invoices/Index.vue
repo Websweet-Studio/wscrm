@@ -2,7 +2,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
@@ -506,10 +505,13 @@ const getDefaultDueDate = () => {
 
                     <div>
                         <label for="create-due-date" class="mb-2 block text-sm font-medium">Tanggal Jatuh Tempo *</label>
-                        <DatePicker
+                        <Input
+                            id="create-due-date"
                             v-model="createForm.due_date"
+                            type="date"
                             placeholder="Pilih tanggal jatuh tempo"
-                            :button-class="{ 'border-red-500': createForm.errors.due_date }"
+                            :class="{ 'border-red-500': createForm.errors.due_date }"
+                            required
                         />
                         <p v-if="createForm.errors.due_date" class="mt-1 text-xs text-red-500">{{ createForm.errors.due_date }}</p>
                     </div>
