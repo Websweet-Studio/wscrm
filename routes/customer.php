@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ImpersonateController;
 use App\Http\Controllers\Customer\Auth\LoginController;
 use App\Http\Controllers\Customer\Auth\RegisterController;
 use App\Http\Controllers\Customer\DashboardController;
@@ -56,5 +57,8 @@ Route::prefix('customer')->name('customer.')->group(function () {
             Route::patch('/profile', [SettingsController::class, 'updateProfile'])->name('update-profile');
             Route::patch('/password', [SettingsController::class, 'updatePassword'])->name('update-password');
         });
+        
+        // Stop Impersonation (available in customer area)
+        Route::post('/stop-impersonation', [ImpersonateController::class, 'stopImpersonation'])->name('stop-impersonation');
     });
 });

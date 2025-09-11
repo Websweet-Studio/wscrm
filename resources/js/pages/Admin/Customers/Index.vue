@@ -7,7 +7,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { Clock, Edit, Plus, Search, Trash2, UserCheck, Users, UserX, X } from 'lucide-vue-next';
+import { Clock, Edit, LogIn, Plus, Search, Trash2, UserCheck, Users, UserX, X } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface Customer {
@@ -230,6 +230,20 @@ const confirmDelete = () => {
         },
     });
 };
+
+const impersonateCustomer = (customer: Customer) => {
+    if (confirm(`Login sebagai ${customer.name}?`)) {
+        router.post(`/admin/impersonate/${customer.id}`, {}, {
+            onSuccess: () => {
+                // Redirect akan ditangani oleh controller
+            },
+            onError: (errors) => {
+                console.error('Impersonation error:', errors);
+                alert('Gagal login sebagai customer. Silakan coba lagi.');
+            },
+        });
+    }
+};
 </script>
 
 <template>
@@ -374,6 +388,9 @@ const confirmDelete = () => {
                                 <div class="flex items-center gap-2">
                                     <Button size="sm" variant="outline" asChild>
                                         <Link :href="`/admin/customers/${customer.id}`"> Lihat Detail </Link>
+                                    </Button>
+                                    <Button size="sm" variant="secondary" @click="impersonateCustomer(customer)" class="cursor-pointer" :title="`Login sebagai ${customer.name}`">
+                                        <LogIn class="h-3 w-3" />
                                     </Button>
                                     <Button size="sm" variant="outline" @click="openEditModal(customer)" class="cursor-pointer">
                                         <Edit class="h-3 w-3" />

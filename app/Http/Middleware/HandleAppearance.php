@@ -18,6 +18,11 @@ class HandleAppearance
     {
         View::share('appearance', $request->cookie('appearance') ?? 'system');
 
+        // Share impersonation status with Inertia
+        if (class_exists('\Inertia\Inertia')) {
+            \Inertia\Inertia::share('session.is_impersonating', fn() => session('is_impersonating', false));
+        }
+
         return $next($request);
     }
 }
