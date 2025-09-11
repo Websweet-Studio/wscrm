@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import HostingOrderModal from '@/components/HostingOrderModal.vue';
+import DomainBundleModal from '@/components/DomainBundleModal.vue';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import customer from '@/routes/customer';
 import { type BreadcrumbItem } from '@/types';
@@ -46,6 +47,12 @@ const props = defineProps<Props>();
 
 const search = ref(props.filters.search || '');
 const domainSearch = ref('');
+const showHostingModal = ref(false);
+const showBundleModal = ref(false);
+const selectedHostingPlan = ref<HostingPlan | null>(null);
+const selectedDomainPrice = ref<DomainPrice | null>(null);
+const selectedDomainId = ref<number | null>(null);
+const selectedDomainExtension = ref<string>('');
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: customer.dashboard().url },
@@ -91,7 +98,46 @@ const isPremium = (extension: string) => {
     return ['com', 'net', 'org'].includes(extension);
 };
 
+const showHostingOfferModal = (hostingPlan: HostingPlan) => {
+    selectedHostingPlan.value = hostingPlan;
+    showHostingModal.value = true;
+};
+
+// Show bundle selection popup when registering domain
 const orderDomain = (domainPriceId: number) => {
+    selectedDomainId.value = domainPriceId;
+    
+    // Find the selected domain
+    const selectedDomain = props.domainPrices.find(d => d.id === domainPriceId);
+    if (selectedDomain) {
+        selectedDomainPrice.value = selectedDomain;
+        selectedDomainExtension.value = selectedDomain.extension;
+        
+        // If there are hosting plans available, show bundle selection modal
+        if (props.hostingPlans.length > 0) {
+            selectedHostingPlan.value = props.hostingPlans[0];
+            showBundleModal.value = true;
+        } else {
+            // Fallback to direct domain order if no hosting plans
+            orderDomainOnly(domainPriceId);
+        }
+    }
+};
+
+// Handle bundle selection
+const handleSelectBundle = (hostingPlan: HostingPlan, domainPrice: DomainPrice) => {
+    selectedHostingPlan.value = hostingPlan;
+    selectedDomainPrice.value = domainPrice;
+    showBundleModal.value = false;
+    showHostingModal.value = true;
+};
+
+// Handle domain only selection
+const handleSelectDomainOnly = (domainPrice: DomainPrice) => {
+    orderDomainOnly(domainPrice.id);
+};
+
+const orderDomainOnly = (domainPriceId: number) => {
     router.post(customer.orders.store().url, {
         items: [
             {
@@ -281,6 +327,81 @@ const orderDomain = (domainPriceId: number) => {
                     {{ search ? 'Try adjusting your search criteria.' : 'No domain extensions are currently available.' }}
                 </p>
             </div>
+
+            <!-- Hosting Offer Section -->
+            <div v-if="hostingPlans.length > 0" class="space-y-6">
+                <div class="space-y-2 text-center">
+                    <h2 class="text-3xl font-bold">Complete Your Setup with Hosting</h2>
+                    <p class="text-muted-foreground">Get your domain and hosting together for the best experience</p>
+                </div>
+
+                <div class="mx-auto grid max-w-6xl gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <Card
+                        v-for="plan in hostingPlans.slice(0, 3)"
+                        :key="plan.id"
+                        class="group relative cursor-pointer overflow-hidden transition-all hover:shadow-lg"
+                        @click="showHostingOfferModal(plan)"
+                    >
+                        <div v-if="plan.discount_percent > 0" class="absolute top-2 right-2">
+                            <Badge class="bg-red-500 text-white">{{ plan.discount_percent }}% OFF</Badge>
+                        </div>
+
+                        <CardContent class="space-y-4 pt-6 text-center">
+                            <div class="mx-auto w-fit rounded-full bg-blue-100 p-3">
+                                <Server class="h-8 w-8 text-blue-600" />
+                            </div>
+                            
+                            <div class="text-xl font-bold">{{ plan.plan_name }}</div>
+
+                            <div class="space-y-2 text-sm text-muted-foreground">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <Server class="h-4 w-4" />
+                                    <span>{{ plan.storage_gb }}GB Storage</span>
+                                </div>
+                                <div class="flex items-center justify-center space-x-2">
+                                    <Server class="h-4 w-4" />
+                                    <span>{{ plan.cpu_cores }} CPU Cores</span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-1">
+                                <div v-if="plan.discount_percent > 0" class="text-sm text-muted-foreground line-through">
+                                    {{ formatPrice(plan.selling_price) }}
+                                </div>
+                                <div class="text-2xl font-bold text-blue-600">
+                                    {{ formatPrice(plan.selling_price * (1 - plan.discount_percent / 100)) }}
+                                </div>
+                                <div class="text-sm text-muted-foreground">per month</div>
+                            </div>
+
+                            <Button class="w-full transition-colors group-hover:bg-blue-600">
+                                <ShoppingCart class="mr-2 h-4 w-4" />
+                                Get Hosting + Domain
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
         </div>
+
+        <!-- Domain Bundle Selection Modal -->
+        <DomainBundleModal
+            v-if="selectedDomainPrice"
+            :open="showBundleModal"
+            @update:open="showBundleModal = $event"
+            :domain-price="selectedDomainPrice"
+            :hosting-plan="selectedHostingPlan"
+            @select-bundle="handleSelectBundle"
+            @select-domain-only="handleSelectDomainOnly"
+        />
+
+        <!-- Hosting Order Modal -->
+        <HostingOrderModal
+            :open="showHostingModal"
+            @update:open="showHostingModal = $event"
+            :hosting-plan="selectedHostingPlan"
+            :domain-prices="domainPrices"
+            :existing-domains="[]"
+        />
     </CustomerLayout>
 </template>
