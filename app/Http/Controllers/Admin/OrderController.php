@@ -81,12 +81,11 @@ class OrderController extends Controller
     {
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
+            'domain_name' => 'nullable|string|max:255',
             'billing_cycle' => 'required|in:onetime,monthly,quarterly,semi_annually,annually',
             'items' => 'required|array|min:1',
             'items.*.item_type' => 'required|in:hosting,domain,service,app,web,maintenance',
             'items.*.item_id' => 'required|integer',
-            'items.*.domain_name' => 'nullable|string|max:255',
-            'items.*.quantity' => 'required|integer|min:1',
         ]);
 
         DB::transaction(function () use ($request) {
@@ -98,27 +97,29 @@ class OrderController extends Controller
                 switch ($item['item_type']) {
                     case 'hosting':
                         $plan = HostingPlan::findOrFail($item['item_id']);
-                        $totalAmount += $plan->selling_price * $item['quantity'];
+                        $totalAmount += $plan->selling_price;
                         break;
                     case 'domain':
                         $domain = DomainPrice::findOrFail($item['item_id']);
-                        $totalAmount += $domain->selling_price * $item['quantity'];
+                        $totalAmount += $domain->selling_price;
                         break;
                     case 'service':
                         $service = ServicePlan::findOrFail($item['item_id']);
-                        $totalAmount += $service->price * $item['quantity'];
+                        $totalAmount += $service->price;
                         break;
                     case 'app':
                     case 'web':
                     case 'maintenance':
                         // Default pricing for new services
-                        $totalAmount += 500000 * $item['quantity']; // IDR
+                        $totalAmount += 500000; // IDR
                         break;
                 }
             }
 
             $order = Order::create([
                 'customer_id' => $request->customer_id,
+                'order_type' => 'hosting',
+                'domain_name' => $request->domain_name,
                 'total_amount' => $totalAmount,
                 'status' => 'pending',
                 'billing_cycle' => $request->billing_cycle,
@@ -153,8 +154,8 @@ class OrderController extends Controller
                     'order_id' => $order->id,
                     'item_type' => $item['item_type'],
                     'item_id' => $item['item_id'],
-                    'domain_name' => $item['domain_name'],
-                    'quantity' => $item['quantity'],
+                    'domain_name' => null,
+                    'quantity' => 1,
                     'price' => $price,
                 ]);
             }
@@ -165,26 +166,82 @@ class OrderController extends Controller
 
     public function update(Request $request, Order $order)
     {
-        if ($order->isOrder()) {
-            // Order update
-            $request->validate([
-                'status' => 'required|in:pending,processing,cancelled',
+        $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'domain_name' => 'nullable|string|max:255',
+            'billing_cycle' => 'required|in:onetime,monthly,quarterly,semi_annually,annually',
+            'status' => 'required|in:pending,processing,active,suspended,expired,cancelled,terminated',
+            'expires_at' => 'nullable|date',
+            'auto_renew' => 'boolean',
+            'items' => 'required|array|min:1',
+            'items.*.item_type' => 'required|in:hosting,domain,service,app,web,maintenance',
+            'items.*.item_id' => 'required|integer',
+            'items.*.price' => 'nullable|numeric|min:0',
+        ]);
+
+        DB::transaction(function () use ($request, $order) {
+            // Update order basic info
+            $order->update([
+                'customer_id' => $request->customer_id,
+                'domain_name' => $request->domain_name,
+                'billing_cycle' => $request->billing_cycle,
+                'status' => $request->status,
+                'expires_at' => $request->expires_at,
+                'auto_renew' => $request->auto_renew ?? false,
             ]);
-        } else {
-            // Service update
-            $request->validate([
-                'status' => 'required|in:active,suspended,expired,terminated',
-                'expires_at' => 'nullable|date',
-                'auto_renew' => 'boolean',
-                'domain_name' => 'nullable|string|max:255',
-            ]);
+
+            // Delete existing order items
+            $order->orderItems()->delete();
+
+            // Create new order items and recalculate total
+            $totalAmount = 0;
+            $items = collect($request->items);
+
+            foreach ($items as $item) {
+                $price = $item['price'] ?? $this->getDefaultPrice($item['item_type'], $item['item_id']);
+                $totalAmount += (float) $price;
+
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'item_type' => $item['item_type'],
+                    'item_id' => $item['item_id'],
+                    'domain_name' => null, // Domain name is at order level
+                    'quantity' => 1,
+                    'price' => $price,
+                ]);
+            }
+
+            // Update total amount
+            $order->update(['total_amount' => $totalAmount]);
+        });
+
+        return redirect()->back()->with('success', 'Pesanan berhasil diperbarui!');
+    }
+
+    private function getDefaultPrice(string $itemType, int $itemId): float
+    {
+        switch ($itemType) {
+            case 'hosting':
+                $plan = HostingPlan::find($itemId);
+
+                return $plan ? $plan->selling_price : 500000;
+            case 'domain':
+                $domain = DomainPrice::find($itemId);
+
+                return $domain ? $domain->selling_price : 150000;
+            case 'service':
+                $service = ServicePlan::find($itemId);
+
+                return $service ? $service->price : 500000;
+            case 'app':
+                return 2500000; // Default app development price
+            case 'web':
+                return 1500000; // Default web development price
+            case 'maintenance':
+                return 300000; // Default maintenance price
+            default:
+                return 100000; // Fallback price
         }
-
-        $order->update($request->only(['status', 'expires_at', 'auto_renew', 'domain_name']));
-
-        $message = $order->isOrder() ? 'Status pesanan berhasil diperbarui!' : 'Layanan berhasil diperbarui!';
-
-        return redirect()->back()->with('success', $message);
     }
 
     public function createService(Request $request)

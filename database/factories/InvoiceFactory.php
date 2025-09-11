@@ -32,9 +32,14 @@ class InvoiceFactory extends Factory
         $prefix = 'INV';
         $year = date('Y');
         $month = str_pad(date('m'), 2, '0', STR_PAD_LEFT);
-        $sequence = str_pad(fake()->numberBetween(1, 9999), 4, '0', STR_PAD_LEFT);
+        
+        // Generate unique sequence by checking existing invoice numbers
+        do {
+            $sequence = str_pad(fake()->numberBetween(1, 99999), 4, '0', STR_PAD_LEFT);
+            $invoiceNumber = "{$prefix}/{$year}/{$month}/{$sequence}";
+        } while (Invoice::where('invoice_number', $invoiceNumber)->exists());
 
-        return "{$prefix}/{$year}/{$month}/{$sequence}";
+        return $invoiceNumber;
     }
 
     public function paid(): static
