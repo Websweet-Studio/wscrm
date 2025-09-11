@@ -52,19 +52,22 @@ class CustomerController extends Controller
         // Get services from orders
         $services = \DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->leftJoin('hosting_plans', 'hosting_plans.id', '=', 'order_items.hosting_plan_id')
+            ->leftJoin('hosting_plans', function($join) {
+                $join->on('hosting_plans.id', '=', 'order_items.item_id')
+                     ->where('order_items.item_type', '=', 'hosting');
+            })
             ->where('orders.customer_id', $customer->id)
             ->whereIn('order_items.item_type', ['hosting', 'domain'])
             ->select([
                 'order_items.id',
                 'order_items.domain_name',
                 'order_items.item_type as service_type',
-                'order_items.status',
-                'order_items.expires_at',
+                'orders.status',
+                'orders.expires_at',
                 'order_items.created_at',
                 'hosting_plans.plan_name',
                 'hosting_plans.storage_gb',
-                'hosting_plans.bandwidth_gb'
+                'hosting_plans.bandwidth'
             ])
             ->get()
             ->map(function ($service) {
@@ -78,7 +81,7 @@ class CustomerController extends Controller
                     'hosting_plan' => $service->plan_name ? [
                         'plan_name' => $service->plan_name,
                         'storage_gb' => $service->storage_gb,
-                        'bandwidth_gb' => $service->bandwidth_gb,
+                        'bandwidth' => $service->bandwidth,
                     ] : null,
                 ];
             });
