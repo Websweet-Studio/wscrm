@@ -35,6 +35,7 @@ interface OrderItem {
 interface Order {
     id: number;
     total_amount: number;
+    discount_amount?: number;
     status: string;
     created_at: string;
     order_items: OrderItem[];
@@ -234,7 +235,22 @@ const getStatusClass = (status: string) => {
                                         </div>
                                     </div>
                                 </TableCell>
-                                <TableCell>{{ formatPrice(order.total_amount) }}</TableCell>
+                                <TableCell>
+                                    <template v-if="order.discount_amount && order.discount_amount > 0">
+                                        <div class="text-xs text-muted-foreground line-through">
+                                            {{ formatPrice(Number(order.total_amount) + Number(order.discount_amount)) }}
+                                        </div>
+                                        <div class="font-medium text-green-600 dark:text-green-400">
+                                            {{ formatPrice(order.total_amount) }}
+                                        </div>
+                                        <div class="text-xs text-green-600 dark:text-green-400">
+                                            Hemat: {{ formatPrice(order.discount_amount) }}
+                                        </div>
+                                    </template>
+                                    <template v-else>
+                                        <div class="font-medium">{{ formatPrice(order.total_amount) }}</div>
+                                    </template>
+                                </TableCell>
                                 <TableCell>
                                     <Badge :class="getStatusClass(order.status)">
                                         {{ order.status }}

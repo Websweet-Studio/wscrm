@@ -49,6 +49,42 @@ class CustomerController extends Controller
             'invoices',
         ]);
 
+        // Get services from orders
+        $services = \DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->leftJoin('hosting_plans', 'hosting_plans.id', '=', 'order_items.hosting_plan_id')
+            ->where('orders.customer_id', $customer->id)
+            ->whereIn('order_items.item_type', ['hosting', 'domain'])
+            ->select([
+                'order_items.id',
+                'order_items.domain_name',
+                'order_items.item_type as service_type',
+                'order_items.status',
+                'order_items.expires_at',
+                'order_items.created_at',
+                'hosting_plans.plan_name',
+                'hosting_plans.storage_gb',
+                'hosting_plans.bandwidth_gb'
+            ])
+            ->get()
+            ->map(function ($service) {
+                return [
+                    'id' => $service->id,
+                    'domain_name' => $service->domain_name,
+                    'service_type' => $service->service_type,
+                    'status' => $service->status,
+                    'expires_at' => $service->expires_at,
+                    'created_at' => $service->created_at,
+                    'hosting_plan' => $service->plan_name ? [
+                        'plan_name' => $service->plan_name,
+                        'storage_gb' => $service->storage_gb,
+                        'bandwidth_gb' => $service->bandwidth_gb,
+                    ] : null,
+                ];
+            });
+
+        $customer->services = $services;
+
         return Inertia::render('Admin/Customers/Show', [
             'customer' => $customer,
         ]);

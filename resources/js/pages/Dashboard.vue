@@ -44,6 +44,7 @@ interface OrderItem {
 interface Order {
     id: number;
     total_amount: number;
+    discount_amount?: number;
     status: string;
     created_at: string;
     expires_at?: string;
@@ -312,7 +313,20 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                                     <div class="text-xs text-muted-foreground">{{ formatDate(order.created_at) }}</div>
                                 </div>
                                 <div class="text-right">
-                                    <div class="text-sm font-bold">{{ formatPrice(order.total_amount) }}</div>
+                                    <template v-if="order.discount_amount && order.discount_amount > 0">
+                                        <div class="text-xs text-muted-foreground line-through">
+                                            {{ formatPrice(Number(order.total_amount) + Number(order.discount_amount)) }}
+                                        </div>
+                                        <div class="text-sm font-bold text-green-600 dark:text-green-400">
+                                            {{ formatPrice(order.total_amount) }}
+                                        </div>
+                                        <div class="text-xs text-green-600 dark:text-green-400">
+                                            Hemat: {{ formatPrice(order.discount_amount) }}
+                                        </div>
+                                    </template>
+                                    <template v-else>
+                                        <div class="text-sm font-bold">{{ formatPrice(order.total_amount) }}</div>
+                                    </template>
                                     <div class="text-xs text-muted-foreground capitalize">{{ order.status }}</div>
                                 </div>
                             </div>

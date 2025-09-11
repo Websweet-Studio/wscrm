@@ -17,6 +17,7 @@ interface Order {
     id: number;
     order_type: string;
     total_amount: number;
+    discount_amount?: number;
     status: 'pending' | 'processing' | 'completed' | 'cancelled';
     billing_cycle: string;
     created_at: string;
@@ -120,7 +121,20 @@ const getStatusText = (status: string) => {
                                     {{ getStatusText(order.status) }}
                                 </span>
                                 <div class="text-right">
-                                    <div class="text-lg font-bold">{{ formatPrice(order.total_amount) }}</div>
+                                    <template v-if="order.discount_amount && order.discount_amount > 0">
+                                        <div class="text-sm text-muted-foreground line-through">
+                                            {{ formatPrice(Number(order.total_amount) + Number(order.discount_amount)) }}
+                                        </div>
+                                        <div class="text-lg font-bold text-green-600 dark:text-green-400">
+                                            {{ formatPrice(order.total_amount) }}
+                                        </div>
+                                        <div class="text-xs text-green-600 dark:text-green-400">
+                                            Hemat: {{ formatPrice(order.discount_amount) }}
+                                        </div>
+                                    </template>
+                                    <template v-else>
+                                        <div class="text-lg font-bold">{{ formatPrice(order.total_amount) }}</div>
+                                    </template>
                                     <div class="text-sm text-muted-foreground capitalize">{{ order.billing_cycle.replace('_', ' ') }}</div>
                                 </div>
                             </div>
