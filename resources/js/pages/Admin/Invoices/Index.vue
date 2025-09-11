@@ -34,8 +34,14 @@ interface Invoice {
     payment_method?: string;
     paid_at?: string;
     created_at: string;
+    order_id?: number;
     customer: Customer;
     service?: Service;
+    order?: {
+        id: number;
+        domain_name?: string;
+        service_type?: string;
+    };
 }
 
 interface Service {
@@ -357,7 +363,9 @@ const getDefaultDueDate = () => {
                                         <span>{{ invoice.customer.email }}</span>
                                     </div>
                                     <div class="flex items-center gap-4">
-                                        <span v-if="invoice.service">Service: {{ invoice.service.domain_name }}</span>
+                                        <span v-if="invoice.order_id">Order #{{ invoice.order_id }}</span>
+                                        <span v-if="invoice.order?.domain_name">Domain: {{ invoice.order.domain_name }}</span>
+                                        <span v-else-if="invoice.service">Service: {{ invoice.service.domain_name }}</span>
                                         <span>Cycle: {{ invoice.billing_cycle.replace('_', ' ') }}</span>
                                         <span>Due: {{ formatDate(invoice.due_date) }}</span>
                                     </div>
