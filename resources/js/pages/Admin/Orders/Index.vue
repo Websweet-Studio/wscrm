@@ -41,8 +41,6 @@ interface ServicePlan {
 interface OrderItem {
     id: number;
     item_type: string;
-    domain_name: string | null;
-    quantity: number;
     price: number;
 }
 
@@ -97,13 +95,12 @@ const orderToDelete = ref<Order | null>(null);
 
 const createForm = useForm({
     customer_id: '',
+    domain_name: '',
     billing_cycle: 'onetime' as 'onetime' | 'monthly' | 'quarterly' | 'semi_annually' | 'annually',
     items: [
         {
             item_type: 'hosting' as 'hosting' | 'domain' | 'service' | 'app' | 'web' | 'maintenance',
             item_id: '',
-            domain_name: '',
-            quantity: 1,
         },
     ],
 });
@@ -233,8 +230,6 @@ const addItem = () => {
     createForm.items.push({
         item_type: 'hosting',
         item_id: '',
-        domain_name: '',
-        quantity: 1,
     });
 };
 
@@ -266,8 +261,6 @@ const submitCreate = () => {
                     {
                         item_type: 'hosting',
                         item_id: '',
-                        domain_name: '',
-                        quantity: 1,
                     },
                 ];
             },
@@ -521,12 +514,7 @@ const confirmDelete = () => {
                             <div class="min-w-0 flex-1">
                                 <div class="mb-2 flex items-center gap-3">
                                     <h3 class="truncate text-sm font-semibold text-foreground">
-                                        <span v-if="currentView === 'services' && order.domain_name">
-                                            {{ order.domain_name }}
-                                        </span>
-                                        <span v-else>
-                                            {{ currentView === 'services' ? 'Layanan' : 'Pesanan' }} #{{ order.id }}
-                                        </span>
+                                        {{ currentView === 'services' ? 'Layanan' : 'Pesanan' }} #{{ order.id }}
                                     </h3>
                                     <span
                                         :class="`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(order.status)}`"
@@ -541,16 +529,22 @@ const confirmDelete = () => {
                                     <div class="flex items-center gap-4">
                                         <span>{{ order.customer.name }}</span>
                                         <span>{{ order.customer.email }}</span>
+                                        <span v-if="order.domain_name" class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
+                                            🌐 {{ order.domain_name }}
+                                        </span>
+                                        <span v-else class="text-xs text-muted-foreground">
+                                            Tidak ada domain
+                                        </span>
                                     </div>
                                     <div class="flex items-center gap-4">
-                                        <span v-if="currentView === 'orders'">Item: {{ order.order_items.length }}</span>
+                                        <span v-if="currentView === 'orders'">{{ order.order_items.length }} item</span>
                                         <span v-if="currentView === 'services' && order.hosting_plan">Plan: {{ order.hosting_plan.plan_name }}</span>
-                                        <span>Siklus: {{ order.billing_cycle.replace('_', ' ') }}</span>
+                                        <span>{{ order.billing_cycle.replace('_', ' ') }}</span>
                                         <span v-if="currentView === 'services' && order.expires_at">
                                             Expire: {{ formatDate(order.expires_at) }}
                                         </span>
                                         <span v-else>
-                                            Tanggal: {{ formatDate(order.created_at) }}
+                                            {{ formatDate(order.created_at) }}
                                         </span>
                                     </div>
                                 </div>
@@ -643,6 +637,15 @@ const confirmDelete = () => {
                                 </option>
                             </select>
                             <p v-if="createForm.errors.customer_id" class="mt-1 text-xs text-red-500">{{ createForm.errors.customer_id }}</p>
+                        </div>
+                        <div>
+                            <Label for="create-domain">Nama Domain (Opsional)</Label>
+                            <Input 
+                                id="create-domain"
+                                v-model="createForm.domain_name" 
+                                placeholder="example.com (kosongkan jika tidak ada)" 
+                            />
+                            <p v-if="createForm.errors.domain_name" class="mt-1 text-xs text-red-500">{{ createForm.errors.domain_name }}</p>
                         </div>
                     </div>
 
@@ -745,16 +748,6 @@ const confirmDelete = () => {
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-3">
-                                <div v-if="item.item_type === 'domain'">
-                                    <Label>Nama Domain</Label>
-                                    <Input v-model="item.domain_name" placeholder="example.com" />
-                                </div>
-                                <div>
-                                    <Label>Jumlah</Label>
-                                    <Input v-model="item.quantity" type="number" min="1" />
-                                </div>
-                            </div>
                         </div>
                         <p v-if="createForm.errors.items" class="mt-1 text-xs text-red-500">{{ createForm.errors.items }}</p>
                     </div>
