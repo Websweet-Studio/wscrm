@@ -391,6 +391,7 @@ const orderDomainOnly = (domainPriceId: number) => {
             @update:open="showBundleModal = $event"
             :domain-price="selectedDomainPrice"
             :hosting-plan="selectedHostingPlan"
+            :hosting-plans="hostingPlans"
             @select-bundle="handleSelectBundle"
             @select-domain-only="handleSelectDomainOnly"
         />

@@ -2,8 +2,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Check, Server, ShoppingCart, X, Globe, ChevronDown } from 'lucide-vue-next';
+import { Check, Server, ShoppingCart, X, Globe } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
 interface HostingPlan {
@@ -29,6 +28,7 @@ interface Props {
     open: boolean;
     domainPrice: DomainPrice;
     hostingPlan?: HostingPlan;
+    hostingPlans: HostingPlan[];
 }
 
 interface Emits {
@@ -39,6 +39,32 @@ interface Emits {
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
+
+// State untuk hosting plan yang dipilih
+const selectedHostingPlan = ref<HostingPlan | null>(null);
+const selectedHostingPlanId = ref<string>('');
+
+// Set default hosting plan (basic 2GB)
+watch(() => props.hostingPlans, (plans) => {
+    if (plans && plans.length > 0) {
+        // Cari paket basic 2GB atau ambil yang pertama
+        const basicPlan = plans.find(plan => 
+            plan.plan_name.toLowerCase().includes('basic') || 
+            plan.plan_name.toLowerCase().includes('2gb')
+        ) || plans[0];
+        selectedHostingPlan.value = basicPlan;
+        selectedHostingPlanId.value = basicPlan.id.toString();
+    }
+}, { immediate: true });
+
+const onHostingPlanChange = (event: Event) => {
+    const target = event.target as HTMLSelectElement;
+    const planId = parseInt(target.value);
+    const plan = props.hostingPlans.find(p => p.id === planId);
+    if (plan) {
+        selectedHostingPlan.value = plan;
+    }
+};
 
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -53,13 +79,13 @@ const getDiscountedPrice = (price: number, discount: number) => {
 };
 
 const bundlePrice = computed(() => {
-    if (!props.hostingPlan) return 0;
-    const hostingPrice = getDiscountedPrice(props.hostingPlan.selling_price, props.hostingPlan.discount_percent);
+    if (!selectedHostingPlan.value) return props.domainPrice.selling_price;
+    const hostingPrice = getDiscountedPrice(selectedHostingPlan.value.selling_price, selectedHostingPlan.value.discount_percent);
     return hostingPrice + props.domainPrice.selling_price;
 });
 
 const bundleSavings = computed(() => {
-    if (!props.hostingPlan) return 0;
+    if (!selectedHostingPlan.value) return 0;
     // Assume 10% discount for bundle
     return bundlePrice.value * 0.1;
 });
@@ -69,8 +95,8 @@ const finalBundlePrice = computed(() => {
 });
 
 const handleSelectBundle = () => {
-    if (props.hostingPlan) {
-        emit('select-bundle', props.hostingPlan, props.domainPrice);
+    if (selectedHostingPlan.value) {
+        emit('select-bundle', selectedHostingPlan.value, props.domainPrice);
     }
     emit('update:open', false);
 };
@@ -132,23 +158,41 @@ const handleSelectDomainOnly = () => {
                                 </div>
                             </div>
 
-                            <!-- Hosting Info -->
-                            <div class="bg-white rounded-lg p-3 border">
+                            <!-- Hosting Plan Selector -->
+                             <div class="space-y-3">
+                                  <label class="text-sm font-medium text-gray-700">Pilih Paket Hosting:</label>
+                                  <select 
+                                      v-model="selectedHostingPlanId"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      @change="onHostingPlanChange"
+                                  >
+                                      <option 
+                                          v-for="plan in hostingPlans" 
+                                          :key="plan.id" 
+                                          :value="plan.id.toString()"
+                                      >
+                                          {{ plan.plan_name }} - {{ plan.storage_gb }}GB - {{ formatPrice(getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
+                                      </option>
+                                  </select>
+                              </div>
+
+                            <!-- Selected Hosting Info -->
+                            <div v-if="selectedHostingPlan" class="bg-white rounded-lg p-3 border">
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="font-medium text-gray-900">{{ hostingPlan.plan_name }}</span>
+                                    <span class="font-medium text-gray-900">{{ selectedHostingPlan.plan_name }}</span>
                                     <div class="text-right">
-                                        <div v-if="hostingPlan.discount_percent > 0" class="text-xs text-gray-500 line-through">
-                                            {{ formatPrice(hostingPlan.selling_price) }}
+                                        <div v-if="selectedHostingPlan.discount_percent > 0" class="text-xs text-gray-500 line-through">
+                                            {{ formatPrice(selectedHostingPlan.selling_price) }}
                                         </div>
                                         <span class="text-gray-600">
-                                            {{ formatPrice(getDiscountedPrice(hostingPlan.selling_price, hostingPlan.discount_percent)) }}
+                                            {{ formatPrice(getDiscountedPrice(selectedHostingPlan.selling_price, selectedHostingPlan.discount_percent)) }}
                                         </span>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-4 text-xs text-gray-500">
-                                    <span>{{ hostingPlan.storage_gb }}GB Storage</span>
-                                    <span>{{ hostingPlan.cpu_cores }} CPU</span>
-                                    <span>{{ hostingPlan.ram_gb }}GB RAM</span>
+                                    <span>{{ selectedHostingPlan.storage_gb }}GB Storage</span>
+                                    <span>{{ selectedHostingPlan.cpu_cores }} CPU</span>
+                                    <span>{{ selectedHostingPlan.ram_gb }}GB RAM</span>
                                 </div>
                             </div>
 
