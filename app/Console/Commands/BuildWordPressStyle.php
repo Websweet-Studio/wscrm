@@ -43,7 +43,15 @@ class BuildWordPressStyle extends Command
         // Clean dan create directories dengan validasi keamanan
         if (File::exists($distDir)) {
             // Pastikan hanya menghapus folder dist, bukan folder lain
-            if (basename($distDir) === 'dist' && str_contains($distDir, base_path())) {
+            // Gunakan path absolut untuk perbandingan
+            $absoluteDistDir = realpath($distDir) ?: $distDir;
+            $absoluteBasePath = realpath(base_path()) ?: base_path();
+            
+            // Normalize path separators untuk Windows
+            $normalizedDistDir = str_replace('\\', '/', $absoluteDistDir);
+            $normalizedBasePath = str_replace('\\', '/', $absoluteBasePath);
+            
+            if (basename($distDir) === 'dist' && str_starts_with($normalizedDistDir, $normalizedBasePath)) {
                 $this->info("🗑️ Menghapus folder dist: {$distDir}");
                 File::deleteDirectory($distDir);
             } else {
@@ -127,8 +135,30 @@ class BuildWordPressStyle extends Command
     {
         $basePath = base_path();
         
+        // Normalize paths ke absolute dan normalize separators untuk Windows
+        $distDir = realpath($distDir) ?: $distDir;
+        $tempDir = realpath(dirname($tempDir)) ? (realpath(dirname($tempDir)) . '/' . basename($tempDir)) : $tempDir;
+        
+        // Jika path relatif, convert ke absolute
+        if (!str_starts_with($distDir, '/') && !preg_match('/^[A-Z]:/', $distDir)) {
+            $distDir = $basePath . '/' . ltrim($distDir, '/');
+        }
+        if (!str_starts_with($tempDir, '/') && !preg_match('/^[A-Z]:/', $tempDir)) {
+            $tempDir = $basePath . '/' . ltrim($tempDir, '/');
+        }
+        
+        // Normalize path separators untuk Windows compatibility
+        $normalizedBasePath = str_replace('\\', '/', $basePath);
+        $normalizedDistDir = str_replace('\\', '/', $distDir);
+        $normalizedTempDir = str_replace('\\', '/', $tempDir);
+        
+        $this->info("🔍 Validating paths:");
+        $this->line("   Base path: {$basePath}");
+        $this->line("   Dist dir: {$distDir}");
+        $this->line("   Temp dir: {$tempDir}");
+        
         // Pastikan dist directory berada di dalam project
-        if (!str_starts_with($distDir, $basePath)) {
+        if (!str_starts_with($normalizedDistDir, $normalizedBasePath)) {
             $this->error("❌ Dist directory harus berada di dalam project: {$distDir}");
             return false;
         }
@@ -140,16 +170,16 @@ class BuildWordPressStyle extends Command
         }
 
         // Pastikan temp directory aman
-        if (!str_starts_with($tempDir, $basePath)) {
+        if (!str_starts_with($normalizedTempDir, $normalizedBasePath)) {
             $this->error("❌ Temp directory harus berada di dalam project: {$tempDir}");
             return false;
         }
 
         // Pastikan tidak menimpa folder project penting
-        $protectedDirs = ['app', 'config', 'database', 'routes', 'resources', '.git'];
+        $protectedDirs = ['app', 'config', 'database', 'routes', 'resources', '.git', 'vendor'];
         foreach ($protectedDirs as $protected) {
-            if (str_contains($distDir, $basePath . '/' . $protected) || 
-                str_contains($tempDir, $basePath . '/' . $protected)) {
+            $protectedPath = str_replace('\\', '/', $basePath . DIRECTORY_SEPARATOR . $protected);
+            if (str_starts_with($normalizedDistDir, $protectedPath) || str_starts_with($normalizedTempDir, $protectedPath)) {
                 $this->error("❌ Tidak boleh menggunakan folder protected: {$protected}");
                 return false;
             }
@@ -216,7 +246,7 @@ class BuildWordPressStyle extends Command
             return;
         }
         
-        // Move all files from public/ to root, except special directories
+        // Move all files from public/ to root first
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($publicDir, RecursiveDirectoryIterator::SKIP_DOTS),
             RecursiveIteratorIterator::SELF_FIRST
@@ -226,8 +256,6 @@ class BuildWordPressStyle extends Command
             $relativePath = str_replace($publicDir . DIRECTORY_SEPARATOR, '', $item->getPathname());
             $relativePath = str_replace('\\', '/', $relativePath);
             
-            // Don't skip anything - we want install directory in the flat structure
-
             $targetPath = $tempDir . DIRECTORY_SEPARATOR . $relativePath;
 
             if ($item->isDir()) {
@@ -255,6 +283,72 @@ class BuildWordPressStyle extends Command
         } else {
             $this->error('❌ BAHAYA: Tidak akan menghapus public directory yang bukan di temp folder');
         }
+        
+        // Create wscrm directory for Laravel backend files
+        $wscrmDir = $tempDir . '/wscrm';
+        File::makeDirectory($wscrmDir, 0755, true);
+        
+        // Copy all Laravel files (except public) to wscrm directory
+        $this->copyLaravelFilesToWscrm($tempDir, $wscrmDir);
+        
+        // Clean up Laravel files from root (they're now in wscrm/)
+        $this->cleanupLaravelFilesFromRoot($tempDir);
+        
+        $this->line('✅ Created wscrm backend folder and moved Laravel files');
+    }
+
+    private function copyLaravelFilesToWscrm(string $tempDir, string $wscrmDir): void
+    {
+        $laravelDirs = ['app', 'bootstrap', 'config', 'database', 'resources', 'routes', 'storage', 'vendor'];
+        $laravelFiles = ['artisan', '.env.example', 'composer.json', 'composer.lock'];
+        
+        // Copy Laravel directories
+        foreach ($laravelDirs as $dir) {
+            $sourceDir = $tempDir . '/' . $dir;
+            $targetDir = $wscrmDir . '/' . $dir;
+            
+            if (File::exists($sourceDir)) {
+                File::copyDirectory($sourceDir, $targetDir);
+                $this->line("✅ Copied {$dir} to wscrm/");
+            }
+        }
+        
+        // Copy Laravel files
+        foreach ($laravelFiles as $file) {
+            $sourceFile = $tempDir . '/' . $file;
+            $targetFile = $wscrmDir . '/' . $file;
+            
+            if (File::exists($sourceFile)) {
+                File::copy($sourceFile, $targetFile);
+                $this->line("✅ Copied {$file} to wscrm/");
+            }
+        }
+    }
+    
+    private function cleanupLaravelFilesFromRoot(string $tempDir): void
+    {
+        $laravelDirs = ['app', 'bootstrap', 'config', 'database', 'resources', 'routes', 'storage', 'vendor'];
+        $laravelFiles = ['artisan', '.env.example', 'composer.json', 'composer.lock'];
+        
+        // Remove Laravel directories from root (ONLY if they exist and we're in temp-package)
+        foreach ($laravelDirs as $dir) {
+            $dirPath = $tempDir . '/' . $dir;
+            if (File::exists($dirPath) && str_contains($dirPath, 'temp-package')) {
+                File::deleteDirectory($dirPath);
+                $this->line("🗑️ Removed Laravel dir from root: {$dir}");
+            }
+        }
+        
+        // Remove Laravel files from root (ONLY Laravel files, not public files)
+        foreach ($laravelFiles as $file) {
+            $filePath = $tempDir . '/' . $file;
+            if (File::exists($filePath)) {
+                File::delete($filePath);
+                $this->line("🗑️ Removed Laravel file from root: {$file}");
+            }
+        }
+        
+        $this->line('✅ Cleaned up Laravel files from root directory');
     }
 
     private function setupInstaller(string $tempDir): void
