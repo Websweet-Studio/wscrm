@@ -141,7 +141,11 @@
       "Bash(mkdir:*)",
       "Read(//d/**)",
       "Bash(grep:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(powershell:*)",
+      "Bash(dir dist)",
+      "Bash(dir disttemp-package)",
+      "Bash(timeout 30 composer run build:package:*)"
     ],
     "deny": [],
     "ask": []
