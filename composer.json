@@ -79,7 +79,7 @@
         ],
         "build:package": [
             "powershell -Command \"if (Test-Path 'dist') { Remove-Item -Recurse -Force 'dist' }\"",
-            "@php artisan build:package"
+            "@php artisan build:package --no-interaction"
         ],
         "build:flat-deployment": [
             "powershell -Command \"if (Test-Path 'dist') { Remove-Item -Recurse -Force 'dist' }\"",

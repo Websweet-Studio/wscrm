@@ -13,7 +13,7 @@ class BuildWordPressStyle extends Command
     /**
      * The name and signature of the console command.
      */
-    protected $signature = 'build:package {--output=dist/wscrm-package.zip}';
+    protected $signature = 'build:package {--output=dist/wscrm-package.zip} {--force}';
 
     /**
      * The console command description.
@@ -32,7 +32,7 @@ class BuildWordPressStyle extends Command
         
         $outputPath = $this->option('output');
         $distDir = dirname($outputPath);
-        $tempDir = $distDir . '/temp-package';
+        $tempDir = $distDir . DIRECTORY_SEPARATOR . 'temp-package';
 
         // Validasi path untuk mencegah penghapusan folder project
         if (!$this->validatePaths($distDir, $tempDir)) {
@@ -44,19 +44,30 @@ class BuildWordPressStyle extends Command
         if (File::exists($distDir)) {
             // Pastikan hanya menghapus folder dist, bukan folder lain
             // Gunakan path absolut untuk perbandingan
-            $absoluteDistDir = realpath($distDir) ?: $distDir;
-            $absoluteBasePath = realpath(base_path()) ?: base_path();
+            $absoluteDistDir = realpath($distDir);
+            $absoluteBasePath = realpath(base_path());
             
-            // Normalize path separators untuk Windows
-            $normalizedDistDir = str_replace('\\', '/', $absoluteDistDir);
-            $normalizedBasePath = str_replace('\\', '/', $absoluteBasePath);
-            
-            if (basename($distDir) === 'dist' && str_starts_with($normalizedDistDir, $normalizedBasePath)) {
-                $this->info("🗑️ Menghapus folder dist: {$distDir}");
-                File::deleteDirectory($distDir);
+            if ($absoluteDistDir && $absoluteBasePath) {
+                // Normalize path separators untuk Windows
+                $normalizedDistDir = str_replace('\\', '/', $absoluteDistDir);
+                $normalizedBasePath = str_replace('\\', '/', $absoluteBasePath);
+                
+                if (basename($distDir) === 'dist' && str_starts_with($normalizedDistDir, $normalizedBasePath)) {
+                    $this->info("🗑️ Menghapus folder dist: {$distDir}");
+                    File::deleteDirectory($distDir);
+                } else {
+                    $this->error("❌ Tidak aman menghapus folder: {$distDir}");
+                    return self::FAILURE;
+                }
             } else {
-                $this->error("❌ Tidak aman menghapus folder: {$distDir}");
-                return self::FAILURE;
+                // Fallback jika realpath gagal
+                if (basename($distDir) === 'dist' && str_contains($distDir, base_path())) {
+                    $this->info("🗑️ Menghapus folder dist: {$distDir}");
+                    File::deleteDirectory($distDir);
+                } else {
+                    $this->error("❌ Tidak aman menghapus folder: {$distDir}");
+                    return self::FAILURE;
+                }
             }
         }
         
@@ -118,9 +129,22 @@ class BuildWordPressStyle extends Command
             $this->warn('⚠️  PERINGATAN: Pastikan semua perubahan sudah di-commit ke git.');
             $this->warn('   Command ini akan memodifikasi file dan folder.');
             
-            if (!$this->confirm('Lanjutkan build package?', false)) {
-                $this->info('Build dibatalkan oleh user.');
-                exit(0);
+            // Gunakan option untuk bypass konfirmasi, atau fallback ke input standar
+            if ($this->option('no-interaction') || $this->option('force')) {
+                $this->info('🚀 Auto-continuing karena --no-interaction atau --force flag.');
+            } else {
+                // Coba confirm, tapi dengan handling untuk PowerShell
+                try {
+                    $continue = $this->confirm('Lanjutkan build package?', true); // default true untuk PowerShell
+                    if (!$continue) {
+                        $this->info('Build dibatalkan oleh user.');
+                        exit(0);
+                    }
+                } catch (\Exception $e) {
+                    // Fallback jika confirm tidak bekerja
+                    $this->warn('Input tidak dapat dibaca, melanjutkan build...');
+                    $this->info('Gunakan --no-interaction untuk menonaktifkan prompt ini.');
+                }
             }
         }
 
@@ -202,12 +226,13 @@ class BuildWordPressStyle extends Command
         $criticalFiles = [
             '.env.example' => base_path('.env.example'),
             'artisan' => base_path('artisan'),
-            'index.php' => base_path('index.php'),
+            'index.php' => base_path('deployment-index.php'), // Use deployment version
+            'debug.php' => base_path('debug-deployment.php'), // Debug script
         ];
 
         foreach ($criticalFiles as $target => $source) {
             $targetPath = $tempDir . '/' . $target;
-            if (!File::exists($targetPath) && File::exists($source)) {
+            if (File::exists($source)) {
                 File::copy($source, $targetPath);
                 $this->line("✅ Copied critical file: $target");
             }
@@ -270,7 +295,8 @@ class BuildWordPressStyle extends Command
                 }
                 
                 // Copy file if it doesn't exist in root or if it's an asset file
-                if (!File::exists($targetPath) || str_starts_with($relativePath, 'build/')) {
+                // Skip copying public/index.php - we'll use deployment version instead
+                if ($relativePath !== 'index.php' && (!File::exists($targetPath) || str_starts_with($relativePath, 'build/'))) {
                     File::copy($item->getPathname(), $targetPath);
                 }
             }
