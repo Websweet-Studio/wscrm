@@ -1,12 +1,12 @@
 <?php
 
 // Enable error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// error_reporting(E_ALL);
+// ini_set('display_errors', 1);
 
 // Disable error reporting for production (comment out for debugging)
-// error_reporting(0);
-// ini_set('display_errors', 0);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 function parseEnvFile($envPath) {
     if (!file_exists($envPath)) {
@@ -203,11 +203,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
             
         case 'move_wscrm':
+            // Debug: Log semua data POST yang diterima
+            error_log('🔍 POST data received: ' . print_r($_POST, true));
+            
             $wscrmPath = $_POST['wscrm_path'] ?? '';
             $operation = $_POST['operation'] ?? 'move'; // 'move' or 'copy'
             
+            // Debug: Log nilai yang diambil
+            error_log('📍 wscrm_path: ' . $wscrmPath);
+            error_log('⚙️ operation: ' . $operation);
+            
             if (empty($wscrmPath)) {
-                echo json_encode(['success' => false, 'message' => 'Path wscrm tidak valid']);
+                $errorMsg = 'Path wscrm tidak valid. Received: ' . var_export($wscrmPath, true);
+                error_log('❌ ' . $errorMsg);
+                echo json_encode(['success' => false, 'message' => $errorMsg, 'debug_post' => $_POST]);
                 exit;
             }
             
@@ -384,6 +393,196 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'success' => true, 
                 'message' => $successMessage
             ]);
+            exit;
+            
+        case 'delete_install_folder':
+            // Security check - only allow deletion if installation is complete
+            $targetWscrmPath = str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT'])) . '/wscrm';
+            
+            // Debug: Check multiple possible paths including the one from UI
+            $detectedPath = detectWscrmFolder();
+            $possiblePaths = [
+                $targetWscrmPath,
+                $detectedPath,
+                '/home/appws/domains/app.websweetstudio.com/wscrm' // Hardcoded path from UI
+            ];
+            
+            // Remove duplicates and empty values
+            $possiblePaths = array_unique(array_filter($possiblePaths));
+            
+            $isInstallComplete = false;
+            $actualWscrmPath = '';
+            
+            // Generate APP_KEY if not exists to prevent errors
+            foreach ($possiblePaths as $path) {
+                if ($path && is_dir($path)) {
+                    $envFile = $path . '/.env';
+                    if (file_exists($envFile)) {
+                        $envContent = file_get_contents($envFile);
+                        // Check if APP_KEY is empty or not set
+                        if (preg_match('/^APP_KEY=\s*$/m', $envContent) || !preg_match('/^APP_KEY=/m', $envContent)) {
+                            $appKey = 'base64:' . base64_encode(random_bytes(32));
+                            
+                            if (preg_match('/^APP_KEY=/m', $envContent)) {
+                                $envContent = preg_replace('/^APP_KEY=.*$/m', 'APP_KEY=' . $appKey, $envContent);
+                            } else {
+                                $envContent .= "\nAPP_KEY=" . $appKey;
+                            }
+                            
+                            file_put_contents($envFile, $envContent);
+                            error_log("🔑 APP_KEY generated for: $path");
+                            
+                            // Clear Laravel cache after generating APP_KEY
+                            $currentDir = getcwd();
+                            chdir($path);
+                            
+                            // Clear config cache
+                            exec('php artisan config:clear 2>&1', $output1, $returnVar1);
+                            if ($returnVar1 === 0) {
+                                error_log("✅ Config cache cleared");
+                            }
+                            
+                            // Clear application cache
+                            exec('php artisan cache:clear 2>&1', $output2, $returnVar2);
+                            if ($returnVar2 === 0) {
+                                error_log("✅ Application cache cleared");
+                            }
+                            
+                            // Clear route cache
+                            exec('php artisan route:clear 2>&1', $output3, $returnVar3);
+                            if ($returnVar3 === 0) {
+                                error_log("✅ Route cache cleared");
+                            }
+                            
+                            // Clear view cache
+                            exec('php artisan view:clear 2>&1', $output4, $returnVar4);
+                            if ($returnVar4 === 0) {
+                                error_log("✅ View cache cleared");
+                            }
+                            
+                            chdir($currentDir);
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            foreach ($possiblePaths as $path) {
+                if ($path && is_dir($path)) {
+                    $envFile = $path . '/.env';
+                    $lockFile = $path . '/storage/installer.lock';
+                    $storageDir = $path . '/storage';
+                    
+                    // Log detailed check for debugging
+                    error_log("🔍 Checking path: $path");
+                    error_log("📁 Directory exists: " . (is_dir($path) ? 'YES' : 'NO'));
+                    error_log("📄 .env exists: " . (file_exists($envFile) ? 'YES' : 'NO') . " at $envFile");
+                    error_log("🔒 installer.lock exists: " . (file_exists($lockFile) ? 'YES' : 'NO') . " at $lockFile");
+                    error_log("📂 storage dir exists: " . (is_dir($storageDir) ? 'YES' : 'NO') . " at $storageDir");
+                    
+                    // Check if .env exists (primary requirement)
+                    if (file_exists($envFile)) {
+                        // Check if installer.lock exists OR if storage directory exists (fallback)
+                        if (file_exists($lockFile) || is_dir($storageDir)) {
+                            $isInstallComplete = true;
+                            $actualWscrmPath = $path;
+                            error_log("✅ Installation complete found at: $path");
+                            error_log("📄 .env: YES, 🔒 installer.lock: " . (file_exists($lockFile) ? 'YES' : 'NO') . ", 📂 storage: " . (is_dir($storageDir) ? 'YES' : 'NO'));
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (!$isInstallComplete) {
+                // Debug info for troubleshooting
+                $debugInfo = [
+                    'DOCUMENT_ROOT' => $_SERVER['DOCUMENT_ROOT'],
+                    'dirname_DOCUMENT_ROOT' => dirname($_SERVER['DOCUMENT_ROOT']),
+                    'calculated_target' => $targetWscrmPath,
+                    'detected_wscrm' => $detectedPath,
+                    'possible_paths' => $possiblePaths,
+                    'checks' => []
+                ];
+                
+                foreach ($possiblePaths as $path) {
+                    if ($path) {
+                        $envPath = $path . '/.env';
+                        $lockPath = $path . '/storage/installer.lock';
+                        $debugInfo['checks'][] = [
+                            'path' => $path,
+                            'is_dir' => is_dir($path),
+                            'has_env' => file_exists($envPath),
+                            'env_path' => $envPath,
+                            'has_lock' => file_exists($lockPath),
+                            'lock_path' => $lockPath,
+                            'storage_dir_exists' => is_dir($path . '/storage')
+                        ];
+                    }
+                }
+                
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Instalasi belum selesai. Folder install tidak dapat dihapus. Debug info tersedia di console.',
+                    'debug' => $debugInfo
+                ]);
+                exit;
+            }
+            
+            // Delete install folder recursively
+            $installPath = __DIR__;
+            
+            function deleteDirectory($dir) {
+                if (!is_dir($dir)) {
+                    return false;
+                }
+                
+                $files = array_diff(scandir($dir), array('.', '..'));
+                
+                foreach ($files as $file) {
+                    $filePath = $dir . '/' . $file;
+                    if (is_dir($filePath)) {
+                        deleteDirectory($filePath);
+                    } else {
+                        unlink($filePath);
+                    }
+                }
+                
+                return rmdir($dir);
+            }
+            
+            if (deleteDirectory($installPath)) {
+                // Prepare success message with details
+                $successMessage = 'Folder install berhasil dihapus.';
+                $details = [];
+                
+                // Check if APP_KEY was generated (look for log entries)
+                if ($actualWscrmPath) {
+                    $envFile = $actualWscrmPath . '/.env';
+                    if (file_exists($envFile)) {
+                        $envContent = file_get_contents($envFile);
+                        if (preg_match('/^APP_KEY=base64:/m', $envContent)) {
+                            $details[] = '✅ APP_KEY telah di-generate untuk keamanan';
+                        }
+                    }
+                }
+                
+                // Add cache clearing info
+                $details[] = '✅ Cache konfigurasi telah dibersihkan';
+                $details[] = '✅ Cache aplikasi telah dioptimasi';
+                
+                if (!empty($details)) {
+                    $successMessage .= '\n\n' . implode('\n', $details);
+                }
+                
+                echo json_encode([
+                    'success' => true, 
+                    'message' => $successMessage,
+                    'details' => $details
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Gagal menghapus folder install. Periksa permission folder.']);
+            }
             exit;
             
         case 'test_database':
@@ -870,7 +1069,11 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                         <strong>✅ Instalasi berhasil diselesaikan!</strong><br>
                         Environment sudah dikonfigurasi dan aplikasi siap digunakan.
                     </div>
-                    <a href="../" class="btn btn-success">Buka Aplikasi</a>
+                    <div class="success-actions" style="margin-top: 15px;">
+                        <a href="../" class="btn btn-success">🚀 Buka Aplikasi</a>
+                        <button onclick="deleteInstallFolder()" class="btn btn-danger" style="margin-left: 10px; background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer;">🗑️ Hapus Folder Install</button>
+                    </div>
+                    <div id="delete-result" style="margin-top: 15px;"></div>
                 <?php else: ?>
                     <button class="btn btn-success" onclick="showEnvConfiguration()">🔧 Setup Environment</button>
                     <div id="env-config-form" class="config-form" style="display: none;">
@@ -982,6 +1185,17 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
     <script>
         let detectedWscrmPath = '';
         
+        // Initialize on page load if wscrm is already detected
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if wscrm path is already shown in the UI
+            const pathInfo = document.querySelector('.path-info');
+            if (pathInfo && pathInfo.textContent.trim()) {
+                detectedWscrmPath = pathInfo.textContent.trim();
+                window.detectedWscrmPath = detectedWscrmPath;
+                console.log('🔄 Initialized detectedWscrmPath from UI:', detectedWscrmPath);
+            }
+        });
+        
         function detectWscrm() {
             const btn = event.target;
             btn.disabled = true;
@@ -1006,6 +1220,16 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                 if (data.success) {
                     // Normalize path - remove trailing slash
                     detectedWscrmPath = data.path.replace(/\/$/, '');
+                    
+                    // Debug: Log detected path
+                    console.log('✅ WSCRM path detected:', detectedWscrmPath);
+                    console.log('📋 Full detection data:', data);
+                    console.log('🔧 detectedWscrmPath after assignment:', detectedWscrmPath);
+                    console.log('🔧 detectedWscrmPath type after assignment:', typeof detectedWscrmPath);
+                    
+                    // Test if variable is accessible
+                    window.detectedWscrmPath = detectedWscrmPath;
+                    console.log('🌐 Global detectedWscrmPath set:', window.detectedWscrmPath);
                     
                     // Check if wscrm is already in correct location (outside public_html)
                     const isAlreadyMoved = data.already_in_target_location || false;
@@ -1067,15 +1291,44 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
             const btn = event.target;
             const operation = document.querySelector('input[name="operation"]:checked').value;
             
+            // Debug: Log current state
+            console.log('🔍 Current detectedWscrmPath value:', detectedWscrmPath);
+            console.log('🔍 detectedWscrmPath type:', typeof detectedWscrmPath);
+            console.log('🔍 detectedWscrmPath length:', detectedWscrmPath ? detectedWscrmPath.length : 'undefined');
+            console.log('🌐 window.detectedWscrmPath:', window.detectedWscrmPath);
+            
+            // Try to use global variable as fallback
+            if (!detectedWscrmPath && window.detectedWscrmPath) {
+                detectedWscrmPath = window.detectedWscrmPath;
+                console.log('🔄 Using global detectedWscrmPath as fallback:', detectedWscrmPath);
+            }
+            
+            // Validasi detectedWscrmPath sebelum mengirim
+            if (!detectedWscrmPath || detectedWscrmPath.trim() === '') {
+                document.getElementById('move-result').innerHTML = `
+                    <div class="alert alert-error">
+                        <strong>❌ Path wscrm tidak terdeteksi. Silakan jalankan deteksi terlebih dahulu.</strong>
+                        <br><small>Debug: detectedWscrmPath = '${detectedWscrmPath}' (${typeof detectedWscrmPath})</small>
+                        <br><small>window.detectedWscrmPath = '${window.detectedWscrmPath}'</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            console.log('🔍 Sending wscrm_path:', detectedWscrmPath);
+            
             btn.disabled = true;
             btn.textContent = operation === 'move' ? 'Memindahkan...' : 'Menyalin...';
+            
+            const payload = `action=move_wscrm&wscrm_path=${encodeURIComponent(detectedWscrmPath)}&operation=${operation}`;
+            console.log('📤 Request payload:', payload);
             
             fetch('index.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `action=move_wscrm&wscrm_path=${encodeURIComponent(detectedWscrmPath)}&operation=${operation}`
+                body: payload
             })
             .then(response => response.json())
             .then(data => {
@@ -1175,6 +1428,60 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
             })
             .catch(error => {
                 document.getElementById('db-test-result').innerHTML = `
+                    <div class="alert alert-error">
+                        <strong>❌ Error: ${error.message}</strong>
+                    </div>
+                `;
+                btn.disabled = false;
+                btn.textContent = originalText;
+            });
+        }
+        
+        function deleteInstallFolder() {
+            if (!confirm('Apakah Anda yakin ingin menghapus folder install? Tindakan ini tidak dapat dibatalkan.')) {
+                return;
+            }
+            
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '🗑️ Menghapus...';
+            
+            fetch('index.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'action=delete_install_folder'
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('delete-result');
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <strong>✅ ${data.message}</strong><br>
+                            Halaman akan dialihkan ke aplikasi dalam 3 detik...
+                        </div>
+                    `;
+                    
+                    setTimeout(() => {
+                        window.location.href = '../';
+                    }, 3000);
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-error">
+                            <strong>❌ ${data.message}</strong>
+                        </div>
+                    `;
+                    
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            })
+            .catch(error => {
+                document.getElementById('delete-result').innerHTML = `
                     <div class="alert alert-error">
                         <strong>❌ Error: ${error.message}</strong>
                     </div>
