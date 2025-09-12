@@ -485,26 +485,26 @@ The build automatically copies `.env.production` to `.env` in the production bui
 - ZipArchive PHP extension
 - rimraf NPM package
 
-## WordPress-Style Deployment System
+## Package-Style Deployment System
 
-This project also includes a WordPress-style deployment system for maximum ease of installation, similar to WordPress, WHMCS, and other popular PHP applications.
+This project also includes a Package deployment system for maximum ease of installation, similar to WordPress, WHMCS, and other popular PHP applications.
 
-### WordPress-Style Build
+### Package-Style Build
 
 Create a single ZIP file that can be extracted directly to public_html with a simple installer:
 
 ```bash
-# Build WordPress-style package
-composer run build:wordpress-style
+# Build package
+composer run build:package
 
-# Output: dist/wscrm-wordpress-style.zip
+# Output: dist/wscrm-package.zip
 ```
 
 ### Implementation Components
 
-#### 1. WordPress-Style Build Command
+#### 1. Package Build Command
 
-Create `app/Console/Commands/BuildWordPressStyle.php`:
+Create `app/Console/Commands/BuildPackage.php`:
 
 ```php
 <?php
@@ -517,18 +517,18 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ZipArchive;
 
-class BuildWordPressStyle extends Command
+class BuildPackage extends Command
 {
-    protected $signature = 'build:wordpress-style {--output=dist/wscrm-wordpress-style.zip}';
-    protected $description = 'Build aplikasi untuk WordPress-style deployment (extract dan install)';
+    protected $signature = 'build:package {--output=dist/wscrm-package.zip}';
+    protected $description = 'Build aplikasi menjadi package siap deploy (extract dan install)';
 
     public function handle(): int
     {
-        $this->info('🚀 Memulai build WordPress-style deployment...');
+        $this->info('🚀 Memulai build package deployment...');
         
         $outputPath = $this->option('output');
         $distDir = dirname($outputPath);
-        $tempDir = $distDir . '/temp-wordpress-style';
+        $tempDir = $distDir . '/temp-package';
 
         // Clean dan create directories
         if (File::exists($distDir)) {
@@ -556,7 +556,7 @@ class BuildWordPressStyle extends Command
         // Cleanup
         File::deleteDirectory($tempDir);
 
-        $this->info("✅ WordPress-style build completed: {$outputPath}");
+        $this->info("✅ Package build completed: {$outputPath}");
         $this->newLine();
         $this->line("📖 Cara install:");
         $this->line("1. Extract zip ke public_html/domain folder");
@@ -776,7 +776,7 @@ $app = require_once $laravel_root.'/bootstrap/app.php';
 $app->handleRequest(Request::capture());
 ```
 
-#### 3. WordPress-Style Installer
+#### 3. Package-Style Installer
 
 Create `public/install/index.php` with visual installer interface:
 
@@ -1152,9 +1152,9 @@ Add these scripts to `composer.json`:
 ```json
 {
   "scripts": {
-    "build:wordpress-style": [
+    "build:package": [
       "powershell -Command \"if (Test-Path 'dist') { Remove-Item -Recurse -Force 'dist' }\"",
-      "@php artisan build:wordpress-style"
+      "@php artisan build:package"
     ],
     "build:flat-deployment": [
       "powershell -Command \"if (Test-Path 'dist') { Remove-Item -Recurse -Force 'dist' }\"",
@@ -1180,7 +1180,7 @@ Add version to `composer.json`:
 }
 ```
 
-### WordPress-Style Usage
+### Package-Style Usage
 
 #### For End Users (Installation)
 1. Download ZIP dari GitHub releases atau build
@@ -1195,10 +1195,10 @@ Add version to `composer.json`:
 
 #### For Developers (Building)
 ```bash
-# Build WordPress-style package
-composer run build:wordpress-style
+# Build package
+composer run build:package
 
-# Output: dist/wscrm-wordpress-style.zip
+# Output: dist/wscrm-package.zip
 # Upload to GitHub releases
 ```
 
@@ -1211,7 +1211,7 @@ composer run build:wordpress-style
 
 ### Security Features
 
-**WordPress-style deployment tetap secure dengan:**
+**Package deployment tetap secure dengan:**
 
 - ✅ `.htaccess` protection untuk block sensitive files
 - ✅ Auto-detect deployment structure  
@@ -1223,7 +1223,7 @@ composer run build:wordpress-style
 
 ### Deployment Comparison
 
-| Feature | Traditional Laravel | WordPress-Style |
+| Feature | Traditional Laravel | Package-Style |
 |---------|-------------------|-----------------|
 | Installation | Requires SSH/command line | Extract + web interface |
 | User Skill | Technical (developer) | Non-technical (end user) |
@@ -1251,6 +1251,6 @@ This system provides the best of both worlds: Laravel's power with WordPress-sty
 - The `index.php` is modified to work with the separated structure
 - Build assets are duplicated for both web root and Laravel compatibility
 - Windows and Unix systems are both supported
-- WordPress-style deployment maintains security through .htaccess protection
+- Package deployment maintains security through .htaccess protection
 - Auto-update system provides safe, one-click updates with backup/restore
 - Installation wizard handles all technical setup automatically

@@ -8,7 +8,7 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ZipArchive;
 
-class BuildWordPressStyle extends Command
+class BuildPackage extends Command
 {
     /**
      * The name and signature of the console command.
@@ -351,16 +351,11 @@ class BuildWordPressStyle extends Command
         $backendDirs = ['app', 'bootstrap', 'config', 'database', 'resources', 'routes', 'storage', 'vendor'];
         $backendFiles = ['artisan', '.env.example', 'composer.json', 'composer.lock'];
 
-        // Copy backend directories
-        foreach ($backendDirs as $dir) {
-            $sourceDir = $tempDir.'/'.$dir;
-            $targetDir = $wscrmDir.'/'.$dir;
+        // Recreate public directory in wscrm dengan build assets
+        $this->createWscrmPublicDirectory($tempDir, $wscrmDir);
 
-            if (File::exists($sourceDir)) {
-                File::copyDirectory($sourceDir, $targetDir);
-                $this->line("✅ Copied {$dir} to wscrm/");
-            }
-        }
+        // Copy backend directories menggunakan system commands untuk kecepatan
+        $this->copyDirectoriesFast($tempDir, $wscrmDir, $backendDirs);
 
         // Copy backend files
         foreach ($backendFiles as $file) {
@@ -398,6 +393,109 @@ class BuildWordPressStyle extends Command
         }
 
         $this->line('✅ Cleaned up backend files from root directory');
+    }
+
+    private function createWscrmPublicDirectory(string $tempDir, string $wscrmDir): void
+    {
+        $wscrmPublicDir = $wscrmDir.'/public';
+        File::makeDirectory($wscrmPublicDir, 0755, true);
+
+        // Copy build assets dari root ke wscrm/public/
+        if (File::exists($tempDir.'/build')) {
+            File::copyDirectory($tempDir.'/build', $wscrmPublicDir.'/build');
+            $this->line('✅ Copied build assets to wscrm/public/build/');
+        }
+
+        // Buat index.php di wscrm/public/ (Laravel standard)
+        $publicIndexContent = '<?php
+
+use Illuminate\\Http\\Request;
+
+define(\'LARAVEL_START\', microtime(true));
+
+// Determine if the application is in maintenance mode...
+if (file_exists($maintenance = __DIR__.\'/../storage/framework/maintenance.php\')) {
+    require $maintenance;
+}
+
+// Register the Composer autoloader...
+require __DIR__.\'/../vendor/autoload.php\';
+
+// Bootstrap Laravel and handle the request...
+(require_once __DIR__.\'/../bootstrap/app.php\')
+    ->handleRequest(Request::capture());
+';
+
+        File::put($wscrmPublicDir.'/index.php', $publicIndexContent);
+        $this->line('✅ Created wscrm/public/index.php');
+
+        // Copy .htaccess ke wscrm/public/ (Laravel public standard)
+        $publicHtaccessContent = '<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+';
+
+        File::put($wscrmPublicDir.'/.htaccess', $publicHtaccessContent);
+        $this->line('✅ Created wscrm/public/.htaccess');
+    }
+
+    private function copyDirectoriesFast(string $tempDir, string $wscrmDir, array $dirs): void
+    {
+        foreach ($dirs as $dir) {
+            $sourceDir = $tempDir.'/'.$dir;
+            $targetDir = $wscrmDir.'/'.$dir;
+
+            if (! File::exists($sourceDir)) {
+                continue;
+            }
+
+            // Ensure target parent directory exists
+            if (! File::exists(dirname($targetDir))) {
+                File::makeDirectory(dirname($targetDir), 0755, true);
+            }
+
+            // Use system commands for much faster copying
+            if (PHP_OS_FAMILY === 'Windows') {
+                // Windows - use robocopy for faster copying
+                $cmd = "robocopy \"$sourceDir\" \"$targetDir\" /E /NFL /NDL /NJH /NJS /NP /MT:8 >nul 2>&1";
+                exec($cmd, $output, $returnCode);
+
+                // Robocopy return codes 0-7 are success, 8+ are errors
+                if ($returnCode >= 8) {
+                    // Fallback to PHP method
+                    File::copyDirectory($sourceDir, $targetDir);
+                }
+            } else {
+                // Unix/Linux - use cp with parallel processing
+                $cmd = "cp -r \"$sourceDir\" \"".dirname($targetDir).'/" 2>/dev/null';
+                exec($cmd, $output, $returnCode);
+
+                if ($returnCode !== 0) {
+                    // Fallback to PHP method
+                    File::copyDirectory($sourceDir, $targetDir);
+                }
+            }
+
+            $this->line("✅ Copied {$dir} to wscrm/ (fast)");
+        }
     }
 
     private function setupInstaller(string $tempDir): void
@@ -498,10 +596,36 @@ Generated: '.date('Y-m-d H:i:s');
 
     private function createZipPackage(string $tempDir, string $outputPath): void
     {
+        // Try system commands first for better performance
+        if (PHP_OS_FAMILY === 'Windows') {
+            // Use PowerShell Compress-Archive for Windows
+            $normalizedTempDir = str_replace('/', '\\', $tempDir);
+            $normalizedOutputPath = str_replace('/', '\\', $outputPath);
+
+            $cmd = "powershell -Command \"Compress-Archive -Path '$normalizedTempDir\\*' -DestinationPath '$normalizedOutputPath' -Force\"";
+            exec($cmd, $output, $returnCode);
+
+            if ($returnCode === 0 && file_exists($outputPath)) {
+                $this->line('✅ Created zip package using PowerShell (fast)');
+
+                return;
+            }
+        } else {
+            // Use zip command for Unix/Linux
+            $cmd = 'cd "'.dirname($tempDir)."\" && zip -r \"$outputPath\" \"".basename($tempDir).'" >/dev/null 2>&1';
+            exec($cmd, $output, $returnCode);
+
+            if ($returnCode === 0 && file_exists($outputPath)) {
+                $this->line('✅ Created zip package using system zip (fast)');
+
+                return;
+            }
+        }
+
+        // Fallback to PHP ZipArchive with batch processing
         $zip = new ZipArchive;
 
         if ($zip->open($outputPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
-            // Normalize temp directory path
             $tempDir = realpath($tempDir);
 
             $files = new RecursiveIteratorIterator(
@@ -509,22 +633,30 @@ Generated: '.date('Y-m-d H:i:s');
                 RecursiveIteratorIterator::LEAVES_ONLY
             );
 
+            $fileCount = 0;
             foreach ($files as $file) {
                 if (! $file->isDir()) {
                     $filePath = $file->getRealPath();
                     if ($filePath && file_exists($filePath)) {
-                        // Create relative path from temp directory
                         $relativePath = substr($filePath, strlen($tempDir) + 1);
                         $relativePath = str_replace('\\', '/', $relativePath);
 
                         if (! empty($relativePath)) {
                             $zip->addFile($filePath, $relativePath);
+                            $fileCount++;
+
+                            // Batch close/reopen every 1000 files to avoid memory issues
+                            if ($fileCount % 1000 === 0) {
+                                $zip->close();
+                                $zip->open($outputPath, ZipArchive::CREATE);
+                            }
                         }
                     }
                 }
             }
 
             $zip->close();
+            $this->line('✅ Created zip package using PHP ZipArchive (fallback)');
         } else {
             $this->error('Failed to create zip package');
         }
