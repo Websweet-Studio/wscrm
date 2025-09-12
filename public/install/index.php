@@ -658,20 +658,16 @@ function fixWebPermissions() {
     
     // Always create/update .htaccess for flat Laravel deployment
     if (true) { // Always overwrite to ensure correct configuration
-        $htaccessContent = "# Laravel .htaccess for public_html flat deployment\n";
+        $htaccessContent = "# Laravel .htaccess - Simple version for shared hosting\n";
+        $htaccessContent .= "Options -Indexes\n";
         $htaccessContent .= "RewriteEngine On\n\n";
-        $htaccessContent .= "# Handle Authorization Header\n";
-        $htaccessContent .= "RewriteCond %{HTTP:Authorization} .\n";
-        $htaccessContent .= "RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]\n\n";
-        $htaccessContent .= "# Allow access to install directory during setup\n";
-        $htaccessContent .= "RewriteRule ^install/ - [L]\n\n";
-        $htaccessContent .= "# Allow access to build assets\n";
-        $htaccessContent .= "RewriteRule ^build/ - [L]\n\n";
-        $htaccessContent .= "# Redirect Trailing Slashes If Not A Folder\n";
-        $htaccessContent .= "RewriteCond %{REQUEST_FILENAME} !-d\n";
-        $htaccessContent .= "RewriteCond %{REQUEST_URI} (.+)/\$\n";
-        $htaccessContent .= "RewriteRule ^ %1 [L,R=301]\n\n";
-        $htaccessContent .= "# Send Requests To Front Controller\n";
+        $htaccessContent .= "# Skip rewrite for install directory\n";
+        $htaccessContent .= "RewriteCond %{REQUEST_URI} ^/install/\n";
+        $htaccessContent .= "RewriteRule .* - [L]\n\n";
+        $htaccessContent .= "# Skip rewrite for build assets\n";
+        $htaccessContent .= "RewriteCond %{REQUEST_URI} ^/build/\n";
+        $htaccessContent .= "RewriteRule .* - [L]\n\n";
+        $htaccessContent .= "# Laravel front controller\n";
         $htaccessContent .= "RewriteCond %{REQUEST_FILENAME} !-d\n";
         $htaccessContent .= "RewriteCond %{REQUEST_FILENAME} !-f\n";
         $htaccessContent .= "RewriteRule ^ index.php [L]\n";

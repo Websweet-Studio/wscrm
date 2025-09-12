@@ -1,0 +1,18 @@
+# Laravel .htaccess - Manual version for shared hosting
+# Upload this file as .htaccess to root directory if installer fails
+
+Options -Indexes
+RewriteEngine On
+
+# Skip rewrite for install directory
+RewriteCond %{REQUEST_URI} ^/install/
+RewriteRule .* - [L]
+
+# Skip rewrite for build assets
+RewriteCond %{REQUEST_URI} ^/build/
+RewriteRule .* - [L]
+
+# Laravel front controller
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L]
