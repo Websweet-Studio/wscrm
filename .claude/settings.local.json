@@ -138,7 +138,8 @@
       "mcp__laravel-boost__get-config",
       "mcp__laravel-boost__search-docs",
       "mcp__laravel-boost__application-info",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Read(//d/**)"
     ],
     "deny": [],
     "ask": []
