@@ -379,8 +379,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $htaccessContent = file_get_contents($htaccessTemplatePath);
                 $htaccessContent = str_replace('{{DATE}}', date('Y-m-d H:i:s'), $htaccessContent);
                 
-                $publicHtmlDir = dirname(__DIR__);
-                $htaccessPath = $publicHtmlDir . '/.htaccess';
+                // Generate .htaccess in root directory (where wscrm is located)
+                $rootDir = dirname(dirname(__DIR__)); // Go up two levels from install directory
+                $htaccessPath = $rootDir . '/.htaccess';
                 file_put_contents($htaccessPath, $htaccessContent);
             }
             
