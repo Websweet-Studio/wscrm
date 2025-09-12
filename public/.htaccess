@@ -1,4 +1,4 @@
-# Laravel .htaccess dengan Security Protection untuk WordPress-style Deployment
+# Laravel .htaccess dengan Security Protection untuk Package Deployment
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
@@ -39,7 +39,8 @@
     # Block PHP files di root kecuali index.php dan installer
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteCond %{REQUEST_URI} ^/[^/]+\.php$
-    RewriteCond %{REQUEST_URI} !^/(index\.php|install/.*)$
+    RewriteCond %{REQUEST_URI} !^/(index\.php)$
+    RewriteCond %{REQUEST_URI} !^/install/
     RewriteRule .* - [F,L]
     
     # Block access to node_modules dan dist folders

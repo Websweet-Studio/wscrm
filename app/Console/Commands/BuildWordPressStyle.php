@@ -29,7 +29,7 @@ class BuildWordPressStyle extends Command
         
         $outputPath = $this->option('output');
         $distDir = dirname($outputPath);
-        $tempDir = $distDir . '/temp-wordpress-style';
+        $tempDir = $distDir . '/temp-package';
 
         // Clean dan create directories
         if (File::exists($distDir)) {
@@ -72,8 +72,8 @@ class BuildWordPressStyle extends Command
     {
         $excludes = [
             '.git', 'node_modules', 'tests', 'storage/logs',
-            'dist', 'temp-wordpress-style', '.env', 'package-lock.json', 
-            'composer.lock', 'BUILD.md', 'README.md'
+            'dist', 'temp-package', '.env', 'package-lock.json', 
+            'composer.lock', 'BUILD.md', 'README.md', '.claude'
         ];
 
         $this->copyDirectory(base_path(), $tempDir, $excludes);
@@ -126,7 +126,7 @@ class BuildWordPressStyle extends Command
         }
 
         // Create README.txt untuk user
-        $readmeContent = "WSCRM - WordPress Style Installation
+        $readmeContent = "WSCRM - Laravel Package Installation
 
 INSTALASI:
 1. Extract semua file ke folder public_html atau domain folder
@@ -136,8 +136,9 @@ INSTALASI:
 
 REQUIREMENTS:
 - PHP 8.2 atau higher
-- Extensions: PDO, SQLite, OpenSSL, Mbstring, Tokenizer, XML, Ctype, JSON
+- Extensions: PDO, MySQL, OpenSSL, Mbstring, Tokenizer, XML, Ctype, JSON
 - Permissions: storage/ dan bootstrap/cache/ harus writable
+- Database: MySQL/MariaDB dengan user dan database yang sudah dibuat
 
 SUPPORT:
 Untuk bantuan lebih lanjut, silakan hubungi developer.

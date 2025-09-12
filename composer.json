@@ -77,9 +77,9 @@
             "@php artisan view:cache",
             "@php artisan build:production-structure"
         ],
-        "build:wordpress-style": [
+        "build:package": [
             "powershell -Command \"if (Test-Path 'dist') { Remove-Item -Recurse -Force 'dist' }\"",
-            "@php artisan build:wordpress-style"
+            "@php artisan build:package"
         ],
         "build:flat-deployment": [
             "powershell -Command \"if (Test-Path 'dist') { Remove-Item -Recurse -Force 'dist' }\"",

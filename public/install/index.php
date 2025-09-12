@@ -1,11 +1,13 @@
 <?php
 /**
- * Laravel Installer - WordPress Style
+ * Laravel Installer - Package Style
  * Simple installation system untuk kemudahan deployment
  */
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/../storage/logs/installer.log');
 
 // Helper function to parse Laravel .env file safely
 function parseEnvFile($path) {
@@ -41,6 +43,8 @@ function parseEnvFile($path) {
     
     return $env;
 }
+
+try {
 
 // Check if already installed
 if (file_exists(__DIR__ . '/../.env') && !file_exists(__DIR__ . '/../storage/installer.lock')) {
@@ -452,9 +456,81 @@ function handleFinalSetup() {
             createAdminUser('admin@wscrm.local', 'admin123');
         }
         
+        // Fix permissions for web access
+        fixWebPermissions();
+        
         showSuccess();
     } catch (Exception $e) {
         showStep(4, 'Error saat finalisasi: ' . $e->getMessage(), true);
+    }
+}
+
+function fixWebPermissions() {
+    $baseDir = __DIR__ . '/..';
+    
+    // Set proper permissions for key files and directories
+    $permissionFixes = [
+        // Files that need to be readable by web server
+        $baseDir . '/index.php' => 0644,
+        $baseDir . '/.htaccess' => 0644,
+        $baseDir . '/.env' => 0600, // Secure but readable by app
+        
+        // Directories that need proper access
+        $baseDir . '/storage' => 0755,
+        $baseDir . '/bootstrap/cache' => 0755,
+        $baseDir . '/public' => 0755,
+    ];
+    
+    foreach ($permissionFixes as $path => $perm) {
+        if (file_exists($path)) {
+            @chmod($path, $perm);
+        }
+    }
+    
+    // Recursively fix storage permissions
+    $storageDir = $baseDir . '/storage';
+    if (is_dir($storageDir)) {
+        try {
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($storageDir, RecursiveDirectoryIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::SELF_FIRST
+            );
+            
+            foreach ($iterator as $item) {
+                if ($item->isDir()) {
+                    @chmod($item->getRealPath(), 0755);
+                } else {
+                    @chmod($item->getRealPath(), 0644);
+                }
+            }
+        } catch (Exception $e) {
+            // Fallback manual method
+            $dirs = [
+                $storageDir . '/app',
+                $storageDir . '/app/public',
+                $storageDir . '/framework',
+                $storageDir . '/framework/cache',
+                $storageDir . '/framework/sessions',
+                $storageDir . '/framework/views',
+                $storageDir . '/logs'
+            ];
+            
+            foreach ($dirs as $dir) {
+                if (is_dir($dir)) {
+                    @chmod($dir, 0755);
+                }
+            }
+        }
+    }
+    
+    // Create a simple .htaccess for root if none exists
+    $rootHtaccess = $baseDir . '/.htaccess';
+    if (!file_exists($rootHtaccess)) {
+        $htaccessContent = "# Basic Laravel .htaccess for public_html deployment\n";
+        $htaccessContent .= "RewriteEngine On\n";
+        $htaccessContent .= "RewriteRule ^(.*)$ public/\$1 [L]\n";
+        @file_put_contents($rootHtaccess, $htaccessContent);
+        @chmod($rootHtaccess, 0644);
     }
 }
 
@@ -1046,14 +1122,34 @@ function showSuccess() {
         <div class="container">
             <div class="success-icon">🎉</div>
             <h1>Instalasi Berhasil!</h1>
-            <p>WSCRM telah berhasil diinstall dan siap digunakan.</p>
+            <p>WSCRM telah berhasil diinstal dan dikonfigurasi. Permissions telah diperbaiki otomatis.</p>
             
-            <p>
+            <div style="background: hsl(var(--success) / 0.1); border: 1px solid hsl(var(--success) / 0.3); color: hsl(var(--success)); padding: 1rem; border-radius: var(--radius); margin: 1.5rem 0; text-align: left;">
+                <strong>📍 Cara Akses Aplikasi:</strong><br>
+                <ol style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                    <li>Akses langsung: <a href="/" style="color: hsl(var(--success)); font-weight: 600;">Klik di sini</a></li>
+                    <li>Jika error 403/Forbidden, coba akses: <a href="/public/" style="color: hsl(var(--success)); font-weight: 600;">/public/</a></li>
+                    <li>Atau akses manual: <code style="background: rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 2px;"><?php echo $_SERVER['HTTP_HOST']; ?>/</code></li>
+                </ol>
+            </div>
+            
+            <div style="background: hsl(46 93% 50% / 0.1); border: 1px solid hsl(46 93% 50% / 0.3); color: hsl(46 100% 20%); padding: 1rem; border-radius: var(--radius); margin: 1.5rem 0; text-align: left;">
+                <strong>⚠️ Jika masih Forbidden:</strong><br>
+                <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                    <li>Periksa permissions folder dengan hosting provider</li>
+                    <li>Pastikan file <code>index.php</code> ada dan readable</li>
+                    <li>Cek konfigurasi .htaccess tidak terlalu restrictive</li>
+                    <li>Hubungi support hosting jika perlu bantuan permissions</li>
+                </ul>
+            </div>
+            
+            <div style="margin: 2rem 0;">
                 <a href="/" class="btn">🚀 Akses Aplikasi</a>
+                <a href="/public/" class="btn btn-secondary">🔗 Akses via /public/</a>
                 <a href="#" onclick="deleteInstaller()" class="btn btn-destructive">🗑️ Hapus Installer</a>
-            </p>
+            </div>
             
-            <p><small>Untuk keamanan, disarankan untuk menghapus folder installer setelah instalasi selesai.</small></p>
+            <p><small>💡 Untuk keamanan optimal, hapus folder installer setelah memastikan aplikasi dapat diakses dengan normal.</small></p>
         </div>
         
         <script>
@@ -1072,4 +1168,27 @@ function showSuccess() {
     <?php
 }
 
+} catch (Exception $e) {
+    // Handle any uncaught exceptions
+    echo "<!DOCTYPE html><html><head><title>Installer Error</title></head><body>";
+    echo "<h1>🚨 Installer Error</h1>";
+    echo "<p><strong>Error:</strong> " . htmlspecialchars($e->getMessage()) . "</p>";
+    echo "<p><strong>File:</strong> " . htmlspecialchars($e->getFile()) . "</p>";
+    echo "<p><strong>Line:</strong> " . $e->getLine() . "</p>";
+    echo "<p><strong>Stack trace:</strong></p>";
+    echo "<pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
+    echo "<hr>";
+    echo "<p><a href='debug.php'>🔧 Run Debug Check</a></p>";
+    echo "</body></html>";
+} catch (Error $e) {
+    // Handle fatal errors
+    echo "<!DOCTYPE html><html><head><title>Fatal Error</title></head><body>";
+    echo "<h1>💥 Fatal Error</h1>";
+    echo "<p><strong>Error:</strong> " . htmlspecialchars($e->getMessage()) . "</p>";
+    echo "<p><strong>File:</strong> " . htmlspecialchars($e->getFile()) . "</p>";
+    echo "<p><strong>Line:</strong> " . $e->getLine() . "</p>";
+    echo "<hr>";
+    echo "<p><a href='debug.php'>🔧 Run Debug Check</a></p>";
+    echo "</body></html>";
+}
 ?>

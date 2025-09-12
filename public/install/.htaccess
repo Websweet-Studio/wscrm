@@ -1,0 +1,19 @@
+# Allow PHP files in install directory
+# Override parent .htaccess restrictions
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Allow all PHP files in this directory
+    # This overrides the parent .htaccess that blocks PHP files
+</IfModule>
+
+# Allow access to all files in install directory
+<RequireAll>
+    Require all granted
+</RequireAll>
+
+# Explicitly allow common file types
+<FilesMatch "\.(php|html|css|js|png|jpg|gif|ico)$">
+    Require all granted
+</FilesMatch>

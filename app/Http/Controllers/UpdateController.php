@@ -133,7 +133,7 @@ class UpdateController extends Controller
     private function getDownloadUrl(array $release): ?string
     {
         foreach ($release['assets'] ?? [] as $asset) {
-            if (str_contains($asset['name'], 'wordpress-style') && str_ends_with($asset['name'], '.zip')) {
+            if (str_contains($asset['name'], 'package') && str_ends_with($asset['name'], '.zip')) {
                 return $asset['browser_download_url'];
             }
         }
