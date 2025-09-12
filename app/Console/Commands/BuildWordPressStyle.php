@@ -13,19 +13,19 @@ class BuildWordPressStyle extends Command
     /**
      * The name and signature of the console command.
      */
-    protected $signature = 'build:wordpress-style {--output=dist/wscrm-wordpress-style.zip}';
+    protected $signature = 'build:package {--output=dist/wscrm-package.zip}';
 
     /**
      * The console command description.
      */
-    protected $description = 'Build aplikasi untuk WordPress-style deployment (extract dan install)';
+    protected $description = 'Build aplikasi menjadi package siap deploy (extract dan install)';
 
     /**
      * Execute the console command.
      */
     public function handle(): int
     {
-        $this->info('🚀 Memulai build WordPress-style deployment...');
+        $this->info('🚀 Memulai build package deployment...');
         
         $outputPath = $this->option('output');
         $distDir = dirname($outputPath);
@@ -35,12 +35,13 @@ class BuildWordPressStyle extends Command
         if (File::exists($distDir)) {
             File::deleteDirectory($distDir);
         }
+        
         File::makeDirectory($distDir, 0755, true);
         File::makeDirectory($tempDir, 0755, true);
 
         // Step 1: Run npm build
         $this->info('📦 Building frontend assets...');
-        $this->runCommand('npm run build');
+        $this->executeCommand('npm run build');
 
         // Step 2: Copy files untuk deployment
         $this->info('📁 Copying application files...');
@@ -57,7 +58,7 @@ class BuildWordPressStyle extends Command
         // Cleanup
         File::deleteDirectory($tempDir);
 
-        $this->info("✅ WordPress-style build completed: {$outputPath}");
+        $this->info("✅ Package build completed: {$outputPath}");
         $this->newLine();
         $this->line("📖 Cara install:");
         $this->line("1. Extract zip ke public_html/domain folder");
@@ -71,22 +72,11 @@ class BuildWordPressStyle extends Command
     {
         $excludes = [
             '.git', 'node_modules', 'tests', 'storage/logs',
-            'dist', '.env', 'package-lock.json', 'composer.lock',
-            'BUILD.md', 'README.md'
+            'dist', 'temp-wordpress-style', '.env', 'package-lock.json', 
+            'composer.lock', 'BUILD.md', 'README.md'
         ];
 
         $this->copyDirectory(base_path(), $tempDir, $excludes);
-
-        // Copy public files ke root level untuk flat deployment
-        if (File::exists($tempDir . '/public')) {
-            foreach (File::allFiles($tempDir . '/public') as $file) {
-                $relativePath = str_replace($tempDir . '/public/', '', $file->getPathname());
-                File::copy(
-                    $file->getPathname(),
-                    $tempDir . '/' . $relativePath
-                );
-            }
-        }
 
         // Create empty storage directories dengan permissions
         $storageDirs = [
@@ -99,12 +89,16 @@ class BuildWordPressStyle extends Command
         ];
 
         foreach ($storageDirs as $dir) {
-            File::makeDirectory($tempDir . '/' . $dir, 0755, true);
+            if (!File::exists($tempDir . '/' . $dir)) {
+                File::makeDirectory($tempDir . '/' . $dir, 0755, true);
+            }
             File::put($tempDir . '/' . $dir . '/.gitkeep', '');
         }
 
         // Create bootstrap/cache
-        File::makeDirectory($tempDir . '/bootstrap/cache', 0755, true);
+        if (!File::exists($tempDir . '/bootstrap/cache')) {
+            File::makeDirectory($tempDir . '/bootstrap/cache', 0755, true);
+        }
         File::put($tempDir . '/bootstrap/cache/.gitkeep', '');
     }
 
@@ -156,27 +150,42 @@ Generated: " . date('Y-m-d H:i:s');
 
     private function copyDirectory(string $source, string $dest, array $excludes = []): void
     {
+        // Normalize paths
+        $source = rtrim($source, DIRECTORY_SEPARATOR);
+        $dest = rtrim($dest, DIRECTORY_SEPARATOR);
+        
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($source, RecursiveDirectoryIterator::SKIP_DOTS),
             RecursiveIteratorIterator::SELF_FIRST
         );
 
         foreach ($iterator as $item) {
-            $relativePath = str_replace($source . DIRECTORY_SEPARATOR, '', $item);
+            $itemPath = $item->getPathname();
+            $relativePath = str_replace($source . DIRECTORY_SEPARATOR, '', $itemPath);
+            $relativePath = str_replace('\\', '/', $relativePath); // Normalize separators
             
             // Skip excluded paths
+            $skip = false;
             foreach ($excludes as $exclude) {
                 if (str_starts_with($relativePath, $exclude)) {
-                    continue 2;
+                    $skip = true;
+                    break;
                 }
             }
+            if ($skip) continue;
 
             $target = $dest . DIRECTORY_SEPARATOR . $relativePath;
 
             if ($item->isDir()) {
-                File::makeDirectory($target, 0755, true);
+                if (!File::exists($target)) {
+                    File::makeDirectory($target, 0755, true);
+                }
             } else {
-                File::copy($item, $target);
+                $targetDir = dirname($target);
+                if (!File::exists($targetDir)) {
+                    File::makeDirectory($targetDir, 0755, true);
+                }
+                File::copy($itemPath, $target);
             }
         }
     }
@@ -186,16 +195,26 @@ Generated: " . date('Y-m-d H:i:s');
         $zip = new ZipArchive();
         
         if ($zip->open($outputPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+            // Normalize temp directory path
+            $tempDir = realpath($tempDir);
+            
             $files = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($tempDir),
+                new RecursiveDirectoryIterator($tempDir, RecursiveDirectoryIterator::SKIP_DOTS),
                 RecursiveIteratorIterator::LEAVES_ONLY
             );
 
             foreach ($files as $file) {
                 if (!$file->isDir()) {
                     $filePath = $file->getRealPath();
-                    $relativePath = substr($filePath, strlen($tempDir) + 1);
-                    $zip->addFile($filePath, $relativePath);
+                    if ($filePath && file_exists($filePath)) {
+                        // Create relative path from temp directory
+                        $relativePath = substr($filePath, strlen($tempDir) + 1);
+                        $relativePath = str_replace('\\', '/', $relativePath);
+                        
+                        if (!empty($relativePath)) {
+                            $zip->addFile($filePath, $relativePath);
+                        }
+                    }
                 }
             }
 
@@ -205,7 +224,7 @@ Generated: " . date('Y-m-d H:i:s');
         }
     }
 
-    private function runCommand(string $command): void
+    protected function executeCommand(string $command): void
     {
         $process = proc_open(
             $command,
