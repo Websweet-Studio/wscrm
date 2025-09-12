@@ -653,12 +653,28 @@ function fixWebPermissions() {
         }
     }
     
-    // Create a simple .htaccess for root if none exists
+    // Create proper .htaccess for flat Laravel deployment
     $rootHtaccess = $baseDir . '/.htaccess';
-    if (!file_exists($rootHtaccess)) {
-        $htaccessContent = "# Basic Laravel .htaccess for public_html deployment\n";
-        $htaccessContent .= "RewriteEngine On\n";
-        $htaccessContent .= "RewriteRule ^(.*)$ public/\$1 [L]\n";
+    
+    // Always create/update .htaccess for flat Laravel deployment
+    if (true) { // Always overwrite to ensure correct configuration
+        $htaccessContent = "# Laravel .htaccess for public_html flat deployment\n";
+        $htaccessContent .= "RewriteEngine On\n\n";
+        $htaccessContent .= "# Handle Authorization Header\n";
+        $htaccessContent .= "RewriteCond %{HTTP:Authorization} .\n";
+        $htaccessContent .= "RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]\n\n";
+        $htaccessContent .= "# Allow access to install directory during setup\n";
+        $htaccessContent .= "RewriteRule ^install/ - [L]\n\n";
+        $htaccessContent .= "# Allow access to build assets\n";
+        $htaccessContent .= "RewriteRule ^build/ - [L]\n\n";
+        $htaccessContent .= "# Redirect Trailing Slashes If Not A Folder\n";
+        $htaccessContent .= "RewriteCond %{REQUEST_FILENAME} !-d\n";
+        $htaccessContent .= "RewriteCond %{REQUEST_URI} (.+)/\$\n";
+        $htaccessContent .= "RewriteRule ^ %1 [L,R=301]\n\n";
+        $htaccessContent .= "# Send Requests To Front Controller\n";
+        $htaccessContent .= "RewriteCond %{REQUEST_FILENAME} !-d\n";
+        $htaccessContent .= "RewriteCond %{REQUEST_FILENAME} !-f\n";
+        $htaccessContent .= "RewriteRule ^ index.php [L]\n";
         @file_put_contents($rootHtaccess, $htaccessContent);
         @chmod($rootHtaccess, 0644);
     }

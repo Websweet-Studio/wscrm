@@ -47,11 +47,15 @@ class BuildWordPressStyle extends Command
         $this->info('📁 Copying application files...');
         $this->copyApplicationFiles($tempDir);
 
-        // Step 3: Setup installer
+        // Step 3: Flatten public directory structure
+        $this->info('🔄 Flattening directory structure...');
+        $this->flattenPublicStructure($tempDir);
+
+        // Step 4: Setup installer
         $this->info('🔧 Setting up installer...');
         $this->setupInstaller($tempDir);
 
-        // Step 4: Create distributable package
+        // Step 5: Create distributable package
         $this->info('📦 Creating zip package...');
         $this->createZipPackage($tempDir, $outputPath);
 
@@ -117,14 +121,66 @@ class BuildWordPressStyle extends Command
         File::put($tempDir . '/bootstrap/cache/.gitkeep', '');
     }
 
+    private function flattenPublicStructure(string $tempDir): void
+    {
+        $publicDir = $tempDir . '/public';
+        
+        if (!File::exists($publicDir)) {
+            $this->warn('Public directory not found, skipping flatten');
+            return;
+        }
+        
+        // Move all files from public/ to root, except special directories
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($publicDir, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        foreach ($iterator as $item) {
+            $relativePath = str_replace($publicDir . DIRECTORY_SEPARATOR, '', $item->getPathname());
+            $relativePath = str_replace('\\', '/', $relativePath);
+            
+            // Don't skip anything - we want install directory in the flat structure
+
+            $targetPath = $tempDir . DIRECTORY_SEPARATOR . $relativePath;
+
+            if ($item->isDir()) {
+                if (!File::exists($targetPath)) {
+                    File::makeDirectory($targetPath, 0755, true);
+                }
+            } else {
+                // Ensure target directory exists
+                $targetDir = dirname($targetPath);
+                if (!File::exists($targetDir)) {
+                    File::makeDirectory($targetDir, 0755, true);
+                }
+                
+                // Copy file if it doesn't exist in root or if it's an asset file
+                if (!File::exists($targetPath) || str_starts_with($relativePath, 'build/')) {
+                    File::copy($item->getPathname(), $targetPath);
+                }
+            }
+        }
+        
+        // Remove the public directory after flattening
+        File::deleteDirectory($publicDir);
+        
+        $this->line('✅ Flattened public directory structure');
+    }
+
     private function setupInstaller(string $tempDir): void
     {
-        // Pastikan installer sudah ada
+        // Pastikan installer sudah ada (seharusnya sudah di-copy dari flattening)
         if (!File::exists($tempDir . '/install')) {
-            File::copyDirectory(
-                base_path('public/install'),
-                $tempDir . '/install'
-            );
+            // Fallback: copy dari source jika belum ada
+            if (File::exists(base_path('public/install'))) {
+                File::copyDirectory(
+                    base_path('public/install'),
+                    $tempDir . '/install'
+                );
+            } else {
+                $this->warn('Install directory not found in source');
+            }
         }
 
         // Create .env.example untuk installer
