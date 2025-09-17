@@ -3,7 +3,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Head, Link, router } from '@inertiajs/vue3';
+import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
+import { Link, router } from '@inertiajs/vue3';
 import { Crown, Globe, Search, ShoppingCart, Star, TrendingUp } from 'lucide-vue-next';
 import { ref } from 'vue';
 
@@ -75,77 +76,52 @@ const isPopular = (extension: string) => {
 </script>
 
 <template>
-    <Head title="Domain Registration - Find Your Perfect Domain" />
-
-    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-        <!-- Navigation -->
-        <nav class="container mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                <Link href="/" class="flex items-center space-x-2">
-                    <img src="/1.png" alt="WebSweetStudio" class="h-8 w-8 object-contain" />
-                    <span class="text-xl font-bold">Ws.</span>
-                </Link>
-                <div class="flex items-center space-x-4">
-                    <Button variant="ghost" asChild>
-                        <Link href="/hosting">Hosting</Link>
-                    </Button>
-                    <Button variant="ghost" asChild>
-                        <Link href="/domains">Domains</Link>
-                    </Button>
-                    <Button variant="outline" asChild>
-                        <Link href="/customer/login">Login</Link>
-                    </Button>
-                    <Button asChild>
-                        <Link href="/customer/register">Get Started</Link>
-                    </Button>
-                </div>
-            </div>
-        </nav>
-
-        <div class="container mx-auto px-6 py-8">
+    <CustomerPublicLayout title="Registrasi Domain - Temukan Domain Sempurna Anda - WebSweetStudio">
+        <section class="container mx-auto px-4 py-12 sm:px-6 sm:py-16">
             <!-- Hero Section -->
             <div
-                class="mb-16 space-y-8 rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-20 text-center"
+                class="mb-12 space-y-6 rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 text-center sm:mb-16 sm:space-y-8 sm:py-20"
             >
-                <div class="space-y-6">
-                    <div class="inline-flex items-center rounded-full border border-blue-200 bg-white/80 px-4 py-2 text-sm font-medium text-blue-700">
-                        <Star class="mr-2 h-4 w-4 text-yellow-500" />
-                        Start your online journey today
+                <div class="space-y-4 sm:space-y-6">
+                    <div class="inline-flex items-center rounded-full border border-blue-200 bg-white/80 px-3 py-1 text-xs font-medium text-blue-700 sm:px-4 sm:py-2 sm:text-sm">
+                        <Star class="mr-1 h-3 w-3 text-yellow-500 sm:mr-2 sm:h-4 sm:w-4" />
+                        Mulai perjalanan online Anda hari ini
                     </div>
                     <h1
-                        class="bg-gradient-to-br from-blue-900 via-blue-700 to-purple-700 bg-clip-text text-5xl font-bold tracking-tight text-transparent"
+                        class="bg-gradient-to-br from-blue-900 via-blue-700 to-purple-700 bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-4xl lg:text-5xl"
                     >
-                        Find Your Perfect Domain
+                        Temukan Domain Sempurna Anda
                     </h1>
-                    <p class="mx-auto max-w-3xl text-xl leading-relaxed text-muted-foreground">
-                        Search for available domains and register them instantly. Your online presence starts here with the perfect domain name.
+                    <p class="mx-auto max-w-3xl text-base leading-relaxed text-muted-foreground sm:text-lg lg:text-xl">
+                        Cari domain yang tersedia dan daftarkan secara instan. Kehadiran online Anda dimulai di sini dengan nama domain yang sempurna.
                     </p>
                 </div>
 
                 <!-- Enhanced Domain Search -->
                 <Card class="mx-auto max-w-3xl border-0 bg-white/90 shadow-xl backdrop-blur-sm">
-                    <CardContent class="pt-8 pb-8">
-                        <div class="flex flex-col items-center gap-3 sm:flex-row">
+                    <CardContent class="px-4 pt-6 pb-6 sm:px-8 sm:pt-8 sm:pb-8">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
                             <div class="relative w-full flex-1">
-                                <Globe class="absolute top-1/2 left-4 h-6 w-6 -translate-y-1/2 transform text-blue-500" />
+                                <Globe class="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform text-blue-500 sm:left-4 sm:h-6 sm:w-6" />
                                 <Input
                                     v-model="domainSearch"
-                                    placeholder="Enter your domain name (e.g., myawesomesite.com)"
-                                    class="h-14 rounded-xl border-2 border-blue-200 pr-4 pl-12 text-lg focus:border-blue-500"
+                                    placeholder="Masukkan nama domain Anda (contoh: websayaawesome.com)"
+                                    class="h-12 rounded-xl border-2 border-blue-200 pr-3 pl-10 text-base focus:border-blue-500 sm:h-14 sm:pr-4 sm:pl-12 sm:text-lg"
                                     @keyup.enter="searchDomain"
                                 />
                             </div>
                             <Button
                                 @click="searchDomain"
                                 size="lg"
-                                class="h-14 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 font-semibold text-white shadow-lg transition-all hover:from-blue-700 hover:to-blue-800 hover:shadow-xl"
+                                class="h-12 w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 font-semibold text-white shadow-lg transition-all hover:from-blue-700 hover:to-blue-800 hover:shadow-xl sm:h-14 sm:w-auto sm:px-8"
                             >
-                                <Search class="mr-2 h-5 w-5" />
-                                Search Domain
+                                <Search class="mr-1 h-4 w-4 sm:mr-2 sm:h-5 sm:w-5" />
+                                <span class="hidden sm:inline">Cari Domain</span>
+                                <span class="sm:hidden">Cari</span>
                             </Button>
                         </div>
-                        <div class="mt-4 flex flex-wrap justify-center gap-2 text-sm text-muted-foreground">
-                            <span>Popular searches:</span>
+                        <div class="mt-3 flex flex-wrap justify-center gap-1 text-xs text-muted-foreground sm:mt-4 sm:gap-2 sm:text-sm">
+                            <span>Pencarian populer:</span>
                             <button class="font-medium text-blue-600 hover:text-blue-800">.com</button>
                             <span>•</span>
                             <button class="font-medium text-blue-600 hover:text-blue-800">.id</button>
@@ -159,55 +135,56 @@ const isPopular = (extension: string) => {
             </div>
 
             <!-- Popular Extensions -->
-            <div class="mb-16 space-y-8">
-                <div class="space-y-3 text-center">
-                    <h2 class="text-3xl font-bold">Popular Domain Extensions</h2>
-                    <p class="mx-auto max-w-2xl text-muted-foreground">
-                        Start your online presence with these most trusted and widely used domain extensions
+            <div class="mb-12 space-y-6 sm:mb-16 sm:space-y-8">
+                <div class="space-y-2 text-center sm:space-y-3">
+                    <h2 class="text-2xl font-bold sm:text-3xl">Ekstensi Domain Populer</h2>
+                    <p class="mx-auto max-w-2xl text-sm text-muted-foreground sm:text-base">
+                        Mulai kehadiran online Anda dengan ekstensi domain paling terpercaya dan banyak digunakan
                     </p>
                 </div>
 
-                <div class="mx-auto grid max-w-7xl gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div class="mx-auto grid max-w-7xl gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
                     <Card
                         v-for="domain in getPopularExtensions()"
                         :key="domain.id"
                         class="group relative cursor-pointer overflow-hidden border-2 transition-all hover:scale-105 hover:border-blue-300 hover:shadow-xl"
                     >
                         <!-- Premium Badge -->
-                        <div v-if="isPremium(domain.extension)" class="absolute top-3 right-3 z-10">
+                        <div v-if="isPremium(domain.extension)" class="absolute top-2 right-2 z-10 sm:top-3 sm:right-3">
                             <Badge class="bg-gradient-to-r from-yellow-400 to-orange-500 text-xs font-semibold text-white">
                                 <Crown class="mr-1 h-3 w-3" />
                                 Premium
                             </Badge>
                         </div>
 
-                        <CardContent class="space-y-6 pt-8 pb-6 text-center">
+                        <CardContent class="space-y-4 pt-6 pb-4 text-center sm:space-y-6 sm:pt-8 sm:pb-6">
                             <!-- Extension Name -->
-                            <div class="space-y-2">
-                                <div class="text-4xl font-bold tracking-tight text-blue-600">.{{ domain.extension }}</div>
-                                <div class="text-xs tracking-wider text-muted-foreground uppercase">Domain Extension</div>
+                            <div class="space-y-1 sm:space-y-2">
+                                <div class="text-3xl font-bold tracking-tight text-blue-600 sm:text-4xl">.{{ domain.extension }}</div>
+                                <div class="text-xs tracking-wider text-muted-foreground uppercase">Ekstensi Domain</div>
                             </div>
 
                             <!-- Pricing -->
-                            <div class="space-y-3 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+                            <div class="space-y-2 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 p-3 sm:space-y-3 sm:p-4">
                                 <div class="space-y-1">
-                                    <div class="text-sm font-medium text-muted-foreground">First Year</div>
-                                    <div class="text-3xl font-bold text-blue-600">{{ formatPrice(domain.selling_price) }}</div>
+                                    <div class="text-xs font-medium text-muted-foreground sm:text-sm">Tahun Pertama</div>
+                                    <div class="text-2xl font-bold text-blue-600 sm:text-3xl">{{ formatPrice(domain.selling_price) }}</div>
                                 </div>
 
                                 <div class="space-y-1 border-t pt-2">
-                                    <div class="text-xs text-muted-foreground">Renewal: {{ formatPrice(domain.renewal_price_with_tax) }}/year</div>
+                                    <div class="text-xs text-muted-foreground">Perpanjangan: {{ formatPrice(domain.renewal_price_with_tax) }}/tahun</div>
                                 </div>
                             </div>
 
                             <!-- CTA Button -->
                             <Button
                                 asChild
-                                class="w-full bg-gradient-to-r from-blue-600 to-blue-700 py-3 font-semibold text-white transition-all group-hover:shadow-lg hover:from-blue-700 hover:to-blue-800"
+                                class="w-full bg-gradient-to-r from-blue-600 to-blue-700 py-2 font-semibold text-white transition-all group-hover:shadow-lg hover:from-blue-700 hover:to-blue-800 sm:py-3"
                             >
                                 <Link href="/customer/register">
-                                    <ShoppingCart class="mr-2 h-4 w-4" />
-                                    Get Started
+                                    <ShoppingCart class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                                    <span class="hidden sm:inline">Mulai Sekarang</span>
+                                    <span class="sm:hidden">Daftar</span>
                                 </Link>
                             </Button>
                         </CardContent>
@@ -216,11 +193,11 @@ const isPopular = (extension: string) => {
             </div>
 
             <!-- All Extensions -->
-            <div class="space-y-8">
-                <div class="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+            <div class="space-y-6 sm:space-y-8">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div class="space-y-1">
-                        <h2 class="text-2xl font-bold">Complete Domain Pricing</h2>
-                        <p class="text-muted-foreground">Compare prices and find the perfect extension for your needs</p>
+                        <h2 class="text-xl font-bold sm:text-2xl">Harga Domain Lengkap</h2>
+                        <p class="text-sm text-muted-foreground sm:text-base">Bandingkan harga dan temukan ekstensi yang sempurna untuk kebutuhan Anda</p>
                     </div>
 
                     <!-- Extension Search -->
@@ -231,7 +208,7 @@ const isPopular = (extension: string) => {
                                     <Search class="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         v-model="search"
-                                        placeholder="Search extensions (e.g., com, id, org)..."
+                                        placeholder="Cari ekstensi (contoh: com, id, org)..."
                                         class="pl-8"
                                         @keyup.enter="handleSearch"
                                     />
@@ -245,30 +222,36 @@ const isPopular = (extension: string) => {
                 <!-- Table View for Better Comparison -->
                 <Card>
                     <CardHeader>
-                        <CardTitle class="flex items-center">
-                            <Globe class="mr-2 h-5 w-5 text-blue-600" />
-                            Domain Extension Pricing
+                        <CardTitle class="flex items-center text-base sm:text-lg">
+                            <Globe class="mr-2 h-4 w-4 text-blue-600 sm:h-5 sm:w-5" />
+                            Harga Ekstensi Domain
                         </CardTitle>
-                        <CardDescription>
-                            All prices are shown per year. Registration is for the first year, renewal applies from the second year onwards.
+                        <CardDescription class="text-sm">
+                            Semua harga ditampilkan per tahun. Registrasi untuk tahun pertama, perpanjangan berlaku mulai tahun kedua.
                         </CardDescription>
                     </CardHeader>
                     <CardContent class="p-0">
                         <div class="overflow-x-auto">
-                            <table class="w-full">
+                            <table class="w-full min-w-[600px]">
                                 <thead class="border-b bg-muted/50">
                                     <tr>
-                                        <th class="px-6 py-4 text-left font-semibold">Extension</th>
-                                        <th class="px-6 py-4 text-right font-semibold">Registration</th>
-                                        <th class="px-6 py-4 text-right font-semibold">Renewal</th>
-                                        <th class="px-6 py-4 text-center font-semibold">Action</th>
+                                        <th class="px-3 py-3 text-left font-semibold sm:px-6 sm:py-4">Ekstensi</th>
+                                        <th class="px-3 py-3 text-right font-semibold sm:px-6 sm:py-4">
+                                            <span class="hidden sm:inline">Registrasi</span>
+                                            <span class="sm:hidden">Reg</span>
+                                        </th>
+                                        <th class="px-3 py-3 text-right font-semibold sm:px-6 sm:py-4">
+                                            <span class="hidden sm:inline">Perpanjangan</span>
+                                            <span class="sm:hidden">Renewal</span>
+                                        </th>
+                                        <th class="px-3 py-3 text-center font-semibold sm:px-6 sm:py-4">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr v-for="domain in domainPrices" :key="domain.id" class="border-b transition-colors hover:bg-muted/20">
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center space-x-3">
-                                                <div class="text-xl font-bold text-blue-600">.{{ domain.extension }}</div>
+                                        <td class="px-3 py-3 sm:px-6 sm:py-4">
+                                            <div class="flex items-center space-x-2 sm:space-x-3">
+                                                <div class="text-lg font-bold text-blue-600 sm:text-xl">.{{ domain.extension }}</div>
                                                 <Badge
                                                     v-if="isPremium(domain.extension)"
                                                     class="bg-gradient-to-r from-yellow-400 to-orange-500 text-xs text-white"
@@ -278,23 +261,24 @@ const isPopular = (extension: string) => {
                                                 </Badge>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 text-right">
+                                        <td class="px-3 py-3 text-right sm:px-6 sm:py-4">
                                             <div class="space-y-1">
-                                                <div class="text-lg font-bold text-green-600">{{ formatPrice(domain.selling_price) }}</div>
-                                                <div class="text-xs text-muted-foreground">first year</div>
+                                                <div class="text-base font-bold text-green-600 sm:text-lg">{{ formatPrice(domain.selling_price) }}</div>
+                                                <div class="text-xs text-muted-foreground">tahun pertama</div>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 text-right">
+                                        <td class="px-3 py-3 text-right sm:px-6 sm:py-4">
                                             <div class="space-y-1">
-                                                <div class="text-lg font-semibold">{{ formatPrice(domain.renewal_price_with_tax) }}</div>
-                                                <div class="text-xs text-muted-foreground">per year</div>
+                                                <div class="text-base font-semibold sm:text-lg">{{ formatPrice(domain.renewal_price_with_tax) }}</div>
+                                                <div class="text-xs text-muted-foreground">per tahun</div>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 text-center">
-                                            <Button asChild size="sm" class="bg-blue-600 text-white hover:bg-blue-700">
+                                        <td class="px-3 py-3 text-center sm:px-6 sm:py-4">
+                                            <Button asChild size="sm" class="w-full bg-blue-600 text-white hover:bg-blue-700 sm:w-auto">
                                                 <Link href="/customer/register">
-                                                    <ShoppingCart class="mr-1 h-4 w-4" />
-                                                    Register
+                                                    <ShoppingCart class="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
+                                                    <span class="hidden sm:inline">Daftar</span>
+                                                    <span class="sm:hidden">Reg</span>
                                                 </Link>
                                             </Button>
                                         </td>
@@ -307,43 +291,43 @@ const isPopular = (extension: string) => {
             </div>
 
             <!-- Why Choose Our Domains -->
-            <Card class="mt-16 bg-gradient-to-br from-blue-50 to-indigo-100">
-                <CardContent class="pt-8 pb-8">
-                    <div class="space-y-6 text-center">
-                        <h2 class="text-2xl font-bold">Why Choose Our Domain Registration?</h2>
+            <Card class="mt-12 bg-gradient-to-br from-blue-50 to-indigo-100 sm:mt-16">
+                <CardContent class="px-4 pt-6 pb-6 sm:px-8 sm:pt-8 sm:pb-8">
+                    <div class="space-y-4 text-center sm:space-y-6">
+                        <h2 class="text-xl font-bold sm:text-2xl">Mengapa Pilih Registrasi Domain Kami?</h2>
 
-                        <div class="mx-auto grid max-w-4xl gap-6 md:grid-cols-3">
-                            <div class="space-y-3 text-center">
-                                <div class="mx-auto w-fit rounded-full bg-blue-100 p-3">
-                                    <Globe class="h-6 w-6 text-blue-600" />
+                        <div class="mx-auto grid max-w-4xl gap-4 sm:gap-6 md:grid-cols-3">
+                            <div class="space-y-2 text-center sm:space-y-3">
+                                <div class="mx-auto w-fit rounded-full bg-blue-100 p-2 sm:p-3">
+                                    <Globe class="h-5 w-5 text-blue-600 sm:h-6 sm:w-6" />
                                 </div>
-                                <h3 class="font-semibold">Easy Management</h3>
-                                <p class="text-sm text-muted-foreground">Intuitive control panel to manage all your domains in one place</p>
+                                <h3 class="text-sm font-semibold sm:text-base">Pengelolaan Mudah</h3>
+                                <p class="text-xs text-muted-foreground sm:text-sm">Panel kontrol intuitif untuk mengelola semua domain Anda di satu tempat</p>
                             </div>
 
-                            <div class="space-y-3 text-center">
-                                <div class="mx-auto w-fit rounded-full bg-green-100 p-3">
-                                    <TrendingUp class="h-6 w-6 text-green-600" />
+                            <div class="space-y-2 text-center sm:space-y-3">
+                                <div class="mx-auto w-fit rounded-full bg-green-100 p-2 sm:p-3">
+                                    <TrendingUp class="h-5 w-5 text-green-600 sm:h-6 sm:w-6" />
                                 </div>
-                                <h3 class="font-semibold">Competitive Pricing</h3>
-                                <p class="text-sm text-muted-foreground">Best prices in the market with transparent renewal rates</p>
+                                <h3 class="text-sm font-semibold sm:text-base">Harga Kompetitif</h3>
+                                <p class="text-xs text-muted-foreground sm:text-sm">Harga terbaik di pasar dengan tarif perpanjangan yang transparan</p>
                             </div>
 
-                            <div class="space-y-3 text-center">
-                                <div class="mx-auto w-fit rounded-full bg-purple-100 p-3">
-                                    <Star class="h-6 w-6 text-purple-600" />
+                            <div class="space-y-2 text-center sm:space-y-3">
+                                <div class="mx-auto w-fit rounded-full bg-purple-100 p-2 sm:p-3">
+                                    <Star class="h-5 w-5 text-purple-600 sm:h-6 sm:w-6" />
                                 </div>
-                                <h3 class="font-semibold">24/7 Support</h3>
-                                <p class="text-sm text-muted-foreground">Expert support team ready to help with domain issues</p>
+                                <h3 class="text-sm font-semibold sm:text-base">Dukungan 24/7</h3>
+                                <p class="text-xs text-muted-foreground sm:text-sm">Tim dukungan ahli siap membantu dengan masalah domain</p>
                             </div>
                         </div>
 
-                        <div class="flex justify-center space-x-4 pt-6">
-                            <Button asChild size="lg">
-                                <Link href="/customer/register">Get Started Today</Link>
+                        <div class="flex flex-col gap-3 pt-4 sm:flex-row sm:justify-center sm:gap-4 sm:pt-6">
+                            <Button asChild size="lg" class="w-full sm:w-auto">
+                                <Link href="/customer/register">Mulai Hari Ini</Link>
                             </Button>
-                            <Button variant="outline" asChild size="lg">
-                                <Link href="/hosting">View Hosting Plans</Link>
+                            <Button variant="outline" asChild size="lg" class="w-full sm:w-auto">
+                                <Link href="/hosting">Lihat Paket Hosting</Link>
                             </Button>
                         </div>
                     </div>
@@ -351,34 +335,13 @@ const isPopular = (extension: string) => {
             </Card>
 
             <!-- Empty State -->
-            <div v-if="domainPrices.length === 0" class="py-12 text-center">
+            <div v-if="domainPrices.length === 0" class="py-8 text-center sm:py-12">
                 <Globe class="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                <h3 class="mb-2 text-lg font-semibold">No domain extensions found</h3>
+                <h3 class="mb-2 text-lg font-semibold">Tidak ada ekstensi domain ditemukan</h3>
                 <p class="text-muted-foreground">
-                    {{ search ? 'Try adjusting your search criteria.' : 'No domain extensions are currently available.' }}
+                    {{ search ? 'Coba sesuaikan kriteria pencarian Anda.' : 'Tidak ada ekstensi domain yang tersedia saat ini.' }}
                 </p>
             </div>
-        </div>
-
-        <!-- Footer -->
-        <footer class="mt-16 bg-gray-900 py-8 text-gray-300">
-            <div class="container mx-auto px-6">
-                <div class="flex flex-col items-center justify-between md:flex-row">
-                    <Link href="/" class="mb-4 flex items-center space-x-2 md:mb-0">
-                        <img src="/1.png" alt="WebSweetStudio" class="h-8 w-8 object-contain" />
-                        <span class="text-xl font-bold text-white">Ws.</span>
-                    </Link>
-                    <div class="flex space-x-6 text-sm">
-                        <Link href="/hosting" class="hover:text-white">Hosting</Link>
-                        <Link href="/domains" class="hover:text-white">Domains</Link>
-                        <Link href="/customer/login" class="hover:text-white">Customer Login</Link>
-                        <Link href="/login" class="hover:text-white">Admin Login</Link>
-                    </div>
-                </div>
-                <div class="mt-6 border-t border-gray-700 pt-6 text-center text-sm">
-                    <p>&copy; 2024 WebSweetStudio. All rights reserved.</p>
-                </div>
-            </div>
-        </footer>
-    </div>
+        </section>
+    </CustomerPublicLayout>
 </template>

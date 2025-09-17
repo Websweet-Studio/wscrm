@@ -65,7 +65,14 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended('/customer/dashboard');
+        // Debug info
+        \Log::info('Customer login redirect debug', [
+            'intended_url' => session('url.intended'),
+            'is_authenticated' => Auth::guard('customer')->check(),
+            'customer_id' => Auth::guard('customer')->id()
+        ]);
+
+        return redirect('/customer/dashboard');
     }
 
     public function destroy(Request $request): RedirectResponse
