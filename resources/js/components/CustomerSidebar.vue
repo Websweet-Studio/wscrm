@@ -6,7 +6,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import customer from '@/routes/customer';
 import { type NavItem } from '@/types';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, Globe, LayoutGrid, Receipt, Server, Settings, ShoppingCart } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Receipt, Settings, ShoppingCart } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const page = usePage();
@@ -25,16 +25,6 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: customer.dashboard().url,
         icon: LayoutGrid,
-    },
-    {
-        title: 'Hosting Plans',
-        href: customer.hosting.index().url,
-        icon: Server,
-    },
-    {
-        title: 'Domains',
-        href: customer.domains.index().url,
-        icon: Globe,
     },
     {
         title: 'My Orders',
