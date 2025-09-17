@@ -6,6 +6,7 @@ import { ref } from 'vue';
 
 const page = usePage();
 const isAdmin = page.props.auth?.user !== null; // User yang login melalui guard 'web' adalah admin
+const isCustomer = page.props.auth?.customer !== null; // Customer yang login melalui guard 'customer'
 const mobileMenuOpen = ref(false);
 </script>
 
@@ -30,6 +31,14 @@ const mobileMenuOpen = ref(false);
                 <template v-if="isAdmin">
                     <Button variant="outline" size="sm" asChild>
                         <Link href="/dashboard" class="flex items-center gap-2">
+                            <LayoutGrid class="h-4 w-4" />
+                            Dashboard Admin
+                        </Link>
+                    </Button>
+                </template>
+                <template v-else-if="isCustomer">
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href="/customer/dashboard" class="flex items-center gap-2">
                             <LayoutGrid class="h-4 w-4" />
                             Dashboard
                         </Link>
@@ -71,6 +80,14 @@ const mobileMenuOpen = ref(false);
             <template v-if="isAdmin">
                 <Button variant="outline" class="w-full justify-start" asChild>
                     <Link href="/dashboard" class="flex items-center gap-2">
+                        <LayoutGrid class="h-4 w-4" />
+                        Dashboard Admin
+                    </Link>
+                </Button>
+            </template>
+            <template v-else-if="isCustomer">
+                <Button variant="outline" class="w-full justify-start" asChild>
+                    <Link href="/customer/dashboard" class="flex items-center gap-2">
                         <LayoutGrid class="h-4 w-4" />
                         Dashboard
                     </Link>
