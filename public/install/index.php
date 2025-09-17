@@ -346,9 +346,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 }
                 
-                // Quote password if it contains special characters
+                // Test database connection before proceeding
+                try {
+                    $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbName}";
+                    $pdo = new PDO($dsn, $dbUsername, $dbPassword);
+                    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    error_log('✅ Database connection test successful');
+                } catch (PDOException $e) {
+                    error_log('❌ Database connection test failed: ' . $e->getMessage());
+                    echo json_encode(['success' => false, 'message' => 'Koneksi database gagal: ' . $e->getMessage()]);
+                    exit;
+                }
+
+                // Handle password properly - empty password should remain empty, not quoted
                 $quotedPassword = $dbPassword;
-                if (preg_match('/[\\s#"\'\\\\]/', $dbPassword)) {
+                if (!empty($dbPassword) && preg_match('/[\\s#"\'\\\\]/', $dbPassword)) {
                     $quotedPassword = '"' . str_replace('"', '\\"', $dbPassword) . '"';
                 }
                 
@@ -1002,6 +1014,13 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
+
+        .form-help {
+            color: #666;
+            font-size: 0.85em;
+            margin-top: 5px;
+            display: block;
+        }
         
         /* Database Options */
         .database-options {
@@ -1295,7 +1314,8 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                                     <label for="db_password">
                                         <span class="label-text">Password</span>
                                     </label>
-                                    <input type="password" id="db_password" class="form-control" placeholder="Masukkan password database">
+                                    <input type="password" id="db_password" class="form-control" placeholder="Masukkan password database (kosongkan jika tidak ada password)">
+                                    <small class="form-help">💡 Kosongkan field ini jika database tidak menggunakan password (seperti setup local XAMPP/WAMP)</small>
                                 </div>
                                 
                                 <button type="button" class="btn btn-outline" onclick="testDatabaseConnection()">

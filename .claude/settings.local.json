@@ -145,7 +145,8 @@
       "Bash(powershell:*)",
       "Bash(dir dist)",
       "Bash(dir disttemp-package)",
-      "Bash(timeout 30 composer run build:package:*)"
+      "Bash(timeout 30 composer run build:package:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []
