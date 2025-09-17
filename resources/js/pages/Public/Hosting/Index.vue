@@ -125,7 +125,7 @@ const filteredPlans = computed(() => {
             <div class="mb-12 space-y-6 text-center">
                 <h1 class="text-4xl font-bold tracking-tight">Professional Web Hosting Plans</h1>
                 <p class="mx-auto max-w-3xl text-xl text-muted-foreground">
-                    Choose the perfect hosting plan for your website. Fast, reliable, and secure hosting with 24/7 support.
+                    Choose the perfect hosting plan for your website. Fast, reliable, and secure hosting.
                 </p>
             </div>
 

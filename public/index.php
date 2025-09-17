@@ -5,8 +5,14 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
-// Check if installer exists and installation is not completed
-if (is_dir(__DIR__ . '/install')) {
+// Check if installer exists and installation is not completed (skip in development)
+$skipInstaller = false;
+if (file_exists(__DIR__ . '/../.env')) {
+    $envContent = file_get_contents(__DIR__ . '/../.env');
+    $skipInstaller = strpos($envContent, 'APP_ENV=local') !== false;
+}
+
+if (is_dir(__DIR__ . '/install') && !$skipInstaller) {
     // For flat deployment, check wscrm folder for installer.lock
     $installerLockPaths = [
         __DIR__ . '/wscrm/storage/installer.lock',      // wscrm in same directory
