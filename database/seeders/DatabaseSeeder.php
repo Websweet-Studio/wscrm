@@ -20,9 +20,11 @@ class DatabaseSeeder extends Seeder
             'name' => 'Admin User',
             'email' => 'admin@example.com',
             'password' => Hash::make('password'),
+            'role' => 'admin',
         ]);
 
         $this->call([
+            SuperAdminSeeder::class,
             HostingPlanSeeder::class,
             DomainPriceSeeder::class,
             ServicePlanSeeder::class,
@@ -30,6 +32,7 @@ class DatabaseSeeder extends Seeder
             OrderSeeder::class,
             InvoiceSeeder::class,
             BankSeeder::class,
+            ExpenseSeeder::class,
         ]);
     }
 }

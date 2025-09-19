@@ -14,7 +14,7 @@ class SuperAdminSeeder extends Seeder
     {
         \App\Models\User::create([
             'name' => 'Super Admin',
-            'email' => 'superadmin@wscrm.local',
+            'email' => 'superadmin@example.com',
             'password' => 'password',
             'role' => 'super_admin',
             'email_verified_at' => now(),
