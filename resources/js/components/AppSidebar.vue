@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import NavUser from '@/components/NavUser.vue';
 import { useSidebar } from '@/composables/useSidebar';
-import { dashboard } from '@/routes';
+// import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 import {
@@ -47,7 +47,7 @@ onMounted(() => {
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: '/dashboard',
         icon: LayoutGrid,
     },
     {
@@ -149,10 +149,10 @@ const footerNavItems: NavItem[] = [
     >
         <!-- Header -->
         <div class="border-b border-border p-4">
-            <Link v-if="!isMinimized" :href="dashboard()" class="flex cursor-pointer items-center gap-2">
+            <Link v-if="!isMinimized" href="/dashboard" class="flex cursor-pointer items-center gap-2">
                 <AppLogo :show-text="!isMinimized" />
             </Link>
-            <Link v-else :href="dashboard()" class="flex cursor-pointer items-center justify-center">
+            <Link v-else href="/dashboard" class="flex cursor-pointer items-center justify-center">
                 <div class="flex aspect-square size-8 items-center justify-center rounded-md">
                     <AppLogoIcon class="size-6 h-6 w-6" />
                 </div>

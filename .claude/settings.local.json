@@ -146,7 +146,8 @@
       "Bash(dir dist)",
       "Bash(dir disttemp-package)",
       "Bash(timeout 30 composer run build:package:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(cd:*)"
     ],
     "deny": [],
     "ask": []

@@ -118,10 +118,9 @@ const totalMonthly = computed(() => {
     return props.monthlyExpenses
         .filter(expense => expense.status === 'active')
         .reduce((total, expense) => {
-            if (expense.currency === 'USD') {
-                return total + (expense.amount * 15000);
-            }
-            return total + expense.amount;
+            const amount = parseFloat(expense.amount) || 0;
+            const amountInIDR = expense.currency === 'USD' ? (amount * 15000) : amount;
+            return total + amountInIDR;
         }, 0);
 });
 
@@ -129,10 +128,9 @@ const totalYearly = computed(() => {
     return props.yearlyExpenses
         .filter(expense => expense.status === 'active')
         .reduce((total, expense) => {
-            if (expense.currency === 'USD') {
-                return total + (expense.amount * 15000);
-            }
-            return total + expense.amount;
+            const amount = parseFloat(expense.amount) || 0;
+            const amountInIDR = expense.currency === 'USD' ? (amount * 15000) : amount;
+            return total + amountInIDR;
         }, 0);
 });
 
@@ -140,10 +138,9 @@ const totalOneTime = computed(() => {
     return props.oneTimeExpenses
         .filter(expense => expense.status === 'paid')
         .reduce((total, expense) => {
-            if (expense.currency === 'USD') {
-                return total + (expense.amount * 15000);
-            }
-            return total + expense.amount;
+            const amount = parseFloat(expense.amount) || 0;
+            const amountInIDR = expense.currency === 'USD' ? (amount * 15000) : amount;
+            return total + amountInIDR;
         }, 0);
 });
 
@@ -161,10 +158,9 @@ const thisYearOneTime = computed(() => {
 
 const thisYearOneTimeTotal = computed(() => {
     return thisYearOneTime.value.reduce((total, expense) => {
-        if (expense.currency === 'USD') {
-            return total + (expense.amount * 15000);
-        }
-        return total + expense.amount;
+        const amount = parseFloat(expense.amount) || 0;
+        const amountInIDR = expense.currency === 'USD' ? (amount * 15000) : amount;
+        return total + amountInIDR;
     }, 0);
 });
 
