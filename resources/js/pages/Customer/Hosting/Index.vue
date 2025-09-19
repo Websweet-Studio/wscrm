@@ -109,94 +109,110 @@ const orderPlan = (plan: HostingPlan) => {
                 </CardContent>
             </Card>
 
-            <!-- Hosting Plans Grid -->
-            <div class="mx-auto grid max-w-7xl gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <Card v-for="plan in hostingPlans" :key="plan.id" class="relative overflow-hidden transition-all hover:shadow-lg">
-                    <div v-if="plan.discount_percent > 0" class="absolute top-4 right-4 z-10">
-                        <Badge class="bg-red-500 text-white">{{ plan.discount_percent }}% OFF</Badge>
+            <!-- Hosting Plans Table -->
+            <Card>
+                <CardHeader>
+                    <CardTitle>Available Hosting Plans</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="border-b border-border">
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Plan</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Storage</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">CPU</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">RAM</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Bandwidth</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Features</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Price</th>
+                                    <th class="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    v-for="plan in hostingPlans"
+                                    :key="plan.id"
+                                    class="border-b border-border hover:bg-muted/30 transition-colors"
+                                >
+                                    <td class="px-3 py-4 text-sm">
+                                        <div class="flex items-center gap-3">
+                                            <div class="rounded-full bg-blue-100 p-2">
+                                                <Server class="h-4 w-4 text-blue-600" />
+                                            </div>
+                                            <div>
+                                                <div class="font-medium text-foreground">{{ plan.plan_name }}</div>
+                                                <div v-if="plan.discount_percent > 0" class="flex items-center">
+                                                    <Badge class="bg-red-500 text-white text-xs">{{ plan.discount_percent }}% OFF</Badge>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-4 text-sm">
+                                        <div class="flex items-center gap-2">
+                                            <HardDrive class="h-4 w-4 text-blue-500" />
+                                            <span class="font-medium">{{ plan.storage_gb }}GB</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-4 text-sm">
+                                        <div class="flex items-center gap-2">
+                                            <Cpu class="h-4 w-4 text-green-500" />
+                                            <span class="font-medium">{{ plan.cpu_cores }} Core{{ plan.cpu_cores > 1 ? 's' : '' }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-4 text-sm">
+                                        <div class="flex items-center gap-2">
+                                            <MemoryStick class="h-4 w-4 text-purple-500" />
+                                            <span class="font-medium">{{ plan.ram_gb }}GB</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-4 text-sm">
+                                        <div class="flex items-center gap-2">
+                                            <Wifi class="h-4 w-4 text-orange-500" />
+                                            <span class="font-medium">{{ plan.bandwidth }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-4 text-sm max-w-xs">
+                                        <div v-if="plan.features && plan.features.length > 0" class="space-y-1">
+                                            <div v-for="(feature, index) in plan.features.slice(0, 2)" :key="index" class="flex items-center gap-1 text-xs">
+                                                <Check class="h-3 w-3 text-green-500 flex-shrink-0" />
+                                                <span>{{ feature }}</span>
+                                            </div>
+                                            <div v-if="plan.features.length > 2" class="text-xs text-blue-600">
+                                                +{{ plan.features.length - 2 }} more
+                                            </div>
+                                        </div>
+                                        <span v-else class="text-muted-foreground">-</span>
+                                    </td>
+                                    <td class="px-3 py-4 text-sm">
+                                        <div class="space-y-1">
+                                            <div v-if="plan.discount_percent > 0" class="text-xs text-muted-foreground line-through">
+                                                {{ formatPrice(plan.selling_price) }}
+                                            </div>
+                                            <div class="font-bold text-blue-600">
+                                                {{ formatPrice(getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
+                                            </div>
+                                            <div class="text-xs text-muted-foreground">per year</div>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-4">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <Button @click="orderPlan(plan)" size="sm" title="Order Now">
+                                                <ShoppingCart class="h-3 w-3" />
+                                            </Button>
+                                            <Button variant="outline" size="sm" asChild title="View Details">
+                                                <Link :href="`/customer/hosting/${plan.id}`">
+                                                    <Server class="h-3 w-3" />
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-
-                    <CardHeader class="pb-4 text-center">
-                        <div class="mb-4 flex justify-center">
-                            <div class="rounded-full bg-blue-100 p-3">
-                                <Server class="h-8 w-8 text-blue-600" />
-                            </div>
-                        </div>
-                        <CardTitle class="text-2xl">{{ plan.plan_name }}</CardTitle>
-                        <div class="space-y-1">
-                            <div v-if="plan.discount_percent > 0" class="text-sm text-muted-foreground line-through">
-                                {{ formatPrice(plan.selling_price) }}
-                            </div>
-                            <div class="text-3xl font-bold text-blue-600">
-                                {{ formatPrice(getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
-                            </div>
-                            <div class="text-sm text-muted-foreground">per year</div>
-                        </div>
-                    </CardHeader>
-
-                    <CardContent class="space-y-6">
-                        <!-- Specifications -->
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between rounded bg-muted p-2">
-                                <div class="flex items-center space-x-2">
-                                    <HardDrive class="h-4 w-4 text-blue-500" />
-                                    <span class="text-sm">Storage</span>
-                                </div>
-                                <span class="font-semibold">{{ plan.storage_gb }}GB</span>
-                            </div>
-
-                            <div class="flex items-center justify-between rounded bg-muted p-2">
-                                <div class="flex items-center space-x-2">
-                                    <Cpu class="h-4 w-4 text-green-500" />
-                                    <span class="text-sm">CPU Cores</span>
-                                </div>
-                                <span class="font-semibold">{{ plan.cpu_cores }}</span>
-                            </div>
-
-                            <div class="flex items-center justify-between rounded bg-muted p-2">
-                                <div class="flex items-center space-x-2">
-                                    <MemoryStick class="h-4 w-4 text-purple-500" />
-                                    <span class="text-sm">RAM</span>
-                                </div>
-                                <span class="font-semibold">{{ plan.ram_gb }}GB</span>
-                            </div>
-
-                            <div class="flex items-center justify-between rounded bg-muted p-2">
-                                <div class="flex items-center space-x-2">
-                                    <Wifi class="h-4 w-4 text-orange-500" />
-                                    <span class="text-sm">Bandwidth</span>
-                                </div>
-                                <span class="font-semibold">{{ plan.bandwidth }}</span>
-                            </div>
-                        </div>
-
-                        <!-- Features -->
-                        <div v-if="plan.features && plan.features.length > 0" class="space-y-2">
-                            <h4 class="text-sm font-semibold">Features Included:</h4>
-                            <ul class="space-y-1">
-                                <li v-for="(feature, index) in plan.features.slice(0, 4)" :key="index" class="flex items-center space-x-2 text-sm">
-                                    <Check class="h-3 w-3 flex-shrink-0 text-green-500" />
-                                    <span>{{ feature }}</span>
-                                </li>
-                                <li v-if="plan.features.length > 4" class="pl-5 text-xs text-muted-foreground">
-                                    and {{ plan.features.length - 4 }} more features...
-                                </li>
-                            </ul>
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="space-y-2 pt-4">
-                            <Button @click="orderPlan(plan)" class="w-full" size="lg">
-                                <ShoppingCart class="mr-2 h-4 w-4" />
-                                Order Now
-                            </Button>
-                            <Link :href="`/customer/hosting/${plan.id}`">
-                                <Button variant="outline" class="w-full" size="lg"> View Details </Button>
-                            </Link>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+                </CardContent>
+            </Card>
 
             <!-- Empty State -->
             <div v-if="hostingPlans.length === 0" class="py-12 text-center">

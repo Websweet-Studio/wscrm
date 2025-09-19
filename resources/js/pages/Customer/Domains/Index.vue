@@ -245,43 +245,61 @@ const orderDomainOnly = (domainPriceId: number) => {
                     </Card>
                 </div>
 
-                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    <Card
-                        v-for="domain in domainPrices"
-                        :key="domain.id"
-                        class="group cursor-pointer transition-all hover:shadow-md"
-                        @click="orderDomain(domain.id)"
-                    >
-                        <CardContent class="pt-6">
-                            <div class="mb-4 flex items-center justify-between">
-                                <div class="flex items-center space-x-2">
-                                    <div class="text-2xl font-bold text-blue-600">.{{ domain.extension }}</div>
-                                    <Badge v-if="isPremium(domain.extension)" variant="secondary" class="text-xs">
-                                        <Crown class="mr-1 h-3 w-3" />
-                                        Premium
-                                    </Badge>
-                                </div>
-                            </div>
-
-                            <div class="space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm text-muted-foreground">Registration</span>
-                                    <span class="font-semibold">{{ formatPrice(domain.selling_price) }}</span>
-                                </div>
-
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm text-muted-foreground">Renewal</span>
-                                    <span class="font-semibold">{{ formatPrice(domain.renewal_price_with_tax) }}</span>
-                                </div>
-
-                                <Button class="mt-4 w-full transition-colors group-hover:bg-blue-600">
-                                    <ShoppingCart class="mr-2 h-4 w-4" />
-                                    Register
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                <!-- Domain Extensions Table -->
+                <Card>
+                    <CardContent class="p-0">
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse">
+                                <thead>
+                                    <tr class="border-b border-border">
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Extension</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Registration</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Renewal</th>
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        v-for="domain in domainPrices"
+                                        :key="domain.id"
+                                        class="border-b border-border hover:bg-muted/30 transition-colors"
+                                    >
+                                        <td class="px-4 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="rounded-full bg-blue-100 p-2">
+                                                    <Globe class="h-4 w-4 text-blue-600" />
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-xl font-bold text-blue-600">.{{ domain.extension }}</span>
+                                                    <Badge v-if="isPremium(domain.extension)" variant="secondary" class="text-xs">
+                                                        <Crown class="mr-1 h-3 w-3" />
+                                                        Premium
+                                                    </Badge>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 text-sm">
+                                            <div class="font-semibold text-green-600">{{ formatPrice(domain.selling_price) }}</div>
+                                            <div class="text-xs text-muted-foreground">per tahun</div>
+                                        </td>
+                                        <td class="px-4 py-4 text-sm">
+                                            <div class="font-semibold">{{ formatPrice(domain.renewal_price_with_tax) }}</div>
+                                            <div class="text-xs text-muted-foreground">per tahun</div>
+                                        </td>
+                                        <td class="px-4 py-4">
+                                            <div class="flex items-center justify-center">
+                                                <Button @click="orderDomain(domain.id)" size="sm">
+                                                    <ShoppingCart class="mr-1 h-3 w-3" />
+                                                    Register
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
 
             <!-- Why Choose Our Domains -->
@@ -398,6 +416,7 @@ const orderDomainOnly = (domainPriceId: number) => {
 
         <!-- Hosting Order Modal -->
         <HostingOrderModal
+            v-if="selectedHostingPlan"
             :open="showHostingModal"
             @update:open="showHostingModal = $event"
             :hosting-plan="selectedHostingPlan"
