@@ -10,7 +10,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { formatPrice } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { CheckCircle, Clock, CreditCard, DollarSign, Edit, Plus, Repeat, Trash2, X } from 'lucide-vue-next';
+import { Activity, AlertTriangle, CheckCircle, Clock, CreditCard, DollarSign, Edit, Plus, Repeat, TrendingDown, TrendingUp, Trash2, X } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface Expense {
@@ -85,7 +85,7 @@ const editForm = useForm({
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Financial', href: '#' },
-    { title: 'Data Pengeluaran', href: '/admin/expenses' },
+    { title: 'Data Keuangan', href: '/admin/expenses' },
 ];
 
 const getStatusColor = (status: string) => {
@@ -186,6 +186,44 @@ const monthlyProfit = computed(() => monthlyRevenue.value - totalMonthly.value);
 const yearlyProfit = computed(() => yearlyRevenue.value - (totalYearly.value + totalMonthly.value * 12));
 const overallProfit = computed(() => monthlyRevenue.value + yearlyRevenue.value - grandTotal.value);
 
+// Health Analysis
+const cashFlowRatio = computed(() => {
+    if (totalMonthly.value === 0) return 100;
+    return (monthlyRevenue.value / totalMonthly.value) * 100;
+});
+
+const expenseToRevenueRatio = computed(() => {
+    const totalRevenue = monthlyRevenue.value + yearlyRevenue.value;
+    if (totalRevenue === 0) return 100;
+    return (grandTotal.value / totalRevenue) * 100;
+});
+
+const financialHealth = computed(() => {
+    const profitMargin = (overallProfit.value / (monthlyRevenue.value + yearlyRevenue.value)) * 100;
+
+    if (profitMargin >= 20) {
+        return { status: 'excellent', label: 'Sangat Sehat', color: 'text-green-600', bgColor: 'bg-green-100', icon: 'TrendingUp' };
+    } else if (profitMargin >= 10) {
+        return { status: 'good', label: 'Sehat', color: 'text-blue-600', bgColor: 'bg-blue-100', icon: 'Activity' };
+    } else if (profitMargin >= 0) {
+        return { status: 'warning', label: 'Perlu Perhatian', color: 'text-yellow-600', bgColor: 'bg-yellow-100', icon: 'AlertTriangle' };
+    } else {
+        return { status: 'danger', label: 'Tidak Sehat', color: 'text-red-600', bgColor: 'bg-red-100', icon: 'TrendingDown' };
+    }
+});
+
+const burnRate = computed(() => {
+    // Monthly burn rate
+    return totalMonthly.value;
+});
+
+const runwayMonths = computed(() => {
+    if (totalMonthly.value === 0) return Infinity;
+    if (monthlyProfit.value <= 0) return 0;
+    // Simplified calculation - how many months can survive with current profit
+    return Math.floor(monthlyProfit.value / totalMonthly.value * 12);
+});
+
 // CRUD functions
 const openCreateModal = (type: 'monthly' | 'yearly' | 'one-time') => {
     createForm.reset();
@@ -260,25 +298,25 @@ const confirmDelete = () => {
 </script>
 
 <template>
-    <Head title="Data Pengeluaran" />
+    <Head title="Data Keuangan" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6">
             <!-- Modern Dashboard Header -->
-            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 p-8 text-white mb-8">
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 p-4 sm:p-6 lg:p-8 text-white mb-6 sm:mb-8">
                 <div class="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-blue-600/20"></div>
-                <div class="relative z-10 flex items-center justify-between">
+                <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
                     <div class="space-y-3">
                         <div class="flex items-center space-x-3">
-                            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-                                <DollarSign class="h-6 w-6" />
+                            <div class="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+                                <DollarSign class="h-5 w-5 sm:h-6 sm:w-6" />
                             </div>
                             <div>
-                                <h1 class="text-3xl font-bold">Dashboard Keuangan</h1>
-                                <p class="text-white/80">Kelola dan pantau semua pengeluaran bisnis dengan mudah</p>
+                                <h1 class="text-2xl sm:text-3xl font-bold">Dashboard Keuangan</h1>
+                                <p class="text-white/80 text-sm sm:text-base hidden sm:block">Kelola dan pantau semua pengeluaran bisnis dengan mudah</p>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-6 text-sm">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-6 space-y-2 sm:space-y-0 text-xs sm:text-sm">
                             <div class="flex items-center space-x-2">
                                 <div class="h-2 w-2 rounded-full bg-green-400"></div>
                                 <span class="text-white/90">{{ props.monthlyExpenses.filter(e => e.status === 'active').length + props.yearlyExpenses.filter(e => e.status === 'active').length }} Layanan Aktif</span>
@@ -287,16 +325,17 @@ const confirmDelete = () => {
                                 <div class="h-2 w-2 rounded-full bg-blue-400"></div>
                                 <span class="text-white/90">{{ props.revenueData?.currentMonth || 'September 2025' }}</span>
                             </div>
-                            <div class="flex items-center space-x-2">
+                            <div class="hidden sm:flex items-center space-x-2">
                                 <div class="h-2 w-2 rounded-full bg-purple-400"></div>
                                 <span class="text-white/90">Real-time Updates</span>
                             </div>
                         </div>
                     </div>
                     <div class="flex space-x-3">
-                        <Button @click="openCreateModal(activeTab as 'monthly' | 'yearly' | 'one-time')" class="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm">
-                            <Plus class="mr-2 h-4 w-4" />
-                            Tambah Pengeluaran
+                        <Button @click="openCreateModal(activeTab as 'monthly' | 'yearly' | 'one-time')" class="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm text-sm">
+                            <Plus class="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                            <span class="hidden sm:inline">Tambah Pengeluaran</span>
+                            <span class="sm:hidden">Tambah</span>
                         </Button>
                     </div>
                 </div>
@@ -306,7 +345,7 @@ const confirmDelete = () => {
             </div>
 
             <!-- Modern Dashboard Summary -->
-            <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div class="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 <!-- Monthly Profit Card -->
                 <Card :class="[
                     'relative overflow-hidden border-0 text-white',
@@ -314,30 +353,34 @@ const confirmDelete = () => {
                         ? 'bg-gradient-to-r from-emerald-500 to-emerald-600'
                         : 'bg-gradient-to-r from-red-500 to-red-600'
                 ]">
-                    <CardContent class="p-6">
+                    <CardContent class="p-4 sm:p-6">
                         <div class="flex items-center justify-between">
-                            <div class="space-y-2">
-                                <p :class="monthlyProfit >= 0 ? 'text-emerald-100' : 'text-red-100'" class="text-sm font-medium">
+                            <div class="space-y-2 flex-1 min-w-0">
+                                <p :class="monthlyProfit >= 0 ? 'text-emerald-100' : 'text-red-100'" class="text-xs sm:text-sm font-medium">
                                     {{ monthlyProfit >= 0 ? 'Keuntungan Bulan Ini' : 'Kerugian Bulan Ini' }}
                                 </p>
-                                <div class="text-3xl font-bold">
+                                <div class="text-xl sm:text-2xl lg:text-3xl font-bold truncate">
                                     {{ formatPrice(Math.abs(monthlyProfit), 'IDR') }}
                                 </div>
-                                <div :class="monthlyProfit >= 0 ? 'text-emerald-100' : 'text-red-100'" class="flex items-center space-x-2 text-sm">
-                                    <DollarSign class="h-4 w-4" />
-                                    <span>{{ props.revenueData?.currentMonth || 'September 2025' }}</span>
+                                <div :class="monthlyProfit >= 0 ? 'text-emerald-100' : 'text-red-100'" class="flex items-center space-x-2 text-xs sm:text-sm">
+                                    <DollarSign class="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                    <span class="truncate">{{ props.revenueData?.currentMonth || 'September 2025' }}</span>
                                 </div>
                             </div>
-                            <div class="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
-                                <DollarSign class="h-6 w-6" />
+                            <div class="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white/20 flex items-center justify-center ml-3 flex-shrink-0">
+                                <DollarSign class="h-5 w-5 sm:h-6 sm:w-6" />
                             </div>
                         </div>
-                        <div :class="monthlyProfit >= 0 ? 'border-emerald-400/30' : 'border-red-400/30'" class="mt-4 pt-4 border-t">
-                            <div :class="monthlyProfit >= 0 ? 'text-emerald-100' : 'text-red-100'" class="flex justify-between text-sm">
-                                <span>Pemasukan: {{ formatPrice(monthlyRevenue, 'IDR') }}</span>
-                            </div>
-                            <div :class="monthlyProfit >= 0 ? 'text-emerald-100' : 'text-red-100'" class="flex justify-between text-sm">
-                                <span>Pengeluaran: {{ formatPrice(totalMonthly, 'IDR') }}</span>
+                        <div :class="monthlyProfit >= 0 ? 'border-emerald-400/30' : 'border-red-400/30'" class="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t">
+                            <div :class="monthlyProfit >= 0 ? 'text-emerald-100' : 'text-red-100'" class="space-y-1">
+                                <div class="flex justify-between text-xs sm:text-sm">
+                                    <span>Pemasukan:</span>
+                                    <span class="font-medium">{{ formatPrice(monthlyRevenue, 'IDR') }}</span>
+                                </div>
+                                <div class="flex justify-between text-xs sm:text-sm">
+                                    <span>Pengeluaran:</span>
+                                    <span class="font-medium">{{ formatPrice(totalMonthly, 'IDR') }}</span>
+                                </div>
                             </div>
                         </div>
                     </CardContent>
@@ -350,30 +393,34 @@ const confirmDelete = () => {
                         ? 'bg-gradient-to-r from-blue-500 to-blue-600'
                         : 'bg-gradient-to-r from-red-500 to-red-600'
                 ]">
-                    <CardContent class="p-6">
+                    <CardContent class="p-4 sm:p-6">
                         <div class="flex items-center justify-between">
-                            <div class="space-y-2">
-                                <p :class="yearlyProfit >= 0 ? 'text-blue-100' : 'text-red-100'" class="text-sm font-medium">
+                            <div class="space-y-2 flex-1 min-w-0">
+                                <p :class="yearlyProfit >= 0 ? 'text-blue-100' : 'text-red-100'" class="text-xs sm:text-sm font-medium">
                                     {{ yearlyProfit >= 0 ? 'Keuntungan Tahun Ini' : 'Kerugian Tahun Ini' }}
                                 </p>
-                                <div class="text-3xl font-bold">
+                                <div class="text-xl sm:text-2xl lg:text-3xl font-bold truncate">
                                     {{ formatPrice(Math.abs(yearlyProfit), 'IDR') }}
                                 </div>
-                                <div :class="yearlyProfit >= 0 ? 'text-blue-100' : 'text-red-100'" class="flex items-center space-x-2 text-sm">
-                                    <Clock class="h-4 w-4" />
-                                    <span>{{ props.revenueData?.currentYear || '2025' }}</span>
+                                <div :class="yearlyProfit >= 0 ? 'text-blue-100' : 'text-red-100'" class="flex items-center space-x-2 text-xs sm:text-sm">
+                                    <Clock class="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                    <span class="truncate">{{ props.revenueData?.currentYear || '2025' }}</span>
                                 </div>
                             </div>
-                            <div class="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
-                                <Clock class="h-6 w-6" />
+                            <div class="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white/20 flex items-center justify-center ml-3 flex-shrink-0">
+                                <Clock class="h-5 w-5 sm:h-6 sm:w-6" />
                             </div>
                         </div>
-                        <div :class="yearlyProfit >= 0 ? 'border-blue-400/30' : 'border-red-400/30'" class="mt-4 pt-4 border-t">
-                            <div :class="yearlyProfit >= 0 ? 'text-blue-100' : 'text-red-100'" class="flex justify-between text-sm">
-                                <span>Pemasukan: {{ formatPrice(yearlyRevenue, 'IDR') }}</span>
-                            </div>
-                            <div :class="yearlyProfit >= 0 ? 'text-blue-100' : 'text-red-100'" class="flex justify-between text-sm">
-                                <span>Pengeluaran: {{ formatPrice(totalYearly, 'IDR') }}</span>
+                        <div :class="yearlyProfit >= 0 ? 'border-blue-400/30' : 'border-red-400/30'" class="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t">
+                            <div :class="yearlyProfit >= 0 ? 'text-blue-100' : 'text-red-100'" class="space-y-1">
+                                <div class="flex justify-between text-xs sm:text-sm">
+                                    <span>Pemasukan:</span>
+                                    <span class="font-medium">{{ formatPrice(yearlyRevenue, 'IDR') }}</span>
+                                </div>
+                                <div class="flex justify-between text-xs sm:text-sm">
+                                    <span>Pengeluaran:</span>
+                                    <span class="font-medium">{{ formatPrice(totalYearly, 'IDR') }}</span>
+                                </div>
                             </div>
                         </div>
                     </CardContent>
@@ -381,23 +428,23 @@ const confirmDelete = () => {
 
                 <!-- Monthly Expenses -->
                 <Card class="hover:shadow-lg transition-shadow">
-                    <CardContent class="p-6">
+                    <CardContent class="p-4 sm:p-6">
                         <div class="flex items-center justify-between">
-                            <div class="space-y-2">
-                                <p class="text-muted-foreground text-sm font-medium">Pengeluaran Bulanan</p>
-                                <div class="text-2xl font-bold text-red-600">
+                            <div class="space-y-2 flex-1 min-w-0">
+                                <p class="text-muted-foreground text-xs sm:text-sm font-medium">Pengeluaran Bulanan</p>
+                                <div class="text-xl sm:text-2xl font-bold text-red-600 truncate">
                                     {{ formatPrice(totalMonthly, 'IDR') }}
                                 </div>
-                                <div class="flex items-center space-x-2 text-muted-foreground text-sm">
-                                    <CheckCircle class="h-4 w-4" />
-                                    <span>{{ props.monthlyExpenses.filter(e => e.status === 'active').length }} layanan aktif</span>
+                                <div class="flex items-center space-x-2 text-muted-foreground text-xs sm:text-sm">
+                                    <CheckCircle class="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                    <span class="truncate">{{ props.monthlyExpenses.filter(e => e.status === 'active').length }} layanan aktif</span>
                                 </div>
                             </div>
-                            <div class="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
-                                <Repeat class="h-6 w-6 text-red-600" />
+                            <div class="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-red-100 flex items-center justify-center ml-3 flex-shrink-0">
+                                <Repeat class="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
                             </div>
                         </div>
-                        <div class="mt-4">
+                        <div class="mt-3 sm:mt-4">
                             <div class="w-full bg-gray-200 rounded-full h-2">
                                 <div class="bg-red-500 h-2 rounded-full" :style="{ width: '75%' }"></div>
                             </div>
@@ -408,23 +455,23 @@ const confirmDelete = () => {
 
                 <!-- Yearly Expenses -->
                 <Card class="hover:shadow-lg transition-shadow">
-                    <CardContent class="p-6">
+                    <CardContent class="p-4 sm:p-6">
                         <div class="flex items-center justify-between">
-                            <div class="space-y-2">
-                                <p class="text-muted-foreground text-sm font-medium">Pengeluaran Tahunan</p>
-                                <div class="text-2xl font-bold text-orange-600">
+                            <div class="space-y-2 flex-1 min-w-0">
+                                <p class="text-muted-foreground text-xs sm:text-sm font-medium">Pengeluaran Tahunan</p>
+                                <div class="text-xl sm:text-2xl font-bold text-orange-600 truncate">
                                     {{ formatPrice(totalYearly, 'IDR') }}
                                 </div>
-                                <div class="flex items-center space-x-2 text-muted-foreground text-sm">
-                                    <CheckCircle class="h-4 w-4" />
-                                    <span>{{ props.yearlyExpenses.filter(e => e.status === 'active').length }} layanan aktif</span>
+                                <div class="flex items-center space-x-2 text-muted-foreground text-xs sm:text-sm">
+                                    <CheckCircle class="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                    <span class="truncate">{{ props.yearlyExpenses.filter(e => e.status === 'active').length }} layanan aktif</span>
                                 </div>
                             </div>
-                            <div class="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center">
-                                <Clock class="h-6 w-6 text-orange-600" />
+                            <div class="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-orange-100 flex items-center justify-center ml-3 flex-shrink-0">
+                                <Clock class="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
                             </div>
                         </div>
-                        <div class="mt-4">
+                        <div class="mt-3 sm:mt-4">
                             <div class="w-full bg-gray-200 rounded-full h-2">
                                 <div class="bg-orange-500 h-2 rounded-full" :style="{ width: '60%' }"></div>
                             </div>
@@ -434,12 +481,12 @@ const confirmDelete = () => {
                 </Card>
 
                 <Card>
-                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">Tahun {{ currentYear }}</CardTitle>
-                        <CheckCircle class="h-4 w-4 text-muted-foreground" />
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2 px-4 sm:px-6">
+                        <CardTitle class="text-xs sm:text-sm font-medium">Tahun {{ currentYear }}</CardTitle>
+                        <CheckCircle class="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                     </CardHeader>
-                    <CardContent>
-                        <div class="text-2xl font-bold">{{ formatPrice(thisYearOneTimeTotal, 'IDR') }}</div>
+                    <CardContent class="px-4 sm:px-6">
+                        <div class="text-xl sm:text-2xl font-bold truncate">{{ formatPrice(thisYearOneTimeTotal, 'IDR') }}</div>
                         <p class="text-xs text-muted-foreground">
                             {{ thisYearOneTime.length }} transaksi sekali bayar
                         </p>
@@ -447,22 +494,190 @@ const confirmDelete = () => {
                 </Card>
             </div>
 
+            <!-- Financial Health Analysis -->
+            <div class="space-y-4 sm:space-y-6">
+                <div class="flex items-center space-x-3">
+                    <div class="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 text-white">
+                        <Activity class="h-4 w-4 sm:h-5 sm:w-5" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h2 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Analisis Kesehatan Keuangan</h2>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">Evaluasi kondisi finansial bisnis secara real-time</p>
+                    </div>
+                </div>
+
+                <div class="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    <!-- Overall Health Status -->
+                    <Card :class="[
+                        'relative overflow-hidden border-0',
+                        financialHealth.bgColor
+                    ]">
+                        <CardContent class="p-4 sm:p-6">
+                            <div class="flex items-center justify-between">
+                                <div class="space-y-2 flex-1 min-w-0">
+                                    <p class="text-xs sm:text-sm font-medium opacity-80">Status Kesehatan</p>
+                                    <div :class="financialHealth.color" class="text-lg sm:text-xl lg:text-2xl font-bold truncate">
+                                        {{ financialHealth.label }}
+                                    </div>
+                                    <div class="flex items-center space-x-2 text-xs sm:text-sm opacity-75">
+                                        <component :is="financialHealth.icon" class="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                        <span class="hidden sm:inline">Evaluasi menyeluruh</span>
+                                        <span class="sm:hidden">Evaluasi</span>
+                                    </div>
+                                </div>
+                                <div :class="[financialHealth.color, 'h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white/20 flex items-center justify-center ml-3 flex-shrink-0']">
+                                    <component :is="financialHealth.icon" class="h-5 w-5 sm:h-6 sm:w-6" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <!-- Cash Flow Ratio -->
+                    <Card>
+                        <CardContent class="p-4 sm:p-6">
+                            <div class="flex items-center justify-between">
+                                <div class="space-y-2 flex-1 min-w-0">
+                                    <p class="text-xs sm:text-sm font-medium text-muted-foreground">Rasio Arus Kas</p>
+                                    <div class="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600 truncate">
+                                        {{ ((monthlyRevenue / totalMonthly) || 0).toFixed(1) }}x
+                                    </div>
+                                    <div class="flex items-center space-x-2 text-xs sm:text-sm text-muted-foreground">
+                                        <Activity class="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                        <span class="hidden sm:inline">Pemasukan vs Pengeluaran</span>
+                                        <span class="sm:hidden">Pemasukan/Keluar</span>
+                                    </div>
+                                </div>
+                                <div class="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-blue-100 flex items-center justify-center ml-3 flex-shrink-0">
+                                    <Activity class="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                                </div>
+                            </div>
+                            <div class="mt-3 sm:mt-4">
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div
+                                        class="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                                        :style="{ width: Math.min(((monthlyRevenue / totalMonthly) || 0) * 25, 100) + '%' }"
+                                    ></div>
+                                </div>
+                                <p class="text-xs text-muted-foreground mt-2">
+                                    {{ (monthlyRevenue / totalMonthly) >= 1.5 ? 'Sangat baik' : (monthlyRevenue / totalMonthly) >= 1.2 ? 'Baik' : 'Perlu ditingkatkan' }}
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <!-- Burn Rate -->
+                    <Card>
+                        <CardContent class="p-4 sm:p-6">
+                            <div class="flex items-center justify-between">
+                                <div class="space-y-2 flex-1 min-w-0">
+                                    <p class="text-xs sm:text-sm font-medium text-muted-foreground">Tingkat Pembakaran</p>
+                                    <div class="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600 truncate">
+                                        {{ formatPrice(burnRate, 'IDR') }}
+                                    </div>
+                                    <div class="flex items-center space-x-2 text-xs sm:text-sm text-muted-foreground">
+                                        <TrendingDown class="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                        <span>Per bulan</span>
+                                    </div>
+                                </div>
+                                <div class="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-orange-100 flex items-center justify-center ml-3 flex-shrink-0">
+                                    <TrendingDown class="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
+                                </div>
+                            </div>
+                            <div class="mt-3 sm:mt-4">
+                                <p class="text-xs text-muted-foreground">
+                                    Pengeluaran rutin bulanan
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <!-- Financial Runway -->
+                    <Card>
+                        <CardContent class="p-4 sm:p-6">
+                            <div class="flex items-center justify-between">
+                                <div class="space-y-2 flex-1 min-w-0">
+                                    <p class="text-xs sm:text-sm font-medium text-muted-foreground">Runway Keuangan</p>
+                                    <div class="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 truncate">
+                                        {{ runwayMonths === Infinity ? '∞' : runwayMonths }} {{ runwayMonths === 1 ? 'bulan' : 'bulan' }}
+                                    </div>
+                                    <div class="flex items-center space-x-2 text-xs sm:text-sm text-muted-foreground">
+                                        <TrendingUp class="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                        <span class="hidden sm:inline">Ketahanan operasional</span>
+                                        <span class="sm:hidden">Ketahanan</span>
+                                    </div>
+                                </div>
+                                <div class="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-green-100 flex items-center justify-center ml-3 flex-shrink-0">
+                                    <TrendingUp class="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+                                </div>
+                            </div>
+                            <div class="mt-3 sm:mt-4">
+                                <p class="text-xs text-muted-foreground">
+                                    {{ runwayMonths >= 12 ? 'Sangat stabil' : runwayMonths >= 6 ? 'Stabil' : runwayMonths >= 3 ? 'Perlu perhatian' : 'Kritis' }}
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <!-- Health Recommendations -->
+                <Card class="border-l-4" :class="[
+                    financialHealth.status === 'excellent' ? 'border-l-green-500 bg-green-50 dark:bg-green-950' :
+                    financialHealth.status === 'good' ? 'border-l-blue-500 bg-blue-50 dark:bg-blue-950' :
+                    financialHealth.status === 'warning' ? 'border-l-yellow-500 bg-yellow-50 dark:bg-yellow-950' :
+                    'border-l-red-500 bg-red-50 dark:bg-red-950'
+                ]">
+                    <CardContent class="p-4 sm:p-6">
+                        <div class="flex items-start space-x-3 sm:space-x-4">
+                            <div :class="[
+                                'h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center flex-shrink-0',
+                                financialHealth.bgColor
+                            ]">
+                                <component :is="financialHealth.icon" :class="financialHealth.color" class="h-4 w-4 sm:h-5 sm:w-5" />
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h3 :class="financialHealth.color" class="text-sm sm:text-base font-semibold mb-2">
+                                    <span class="hidden sm:inline">Rekomendasi untuk Bisnis {{ financialHealth.label }}</span>
+                                    <span class="sm:hidden">Rekomendasi {{ financialHealth.label }}</span>
+                                </h3>
+                                <div class="space-y-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+                                    <p v-if="financialHealth.status === 'excellent'">
+                                        Kondisi keuangan sangat baik! Pertimbangkan untuk mengalokasikan lebih banyak dana untuk investasi dan ekspansi bisnis.
+                                    </p>
+                                    <p v-else-if="financialHealth.status === 'good'">
+                                        Kondisi keuangan sehat. Terus pertahankan keseimbangan ini dan pantau pengeluaran secara berkala.
+                                    </p>
+                                    <p v-else-if="financialHealth.status === 'warning'">
+                                        Perlu perhatian lebih pada pengelolaan kas. Evaluasi pengeluaran yang tidak esensial dan tingkatkan sumber pemasukan.
+                                    </p>
+                                    <p v-else>
+                                        Kondisi keuangan memerlukan tindakan segera. Fokus pada efisiensi operasional dan diversifikasi sumber pendapatan.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
             <!-- Custom Tabs for Different Types -->
             <div class="w-full">
                 <!-- Tab Navigation -->
-                <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-1 mb-8">
-                    <div class="flex space-x-1">
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-1 mb-6 sm:mb-8">
+                    <div class="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-1">
                         <button
                             @click="activeTab = 'monthly'"
                             :class="[
-                                'flex items-center px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200',
+                                'flex items-center justify-between sm:justify-center px-3 sm:px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 w-full sm:w-auto',
                                 activeTab === 'monthly'
                                     ? 'bg-white dark:bg-gray-800 text-red-600 shadow-sm'
                                     : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-gray-800/50'
                             ]"
                         >
-                            <Repeat class="h-4 w-4 mr-2" />
-                            Pengeluaran Bulanan
+                            <div class="flex items-center">
+                                <Repeat class="h-4 w-4 mr-2" />
+                                <span class="sm:hidden">Bulanan</span>
+                                <span class="hidden sm:inline">Pengeluaran Bulanan</span>
+                            </div>
                             <Badge class="ml-2 text-xs" :class="activeTab === 'monthly' ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-600'">
                                 {{ props.monthlyExpenses.filter(e => e.status === 'active').length }}
                             </Badge>
@@ -470,14 +685,17 @@ const confirmDelete = () => {
                         <button
                             @click="activeTab = 'yearly'"
                             :class="[
-                                'flex items-center px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200',
+                                'flex items-center justify-between sm:justify-center px-3 sm:px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 w-full sm:w-auto',
                                 activeTab === 'yearly'
                                     ? 'bg-white dark:bg-gray-800 text-orange-600 shadow-sm'
                                     : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-gray-800/50'
                             ]"
                         >
-                            <Clock class="h-4 w-4 mr-2" />
-                            Pengeluaran Tahunan
+                            <div class="flex items-center">
+                                <Clock class="h-4 w-4 mr-2" />
+                                <span class="sm:hidden">Tahunan</span>
+                                <span class="hidden sm:inline">Pengeluaran Tahunan</span>
+                            </div>
                             <Badge class="ml-2 text-xs" :class="activeTab === 'yearly' ? 'bg-orange-100 text-orange-700' : 'bg-gray-200 text-gray-600'">
                                 {{ props.yearlyExpenses.filter(e => e.status === 'active').length }}
                             </Badge>
@@ -485,14 +703,17 @@ const confirmDelete = () => {
                         <button
                             @click="activeTab = 'one-time'"
                             :class="[
-                                'flex items-center px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200',
+                                'flex items-center justify-between sm:justify-center px-3 sm:px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 w-full sm:w-auto',
                                 activeTab === 'one-time'
                                     ? 'bg-white dark:bg-gray-800 text-blue-600 shadow-sm'
                                     : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-gray-800/50'
                             ]"
                         >
-                            <CreditCard class="h-4 w-4 mr-2" />
-                            Sekali Bayar
+                            <div class="flex items-center">
+                                <CreditCard class="h-4 w-4 mr-2" />
+                                <span class="sm:hidden">Sekali Bayar</span>
+                                <span class="hidden sm:inline">Sekali Bayar</span>
+                            </div>
                             <Badge class="ml-2 text-xs" :class="activeTab === 'one-time' ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'">
                                 {{ props.oneTimeExpenses.length }}
                             </Badge>

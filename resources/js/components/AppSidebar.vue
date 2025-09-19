@@ -70,7 +70,7 @@ const getFinancialChildren = () => {
     // Only add expenses for super_admin
     if (user.role === 'super_admin') {
         baseChildren.push({
-            title: 'Data Pengeluaran',
+            title: 'Data Keuangan',
             href: '/admin/expenses',
             icon: CreditCard,
         });
