@@ -454,10 +454,10 @@ const confirmDelete = () => {
                         <button
                             @click="activeTab = 'yearly'"
                             :class="[
-                                'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm',
+                                'flex items-center px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200',
                                 activeTab === 'yearly'
-                                    ? 'border-primary text-primary'
-                                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                                    ? 'bg-white dark:bg-gray-800 text-orange-600 shadow-sm'
+                                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-gray-800/50'
                             ]"
                         >
                             <Clock class="h-4 w-4 mr-2" />
@@ -469,14 +469,17 @@ const confirmDelete = () => {
                         <button
                             @click="activeTab = 'one-time'"
                             :class="[
-                                'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm',
+                                'flex items-center px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200',
                                 activeTab === 'one-time'
-                                    ? 'border-primary text-primary'
-                                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                                    ? 'bg-white dark:bg-gray-800 text-blue-600 shadow-sm'
+                                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-gray-800/50'
                             ]"
                         >
-                            <CreditCard class="h-4 w-4 mr-2 inline" />
+                            <CreditCard class="h-4 w-4 mr-2" />
                             Sekali Bayar
+                            <Badge class="ml-2 text-xs" :class="activeTab === 'one-time' ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'">
+                                {{ props.oneTimeExpenses.length }}
+                            </Badge>
                         </button>
                     </div>
                 </div>
