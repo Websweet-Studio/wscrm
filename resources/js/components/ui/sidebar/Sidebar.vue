@@ -36,7 +36,7 @@ const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
       data-slot="sidebar"
       data-mobile="true"
       :side="side"
-      class="bg-white/95 backdrop-blur-md text-sidebar-foreground w-72 p-0 [&>button]:hidden border-r border-gray-200/50 shadow-xl"
+      class="bg-white/95 backdrop-blur-md text-sidebar-foreground w-[70vw] max-w-[350px] p-0 [&>button]:hidden border-r border-gray-200/50 shadow-xl"
     >
       <SheetHeader class="sr-only">
         <SheetTitle>Sidebar</SheetTitle>
