@@ -39,9 +39,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
     Route::patch('banks/{bank}/toggle-status', [BankController::class, 'toggleStatus'])->name('banks.toggle-status');
 
     // Expense Management
-    Route::get('expenses/monthly', [ExpenseController::class, 'monthly'])->name('expenses.monthly');
-    Route::get('expenses/yearly', [ExpenseController::class, 'yearly'])->name('expenses.yearly');
-    Route::get('expenses/one-time', [ExpenseController::class, 'oneTime'])->name('expenses.one-time');
+    Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses.index');
 
     // Customer Impersonation
     Route::post('impersonate/{customer}', [ImpersonateController::class, 'impersonate'])->name('impersonate');

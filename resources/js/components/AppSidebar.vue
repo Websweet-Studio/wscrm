@@ -10,7 +10,6 @@ import {
     Calculator,
     ChevronDown,
     ChevronRight,
-    Clock,
     CreditCard,
     DollarSign,
     FileText,
@@ -18,7 +17,6 @@ import {
     Globe,
     LayoutGrid,
     Package,
-    Repeat,
     Server,
     ShoppingCart,
     Users,
@@ -113,25 +111,8 @@ const mainNavItems: NavItem[] = [
             },
             {
                 title: 'Data Pengeluaran',
-                href: '#',
+                href: '/admin/expenses',
                 icon: CreditCard,
-                children: [
-                    {
-                        title: 'Bulanan',
-                        href: '/admin/expenses/monthly',
-                        icon: Repeat,
-                    },
-                    {
-                        title: 'Tahunan',
-                        href: '/admin/expenses/yearly',
-                        icon: Clock,
-                    },
-                    {
-                        title: 'Sekali Bayar',
-                        href: '/admin/expenses/one-time',
-                        icon: CreditCard,
-                    },
-                ],
             },
         ],
     },
