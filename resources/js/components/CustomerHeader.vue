@@ -1,13 +1,21 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import { Link, usePage } from '@inertiajs/vue3';
-import { LayoutGrid, Menu, X } from 'lucide-vue-next';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { LayoutGrid, LogOut, Menu, X } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 const page = usePage();
 const isAdmin = page.props.auth?.user !== null; // User yang login melalui guard 'web' adalah admin
 const isCustomer = page.props.auth?.customer !== null; // Customer yang login melalui guard 'customer'
 const mobileMenuOpen = ref(false);
+
+const handleLogout = () => {
+    if (isAdmin) {
+        router.post('/logout');
+    } else if (isCustomer) {
+        router.post('/customer/logout');
+    }
+};
 </script>
 
 <template>
@@ -36,6 +44,10 @@ const mobileMenuOpen = ref(false);
                             Dashboard Admin
                         </Link>
                     </Button>
+                    <Button variant="ghost" size="sm" @click="handleLogout" class="flex items-center gap-2 text-red-600 hover:text-red-700">
+                        <LogOut class="h-4 w-4" />
+                        Logout
+                    </Button>
                 </template>
                 <template v-else-if="isCustomer">
                     <Button variant="outline" size="sm" asChild>
@@ -43,6 +55,10 @@ const mobileMenuOpen = ref(false);
                             <LayoutGrid class="h-4 w-4" />
                             Dashboard
                         </Link>
+                    </Button>
+                    <Button variant="ghost" size="sm" @click="handleLogout" class="flex items-center gap-2 text-red-600 hover:text-red-700">
+                        <LogOut class="h-4 w-4" />
+                        Logout
                     </Button>
                 </template>
                 <template v-else>
@@ -116,6 +132,10 @@ const mobileMenuOpen = ref(false);
                                     Dashboard Admin
                                 </Link>
                             </Button>
+                            <Button variant="ghost" class="w-full justify-start text-red-600 hover:text-red-700" @click="handleLogout; mobileMenuOpen = false">
+                                <LogOut class="mr-2 h-4 w-4" />
+                                Logout
+                            </Button>
                         </template>
                         <template v-else-if="isCustomer">
                             <Button variant="outline" class="w-full justify-start" asChild>
@@ -123,6 +143,10 @@ const mobileMenuOpen = ref(false);
                                     <LayoutGrid class="h-4 w-4" />
                                     Dashboard
                                 </Link>
+                            </Button>
+                            <Button variant="ghost" class="w-full justify-start text-red-600 hover:text-red-700" @click="handleLogout; mobileMenuOpen = false">
+                                <LogOut class="mr-2 h-4 w-4" />
+                                Logout
                             </Button>
                         </template>
                         <template v-else>

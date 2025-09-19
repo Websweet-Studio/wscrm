@@ -6,7 +6,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import customer from '@/routes/customer';
 import { type NavItem } from '@/types';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Receipt, Settings, ShoppingCart } from 'lucide-vue-next';
+import { BookOpen, Folder, Globe, Home, LayoutGrid, Receipt, Server, Settings, ShoppingCart } from 'lucide-vue-next';
 import AppSidebarLogo from './AppSidebarLogo.vue';
 
 const page = usePage();
@@ -22,9 +22,24 @@ const stopImpersonation = () => {
 
 const mainNavItems: NavItem[] = [
     {
+        title: 'Halaman Depan',
+        href: '/',
+        icon: Home,
+    },
+    {
         title: 'Dashboard',
         href: customer.dashboard().url,
         icon: LayoutGrid,
+    },
+    {
+        title: 'Hosting',
+        href: customer.hosting.index().url,
+        icon: Server,
+    },
+    {
+        title: 'Domain',
+        href: customer.domains.index().url,
+        icon: Globe,
     },
     {
         title: 'My Orders',

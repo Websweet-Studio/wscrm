@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import { Check, Cpu, Filter, HardDrive, MemoryStick, Search, Server, ShoppingCart, Wifi } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
@@ -30,6 +30,10 @@ interface Props {
 
 const props = defineProps<Props>();
 
+const page = usePage();
+const isCustomer = page.props.auth?.customer !== null;
+const isAdmin = page.props.auth?.user !== null;
+
 const search = ref(props.filters.search || '');
 const activeTab = ref('basic');
 
@@ -43,6 +47,24 @@ const formatPrice = (price: number) => {
 
 const getDiscountedPrice = (price: number, discount: number) => {
     return price * (1 - discount / 100);
+};
+
+const getActionUrl = () => {
+    if (isCustomer) {
+        return '/customer/hosting'; // Customer dashboard hosting
+    } else if (isAdmin) {
+        return '/dashboard'; // Admin dashboard
+    } else {
+        return '/customer/register'; // Registration for guests
+    }
+};
+
+const getSecondaryActionUrl = () => {
+    if (isCustomer || isAdmin) {
+        return '/customer/hosting'; // Same as primary for logged-in users
+    } else {
+        return '/customer/login'; // Login for guests
+    }
 };
 
 const handleSearch = () => {
@@ -296,14 +318,14 @@ const filteredPlans = computed(() => {
                                         <td class="px-2 py-4 text-center sm:px-4 sm:py-6">
                                             <div class="space-y-2">
                                                 <Button asChild size="sm" class="w-full">
-                                                    <Link href="/customer/register">
+                                                    <Link :href="getActionUrl()">
                                                         <ShoppingCart class="mr-1 h-4 w-4 sm:mr-2" />
-                                                        <span class="hidden sm:inline">Mulai</span>
-                                                        <span class="sm:hidden">Daftar</span>
+                                                        <span class="hidden sm:inline">{{ isCustomer || isAdmin ? 'Kelola' : 'Mulai' }}</span>
+                                                        <span class="sm:hidden">{{ isCustomer || isAdmin ? 'Kelola' : 'Daftar' }}</span>
                                                     </Link>
                                                 </Button>
-                                                <Button variant="outline" asChild size="sm" class="w-full">
-                                                    <Link href="/customer/login">Pesan Sekarang</Link>
+                                                <Button v-if="!isCustomer && !isAdmin" variant="outline" asChild size="sm" class="w-full">
+                                                    <Link :href="getSecondaryActionUrl()">Pesan Sekarang</Link>
                                                 </Button>
                                             </div>
                                         </td>
@@ -332,7 +354,7 @@ const filteredPlans = computed(() => {
             </div>
 
             <!-- CTA Section -->
-            <div class="mt-12 pt-16 text-center sm:mt-16 sm:pt-24">
+            <div v-if="!isCustomer && !isAdmin" class="mt-12 pt-16 text-center sm:mt-16 sm:pt-24">
                 <h2 class="mb-4 text-2xl font-bold sm:mb-6 sm:text-3xl">Siap untuk Memulai?</h2>
                 <p class="mx-auto mb-6 max-w-2xl text-muted-foreground sm:mb-8">
                     Bergabunglah dengan ribuan pelanggan yang puas yang mempercayai kebutuhan hosting mereka kepada kami.
