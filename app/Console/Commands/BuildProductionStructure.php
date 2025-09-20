@@ -90,6 +90,7 @@ class BuildProductionStructure extends Command
             '.editorconfig',
             '.styleci.yml',
             'README.md',
+            'install',
         ];
 
         $basePath = base_path();
