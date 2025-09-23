@@ -32,13 +32,33 @@ class CustomerController extends Controller
             ->when(request('status'), function ($query, $status) {
                 $query->where('status', $status);
             })
-            ->orderBy('created_at', 'desc')
+            ->when(request('sort'), function ($query, $sort) {
+                $direction = request('direction', 'asc');
+
+                // Validate sort field
+                $allowedSorts = ['id', 'name', 'email', 'phone', 'city', 'status', 'created_at', 'orders_count'];
+                if (!in_array($sort, $allowedSorts)) {
+                    $sort = 'created_at';
+                }
+
+                // Validate direction
+                if (!in_array($direction, ['asc', 'desc'])) {
+                    $direction = 'desc';
+                }
+
+                $query->orderBy($sort, $direction);
+            }, function ($query) {
+                // Default sorting
+                $query->orderBy('created_at', 'desc');
+            })
             ->paginate(20)
             ->withQueryString();
 
         return Inertia::render('Admin/Customers/Index', [
             'customers' => $customers,
             'filters' => request()->only(['search', 'status']),
+            'sort' => request('sort'),
+            'direction' => request('direction', 'asc'),
         ]);
     }
 

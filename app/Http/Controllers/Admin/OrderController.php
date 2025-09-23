@@ -31,22 +31,46 @@ class OrderController extends Controller
         }
 
         $orders = $query->when(request('search'), function ($query, $search) {
-            $query->where('domain_name', 'like', "%{$search}%")
+            $query->where('orders.domain_name', 'like', "%{$search}%")
                 ->orWhereHas('customer', function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
-                })->orWhere('id', 'like', "%{$search}%");
+                })->orWhere('orders.id', 'like', "%{$search}%");
         })
             ->when(request('status'), function ($query, $status) {
-                $query->where('status', $status);
+                $query->where('orders.status', $status);
             })
             ->when(request('service_type'), function ($query, $type) {
-                $query->where('service_type', $type);
+                $query->where('orders.service_type', $type);
             })
             ->when(request('customer_id'), function ($query, $customerId) {
-                $query->where('customer_id', $customerId);
+                $query->where('orders.customer_id', $customerId);
             })
-            ->orderBy('created_at', 'desc')
+            ->when(request('sort'), function ($query, $sort) {
+                $direction = request('direction', 'asc');
+
+                // Validate sort field
+                $allowedSorts = ['id', 'total_amount', 'status', 'billing_cycle', 'created_at', 'expires_at', 'customer_name'];
+                if (!in_array($sort, $allowedSorts)) {
+                    $sort = 'created_at';
+                }
+
+                // Validate direction
+                if (!in_array($direction, ['asc', 'desc'])) {
+                    $direction = 'desc';
+                }
+
+                if ($sort === 'customer_name') {
+                    $query->join('customers', 'orders.customer_id', '=', 'customers.id')
+                        ->orderBy('customers.name', $direction)
+                        ->select('orders.*');
+                } else {
+                    $query->orderBy('orders.' . $sort, $direction);
+                }
+            }, function ($query) {
+                // Default sorting
+                $query->orderBy('orders.created_at', 'desc');
+            })
             ->paginate(20)
             ->withQueryString();
 
@@ -59,6 +83,8 @@ class OrderController extends Controller
             'orders' => $orders,
             'view' => $view,
             'filters' => request()->only(['search', 'status', 'service_type', 'customer_id', 'view']),
+            'sort' => request('sort'),
+            'direction' => request('direction', 'asc'),
             'customers' => $customers,
             'hostingPlans' => $hostingPlans,
             'domainPrices' => $domainPrices,

@@ -8,7 +8,7 @@ import OrderFormModal from '@/components/OrderFormModal.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { CheckCircle, Clock, Edit, Package, Plus, Search, ShoppingCart, Trash2, X } from 'lucide-vue-next';
+import { CheckCircle, Clock, Edit, Package, Plus, Search, ShoppingCart, Trash2, X, ChevronUp, ChevronDown } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface Customer {
@@ -78,6 +78,8 @@ interface Props {
         service_type?: string;
         customer_id?: string;
     };
+    sort?: string;
+    direction?: string;
     customers: Customer[];
     hostingPlans: HostingPlan[];
     domainPrices: DomainPrice[];
@@ -336,6 +338,34 @@ const deleteOrder = () => {
         });
     }
 };
+
+const sortBy = (field: string) => {
+    const params = new URLSearchParams();
+
+    // Preserve existing filters
+    if (search.value) params.set('search', search.value);
+    if (statusFilter.value) params.set('status', statusFilter.value);
+    if (serviceTypeFilter.value) params.set('service_type', serviceTypeFilter.value);
+    if (customerFilter.value) params.set('customer_id', customerFilter.value);
+    if (currentView.value) params.set('view', currentView.value);
+
+    // Handle sorting
+    let direction = 'asc';
+    if (props.sort === field && props.direction === 'asc') {
+        direction = 'desc';
+    }
+
+    params.set('sort', field);
+    params.set('direction', direction);
+
+    const url = `/admin/orders${params.toString() ? '?' + params.toString() : ''}`;
+    router.get(url, {}, { preserveState: true });
+};
+
+const getSortIcon = (field: string) => {
+    if (props.sort !== field) return null;
+    return props.direction === 'asc' ? ChevronUp : ChevronDown;
+};
 </script>
 
 <template>
@@ -481,14 +511,98 @@ const deleteOrder = () => {
                         <table class="w-full table-auto">
                             <thead>
                                 <tr class="border-b">
-                                    <th class="pb-3 text-left font-medium">ID</th>
-                                    <th class="pb-3 text-left font-medium">Pelanggan</th>
+                                    <th class="pb-3 text-left font-medium">
+                                        <button
+                                            @click="sortBy('id')"
+                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
+                                        >
+                                            <span>ID</span>
+                                            <component
+                                                :is="getSortIcon('id')"
+                                                v-if="getSortIcon('id')"
+                                                class="h-4 w-4"
+                                            />
+                                        </button>
+                                    </th>
+                                    <th class="pb-3 text-left font-medium">
+                                        <button
+                                            @click="sortBy('customer_name')"
+                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
+                                        >
+                                            <span>Pelanggan</span>
+                                            <component
+                                                :is="getSortIcon('customer_name')"
+                                                v-if="getSortIcon('customer_name')"
+                                                class="h-4 w-4"
+                                            />
+                                        </button>
+                                    </th>
                                     <th class="pb-3 text-left font-medium">Domain</th>
-                                    <th class="pb-3 text-left font-medium">Total</th>
-                                    <th class="pb-3 text-left font-medium">Status</th>
-                                    <th class="pb-3 text-left font-medium">Siklus</th>
-                                    <th v-if="currentView === 'services'" class="pb-3 text-left font-medium">Kadaluwarsa</th>
-                                    <th class="pb-3 text-left font-medium">{{ currentView === 'services' ? 'Dibuat' : 'Tanggal' }}</th>
+                                    <th class="pb-3 text-left font-medium">
+                                        <button
+                                            @click="sortBy('total_amount')"
+                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
+                                        >
+                                            <span>Total</span>
+                                            <component
+                                                :is="getSortIcon('total_amount')"
+                                                v-if="getSortIcon('total_amount')"
+                                                class="h-4 w-4"
+                                            />
+                                        </button>
+                                    </th>
+                                    <th class="pb-3 text-left font-medium">
+                                        <button
+                                            @click="sortBy('status')"
+                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
+                                        >
+                                            <span>Status</span>
+                                            <component
+                                                :is="getSortIcon('status')"
+                                                v-if="getSortIcon('status')"
+                                                class="h-4 w-4"
+                                            />
+                                        </button>
+                                    </th>
+                                    <th class="pb-3 text-left font-medium">
+                                        <button
+                                            @click="sortBy('billing_cycle')"
+                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
+                                        >
+                                            <span>Siklus</span>
+                                            <component
+                                                :is="getSortIcon('billing_cycle')"
+                                                v-if="getSortIcon('billing_cycle')"
+                                                class="h-4 w-4"
+                                            />
+                                        </button>
+                                    </th>
+                                    <th v-if="currentView === 'services'" class="pb-3 text-left font-medium">
+                                        <button
+                                            @click="sortBy('expires_at')"
+                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
+                                        >
+                                            <span>Kadaluwarsa</span>
+                                            <component
+                                                :is="getSortIcon('expires_at')"
+                                                v-if="getSortIcon('expires_at')"
+                                                class="h-4 w-4"
+                                            />
+                                        </button>
+                                    </th>
+                                    <th class="pb-3 text-left font-medium">
+                                        <button
+                                            @click="sortBy('created_at')"
+                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
+                                        >
+                                            <span>{{ currentView === 'services' ? 'Dibuat' : 'Tanggal' }}</span>
+                                            <component
+                                                :is="getSortIcon('created_at')"
+                                                v-if="getSortIcon('created_at')"
+                                                class="h-4 w-4"
+                                            />
+                                        </button>
+                                    </th>
                                     <th class="pb-3 text-center font-medium">Aksi</th>
                                 </tr>
                             </thead>

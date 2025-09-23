@@ -7,7 +7,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { Clock, Edit, LogIn, Plus, Search, Trash2, UserCheck, Users, UserX, X } from 'lucide-vue-next';
+import { Clock, Edit, LogIn, Plus, Search, Trash2, UserCheck, Users, UserX, X, ChevronUp, ChevronDown } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface Customer {
@@ -38,6 +38,8 @@ interface Props {
         search?: string;
         status?: string;
     };
+    sort?: string;
+    direction?: string;
 }
 
 const props = defineProps<Props>();
@@ -244,6 +246,31 @@ const impersonateCustomer = (customer: Customer) => {
         });
     }
 };
+
+const sortBy = (field: string) => {
+    const params = new URLSearchParams();
+
+    // Preserve existing filters
+    if (search.value) params.set('search', search.value);
+    if (status.value) params.set('status', status.value);
+
+    // Handle sorting
+    let direction = 'asc';
+    if (props.sort === field && props.direction === 'asc') {
+        direction = 'desc';
+    }
+
+    params.set('sort', field);
+    params.set('direction', direction);
+
+    const url = `/admin/customers${params.toString() ? '?' + params.toString() : ''}`;
+    router.get(url, {}, { preserveState: true });
+};
+
+const getSortIcon = (field: string) => {
+    if (props.sort !== field) return null;
+    return props.direction === 'asc' ? ChevronUp : ChevronDown;
+};
 </script>
 
 <template>
@@ -348,15 +375,111 @@ const impersonateCustomer = (customer: Customer) => {
                         <table class="w-full border-collapse">
                             <thead>
                                 <tr class="border-b border-border">
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">ID</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Nama</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Email</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Telepon</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Kota</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Pesanan</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                        <button
+                                            @click="sortBy('id')"
+                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
+                                        >
+                                            <span>ID</span>
+                                            <component
+                                                :is="getSortIcon('id')"
+                                                v-if="getSortIcon('id')"
+                                                class="h-3 w-3"
+                                            />
+                                        </button>
+                                    </th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                        <button
+                                            @click="sortBy('name')"
+                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
+                                        >
+                                            <span>Nama</span>
+                                            <component
+                                                :is="getSortIcon('name')"
+                                                v-if="getSortIcon('name')"
+                                                class="h-3 w-3"
+                                            />
+                                        </button>
+                                    </th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                        <button
+                                            @click="sortBy('email')"
+                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
+                                        >
+                                            <span>Email</span>
+                                            <component
+                                                :is="getSortIcon('email')"
+                                                v-if="getSortIcon('email')"
+                                                class="h-3 w-3"
+                                            />
+                                        </button>
+                                    </th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                        <button
+                                            @click="sortBy('phone')"
+                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
+                                        >
+                                            <span>Telepon</span>
+                                            <component
+                                                :is="getSortIcon('phone')"
+                                                v-if="getSortIcon('phone')"
+                                                class="h-3 w-3"
+                                            />
+                                        </button>
+                                    </th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                        <button
+                                            @click="sortBy('city')"
+                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
+                                        >
+                                            <span>Kota</span>
+                                            <component
+                                                :is="getSortIcon('city')"
+                                                v-if="getSortIcon('city')"
+                                                class="h-3 w-3"
+                                            />
+                                        </button>
+                                    </th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                        <button
+                                            @click="sortBy('status')"
+                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
+                                        >
+                                            <span>Status</span>
+                                            <component
+                                                :is="getSortIcon('status')"
+                                                v-if="getSortIcon('status')"
+                                                class="h-3 w-3"
+                                            />
+                                        </button>
+                                    </th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                        <button
+                                            @click="sortBy('orders_count')"
+                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
+                                        >
+                                            <span>Pesanan</span>
+                                            <component
+                                                :is="getSortIcon('orders_count')"
+                                                v-if="getSortIcon('orders_count')"
+                                                class="h-3 w-3"
+                                            />
+                                        </button>
+                                    </th>
                                     <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Layanan</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Bergabung</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                        <button
+                                            @click="sortBy('created_at')"
+                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
+                                        >
+                                            <span>Bergabung</span>
+                                            <component
+                                                :is="getSortIcon('created_at')"
+                                                v-if="getSortIcon('created_at')"
+                                                class="h-3 w-3"
+                                            />
+                                        </button>
+                                    </th>
                                     <th class="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>

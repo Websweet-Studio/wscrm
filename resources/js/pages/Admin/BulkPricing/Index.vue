@@ -308,20 +308,26 @@ const deleteConfig = (configId: number, configName: string) => {
                         <CardContent class="space-y-4">
                             <div v-for="(tier, index) in form.tier_discounts" :key="index" class="flex gap-2">
                                 <div class="flex-1">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Storage
+                                    </label>
                                     <Input
                                         v-model.number="tier.storage_gb"
                                         type="number"
-                                        placeholder="GB"
+                                        placeholder="Contoh: 100 GB"
                                         @input="runSimulation"
                                     />
                                 </div>
                                 <div class="flex-1">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Diskon
+                                    </label>
                                     <Input
                                         v-model.number="tier.discount_percentage"
                                         type="number"
                                         step="0.1"
                                         max="100"
-                                        placeholder="Discount %"
+                                        placeholder="Contoh: 10.5%"
                                         @input="runSimulation"
                                     />
                                 </div>

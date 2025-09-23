@@ -62,38 +62,38 @@ class Order extends Model
     // Scopes for different use cases
     public function scopeOrders($query)
     {
-        return $query->whereIn('status', ['pending', 'processing', 'cancelled']);
+        return $query->whereIn('orders.status', ['pending', 'processing', 'cancelled']);
     }
 
     public function scopeServices($query)
     {
-        return $query->whereIn('status', ['active', 'suspended', 'expired', 'terminated']);
+        return $query->whereIn('orders.status', ['active', 'suspended', 'expired', 'terminated']);
     }
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('orders.status', 'active');
     }
 
     public function scopeExpiringSoon($query, int $days = 30)
     {
-        return $query->where('expires_at', '<=', Carbon::now()->addDays($days))
-            ->where('status', 'active');
+        return $query->where('orders.expires_at', '<=', Carbon::now()->addDays($days))
+            ->where('orders.status', 'active');
     }
 
     public function scopeByStatus($query, string $status)
     {
-        return $query->where('status', $status);
+        return $query->where('orders.status', $status);
     }
 
     public function scopeByCustomer($query, int $customerId)
     {
-        return $query->where('customer_id', $customerId);
+        return $query->where('orders.customer_id', $customerId);
     }
 
     public function scopeByType($query, string $type)
     {
-        return $query->where('service_type', $type);
+        return $query->where('orders.service_type', $type);
     }
 
     // Helper methods
