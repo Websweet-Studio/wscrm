@@ -148,7 +148,8 @@
       "Bash(timeout 30 composer run build:package:*)",
       "Bash(npm install:*)",
       "Bash(cd:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": [],
     "ask": []

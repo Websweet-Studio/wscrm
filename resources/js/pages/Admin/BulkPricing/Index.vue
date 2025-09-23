@@ -149,9 +149,14 @@ const getProfitStatus = (profitMargin: number) => {
 
 const addTier = () => {
     const maxStorage = Math.max(...form.tier_discounts.map(t => t.storage_gb));
+    const maxDiscount = Math.max(...form.tier_discounts.map(t => t.discount_percentage));
+
+    // Limit max discount increase to 30% and make incremental increases smaller
+    const newDiscount = Math.min(maxDiscount + 2, 30); // Increase by 2% max, capped at 30%
+
     form.tier_discounts.push({
         storage_gb: maxStorage * 2,
-        discount_percentage: 50,
+        discount_percentage: newDiscount,
     });
 };
 
@@ -264,8 +269,8 @@ const saveConfig = () => {
             alert(`Storage GB pada tier ${i + 1} harus lebih dari 0!`);
             return;
         }
-        if (tier.discount_percentage < 0 || tier.discount_percentage > 100) {
-            alert(`Persentase diskon pada tier ${i + 1} harus antara 0-100%!`);
+        if (tier.discount_percentage < 0 || tier.discount_percentage > 30) {
+            alert(`Persentase diskon pada tier ${i + 1} harus antara 0-30% (maksimal 30%)!`);
             return;
         }
     }
@@ -446,7 +451,7 @@ const deleteConfig = (configId: number, configName: string) => {
                     <Card>
                         <CardHeader>
                             <CardTitle>Tier Discounts</CardTitle>
-                            <CardDescription>Persentase diskon berdasarkan ukuran storage</CardDescription>
+                            <CardDescription>Persentase diskon berdasarkan ukuran storage (maksimal 30%, kenaikan bertahap)</CardDescription>
                         </CardHeader>
                         <CardContent class="space-y-4">
                             <div v-for="(tier, index) in form.tier_discounts" :key="index" class="flex gap-2">
@@ -463,14 +468,15 @@ const deleteConfig = (configId: number, configName: string) => {
                                 </div>
                                 <div class="flex-1">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
-                                        Diskon
+                                        Diskon (Max 30%)
                                     </label>
                                     <Input
                                         v-model.number="tier.discount_percentage"
                                         type="number"
-                                        step="0.1"
-                                        max="100"
-                                        placeholder="Contoh: 10.5%"
+                                        step="0.5"
+                                        min="0"
+                                        max="30"
+                                        placeholder="Contoh: 5.0%"
                                         @input="runSimulation"
                                     />
                                 </div>

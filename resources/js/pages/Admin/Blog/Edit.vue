@@ -254,7 +254,7 @@ const formatDate = (dateString: string) => {
                                     {{ form.errors.content }}
                                 </div>
                                 <p class="text-sm text-muted-foreground mt-1">
-                                    Gunakan toolbar untuk memformat teks, menambahkan link, dan styling lainnya
+                                    Gunakan toolbar sederhana untuk formatting dasar: bold, italic, list, link, dan heading
                                 </p>
                             </div>
                         </CardContent>

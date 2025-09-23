@@ -61,13 +61,13 @@ class BulkPricingConfig extends Model
             ],
             'tier_discounts' => [
                 ['storage_gb' => 1, 'discount_percentage' => 0.00],
-                ['storage_gb' => 3, 'discount_percentage' => 3.00],
-                ['storage_gb' => 5, 'discount_percentage' => 7.00],
-                ['storage_gb' => 10, 'discount_percentage' => 12.00],
-                ['storage_gb' => 20, 'discount_percentage' => 20.00],
-                ['storage_gb' => 50, 'discount_percentage' => 30.00],
-                ['storage_gb' => 100, 'discount_percentage' => 40.00],
-                ['storage_gb' => 200, 'discount_percentage' => 45.00],
+                ['storage_gb' => 3, 'discount_percentage' => 2.00],
+                ['storage_gb' => 5, 'discount_percentage' => 4.00],
+                ['storage_gb' => 10, 'discount_percentage' => 7.00],
+                ['storage_gb' => 20, 'discount_percentage' => 12.00],
+                ['storage_gb' => 50, 'discount_percentage' => 18.00],
+                ['storage_gb' => 100, 'discount_percentage' => 25.00],
+                ['storage_gb' => 200, 'discount_percentage' => 30.00],
             ],
         ];
     }
