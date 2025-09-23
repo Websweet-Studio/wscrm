@@ -155,7 +155,7 @@ const copyLink = () => {
                             />
                         </div>
 
-                        <div class="p-6 md:p-8">
+                        <div class="p-6">
                             <!-- Meta Info -->
                             <div class="flex flex-wrap items-center gap-4 mb-6">
                                 <Badge
@@ -261,7 +261,7 @@ const copyLink = () => {
                                         class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                                     />
                                 </div>
-                                <CardContent class="p-6">
+                                <CardContent>
                                     <div class="flex items-center justify-between mb-3">
                                         <Badge
                                             :style="{ backgroundColor: relatedPost.category.color + '20', color: relatedPost.category.color }"
@@ -334,7 +334,7 @@ const copyLink = () => {
 
                     <!-- Back to Blog -->
                     <Card>
-                        <CardContent class="pt-6">
+                        <CardContent>
                             <Link href="/blog">
                                 <Button class="w-full">
                                     Lihat Semua Artikel
