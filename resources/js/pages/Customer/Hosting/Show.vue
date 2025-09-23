@@ -62,7 +62,7 @@ const orderPlan = () => {
     <Head :title="`${hostingPlan.plan_name} - Hosting Plan`" />
 
     <CustomerLayout :breadcrumbs="breadcrumbs">
-        <div class="mx-auto max-w-6xl space-y-6 p-6">
+        <div class="mx-auto max-w-6xl space-y-6">
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">

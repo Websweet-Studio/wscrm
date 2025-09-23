@@ -71,7 +71,7 @@ const calculateProfitMargin = () => {
     <Head :title="`Hosting Plan - ${hostingPlan.plan_name}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="space-y-6 p-6">
+        <div class="space-y-6">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
                     <Link href="/admin/hosting-plans">

@@ -237,7 +237,7 @@ const markAsPaid = (invoice: Invoice) => {
     <Head title="Admin - Invoices" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="space-y-6 p-6">
+        <div class="space-y-6">
             <!-- Auto-generation Message -->
             <div v-if="generationMessage" class="rounded-lg bg-blue-50 border border-blue-200 p-4 dark:bg-blue-950 dark:border-blue-800">
                 <div class="flex items-center gap-2">

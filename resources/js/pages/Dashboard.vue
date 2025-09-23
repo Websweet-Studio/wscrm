@@ -140,7 +140,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
     <Head title="Dashboard" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        <div class="space-y-4 sm:space-y-6">
             <!-- Welcome Header -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                 <div>

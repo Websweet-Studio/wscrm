@@ -120,7 +120,7 @@ const getTypeColor = (type: string) => {
     <Head :title="`Invoice ${invoice.invoice_number}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="space-y-6 p-6">
+        <div class="space-y-6">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold tracking-tight">{{ invoice.invoice_number }}</h1>

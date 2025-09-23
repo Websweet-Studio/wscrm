@@ -79,7 +79,7 @@ const getOrderTypeDisplay = (order) => {
 
     <CustomerLayout :breadcrumbs="breadcrumbs">
 
-        <div class="space-y-6 p-6">
+        <div class="space-y-6">
             <div>
                 <h1 class="text-3xl font-bold tracking-tight">Invoice Saya</h1>
                 <p class="text-muted-foreground">Kelola dan bayar invoice Anda</p>

@@ -88,7 +88,7 @@ const orderPlan = (plan: HostingPlan) => {
     <Head title="Hosting Plans" />
 
     <CustomerLayout :breadcrumbs="breadcrumbs">
-        <div class="space-y-6 p-6">
+        <div class="space-y-6">
             <div class="space-y-4 text-center">
                 <h1 class="text-4xl font-bold tracking-tight">Choose Your Hosting Plan</h1>
                 <p class="mx-auto max-w-3xl text-xl text-muted-foreground">

@@ -233,7 +233,7 @@ const deleteConfig = (configId: number, configName: string) => {
     <Head title="Bulk Pricing Simulator" />
 
     <AppLayout>
-        <div class="space-y-6 p-6">
+        <div class="space-y-6">
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <div>

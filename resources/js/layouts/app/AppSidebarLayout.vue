@@ -51,7 +51,9 @@ const { isMinimized, isMobileOpen, toggleSidebar, toggleMobileSidebar, closeMobi
             />
             <main class="flex-1 overflow-hidden">
                 <div class="h-full overflow-y-auto">
-                    <slot />
+                    <div class="p-6">
+                        <slot />
+                    </div>
                 </div>
             </main>
         </div>

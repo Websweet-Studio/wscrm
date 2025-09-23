@@ -250,7 +250,7 @@ const impersonateCustomer = (customer: Customer) => {
     <Head title="Admin - Kelola Pelanggan" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="w-full max-w-none space-y-4 sm:space-y-6 p-3 sm:p-4 lg:p-6">
+        <div class="w-full max-w-none space-y-4 sm:space-y-6">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Kelola Pelanggan</h1>

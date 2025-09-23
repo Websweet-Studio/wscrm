@@ -159,7 +159,7 @@ const totalItemsAmount = props.order.order_items.reduce((sum, item) => sum + ite
     <Head :title="`Order #${order.id}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="space-y-6 p-6">
+        <div class="space-y-6">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold tracking-tight">{{ order.domain_name || `Order #${order.id}` }}</h1>
