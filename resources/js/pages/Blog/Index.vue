@@ -3,8 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
+import CustomerPublicLayout from "@/layouts/CustomerPublicLayout.vue";
 import { Head, Link, router } from '@inertiajs/vue3';
 import {
     Search,
@@ -89,10 +88,6 @@ const typeFilter = ref(props.filters?.type || '');
 const currentSlide = ref(0);
 let carouselInterval: NodeJS.Timeout | null = null;
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Beranda', href: '/' },
-    { title: 'Blog', href: '/blog' },
-];
 
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
@@ -189,22 +184,19 @@ onUnmounted(() => {
 <template>
     <Head title="Blog - WSCRM" />
 
-    <AppLayout>
-        <template #breadcrumbs>
-            {{ breadcrumbs }}
-        </template>
+    <CustomerPublicLayout title="Blog - WebSweetStudio">
 
-        <div class="space-y-8">
+        <div class="container mx-auto px-4 py-8">
             <!-- Header -->
-            <div class="text-center">
-                <h1 class="text-4xl font-bold text-gray-900 dark:text-white">Blog WSCRM</h1>
-                <p class="mt-4 text-lg text-gray-600 dark:text-gray-400">
-                    Informasi terbaru seputar teknologi, hosting, dan tips berguna
+            <div class="text-center mb-12">
+                <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">Blog WebSweetStudio</h1>
+                <p class="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                    Informasi terbaru seputar teknologi, hosting, dan tips berguna untuk mengembangkan bisnis online Anda
                 </p>
             </div>
 
             <!-- Featured Posts Carousel -->
-            <div v-if="featuredPosts.length > 0" class="relative">
+            <div v-if="featuredPosts.length > 0" class="relative mb-12">
                 <Card class="overflow-hidden">
                     <div class="relative h-96 md:h-[500px]">
                         <!-- Carousel slides -->
@@ -303,7 +295,7 @@ onUnmounted(() => {
             </div>
 
             <!-- Pinned Posts -->
-            <div v-if="pinnedPosts.length > 0">
+            <div v-if="pinnedPosts.length > 0" class="mb-12">
                 <div class="flex items-center space-x-2 mb-6">
                     <Pin class="h-5 w-5 text-blue-600" />
                     <h2 class="text-2xl font-bold">Artikel Terpilih</h2>
@@ -615,7 +607,7 @@ onUnmounted(() => {
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </CustomerPublicLayout>
 </template>
 
 <style scoped>

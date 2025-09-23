@@ -179,7 +179,7 @@ onMounted(() => {
     <!-- Editor Content -->
     <div
       ref="editorRef"
-      class="editor-content p-4 outline-none"
+      class="editor-content p-4 outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] focus-visible:border-ring"
       :style="{ minHeight: `${height}px` }"
       contenteditable="true"
       :data-placeholder="placeholder"
@@ -191,61 +191,75 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.editor-content {
-  @apply focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50;
-}
-
 .editor-content:empty::before {
   content: attr(data-placeholder);
-  @apply text-gray-400 pointer-events-none;
+  color: rgb(156 163 175);
+  pointer-events: none;
 }
 
 .editor-content[aria-disabled="true"] {
-  @apply bg-gray-100 cursor-not-allowed opacity-60;
+  background-color: rgb(243 244 246);
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* Styling for content inside editor */
 .editor-content :deep(h1) {
-  @apply text-2xl font-bold mb-4;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
 }
 
 .editor-content :deep(h2) {
-  @apply text-xl font-bold mb-3;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
 }
 
 .editor-content :deep(h3) {
-  @apply text-lg font-bold mb-2;
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
 }
 
 .editor-content :deep(p) {
-  @apply mb-2;
+  margin-bottom: 0.5rem;
 }
 
 .editor-content :deep(ul) {
-  @apply list-disc ml-6 mb-2;
+  list-style-type: disc;
+  margin-left: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .editor-content :deep(ol) {
-  @apply list-decimal ml-6 mb-2;
+  list-style-type: decimal;
+  margin-left: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .editor-content :deep(li) {
-  @apply mb-1;
+  margin-bottom: 0.25rem;
 }
 
 .editor-content :deep(a) {
-  @apply text-blue-600 underline hover:text-blue-800;
+  color: rgb(37 99 235);
+  text-decoration: underline;
+}
+
+.editor-content :deep(a:hover) {
+  color: rgb(29 78 216);
 }
 
 .editor-content :deep(strong) {
-  @apply font-bold;
+  font-weight: 700;
 }
 
 .editor-content :deep(em) {
-  @apply italic;
+  font-style: italic;
 }
 
 .editor-content :deep(u) {
-  @apply underline;
+  text-decoration: underline;
 }
 </style>

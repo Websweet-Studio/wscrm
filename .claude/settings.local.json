@@ -149,7 +149,8 @@
       "Bash(npm install:*)",
       "Bash(cd:*)",
       "Bash(dir:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "WebFetch(domain:app.websweetstudio.com)"
     ],
     "deny": [],
     "ask": []
