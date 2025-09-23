@@ -52,14 +52,12 @@ class BulkPricingConfig extends Model
             ];
         }
 
-        // Fallback to hardcoded default
+        // Fallback to hardcoded default - only basic plan
         return [
             'base_price_per_gb' => 150000,
             'cost_per_gb' => 112500,
             'plan_multipliers' => [
                 'basic' => 1.0,
-                'lite' => 0.77,
-                'premium' => 1.3,
             ],
             'tier_discounts' => [
                 ['storage_gb' => 1, 'discount_percentage' => 0.00],

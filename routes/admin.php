@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\BankController;
+use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\BulkPricingController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DomainPriceController;
@@ -38,6 +39,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
     Route::delete('bulk-pricing/delete-config/{id}', [BulkPricingController::class, 'deleteConfig'])->name('bulk-pricing.delete-config');
     Route::resource('banks', BankController::class);
     Route::patch('banks/{bank}/toggle-status', [BankController::class, 'toggleStatus'])->name('banks.toggle-status');
+
+    // Blog Management
+    Route::resource('blog', BlogController::class);
+    Route::patch('blog/{blog}/toggle-featured', [BlogController::class, 'toggleFeatured'])->name('blog.toggle-featured');
+    Route::patch('blog/{blog}/toggle-pinned', [BlogController::class, 'togglePinned'])->name('blog.toggle-pinned');
 
     // Expense Management - Restricted to Super Admin only
     Route::resource('expenses', ExpenseController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('super_admin');

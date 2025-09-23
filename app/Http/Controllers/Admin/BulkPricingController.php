@@ -70,18 +70,17 @@ class BulkPricingController extends Controller
                 'base_price_per_gb' => 150000,
                 'cost_per_gb' => 112500,
                 'plan_multipliers' => [
-                    'starter' => 1.0,
-                    'professional' => 1.2,
-                    'business' => 1.5,
-                    'enterprise' => 2.0,
+                    'basic' => 1.0,
                 ],
                 'tier_discounts' => [
-                    ['storage_gb' => 1, 'discount_percentage' => 0],
-                    ['storage_gb' => 5, 'discount_percentage' => 5],
-                    ['storage_gb' => 20, 'discount_percentage' => 10],
-                    ['storage_gb' => 50, 'discount_percentage' => 15],
-                    ['storage_gb' => 100, 'discount_percentage' => 20],
-                    ['storage_gb' => 200, 'discount_percentage' => 25],
+                    ['storage_gb' => 1, 'discount_percentage' => 0.00],
+                    ['storage_gb' => 3, 'discount_percentage' => 3.00],
+                    ['storage_gb' => 5, 'discount_percentage' => 7.00],
+                    ['storage_gb' => 10, 'discount_percentage' => 12.00],
+                    ['storage_gb' => 20, 'discount_percentage' => 20.00],
+                    ['storage_gb' => 50, 'discount_percentage' => 30.00],
+                    ['storage_gb' => 100, 'discount_percentage' => 40.00],
+                    ['storage_gb' => 200, 'discount_percentage' => 45.00],
                 ],
             ],
             'simulationResults' => [
@@ -151,33 +150,82 @@ class BulkPricingController extends Controller
 
     public function saveConfig(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'base_price_per_gb' => 'required|numeric|min:0',
-            'cost_per_gb' => 'required|numeric|min:0',
-            'plan_multipliers' => 'required|array',
-            'tier_discounts' => 'required|array',
-            'is_default' => 'boolean',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255|unique:bulk_pricing_configs,name',
+                'description' => 'nullable|string|max:1000',
+                'base_price_per_gb' => 'required|numeric|min:1|max:999999999',
+                'cost_per_gb' => 'required|numeric|min:1|max:999999999',
+                'plan_multipliers' => 'required|array|min:1',
+                'plan_multipliers.*' => 'required|numeric|min:0.1|max:10',
+                'tier_discounts' => 'required|array|min:1',
+                'tier_discounts.*.storage_gb' => 'required|integer|min:1|max:999999',
+                'tier_discounts.*.discount_percentage' => 'required|numeric|min:0|max:100',
+                'is_default' => 'nullable|boolean',
+            ], [
+                'name.required' => 'Nama konfigurasi wajib diisi.',
+                'name.unique' => 'Nama konfigurasi sudah digunakan.',
+                'base_price_per_gb.required' => 'Harga dasar per GB wajib diisi.',
+                'base_price_per_gb.min' => 'Harga dasar per GB minimal 1.',
+                'cost_per_gb.required' => 'Biaya per GB wajib diisi.',
+                'cost_per_gb.min' => 'Biaya per GB minimal 1.',
+                'plan_multipliers.required' => 'Plan multipliers wajib diisi.',
+                'tier_discounts.required' => 'Tier discounts wajib diisi.',
+                'tier_discounts.*.storage_gb.required' => 'Storage GB pada tier discount wajib diisi.',
+                'tier_discounts.*.storage_gb.min' => 'Storage GB minimal 1.',
+                'tier_discounts.*.discount_percentage.required' => 'Persentase diskon wajib diisi.',
+                'tier_discounts.*.discount_percentage.max' => 'Persentase diskon maksimal 100%.',
+            ]);
 
-        // If setting as default, remove default from others
-        if ($request->is_default) {
-            BulkPricingConfig::where('is_default', true)->update(['is_default' => false]);
+            // Additional business logic validation
+            if ($validated['base_price_per_gb'] <= $validated['cost_per_gb']) {
+                return redirect()->back()->withErrors([
+                    'base_price_per_gb' => 'Harga dasar per GB harus lebih besar dari biaya per GB.'
+                ])->withInput();
+            }
+
+            // Validate tier discounts sorting
+            $tierDiscounts = collect($validated['tier_discounts'])->sortBy('storage_gb')->values()->all();
+            $validated['tier_discounts'] = $tierDiscounts;
+
+            \DB::transaction(function () use ($validated) {
+                // If setting as default, remove default from others
+                if ($validated['is_default'] ?? false) {
+                    BulkPricingConfig::where('is_default', true)->update(['is_default' => false]);
+                }
+
+                BulkPricingConfig::create([
+                    'name' => $validated['name'],
+                    'description' => $validated['description'],
+                    'base_price_per_gb' => $validated['base_price_per_gb'],
+                    'cost_per_gb' => $validated['cost_per_gb'],
+                    'plan_multipliers' => $validated['plan_multipliers'],
+                    'tier_discounts' => $validated['tier_discounts'],
+                    'is_active' => true,
+                    'is_default' => $validated['is_default'] ?? false,
+                ]);
+            });
+
+            return redirect()->back()->with('success', 'Konfigurasi berhasil disimpan!');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Bulk pricing config validation failed', [
+                'errors' => $e->errors(),
+                'input' => $request->all()
+            ]);
+            return redirect()->back()->withErrors($e->errors())->withInput();
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to save bulk pricing config', [
+                'error' => $e->getMessage(),
+                'input' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->back()->withErrors([
+                'error' => 'Terjadi kesalahan saat menyimpan konfigurasi. Silakan coba lagi.'
+            ])->withInput();
         }
-
-        BulkPricingConfig::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'base_price_per_gb' => $request->base_price_per_gb,
-            'cost_per_gb' => $request->cost_per_gb,
-            'plan_multipliers' => $request->plan_multipliers,
-            'tier_discounts' => $request->tier_discounts,
-            'is_active' => true,
-            'is_default' => $request->is_default ?? false,
-        ]);
-
-        return redirect()->back()->with('success', 'Konfigurasi berhasil disimpan!');
     }
 
     public function loadConfig($id)
@@ -208,11 +256,20 @@ class BulkPricingController extends Controller
     private function runSimulation(float $basePricePerGb, float $costPerGb, array $planMultipliers, array $tierDiscounts): array
     {
         $simulation = [];
+
+        // Get all hosting plans, but only simulate for ones that have multipliers OR are basic/lite
         $hostingPlans = HostingPlan::all();
 
         foreach ($hostingPlans as $plan) {
             $planType = strtolower($plan->plan_name);
-            $multiplier = $planMultipliers[$planType] ?? 1.0;
+
+            // Set default multipliers for common plan types if not provided
+            $multiplier = $planMultipliers[$planType] ?? ($planType === 'basic' ? 1.0 : ($planType === 'lite' ? 0.77 : null));
+
+            // Skip plans that don't have a multiplier
+            if ($multiplier === null) {
+                continue;
+            }
 
             // Find matching discount tier for this plan's storage
             $discount = 0;

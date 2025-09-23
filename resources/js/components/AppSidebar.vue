@@ -17,6 +17,7 @@ import {
     Globe,
     LayoutGrid,
     Package,
+    PenTool,
     Server,
     ShoppingCart,
     Users,
@@ -146,6 +147,11 @@ const mainNavItems: NavItem[] = [
                 icon: Package,
             },
         ],
+    },
+    {
+        title: 'Blog',
+        href: '/admin/blog',
+        icon: PenTool,
     },
     {
         title: 'Financial',

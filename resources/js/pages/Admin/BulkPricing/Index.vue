@@ -83,6 +83,41 @@ const isSimulating = ref(false);
 const isApplying = ref(false);
 const viewMode = ref<'basic' | 'lite'>('basic');
 const showSaveModal = ref(false);
+const enabledPlans = ref({
+    basic: true,
+    lite: false,
+});
+
+// Update plan_multipliers based on enabled plans
+const updateActivePlans = () => {
+    const newMultipliers: Record<string, number> = {};
+
+    if (enabledPlans.value.basic) {
+        newMultipliers.basic = form.plan_multipliers.basic || 1.0;
+    }
+    if (enabledPlans.value.lite) {
+        newMultipliers.lite = form.plan_multipliers.lite || 0.77;
+    }
+
+    form.plan_multipliers = newMultipliers;
+
+    // Run simulation with updated plans
+    runSimulation();
+};
+
+// Filter simulation based on active plan multipliers
+const filteredSimulation = computed(() => {
+    const activePlans = Object.keys(form.plan_multipliers);
+    const filtered: Record<string, SimulationData[]> = {};
+
+    for (const planType of activePlans) {
+        if (simulation.value[planType]) {
+            filtered[planType] = simulation.value[planType];
+        }
+    }
+
+    return filtered;
+});
 
 // Watch for props changes
 watch(() => props.simulationResults, (newResults) => {
@@ -97,10 +132,6 @@ const saveForm = reactive({
     is_default: false,
 });
 
-const uniquePlanTypes = computed(() => {
-    const types = new Set(props.hostingPlans.map(plan => plan.plan_name.toLowerCase()));
-    return Array.from(types);
-});
 
 const getStatusClass = (profitMargin: number) => {
     if (profitMargin < 0) return 'text-red-600 bg-red-50';
@@ -151,7 +182,7 @@ const runSimulation = async () => {
 };
 
 const applyPricing = () => {
-    if (!Object.keys(simulation.value).length) {
+    if (!Object.keys(filteredSimulation.value).length) {
         alert('Jalankan simulasi terlebih dahulu!');
         return;
     }
@@ -199,24 +230,90 @@ const loadConfig = async (configId: number) => {
 };
 
 const saveConfig = () => {
+    // Enhanced validation
     if (!saveForm.name.trim()) {
         alert('Nama konfigurasi wajib diisi!');
         return;
     }
 
-    router.post('/admin/bulk-pricing/save-config', {
-        ...saveForm,
-        ...form,
-    }, {
-        onSuccess: () => {
+    if (saveForm.name.length > 255) {
+        alert('Nama konfigurasi terlalu panjang (maksimal 255 karakter)!');
+        return;
+    }
+
+    // Validate form data
+    if (!form.base_price_per_gb || form.base_price_per_gb <= 0) {
+        alert('Harga dasar per GB harus lebih dari 0!');
+        return;
+    }
+
+    if (!form.cost_per_gb || form.cost_per_gb <= 0) {
+        alert('Biaya per GB harus lebih dari 0!');
+        return;
+    }
+
+    if (!form.tier_discounts || form.tier_discounts.length === 0) {
+        alert('Minimal harus ada satu tier discount!');
+        return;
+    }
+
+    // Validate tier discounts
+    for (let i = 0; i < form.tier_discounts.length; i++) {
+        const tier = form.tier_discounts[i];
+        if (!tier.storage_gb || tier.storage_gb <= 0) {
+            alert(`Storage GB pada tier ${i + 1} harus lebih dari 0!`);
+            return;
+        }
+        if (tier.discount_percentage < 0 || tier.discount_percentage > 100) {
+            alert(`Persentase diskon pada tier ${i + 1} harus antara 0-100%!`);
+            return;
+        }
+    }
+
+    const saveData = {
+        name: saveForm.name.trim(),
+        description: saveForm.description?.trim() || '',
+        is_default: saveForm.is_default || false,
+        base_price_per_gb: parseFloat(form.base_price_per_gb),
+        cost_per_gb: parseFloat(form.cost_per_gb),
+        plan_multipliers: { ...form.plan_multipliers },
+        tier_discounts: form.tier_discounts.map(tier => ({
+            storage_gb: parseInt(tier.storage_gb),
+            discount_percentage: parseFloat(tier.discount_percentage)
+        }))
+    };
+
+    console.log('Saving config data:', saveData);
+
+    router.post('/admin/bulk-pricing/save-config', saveData, {
+        onSuccess: (page) => {
+            console.log('Config saved successfully');
             saveForm.name = '';
             saveForm.description = '';
             saveForm.is_default = false;
             showSaveModal.value = false;
         },
-        onError: () => {
-            alert('Gagal menyimpan konfigurasi!');
+        onError: (errors) => {
+            console.error('Save config errors:', errors);
+
+            // Show specific error messages
+            if (typeof errors === 'object' && errors !== null) {
+                const errorMessages = [];
+                for (const [field, messages] of Object.entries(errors)) {
+                    if (Array.isArray(messages)) {
+                        errorMessages.push(...messages);
+                    } else {
+                        errorMessages.push(String(messages));
+                    }
+                }
+                alert('Gagal menyimpan konfigurasi:\n' + errorMessages.join('\n'));
+            } else {
+                alert('Gagal menyimpan konfigurasi! Silakan coba lagi.');
+            }
         },
+        onFinish: () => {
+            console.log('Save request finished');
+        }
     });
 };
 
@@ -278,23 +375,69 @@ const deleteConfig = (configId: number, configName: string) => {
                         </CardContent>
                     </Card>
 
-                    <!-- Plan Multipliers -->
+                    <!-- Plan Selection & Multipliers -->
                     <Card>
                         <CardHeader>
-                            <CardTitle>Plan Multipliers</CardTitle>
-                            <CardDescription>Pengali harga untuk setiap tipe plan</CardDescription>
+                            <CardTitle>Plan Selection & Multipliers</CardTitle>
+                            <CardDescription>Pilih plan yang aktif dan atur pengali harganya</CardDescription>
                         </CardHeader>
                         <CardContent class="space-y-4">
-                            <div v-for="planType in uniquePlanTypes" :key="planType">
-                                <Label :for="`multiplier-${planType}`">{{ planType.charAt(0).toUpperCase() + planType.slice(1) }}</Label>
-                                <Input
-                                    :id="`multiplier-${planType}`"
-                                    v-model.number="form.plan_multipliers[planType]"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    @input="runSimulation"
+                            <!-- Basic Plan -->
+                            <div class="flex items-start space-x-3 p-3 border rounded-lg">
+                                <input
+                                    id="enable-basic"
+                                    type="checkbox"
+                                    v-model="enabledPlans.basic"
+                                    @change="updateActivePlans"
+                                    class="mt-1"
                                 />
+                                <div class="flex-1">
+                                    <label for="enable-basic" class="font-medium cursor-pointer">Basic Plan</label>
+                                    <p class="text-sm text-muted-foreground">Plan hosting standar untuk kebutuhan umum</p>
+                                    <div v-if="enabledPlans.basic" class="mt-2">
+                                        <Label for="basic-multiplier">Multiplier</Label>
+                                        <Input
+                                            id="basic-multiplier"
+                                            v-model.number="form.plan_multipliers.basic"
+                                            type="number"
+                                            step="0.01"
+                                            min="0.1"
+                                            max="10"
+                                            placeholder="1.0"
+                                            @input="runSimulation"
+                                            class="mt-1"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lite Plan -->
+                            <div class="flex items-start space-x-3 p-3 border rounded-lg">
+                                <input
+                                    id="enable-lite"
+                                    type="checkbox"
+                                    v-model="enabledPlans.lite"
+                                    @change="updateActivePlans"
+                                    class="mt-1"
+                                />
+                                <div class="flex-1">
+                                    <label for="enable-lite" class="font-medium cursor-pointer">Lite Plan</label>
+                                    <p class="text-sm text-muted-foreground">Plan hosting ekonomis dengan fitur terbatas</p>
+                                    <div v-if="enabledPlans.lite" class="mt-2">
+                                        <Label for="lite-multiplier">Multiplier</Label>
+                                        <Input
+                                            id="lite-multiplier"
+                                            v-model.number="form.plan_multipliers.lite"
+                                            type="number"
+                                            step="0.01"
+                                            min="0.1"
+                                            max="10"
+                                            placeholder="0.77"
+                                            @input="runSimulation"
+                                            class="mt-1"
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -390,7 +533,7 @@ const deleteConfig = (configId: number, configName: string) => {
                                     Simpan Konfigurasi
                                 </Button>
                                 
-                                <Button @click="applyPricing" :disabled="isApplying || !Object.keys(simulation).length" class="w-full bg-red-600 hover:bg-red-700 text-white" variant="destructive">
+                                <Button @click="applyPricing" :disabled="isApplying || !Object.keys(filteredSimulation).length" class="w-full bg-red-600 hover:bg-red-700 text-white" variant="destructive">
                                     <DollarSign class="h-4 w-4 mr-2" />
                                     {{ isApplying ? 'Menerapkan...' : 'Terapkan Harga Baru' }}
                                 </Button>
@@ -438,11 +581,11 @@ const deleteConfig = (configId: number, configName: string) => {
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div v-if="Object.keys(simulation).length === 0" class="py-8 text-center text-muted-foreground">
+                            <div v-if="Object.keys(filteredSimulation).length === 0" class="py-8 text-center text-muted-foreground">
                                 Jalankan simulasi untuk melihat hasil
                             </div>
                             <div v-else class="space-y-6">
-                                <div v-for="(planData, planType) in simulation" :key="planType">
+                                <div v-for="(planData, planType) in filteredSimulation" :key="planType">
                                     <h3 class="text-lg font-semibold mb-3 capitalize">{{ planType }} Plan</h3>
                                     <div class="overflow-x-auto">
                                         <Table>
