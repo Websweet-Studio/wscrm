@@ -522,15 +522,40 @@ const processUpgradeDowngrade = () => {
 
                         <!-- Current Plan Info -->
                         <div v-if="order.hosting_plan" class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-6">
-                            <h3 class="font-medium mb-2">Plan Saat Ini</h3>
-                            <div class="space-y-1 text-sm">
-                                <p><strong>{{ order.hosting_plan.plan_name }}</strong> - {{ formatPrice(order.hosting_plan.selling_price) }}/bulan</p>
-                                <p class="text-gray-600 dark:text-gray-400">
-                                    Berakhir: {{ order.expires_at ? formatDate(order.expires_at) : '-' }}
-                                </p>
-                                <p class="text-gray-600 dark:text-gray-400">
-                                    Sisa: {{ order.expires_at ? getDaysUntilExpiry(order.expires_at) : 0 }} hari
-                                </p>
+                            <h3 class="font-medium mb-3">Plan Saat Ini</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-semibold text-lg">{{ order.hosting_plan.plan_name }}</span>
+                                    <span class="font-bold text-blue-600 dark:text-blue-400">{{ formatPrice(order.hosting_plan.selling_price) }}/bulan</span>
+                                </div>
+
+                                <!-- Plan Specifications -->
+                                <div class="grid grid-cols-3 gap-4 py-3 text-sm">
+                                    <div class="text-center">
+                                        <div class="font-medium text-gray-900 dark:text-gray-100">{{ order.hosting_plan.storage_gb }}GB</div>
+                                        <div class="text-gray-500 text-xs">Storage</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="font-medium text-gray-900 dark:text-gray-100">{{ order.hosting_plan.cpu_cores }} Core</div>
+                                        <div class="text-gray-500 text-xs">CPU</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="font-medium text-gray-900 dark:text-gray-100">{{ order.hosting_plan.ram_gb }}GB</div>
+                                        <div class="text-gray-500 text-xs">RAM</div>
+                                    </div>
+                                </div>
+
+                                <!-- Service Info -->
+                                <div class="pt-2 border-t border-gray-200 dark:border-gray-600 text-sm space-y-1">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600 dark:text-gray-400">Berakhir:</span>
+                                        <span class="font-medium">{{ order.expires_at ? formatDate(order.expires_at) : '-' }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600 dark:text-gray-400">Sisa hari:</span>
+                                        <span class="font-medium text-orange-600 dark:text-orange-400">{{ order.expires_at ? getDaysUntilExpiry(order.expires_at) : 0 }} hari</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -561,25 +586,51 @@ const processUpgradeDowngrade = () => {
                         </div>
 
                         <div v-else-if="simulation" class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-6">
-                            <h4 class="font-medium mb-3">Simulasi Biaya:</h4>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <span>{{ simulation.current_plan.name }} ({{ simulation.calculation.remaining_days }} hari):</span>
-                                    <span>{{ formatPrice(simulation.current_plan.prorated_amount) }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>{{ simulation.new_plan.name }} ({{ simulation.calculation.remaining_days }} hari):</span>
-                                    <span>{{ formatPrice(simulation.new_plan.prorated_amount) }}</span>
-                                </div>
-                                <hr class="my-2">
-                                <div class="flex justify-between font-bold">
-                                    <span v-if="simulation.calculation.is_upgrade">Total Tambahan:</span>
-                                    <span v-else-if="simulation.calculation.is_downgrade">Total Penghematan:</span>
-                                    <span v-else>Tidak ada perubahan biaya</span>
+                            <h4 class="font-medium mb-4">💰 Simulasi Biaya Upgrade</h4>
 
-                                    <span :class="simulation.calculation.is_upgrade ? 'text-red-600' : simulation.calculation.is_downgrade ? 'text-green-600' : ''">
-                                        {{ simulation.calculation.cost_difference > 0 ? '+' : '' }}{{ formatPrice(simulation.calculation.cost_difference) }}
-                                    </span>
+                            <!-- Plan Comparison -->
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <!-- Current Plan -->
+                                <div class="bg-white dark:bg-gray-800 p-3 rounded-lg">
+                                    <h5 class="text-xs text-gray-500 mb-1">PLAN SAAT INI</h5>
+                                    <div class="font-semibold text-sm">{{ simulation.current_plan.name }}</div>
+                                    <div class="text-lg font-bold text-gray-600">{{ formatPrice(simulation.current_plan.price) }}<span class="text-xs font-normal">/bulan</span></div>
+                                    <div class="text-xs text-orange-600 mt-1">Pro-rated {{ simulation.calculation.remaining_days }} hari: {{ formatPrice(simulation.current_plan.prorated_amount) }}</div>
+                                </div>
+
+                                <!-- New Plan -->
+                                <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border-2 border-blue-200 dark:border-blue-600">
+                                    <h5 class="text-xs text-blue-600 mb-1">PLAN BARU</h5>
+                                    <div class="font-semibold text-sm">{{ simulation.new_plan.name }}</div>
+                                    <div class="text-lg font-bold text-blue-600">{{ formatPrice(simulation.new_plan.price) }}<span class="text-xs font-normal">/bulan</span></div>
+                                    <div class="text-xs text-orange-600 mt-1">Pro-rated {{ simulation.calculation.remaining_days }} hari: {{ formatPrice(simulation.new_plan.prorated_amount) }}</div>
+                                </div>
+                            </div>
+
+                            <!-- Calculation Summary -->
+                            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg">
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Biaya Plan Lama (sisa {{ simulation.calculation.remaining_days }} hari):</span>
+                                        <span class="line-through text-gray-500">{{ formatPrice(simulation.current_plan.prorated_amount) }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Biaya Plan Baru ({{ simulation.calculation.remaining_days }} hari):</span>
+                                        <span class="font-semibold">{{ formatPrice(simulation.new_plan.prorated_amount) }}</span>
+                                    </div>
+                                    <hr class="border-gray-300 dark:border-gray-600">
+                                    <div class="flex justify-between font-bold text-lg">
+                                        <span v-if="simulation.calculation.is_upgrade">💳 Yang Harus Dibayar:</span>
+                                        <span v-else-if="simulation.calculation.is_downgrade">💚 Penghematan:</span>
+                                        <span v-else>Tidak ada perubahan biaya</span>
+
+                                        <span
+                                            class="px-3 py-1 rounded-full text-white font-bold"
+                                            :class="simulation.calculation.is_upgrade ? 'bg-red-500' : simulation.calculation.is_downgrade ? 'bg-green-500' : 'bg-gray-500'"
+                                        >
+                                            {{ simulation.calculation.cost_difference > 0 ? '+' : '' }}{{ formatPrice(Math.abs(simulation.calculation.cost_difference)) }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 

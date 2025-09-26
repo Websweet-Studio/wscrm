@@ -142,7 +142,7 @@ class Order extends Model
         if (!$this->expires_at) {
             return 0;
         }
-        return max(0, $this->expires_at->diffInDays(Carbon::now()));
+        return max(0, Carbon::now()->diffInDays($this->expires_at, false));
     }
 
     public function getTotalBillingDays(): int
