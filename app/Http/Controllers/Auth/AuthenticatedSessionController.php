@@ -30,18 +30,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        // Debug logging untuk cek network
-        \Log::info('Login attempt', [
-            'form_data' => $request->all(),
-            'csrf_token_request' => $request->input('_token'),
-            'csrf_token_session' => $request->session()->token(),
-            'csrf_match' => $request->input('_token') === $request->session()->token(),
-            'headers' => $request->headers->all(),
-        ]);
-
         $request->authenticate();
-
-        \Log::info('Login successful, akan redirect');
 
         $request->session()->regenerate();
 

@@ -12,13 +12,6 @@ class DashboardController extends Controller
 {
     public function index(): Response
     {
-        // Debug: check authentication
-        \Log::info('Dashboard access attempt', [
-            'authenticated' => \Auth::check(),
-            'user_id' => \Auth::id(),
-            'user_email' => \Auth::user()?->email,
-            'user_username' => \Auth::user()?->username,
-        ]);
         $now = Carbon::now();
         $thisMonth = $now->startOfMonth();
         $lastMonth = $now->copy()->subMonth()->startOfMonth();
