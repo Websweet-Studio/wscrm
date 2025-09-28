@@ -48,7 +48,30 @@ class InvoiceController extends Controller
             $query->where('invoice_type', $request->get('invoice_type'));
         }
 
-        $invoices = $query->latest()->paginate(20)->withQueryString();
+        // Sorting
+        $sort = $request->get('sort', 'created_at');
+        $direction = $request->get('direction', 'desc');
+
+        // Validate sort field
+        $allowedSorts = ['invoice_number', 'customer_name', 'invoice_type', 'amount', 'billing_cycle', 'due_date', 'status', 'created_at'];
+        if (!in_array($sort, $allowedSorts)) {
+            $sort = 'created_at';
+        }
+
+        // Validate direction
+        if (!in_array($direction, ['asc', 'desc'])) {
+            $direction = 'desc';
+        }
+
+        if ($sort === 'customer_name') {
+            $query->join('customers', 'invoices.customer_id', '=', 'customers.id')
+                ->orderBy('customers.name', $direction)
+                ->select('invoices.*');
+        } else {
+            $query->orderBy($sort, $direction);
+        }
+
+        $invoices = $query->paginate(20)->withQueryString();
 
         // Statistics
         $totalInvoices = Invoice::count();
@@ -63,6 +86,8 @@ class InvoiceController extends Controller
                 'status' => $request->get('status'),
                 'invoice_type' => $request->get('invoice_type'),
             ],
+            'sort' => $sort,
+            'direction' => $direction,
             'statistics' => [
                 'total' => $totalInvoices,
                 'revenue' => $totalRevenue,

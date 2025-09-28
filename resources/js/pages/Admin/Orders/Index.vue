@@ -3,12 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker';
 import OrderFormModal from '@/components/OrderFormModal.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { CheckCircle, Clock, Edit, Package, Plus, Search, ShoppingCart, Trash2, X, ChevronUp, ChevronDown } from 'lucide-vue-next';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { Edit, Package, Plus, Search, ShoppingCart, Trash2, ChevronUp, ChevronDown } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface Customer {
@@ -93,7 +92,6 @@ const statusFilter = ref(props.filters?.status || '');
 const serviceTypeFilter = ref(props.filters?.service_type || '');
 const customerFilter = ref(props.filters?.customer_id || '');
 const currentView = ref(props.view || 'orders');
-const showCreateModal = ref(false);
 const showOrderFormModal = ref(false);
 const orderFormMode = ref<'create' | 'edit'>('create');
 const showDeleteModal = ref(false);
@@ -216,11 +214,11 @@ const getDaysUntilExpiry = (expiryDate: string): number => {
 
 const getExpiryBadge = (expiryDate: string) => {
     const daysLeft = getDaysUntilExpiry(expiryDate);
-    
+
     if (daysLeft === -1) return null; // No expiry date
-    
+
     const threeMonthsInDays = 90;
-    
+
     if (daysLeft < 0) {
         // Expired
         return {
@@ -240,8 +238,65 @@ const getExpiryBadge = (expiryDate: string) => {
             class: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
         };
     }
-    
+
     return null; // More than 3 months, no badge
+};
+
+const getServiceTypeColor = (itemType: string) => {
+    switch (itemType) {
+        case 'hosting':
+            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+        case 'domain':
+            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+        case 'service':
+            return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+        case 'app':
+            return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
+        case 'web':
+            return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300';
+        case 'maintenance':
+            return 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300';
+        default:
+            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+    }
+};
+
+const getServiceTypeText = (itemType: string) => {
+    switch (itemType) {
+        case 'hosting':
+            return 'Hosting';
+        case 'domain':
+            return 'Domain';
+        case 'service':
+            return 'Layanan';
+        case 'app':
+            return 'Aplikasi';
+        case 'web':
+            return 'Website';
+        case 'maintenance':
+            return 'Maintenance';
+        default:
+            return itemType;
+    }
+};
+
+const getServiceIcon = (itemType: string) => {
+    switch (itemType) {
+        case 'hosting':
+            return '🌐';
+        case 'domain':
+            return '🔗';
+        case 'service':
+            return '⚙️';
+        case 'app':
+            return '📱';
+        case 'web':
+            return '💻';
+        case 'maintenance':
+            return '🔧';
+        default:
+            return '📦';
+    }
 };
 
 const applyFilters = () => {
@@ -469,6 +524,10 @@ const getSortIcon = (field: string) => {
                                 <option value="">Semua Tipe</option>
                                 <option value="hosting">Hosting</option>
                                 <option value="domain">Domain</option>
+                                <option value="service">Layanan</option>
+                                <option value="app">Aplikasi</option>
+                                <option value="web">Website</option>
+                                <option value="maintenance">Maintenance</option>
                             </select>
                         </div>
                         <div>
@@ -537,6 +596,7 @@ const getSortIcon = (field: string) => {
                                             />
                                         </button>
                                     </th>
+                                    <th class="pb-3 text-left font-medium">Layanan</th>
                                     <th class="pb-3 text-left font-medium">Domain</th>
                                     <th class="pb-3 text-left font-medium">
                                         <button
@@ -619,6 +679,19 @@ const getSortIcon = (field: string) => {
                                         <div>
                                             <div class="font-medium">{{ order.customer.name }}</div>
                                             <div class="text-sm text-muted-foreground">{{ order.customer.email }}</div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="flex flex-wrap gap-1">
+                                            <div
+                                                v-for="orderItem in order.order_items"
+                                                :key="orderItem.id"
+                                                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                                                :class="getServiceTypeColor(orderItem.item_type)"
+                                            >
+                                                <span class="mr-1">{{ getServiceIcon(orderItem.item_type) }}</span>
+                                                {{ getServiceTypeText(orderItem.item_type) }}
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="py-3">
