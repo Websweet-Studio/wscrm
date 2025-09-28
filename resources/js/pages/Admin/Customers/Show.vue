@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/vue3';
-import { Calendar, Edit, FileText, Mail, MapPin, Phone, Settings, ShoppingCart } from 'lucide-vue-next';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { Calendar, Edit, FileText, Mail, MapPin, Phone, Settings, ShoppingCart, Send } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 interface Customer {
     id: number;
@@ -70,11 +71,33 @@ interface Props {
 
 const props = defineProps<Props>();
 
+const sendingCredentials = ref(false);
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Customers', href: '/admin/customers' },
     { title: props.customer.name, href: `/admin/customers/${props.customer.id}` },
 ];
+
+const sendCredentials = () => {
+    if (sendingCredentials.value) return;
+
+    const confirmed = confirm(
+        `Kirim kredensial login ke ${props.customer.email}?\n\nIni akan mengubah password user dan mengirim email dengan username dan password baru.`
+    );
+
+    if (confirmed) {
+        sendingCredentials.value = true;
+        router.post(`/admin/users/${props.customer.id}/send-credentials`, {}, {
+            onSuccess: () => {
+                sendingCredentials.value = false;
+            },
+            onError: () => {
+                sendingCredentials.value = false;
+            }
+        });
+    }
+};
 
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
@@ -152,9 +175,21 @@ const getStatusClass = (status: string) => {
                         </div>
 
                         <div class="space-y-3">
-                            <div class="flex items-center gap-3">
-                                <Mail class="h-4 w-4 text-muted-foreground" />
-                                <span class="text-sm">{{ customer.email }}</span>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <Mail class="h-4 w-4 text-muted-foreground" />
+                                    <span class="text-sm">{{ customer.email }}</span>
+                                </div>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    :disabled="sendingCredentials"
+                                    @click="sendCredentials"
+                                    class="flex items-center gap-2"
+                                >
+                                    <Send class="h-3 w-3" />
+                                    {{ sendingCredentials ? 'Mengirim...' : 'Kirim Kredensial' }}
+                                </Button>
                             </div>
 
                             <div v-if="customer.phone" class="flex items-center gap-3">

@@ -151,7 +151,9 @@
       "Bash(dir:*)",
       "Bash(npm uninstall:*)",
       "WebFetch(domain:app.websweetstudio.com)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "mcp__laravel-boost__read-log-entries",
+      "Bash(/dev/null)"
     ],
     "deny": [],
     "ask": []

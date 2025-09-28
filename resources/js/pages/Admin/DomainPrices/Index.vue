@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { Edit, Plus, Search, Trash2, X } from 'lucide-vue-next';
+import { Edit, Plus, Search, Trash2, X, ChevronUp, ChevronDown } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface DomainPrice {
@@ -33,6 +33,8 @@ interface Props {
     filters: {
         search?: string;
     };
+    sort?: string;
+    direction?: string;
 }
 
 const props = defineProps<Props>();
@@ -78,7 +80,33 @@ const formatPrice = (price: number) => {
 const handleSearch = () => {
     router.get(
         '/admin/domain-prices',
-        { search: search.value },
+        {
+            search: search.value,
+            sort: props.sort,
+            direction: props.direction,
+        },
+        {
+            preserveState: true,
+            replace: true,
+        },
+    );
+};
+
+const sortBy = (field: string) => {
+    let direction = 'asc';
+
+    // If clicking the same field, toggle direction
+    if (props.sort === field) {
+        direction = props.direction === 'asc' ? 'desc' : 'asc';
+    }
+
+    router.get(
+        '/admin/domain-prices',
+        {
+            search: search.value,
+            sort: field,
+            direction: direction,
+        },
         {
             preserveState: true,
             replace: true,
@@ -174,12 +202,108 @@ const confirmDelete = () => {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Ekstensi</TableHead>
-                                    <TableHead>Biaya Dasar</TableHead>
-                                    <TableHead>Biaya Perpanjangan</TableHead>
-                                    <TableHead>Harga Jual</TableHead>
-                                    <TableHead>Perpanjangan + Pajak</TableHead>
-                                    <TableHead>Status</TableHead>
+                                    <TableHead>
+                                        <button
+                                            @click="sortBy('extension')"
+                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
+                                        >
+                                            <span>Ekstensi</span>
+                                            <ChevronUp
+                                                v-if="props.sort === 'extension' && props.direction === 'asc'"
+                                                class="h-4 w-4"
+                                            />
+                                            <ChevronDown
+                                                v-else-if="props.sort === 'extension' && props.direction === 'desc'"
+                                                class="h-4 w-4"
+                                            />
+                                            <div v-else class="h-4 w-4"></div>
+                                        </button>
+                                    </TableHead>
+                                    <TableHead>
+                                        <button
+                                            @click="sortBy('base_cost')"
+                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
+                                        >
+                                            <span>Biaya Dasar</span>
+                                            <ChevronUp
+                                                v-if="props.sort === 'base_cost' && props.direction === 'asc'"
+                                                class="h-4 w-4"
+                                            />
+                                            <ChevronDown
+                                                v-else-if="props.sort === 'base_cost' && props.direction === 'desc'"
+                                                class="h-4 w-4"
+                                            />
+                                            <div v-else class="h-4 w-4"></div>
+                                        </button>
+                                    </TableHead>
+                                    <TableHead>
+                                        <button
+                                            @click="sortBy('renewal_cost')"
+                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
+                                        >
+                                            <span>Biaya Perpanjangan</span>
+                                            <ChevronUp
+                                                v-if="props.sort === 'renewal_cost' && props.direction === 'asc'"
+                                                class="h-4 w-4"
+                                            />
+                                            <ChevronDown
+                                                v-else-if="props.sort === 'renewal_cost' && props.direction === 'desc'"
+                                                class="h-4 w-4"
+                                            />
+                                            <div v-else class="h-4 w-4"></div>
+                                        </button>
+                                    </TableHead>
+                                    <TableHead>
+                                        <button
+                                            @click="sortBy('selling_price')"
+                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
+                                        >
+                                            <span>Harga Jual</span>
+                                            <ChevronUp
+                                                v-if="props.sort === 'selling_price' && props.direction === 'asc'"
+                                                class="h-4 w-4"
+                                            />
+                                            <ChevronDown
+                                                v-else-if="props.sort === 'selling_price' && props.direction === 'desc'"
+                                                class="h-4 w-4"
+                                            />
+                                            <div v-else class="h-4 w-4"></div>
+                                        </button>
+                                    </TableHead>
+                                    <TableHead>
+                                        <button
+                                            @click="sortBy('renewal_price_with_tax')"
+                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
+                                        >
+                                            <span>Perpanjangan + Pajak</span>
+                                            <ChevronUp
+                                                v-if="props.sort === 'renewal_price_with_tax' && props.direction === 'asc'"
+                                                class="h-4 w-4"
+                                            />
+                                            <ChevronDown
+                                                v-else-if="props.sort === 'renewal_price_with_tax' && props.direction === 'desc'"
+                                                class="h-4 w-4"
+                                            />
+                                            <div v-else class="h-4 w-4"></div>
+                                        </button>
+                                    </TableHead>
+                                    <TableHead>
+                                        <button
+                                            @click="sortBy('is_active')"
+                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
+                                        >
+                                            <span>Status</span>
+                                            <ChevronUp
+                                                v-if="props.sort === 'is_active' && props.direction === 'asc'"
+                                                class="h-4 w-4"
+                                            />
+                                            <ChevronDown
+                                                v-else-if="props.sort === 'is_active' && props.direction === 'desc'"
+                                                class="h-4 w-4"
+                                            />
+                                            <div v-else class="h-4 w-4"></div>
+                                        </button>
+                                    </TableHead>
                                     <TableHead class="w-[100px]">Aksi</TableHead>
                                 </TableRow>
                             </TableHeader>

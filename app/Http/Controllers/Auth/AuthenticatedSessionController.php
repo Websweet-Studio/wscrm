@@ -29,11 +29,22 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
+        // Debug logging
+        \Log::info('Login attempt', [
+            'form_data' => $request->all(),
+            'csrf_token_request' => $request->input('_token'),
+            'csrf_token_session' => $request->session()->token(),
+            'csrf_match' => $request->input('_token') === $request->session()->token(),
+        ]);
+
         $request->authenticate();
 
-        $request->session()->regenerate();
+        // Don't regenerate session to preserve authentication
+        // $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        \Log::info('Login successful');
+
+        return redirect()->route('dashboard');
     }
 
     /**

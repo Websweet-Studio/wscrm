@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\ImpersonateController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ServicePlanController;
+use App\Http\Controllers\Admin\UserCredentialController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(function () {
@@ -53,4 +54,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
     // Customer Impersonation
     Route::post('impersonate/{customer}', [ImpersonateController::class, 'impersonate'])->name('impersonate');
     Route::post('stop-impersonation', [ImpersonateController::class, 'stopImpersonation'])->name('stop-impersonation');
+
+    // User Credential Management
+    Route::post('users/{user}/send-credentials', [UserCredentialController::class, 'sendCredentials'])->name('users.send-credentials');
 });

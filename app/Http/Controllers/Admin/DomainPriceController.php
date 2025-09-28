@@ -11,19 +11,36 @@ use Inertia\Response;
 
 class DomainPriceController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        // Sorting
+        $sort = $request->get('sort', 'extension');
+        $direction = $request->get('direction', 'asc');
+
+        // Validate sort field
+        $allowedSorts = ['extension', 'base_cost', 'renewal_cost', 'selling_price', 'renewal_price_with_tax', 'is_active'];
+        if (!in_array($sort, $allowedSorts)) {
+            $sort = 'extension';
+        }
+
+        // Validate direction
+        if (!in_array($direction, ['asc', 'desc'])) {
+            $direction = 'asc';
+        }
+
         $domainPrices = DomainPrice::query()
             ->when(request('search'), function ($query, $search) {
                 $query->where('extension', 'like', "%{$search}%");
             })
-            ->orderBy('extension')
+            ->orderBy($sort, $direction)
             ->paginate(20)
             ->withQueryString();
 
         return Inertia::render('Admin/DomainPrices/Index', [
             'domainPrices' => $domainPrices,
             'filters' => request()->only(['search']),
+            'sort' => $sort,
+            'direction' => $direction,
         ]);
     }
 

@@ -27,6 +27,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::post('/api/domains/availability', [App\Http\Controllers\DomainPriceController::class, 'checkAvailability'])
     ->name('api.domains.availability');
 
+Route::get('/api/username/check', [App\Http\Controllers\Api\UsernameController::class, 'checkAvailability'])
+    ->name('api.username.check');
+
 Route::get('dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');

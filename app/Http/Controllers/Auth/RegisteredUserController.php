@@ -32,12 +32,26 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'username' => [
+                'required',
+                'string',
+                'min:3',
+                'max:30',
+                'regex:/^[a-zA-Z0-9_]+$/',
+                'unique:'.User::class
+            ],
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'username.regex' => 'Username hanya boleh mengandung huruf, angka, dan underscore.',
+            'username.min' => 'Username minimal 3 karakter.',
+            'username.max' => 'Username maksimal 30 karakter.',
+            'username.unique' => 'Username sudah digunakan.',
         ]);
 
         $user = User::create([
             'name' => $request->name,
+            'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
