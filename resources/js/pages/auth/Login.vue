@@ -18,21 +18,6 @@ defineProps<{
 }>();
 
 const page = usePage();
-
-const csrfToken = computed(() => {
-    // Try to get CSRF token from Inertia page props first
-    if (page.props.csrf_token) {
-        return page.props.csrf_token;
-    }
-
-    // Fallback to meta tag in browser environment
-    if (typeof document !== 'undefined') {
-        const metaTag = document.querySelector('meta[name="csrf-token"]');
-        return metaTag?.getAttribute('content') || '';
-    }
-
-    return '';
-});
 </script>
 
 <template>
@@ -50,8 +35,6 @@ const csrfToken = computed(() => {
             v-slot="{ errors, processing }"
             class="flex flex-col gap-6"
         >
-            <!-- CSRF Token -->
-            <input type="hidden" name="_token" :value="csrfToken" />
 
             <div class="grid gap-6">
                 <div class="grid gap-2">

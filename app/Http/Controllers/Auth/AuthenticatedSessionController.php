@@ -21,6 +21,7 @@ class AuthenticatedSessionController extends Controller
         return Inertia::render('auth/Login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => $request->session()->get('status'),
+            'csrf_token' => csrf_token(),
         ]);
     }
 
@@ -29,20 +30,21 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        // Debug logging
+        // Debug logging untuk cek network
         \Log::info('Login attempt', [
             'form_data' => $request->all(),
             'csrf_token_request' => $request->input('_token'),
             'csrf_token_session' => $request->session()->token(),
             'csrf_match' => $request->input('_token') === $request->session()->token(),
+            'headers' => $request->headers->all(),
         ]);
 
         $request->authenticate();
 
-        // Don't regenerate session to preserve authentication
-        // $request->session()->regenerate();
+        \Log::info('Login successful, akan redirect');
 
-        \Log::info('Login successful');
+        // Temporary: jangan regenerate session dulu untuk debug
+        // $request->session()->regenerate();
 
         return redirect()->route('dashboard');
     }
