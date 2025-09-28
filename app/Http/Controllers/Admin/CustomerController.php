@@ -152,6 +152,7 @@ class CustomerController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:customers,email,'.$customer->id,
+            'username' => 'nullable|string|max:255|unique:customers,username,'.$customer->id,
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
             'city' => 'nullable|string|max:100',
@@ -161,7 +162,7 @@ class CustomerController extends Controller
         ]);
 
         $updateData = $request->only([
-            'name', 'email', 'phone', 'address', 'city', 'country', 'postal_code', 'status',
+            'name', 'email', 'username', 'phone', 'address', 'city', 'country', 'postal_code', 'status',
         ]);
 
         if ($request->filled('password')) {

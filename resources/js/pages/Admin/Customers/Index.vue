@@ -14,6 +14,7 @@ interface Customer {
     id: number;
     name: string;
     email: string;
+    username?: string;
     phone?: string;
     address?: string;
     city?: string;
@@ -67,6 +68,7 @@ const createForm = useForm({
 const editForm = useForm({
     name: '',
     email: '',
+    username: '',
     password: '',
     password_confirmation: '',
     phone: '',
@@ -157,6 +159,7 @@ const openEditModal = (customer: Customer) => {
     editForm.reset();
     editForm.name = customer.name;
     editForm.email = customer.email;
+    editForm.username = customer.username || '';
     editForm.phone = customer.phone || '';
     editForm.address = customer.address || '';
     editForm.city = customer.city || '';
@@ -701,6 +704,23 @@ const getSortIcon = (field: string) => {
                                 required
                             />
                             <p v-if="editForm.errors.email" class="mt-1 text-xs text-red-500">{{ editForm.errors.email }}</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <Label for="edit-username">Username</Label>
+                            <Input
+                                id="edit-username"
+                                type="text"
+                                autocomplete="username"
+                                v-model="editForm.username"
+                                :class="{ 'border-red-500': editForm.errors.username }"
+                                placeholder="Username (opsional)"
+                            />
+                            <p v-if="editForm.errors.username" class="mt-1 text-xs text-red-500">{{ editForm.errors.username }}</p>
+                        </div>
+                        <div>
+                            <!-- Kosong untuk spacing -->
                         </div>
                     </div>
 
