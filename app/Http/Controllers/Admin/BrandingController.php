@@ -45,7 +45,7 @@ class BrandingController extends Controller
     public function uploadImage(Request $request)
     {
         $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:5120', // 5MB
             'key' => 'required|string',
         ]);
 

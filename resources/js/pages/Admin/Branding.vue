@@ -59,7 +59,7 @@
                   </label>
                   <p class="text-sm text-gray-500">{{ setting.description }}</p>
 
-                  <!-- Current Image Preview -->
+                  <!-- Current Image Preview (dari database) -->
                   <div v-if="setting.value && !imagePreviews[setting.key]" class="space-y-3">
                     <div class="relative w-32 h-32 border-2 border-gray-200 rounded-lg overflow-hidden">
                       <img
@@ -67,6 +67,9 @@
                         :alt="getSettingLabel(setting.key)"
                         class="w-full h-full object-contain"
                       />
+                    </div>
+                    <div class="text-xs text-gray-600">
+                      Gambar saat ini
                     </div>
                     <button
                       type="button"
@@ -96,8 +99,18 @@
                         </button>
                       </div>
                     </div>
-                    <div class="text-xs text-blue-600">
-                      Preview gambar baru - belum disimpan
+                    <div class="flex items-center justify-between">
+                      <div class="text-xs text-blue-600">
+                        Preview gambar baru - belum disimpan
+                      </div>
+                      <button
+                        type="button"
+                        @click="uploadPreviewImage(setting.key)"
+                        :disabled="form.processing"
+                        class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded disabled:opacity-50"
+                      >
+                        Upload
+                      </button>
                     </div>
                   </div>
 
@@ -201,12 +214,14 @@ const form = useForm({
 
 // Preview functionality
 const imagePreviews = ref<Record<string, string>>({})
+const pendingFiles = ref<Record<string, File>>({})
 
 const createImagePreview = (file: File, key: string) => {
   const reader = new FileReader()
   reader.onload = (e) => {
     if (e.target?.result) {
       imagePreviews.value[key] = e.target.result as string
+      pendingFiles.value[key] = file
     }
   }
   reader.readAsDataURL(file)
@@ -214,8 +229,10 @@ const createImagePreview = (file: File, key: string) => {
 
 const clearImagePreview = (key: string) => {
   if (imagePreviews.value[key]) {
-    URL.revokeObjectURL(imagePreviews.value[key])
     delete imagePreviews.value[key]
+  }
+  if (pendingFiles.value[key]) {
+    delete pendingFiles.value[key]
   }
 }
 
@@ -257,6 +274,22 @@ const submitSettings = () => {
     settings: settingsArray,
   })).patch('/admin/branding', {
     preserveScroll: true,
+    onSuccess: () => {
+      success('Berhasil', 'Pengaturan branding berhasil diperbarui')
+    },
+    onError: (errors) => {
+      console.error('Form submission errors:', errors)
+      if (Object.keys(errors).length > 0) {
+        const firstError = Object.values(errors)[0]
+        error('Gagal menyimpan', Array.isArray(firstError) ? firstError[0] : firstError)
+      } else {
+        error('Terjadi kesalahan', 'Gagal menyimpan pengaturan branding')
+      }
+    },
+    onFinish: () => {
+      // Reset transform to avoid stale data
+      form.transform(() => form.data())
+    }
   })
 }
 
@@ -266,7 +299,7 @@ const resetForm = () => {
   })
 }
 
-const handleImageUpload = async (event: Event, key: string) => {
+const handleImageUpload = (event: Event, key: string) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
 
@@ -293,18 +326,49 @@ const handleImageUpload = async (event: Event, key: string) => {
   // Create preview immediately
   createImagePreview(file, key)
 
+  // Clear the input so same file can be selected again
+  target.value = ''
+}
+
+const uploadPreviewImage = async (key: string) => {
+  const file = pendingFiles.value[key]
+  if (!file) {
+    error('File tidak ditemukan', 'Silakan pilih file lagi')
+    return
+  }
+
   const formData = new FormData()
   formData.append('image', file)
   formData.append('key', key)
 
   try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+    if (!csrfToken) {
+      error('Token tidak valid', 'Silakan refresh halaman dan coba lagi')
+      return
+    }
+
     const response = await fetch('/admin/branding/upload-image', {
       method: 'POST',
       body: formData,
       headers: {
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        'X-CSRF-TOKEN': csrfToken,
+        'Accept': 'application/json',
       },
     })
+
+    if (!response.ok) {
+      if (response.status === 419) {
+        error('Sesi telah berakhir', 'Silakan refresh halaman dan coba lagi')
+      } else if (response.status === 422) {
+        const errorData = await response.json()
+        const firstError = Object.values(errorData.errors || {})[0]
+        error('Validasi gagal', Array.isArray(firstError) ? firstError[0] : 'Data tidak valid')
+      } else {
+        error('Terjadi kesalahan', `Server error: ${response.status}`)
+      }
+      return
+    }
 
     const data = await response.json()
 
@@ -326,15 +390,10 @@ const handleImageUpload = async (event: Event, key: string) => {
       success('Upload berhasil', 'Gambar telah berhasil diupload')
     } else {
       error('Upload gagal', data.message || 'Gagal mengupload gambar')
-      clearImagePreview(key)
     }
   } catch (uploadError) {
     console.error('Upload error:', uploadError)
     error('Terjadi kesalahan', 'Terjadi kesalahan saat mengupload gambar')
-    clearImagePreview(key)
-  } finally {
-    // Clear the input so same file can be selected again
-    target.value = ''
   }
 }
 
@@ -342,14 +401,34 @@ const deleteImage = async (key: string) => {
   if (!confirm('Yakin ingin menghapus gambar ini?')) return
 
   try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+    if (!csrfToken) {
+      error('Token tidak valid', 'Silakan refresh halaman dan coba lagi')
+      return
+    }
+
     const response = await fetch('/admin/branding/delete-image', {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        'X-CSRF-TOKEN': csrfToken,
+        'Accept': 'application/json',
       },
       body: JSON.stringify({ key }),
     })
+
+    if (!response.ok) {
+      if (response.status === 419) {
+        error('Sesi telah berakhir', 'Silakan refresh halaman dan coba lagi')
+      } else if (response.status === 422) {
+        const errorData = await response.json()
+        const firstError = Object.values(errorData.errors || {})[0]
+        error('Validasi gagal', Array.isArray(firstError) ? firstError[0] : 'Data tidak valid')
+      } else {
+        error('Terjadi kesalahan', `Server error: ${response.status}`)
+      }
+      return
+    }
 
     const data = await response.json()
 
