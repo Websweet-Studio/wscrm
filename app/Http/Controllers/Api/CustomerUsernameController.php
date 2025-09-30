@@ -30,7 +30,7 @@ class CustomerUsernameController extends Controller
         }
 
         // Check if username contains only allowed characters
-        if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+        if (! preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
             return response()->json([
                 'available' => false,
                 'message' => 'Username hanya boleh mengandung huruf, angka, dan underscore',
@@ -48,7 +48,7 @@ class CustomerUsernameController extends Controller
         $exists = $query->exists();
 
         return response()->json([
-            'available' => !$exists,
+            'available' => ! $exists,
             'message' => $exists ? 'Username sudah digunakan' : 'Username tersedia',
         ]);
     }

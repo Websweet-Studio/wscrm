@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class BlogPost extends Model
 {
@@ -106,7 +105,7 @@ class BlogPost extends Model
         $this->attributes['status'] = $value;
 
         // Auto-set published_at when status changes to published
-        if ($value === 'published' && !$this->published_at) {
+        if ($value === 'published' && ! $this->published_at) {
             $this->attributes['published_at'] = now();
         }
     }
@@ -127,7 +126,7 @@ class BlogPost extends Model
         $words = str_word_count(strip_tags($this->content));
         $minutes = ceil($words / 200); // Average reading speed: 200 words per minute
 
-        return $minutes . ' menit baca';
+        return $minutes.' menit baca';
     }
 
     public function getFormattedDateAttribute()
@@ -138,7 +137,7 @@ class BlogPost extends Model
     public function getFeaturedImageUrlAttribute()
     {
         if ($this->featured_image) {
-            return asset('storage/' . $this->featured_image);
+            return asset('storage/'.$this->featured_image);
         }
 
         return asset('images/blog-placeholder.jpg'); // Default image

@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::table('orders', function (Blueprint $table) {
             // Skip adding pending_plan_id as it already exists
-            if (!Schema::hasColumn('orders', 'change_status')) {
+            if (! Schema::hasColumn('orders', 'change_status')) {
                 $table->enum('change_status', ['none', 'pending', 'completed'])->default('none')->after('status');
             }
-            if (!Schema::hasColumn('orders', 'change_requested_at')) {
+            if (! Schema::hasColumn('orders', 'change_requested_at')) {
                 $table->timestamp('change_requested_at')->nullable()->after('change_status');
             }
         });

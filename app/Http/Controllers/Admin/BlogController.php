@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\BlogPost;
 use App\Models\BlogCategory;
+use App\Models\BlogPost;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -137,7 +137,7 @@ class BlogController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:blog_posts,slug,' . $blog->id,
+            'slug' => 'nullable|string|max:255|unique:blog_posts,slug,'.$blog->id,
             'excerpt' => 'nullable|string|max:500',
             'content' => 'required|string',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
@@ -190,7 +190,7 @@ class BlogController extends Controller
      */
     public function toggleFeatured(BlogPost $blog)
     {
-        $blog->update(['is_featured' => !$blog->is_featured]);
+        $blog->update(['is_featured' => ! $blog->is_featured]);
 
         return back()->with('success', 'Status featured berhasil diubah!');
     }
@@ -200,7 +200,7 @@ class BlogController extends Controller
      */
     public function togglePinned(BlogPost $blog)
     {
-        $blog->update(['is_pinned' => !$blog->is_pinned]);
+        $blog->update(['is_pinned' => ! $blog->is_pinned]);
 
         return back()->with('success', 'Status pinned berhasil diubah!');
     }

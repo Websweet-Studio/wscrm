@@ -53,6 +53,7 @@ class LoginRequest extends FormRequest
 
         if (Auth::attempt($credentials, $this->boolean('remember'))) {
             RateLimiter::clear($this->throttleKey());
+
             return;
         }
 
@@ -62,6 +63,7 @@ class LoginRequest extends FormRequest
         if ($user && Hash::check($password, $user->password)) {
             Auth::login($user, $this->boolean('remember'));
             RateLimiter::clear($this->throttleKey());
+
             return;
         }
 

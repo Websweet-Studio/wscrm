@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\BlogPost;
 use App\Models\BlogCategory;
+use App\Models\BlogPost;
 use App\Models\User;
-use Illuminate\Database\Seeder;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class BlogPostSeeder extends Seeder
 {
@@ -1137,7 +1137,7 @@ class BlogPostSeeder extends Seeder
                 'type' => 'article',
                 'is_featured' => false,
                 'is_pinned' => false,
-            ]
+            ],
         ];
 
         foreach ($articles as $index => $articleData) {
@@ -1146,39 +1146,39 @@ class BlogPostSeeder extends Seeder
 
             // Generate reading time based on content length
             $wordCount = str_word_count(strip_tags($articleData['content']));
-            $readingTime = ceil($wordCount / 200) . ' menit baca'; // 200 words per minute
+            $readingTime = ceil($wordCount / 200).' menit baca'; // 200 words per minute
 
             // Random publish date in the last 3 months
             $publishedAt = Carbon::now()->subDays(rand(1, 90));
 
             // Generate featured image based on category
             $featuredImages = [
-                "teknologi" => [
-                    "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=300&fit=crop",
+                'teknologi' => [
+                    'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&h=300&fit=crop',
+                    'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=300&fit=crop',
                 ],
-                "hosting-domain" => [
-                    "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=400&h=300&fit=crop",
+                'hosting-domain' => [
+                    'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=400&h=300&fit=crop',
+                    'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=400&h=300&fit=crop',
                 ],
-                "tutorial" => [
-                    "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400&h=300&fit=crop",
+                'tutorial' => [
+                    'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop',
+                    'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400&h=300&fit=crop',
                 ],
-                "pengumuman" => [
-                    "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1553484771-cc0d9b8c2b33?w=400&h=300&fit=crop",
+                'pengumuman' => [
+                    'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=400&h=300&fit=crop',
+                    'https://images.unsplash.com/photo-1553484771-cc0d9b8c2b33?w=400&h=300&fit=crop',
                 ],
-                "tips-trik" => [
-                    "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=300&fit=crop",
+                'tips-trik' => [
+                    'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=300&fit=crop',
+                    'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=300&fit=crop',
                 ],
-                "berita" => [
-                    "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=400&h=300&fit=crop",
-                ]
+                'berita' => [
+                    'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=300&fit=crop',
+                    'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=400&h=300&fit=crop',
+                ],
             ];
-            $categoryImages = $featuredImages[$articleData["category"]] ?? $featuredImages["teknologi"];
+            $categoryImages = $featuredImages[$articleData['category']] ?? $featuredImages['teknologi'];
             $featuredImage = $categoryImages[rand(0, count($categoryImages) - 1)];
 
             BlogPost::create([
@@ -1203,7 +1203,7 @@ class BlogPostSeeder extends Seeder
                     'reading_time' => $readingTime,
                     'tags' => $this->generateTags($articleData['category']),
                     'featured_image_alt' => $articleData['title'],
-                ]
+                ],
             ]);
         }
     }
@@ -1220,6 +1220,7 @@ class BlogPostSeeder extends Seeder
         ];
 
         $tags = $tagMap[$categorySlug] ?? ['umum', 'artikel'];
+
         return array_slice($tags, 0, rand(2, 4));
     }
 }

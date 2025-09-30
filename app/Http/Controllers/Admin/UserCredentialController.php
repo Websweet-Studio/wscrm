@@ -12,7 +12,7 @@ class UserCredentialController extends Controller
     public function sendCredentials(Request $request, User $user): RedirectResponse
     {
         // Ensure only admin can send credentials
-        if (!auth()->user()->isAdmin()) {
+        if (! auth()->user()->isAdmin()) {
             abort(403, 'Unauthorized');
         }
 
@@ -21,7 +21,7 @@ class UserCredentialController extends Controller
         $success = $user->sendCredentials($customPassword);
 
         if ($success) {
-            return redirect()->back()->with('success', 'Credential berhasil dikirim ke ' . $user->email);
+            return redirect()->back()->with('success', 'Credential berhasil dikirim ke '.$user->email);
         } else {
             return redirect()->back()->with('error', 'Gagal mengirim credential. Silakan coba lagi.');
         }

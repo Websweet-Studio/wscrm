@@ -54,12 +54,12 @@ class InvoiceController extends Controller
 
         // Validate sort field
         $allowedSorts = ['invoice_number', 'customer_name', 'invoice_type', 'amount', 'billing_cycle', 'due_date', 'status', 'created_at'];
-        if (!in_array($sort, $allowedSorts)) {
+        if (! in_array($sort, $allowedSorts)) {
             $sort = 'created_at';
         }
 
         // Validate direction
-        if (!in_array($direction, ['asc', 'desc'])) {
+        if (! in_array($direction, ['asc', 'desc'])) {
             $direction = 'desc';
         }
 
@@ -194,7 +194,7 @@ class InvoiceController extends Controller
 
         $invoice->update([
             'status' => 'paid',
-            'paid_at' => now()
+            'paid_at' => now(),
         ]);
 
         return back()->with('success', 'Invoice berhasil ditandai sebagai dibayar.');

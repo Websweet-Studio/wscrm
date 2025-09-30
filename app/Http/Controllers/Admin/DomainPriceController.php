@@ -19,12 +19,12 @@ class DomainPriceController extends Controller
 
         // Validate sort field
         $allowedSorts = ['extension', 'base_cost', 'renewal_cost', 'selling_price', 'renewal_price_with_tax', 'is_active'];
-        if (!in_array($sort, $allowedSorts)) {
+        if (! in_array($sort, $allowedSorts)) {
             $sort = 'extension';
         }
 
         // Validate direction
-        if (!in_array($direction, ['asc', 'desc'])) {
+        if (! in_array($direction, ['asc', 'desc'])) {
             $direction = 'asc';
         }
 

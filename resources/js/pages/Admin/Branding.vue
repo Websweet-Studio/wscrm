@@ -60,7 +60,7 @@
                   <p class="text-sm text-gray-500">{{ setting.description }}</p>
 
                   <!-- Current Image Preview -->
-                  <div v-if="setting.value" class="space-y-3">
+                  <div v-if="setting.value && !imagePreviews[setting.key]" class="space-y-3">
                     <div class="relative w-32 h-32 border-2 border-gray-200 rounded-lg overflow-hidden">
                       <img
                         :src="setting.value"
@@ -76,6 +76,29 @@
                     >
                       Hapus Gambar
                     </button>
+                  </div>
+
+                  <!-- New Image Preview -->
+                  <div v-if="imagePreviews[setting.key]" class="space-y-3">
+                    <div class="relative w-32 h-32 border-2 border-blue-300 rounded-lg overflow-hidden">
+                      <img
+                        :src="imagePreviews[setting.key]"
+                        :alt="`Preview ${getSettingLabel(setting.key)}`"
+                        class="w-full h-full object-contain"
+                      />
+                      <div class="absolute top-1 right-1">
+                        <button
+                          type="button"
+                          @click="clearImagePreview(setting.key)"
+                          class="bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                    <div class="text-xs text-blue-600">
+                      Preview gambar baru - belum disimpan
+                    </div>
                   </div>
 
                   <!-- Upload Input -->
@@ -148,6 +171,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
+import { useToast } from '@/composables/useToast'
 
 interface BrandingSetting {
   id: number
@@ -168,11 +192,32 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const { success, error } = useToast()
 
 // Form setup
 const form = useForm({
   settings: {} as Record<string, string | null>
 })
+
+// Preview functionality
+const imagePreviews = ref<Record<string, string>>({})
+
+const createImagePreview = (file: File, key: string) => {
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    if (e.target?.result) {
+      imagePreviews.value[key] = e.target.result as string
+    }
+  }
+  reader.readAsDataURL(file)
+}
+
+const clearImagePreview = (key: string) => {
+  if (imagePreviews.value[key]) {
+    URL.revokeObjectURL(imagePreviews.value[key])
+    delete imagePreviews.value[key]
+  }
+}
 
 // Initialize form with current settings
 onMounted(() => {
@@ -225,7 +270,28 @@ const handleImageUpload = async (event: Event, key: string) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
 
-  if (!file) return
+  if (!file) {
+    clearImagePreview(key)
+    return
+  }
+
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    error('File tidak valid', 'File yang dipilih harus berupa gambar')
+    target.value = ''
+    return
+  }
+
+  // Validate file size (max 5MB)
+  const maxSize = 5 * 1024 * 1024 // 5MB in bytes
+  if (file.size > maxSize) {
+    error('Ukuran file terlalu besar', 'Ukuran file tidak boleh lebih dari 5MB')
+    target.value = ''
+    return
+  }
+
+  // Create preview immediately
+  createImagePreview(file, key)
 
   const formData = new FormData()
   formData.append('image', file)
@@ -254,12 +320,21 @@ const handleImageUpload = async (event: Event, key: string) => {
           setting.value = data.path
         }
       }
+
+      // Clear preview after successful upload
+      clearImagePreview(key)
+      success('Upload berhasil', 'Gambar telah berhasil diupload')
     } else {
-      alert(data.message || 'Gagal mengupload gambar')
+      error('Upload gagal', data.message || 'Gagal mengupload gambar')
+      clearImagePreview(key)
     }
-  } catch (error) {
-    console.error('Upload error:', error)
-    alert('Terjadi kesalahan saat mengupload gambar')
+  } catch (uploadError) {
+    console.error('Upload error:', uploadError)
+    error('Terjadi kesalahan', 'Terjadi kesalahan saat mengupload gambar')
+    clearImagePreview(key)
+  } finally {
+    // Clear the input so same file can be selected again
+    target.value = ''
   }
 }
 
@@ -290,12 +365,16 @@ const deleteImage = async (key: string) => {
           setting.value = null
         }
       }
+
+      // Clear any preview for this key
+      clearImagePreview(key)
+      success('Hapus berhasil', 'Gambar telah berhasil dihapus')
     } else {
-      alert(data.message || 'Gagal menghapus gambar')
+      error('Hapus gagal', data.message || 'Gagal menghapus gambar')
     }
-  } catch (error) {
-    console.error('Delete error:', error)
-    alert('Terjadi kesalahan saat menghapus gambar')
+  } catch (deleteError) {
+    console.error('Delete error:', deleteError)
+    error('Terjadi kesalahan', 'Terjadi kesalahan saat menghapus gambar')
   }
 }
 </script>

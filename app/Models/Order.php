@@ -139,15 +139,16 @@ class Order extends Model
 
     public function getRemainingDays(): int
     {
-        if (!$this->expires_at) {
+        if (! $this->expires_at) {
             return 0;
         }
+
         return max(0, Carbon::now()->diffInDays($this->expires_at, false));
     }
 
     public function getTotalBillingDays(): int
     {
-        return match($this->billing_cycle) {
+        return match ($this->billing_cycle) {
             'monthly' => 30,
             'quarterly' => 90,
             'semi_annually' => 180,

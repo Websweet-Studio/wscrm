@@ -37,12 +37,12 @@ class CustomerController extends Controller
 
                 // Validate sort field
                 $allowedSorts = ['id', 'name', 'email', 'phone', 'city', 'status', 'created_at', 'orders_count'];
-                if (!in_array($sort, $allowedSorts)) {
+                if (! in_array($sort, $allowedSorts)) {
                     $sort = 'created_at';
                 }
 
                 // Validate direction
-                if (!in_array($direction, ['asc', 'desc'])) {
+                if (! in_array($direction, ['asc', 'desc'])) {
                     $direction = 'desc';
                 }
 

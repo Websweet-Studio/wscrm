@@ -52,12 +52,12 @@ class OrderController extends Controller
 
                 // Validate sort field
                 $allowedSorts = ['id', 'total_amount', 'status', 'billing_cycle', 'created_at', 'expires_at', 'customer_name'];
-                if (!in_array($sort, $allowedSorts)) {
+                if (! in_array($sort, $allowedSorts)) {
                     $sort = 'created_at';
                 }
 
                 // Validate direction
-                if (!in_array($direction, ['asc', 'desc'])) {
+                if (! in_array($direction, ['asc', 'desc'])) {
                     $direction = 'desc';
                 }
 
@@ -66,7 +66,7 @@ class OrderController extends Controller
                         ->orderBy('customers.name', $direction)
                         ->select('orders.*');
                 } else {
-                    $query->orderBy('orders.' . $sort, $direction);
+                    $query->orderBy('orders.'.$sort, $direction);
                 }
             }, function ($query) {
                 // Default sorting
@@ -316,12 +316,12 @@ class OrderController extends Controller
         // Get current hosting plan from either direct relationship or order items
         $currentPlan = $this->getCurrentHostingPlan($order);
 
-        if (!$currentPlan) {
+        if (! $currentPlan) {
             return response()->json(['error' => 'No hosting plan found for this order'], 400);
         }
 
         $request->validate([
-            'new_plan_id' => 'required|exists:hosting_plans,id|different:' . $currentPlan->id,
+            'new_plan_id' => 'required|exists:hosting_plans,id|different:'.$currentPlan->id,
         ]);
 
         $newPlan = HostingPlan::findOrFail($request->new_plan_id);
@@ -363,19 +363,19 @@ class OrderController extends Controller
         // Get current hosting plan from either direct relationship or order items
         $currentPlan = $this->getCurrentHostingPlan($order);
 
-        if (!$currentPlan) {
+        if (! $currentPlan) {
             return redirect()->back()->with('error', 'No hosting plan found for this order');
         }
 
         $request->validate([
-            'new_plan_id' => 'required|exists:hosting_plans,id|different:' . $currentPlan->id,
+            'new_plan_id' => 'required|exists:hosting_plans,id|different:'.$currentPlan->id,
         ]);
 
         if ($order->hasPendingChange()) {
             return redirect()->back()->with('error', 'Order ini sudah memiliki perubahan pending.');
         }
 
-        if (!$order->isService() || $order->status !== 'active') {
+        if (! $order->isService() || $order->status !== 'active') {
             return redirect()->back()->with('error', 'Hanya layanan aktif yang dapat di-upgrade/downgrade.');
         }
 
@@ -401,7 +401,7 @@ class OrderController extends Controller
             // Only generate invoice for upgrades (costDifference > 0)
             if ($costDifference > 0) {
                 // Generate upgrade invoice
-                $invoiceNumber = 'INV-UPG-' . now()->format('Ymd') . '-' . str_pad($order->id, 4, '0', STR_PAD_LEFT);
+                $invoiceNumber = 'INV-UPG-'.now()->format('Ymd').'-'.str_pad($order->id, 4, '0', STR_PAD_LEFT);
 
                 Invoice::create([
                     'customer_id' => $order->customer_id,

@@ -17,7 +17,7 @@ class UsernameController extends Controller
             return response()->json([
                 'available' => false,
                 'message' => 'Username minimal 3 karakter',
-                'status' => 'invalid'
+                'status' => 'invalid',
             ]);
         }
 
@@ -25,15 +25,15 @@ class UsernameController extends Controller
             return response()->json([
                 'available' => false,
                 'message' => 'Username maksimal 30 karakter',
-                'status' => 'invalid'
+                'status' => 'invalid',
             ]);
         }
 
-        if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+        if (! preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
             return response()->json([
                 'available' => false,
                 'message' => 'Username hanya boleh huruf, angka, dan underscore',
-                'status' => 'invalid'
+                'status' => 'invalid',
             ]);
         }
 
@@ -43,14 +43,14 @@ class UsernameController extends Controller
             return response()->json([
                 'available' => false,
                 'message' => 'Username sudah digunakan',
-                'status' => 'taken'
+                'status' => 'taken',
             ]);
         }
 
         return response()->json([
             'available' => true,
             'message' => 'Username tersedia',
-            'status' => 'available'
+            'status' => 'available',
         ]);
     }
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
+import ToastContainer from '@/components/ToastContainer.vue';
 import { useSidebar } from '@/composables/useSidebar';
 import type { BreadcrumbItemType } from '@/types';
 
@@ -57,5 +58,8 @@ const { isMinimized, isMobileOpen, toggleSidebar, toggleMobileSidebar, closeMobi
                 </div>
             </main>
         </div>
+
+        <!-- Toast Container -->
+        <ToastContainer />
     </div>
 </template>

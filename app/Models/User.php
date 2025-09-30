@@ -87,7 +87,6 @@ class User extends Authenticatable
         return in_array($this->role, ['admin', 'super_admin']);
     }
 
-
     /**
      * Find user by username or email for authentication.
      */
@@ -101,7 +100,7 @@ class User extends Authenticatable
     /**
      * Send user credentials via email.
      */
-    public function sendCredentials(string $newPassword = null): bool
+    public function sendCredentials(?string $newPassword = null): bool
     {
         try {
             // Generate temporary password if not provided
@@ -109,7 +108,7 @@ class User extends Authenticatable
 
             // Update user password
             $this->update([
-                'password' => Hash::make($temporaryPassword)
+                'password' => Hash::make($temporaryPassword),
             ]);
 
             // Send email with credentials
@@ -119,8 +118,9 @@ class User extends Authenticatable
         } catch (\Exception $e) {
             \Log::error('Failed to send user credentials', [
                 'user_id' => $this->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }

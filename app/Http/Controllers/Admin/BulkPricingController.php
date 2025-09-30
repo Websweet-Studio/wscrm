@@ -180,7 +180,7 @@ class BulkPricingController extends Controller
             // Additional business logic validation
             if ($validated['base_price_per_gb'] <= $validated['cost_per_gb']) {
                 return redirect()->back()->withErrors([
-                    'base_price_per_gb' => 'Harga dasar per GB harus lebih besar dari biaya per GB.'
+                    'base_price_per_gb' => 'Harga dasar per GB harus lebih besar dari biaya per GB.',
                 ])->withInput();
             }
 
@@ -211,19 +211,20 @@ class BulkPricingController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Bulk pricing config validation failed', [
                 'errors' => $e->errors(),
-                'input' => $request->all()
+                'input' => $request->all(),
             ]);
+
             return redirect()->back()->withErrors($e->errors())->withInput();
 
         } catch (\Exception $e) {
             \Log::error('Failed to save bulk pricing config', [
                 'error' => $e->getMessage(),
                 'input' => $request->all(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return redirect()->back()->withErrors([
-                'error' => 'Terjadi kesalahan saat menyimpan konfigurasi. Silakan coba lagi.'
+                'error' => 'Terjadi kesalahan saat menyimpan konfigurasi. Silakan coba lagi.',
             ])->withInput();
         }
     }
