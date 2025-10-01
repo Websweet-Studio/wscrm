@@ -29,11 +29,11 @@ class BrandingController extends Controller
     {
         $brandingSettings = [];
         $settings = BrandingSetting::getAllActive();
-        
+
         foreach ($settings as $setting) {
             $brandingSettings[$setting->key] = $setting->value;
         }
-        
+
         Inertia::share('brandingSettings', $brandingSettings);
     }
 
@@ -50,9 +50,16 @@ class BrandingController extends Controller
             $setting = BrandingSetting::where('key', $settingData['key'])->first();
 
             if ($setting) {
-                // Skip updating image settings from form submission
-                // Images are handled separately via uploadImage endpoint
-                if ($setting->type !== 'image') {
+                if ($setting->type === 'image') {
+                    // For image settings, only update if value is explicitly provided
+                    // Don't overwrite existing image URLs with null
+                    if ($settingData['value'] !== null) {
+                        $setting->update([
+                            'value' => $settingData['value'],
+                        ]);
+                    }
+                } else {
+                    // Update non-image settings normally
                     $setting->update([
                         'value' => $settingData['value'],
                     ]);
@@ -71,59 +78,101 @@ class BrandingController extends Controller
 
     public function uploadImage(Request $request)
     {
-        $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:5120', // 5MB
-            'key' => 'required|string',
-        ]);
+        // Ensure JSON response for validation errors
+        $request->headers->set('Accept', 'application/json');
 
-        if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $filename = time().'_'.$image->getClientOriginalName();
-            $path = $image->storeAs('branding', $filename, 'public');
+        try {
+            $validated = $request->validate([
+                'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:5120', // 5MB
+                'key' => 'required|string',
+            ]);
 
-            // Update the setting with the new image path
-            BrandingSetting::setValue($request->key, '/storage/'.$path);
+            if ($request->hasFile('image')) {
+                // Find existing setting to delete old image
+                $existingSetting = BrandingSetting::where('key', $validated['key'])->first();
+                if ($existingSetting && $existingSetting->value) {
+                    // Delete old image file from storage
+                    $oldImagePath = str_replace('/storage/', '', $existingSetting->value);
+                    if (Storage::disk('public')->exists($oldImagePath)) {
+                        Storage::disk('public')->delete($oldImagePath);
+                    }
+                }
+
+                $image = $request->file('image');
+                $filename = time().'_'.$image->getClientOriginalName();
+                $path = $image->storeAs('branding', $filename, 'public');
+
+                // Update the setting with the new image path
+                BrandingSetting::setValue($validated['key'], '/storage/'.$path);
+
+                return response()->json([
+                    'success' => true,
+                    'path' => '/storage/'.$path,
+                    'message' => 'Gambar berhasil diupload.',
+                ]);
+            }
 
             return response()->json([
-                'success' => true,
-                'path' => '/storage/'.$path,
-                'message' => 'Gambar berhasil diupload.',
-            ]);
+                'success' => false,
+                'message' => 'Gagal mengupload gambar.',
+            ], 400);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: '.$e->getMessage(),
+            ], 500);
         }
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal mengupload gambar.',
-        ], 400);
     }
 
     public function deleteImage(Request $request)
     {
-        $request->validate([
-            'key' => 'required|string',
-        ]);
+        // Ensure JSON response for validation errors
+        $request->headers->set('Accept', 'application/json');
 
-        $setting = BrandingSetting::where('key', $request->key)->first();
+        try {
+            $validated = $request->validate([
+                'key' => 'required|string',
+            ]);
 
-        if ($setting && $setting->value) {
-            // Delete the file from storage
-            $imagePath = str_replace('/storage/', '', $setting->value);
-            if (Storage::disk('public')->exists($imagePath)) {
-                Storage::disk('public')->delete($imagePath);
+            $setting = BrandingSetting::where('key', $validated['key'])->first();
+
+            if ($setting && $setting->value) {
+                // Delete the file from storage
+                $imagePath = str_replace('/storage/', '', $setting->value);
+                if (Storage::disk('public')->exists($imagePath)) {
+                    Storage::disk('public')->delete($imagePath);
+                }
+
+                // Clear the setting value
+                $setting->update(['value' => null]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Gambar berhasil dihapus.',
+                ]);
             }
 
-            // Clear the setting value
-            $setting->update(['value' => null]);
-
             return response()->json([
-                'success' => true,
-                'message' => 'Gambar berhasil dihapus.',
-            ]);
+                'success' => false,
+                'message' => 'Gambar tidak ditemukan.',
+            ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: '.$e->getMessage(),
+            ], 500);
         }
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Gambar tidak ditemukan.',
-        ], 404);
     }
 }

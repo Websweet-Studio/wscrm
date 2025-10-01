@@ -297,12 +297,11 @@ const handleImageError = (event: Event) => {
 }
 
 const submitSettings = () => {
-  // Filter out image settings - they are handled separately via upload endpoints
+  // Include all settings but for image settings, send existing value to prevent null override
   const settingsArray = Object.values(props.settings).flat()
-    .filter((setting) => setting.type !== 'image')
     .map((setting) => ({
       key: setting.key,
-      value: form.settings[setting.key],
+      value: setting.type === 'image' ? setting.value : form.settings[setting.key],
       type: setting.type,
     }))
 
