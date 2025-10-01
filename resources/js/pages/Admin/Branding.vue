@@ -23,7 +23,7 @@
                     :id="setting.key"
                     v-model="form.settings[setting.key]"
                     type="text"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-4 py-2"
                     :placeholder="setting.description"
                   />
                 </div>
@@ -42,7 +42,7 @@
                     :id="setting.key"
                     v-model="form.settings[setting.key]"
                     rows="3"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-4 py-2"
                     :placeholder="setting.description"
                   ></textarea>
                 </div>
@@ -124,7 +124,7 @@
                       :id="`upload_${setting.key}`"
                       @change="(event) => handleImageUpload(event, setting.key)"
                       accept="image/*"
-                      class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 px-4 py-2"
                     />
                   </div>
                 </div>
@@ -144,12 +144,12 @@
                       :id="setting.key"
                       v-model="form.settings[setting.key]"
                       type="color"
-                      class="h-10 w-20 rounded border border-gray-300 cursor-pointer"
+                      class="h-10 w-20 rounded border border-gray-300 cursor-pointer px-2 py-1"
                     />
                     <input
                       v-model="form.settings[setting.key]"
                       type="text"
-                      class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-4 py-2"
                       placeholder="#000000"
                     />
                   </div>

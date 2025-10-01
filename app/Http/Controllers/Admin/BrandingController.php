@@ -60,6 +60,9 @@ class BrandingController extends Controller
         // Reload fresh data after update
         $settings = BrandingSetting::getAllActive()->groupBy('type');
 
+        // Refresh Inertia shared props with updated branding settings
+        self::shareBrandingSettings();
+
         return Inertia::render('Admin/Branding', [
             'settings' => $settings,
             'timestamp' => now()->timestamp,
@@ -93,6 +96,9 @@ class BrandingController extends Controller
             // Update setting
             $setting->update(['value' => $publicPath]);
 
+            // Refresh Inertia shared props with updated branding settings
+            self::shareBrandingSettings();
+
             return response()->json([
                 'success' => true,
                 'path' => $publicPath,
@@ -107,7 +113,7 @@ class BrandingController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: '.$e->getMessage(),
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -134,6 +140,9 @@ class BrandingController extends Controller
             // Clear setting
             $setting->update(['value' => null]);
 
+            // Refresh Inertia shared props with updated branding settings
+            self::shareBrandingSettings();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Gambar berhasil dihapus.',
@@ -147,7 +156,7 @@ class BrandingController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: '.$e->getMessage(),
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
             ], 500);
         }
     }

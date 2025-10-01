@@ -25,7 +25,8 @@ class AppServiceProvider extends ServiceProvider
         // Share branding settings with all Inertia views
         Inertia::share('brandingSettings', function () {
             $brandingSettings = [];
-            $settings = BrandingSetting::getAllActive();
+            // Use fresh query to ensure we get the latest data
+            $settings = BrandingSetting::where('is_active', true)->orderBy('key')->get();
 
             foreach ($settings as $setting) {
                 $brandingSettings[$setting->key] = $setting->value;
@@ -35,15 +36,14 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Share branding settings with all Blade views
-        view()->share('brandingSettings', function () {
-            $brandingSettings = [];
-            $settings = BrandingSetting::getAllActive();
+        $brandingSettings = [];
+        // Use fresh query to ensure we get the latest data
+        $settings = BrandingSetting::where('is_active', true)->orderBy('key')->get();
 
-            foreach ($settings as $setting) {
-                $brandingSettings[$setting->key] = $setting->value;
-            }
+        foreach ($settings as $setting) {
+            $brandingSettings[$setting->key] = $setting->value;
+        }
 
-            return $brandingSettings;
-        });
+        view()->share('brandingSettings', $brandingSettings);
     }
 }
