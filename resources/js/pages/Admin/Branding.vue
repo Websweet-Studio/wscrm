@@ -416,6 +416,12 @@ const uploadImageImmediately = async (file: File, key: string) => {
 
       // Clear preview after successful upload
       clearImagePreview(key)
+
+      // Update browser favicon if this is app_favicon
+      if (key === 'app_favicon') {
+        updateBrowserFavicon(data.path)
+      }
+
       success('Upload berhasil', 'Gambar telah berhasil diupload')
     } else {
       error('Upload gagal', data.message || 'Gagal mengupload gambar')
@@ -427,6 +433,28 @@ const uploadImageImmediately = async (file: File, key: string) => {
     // Clear loading state
     uploadingImages.value[key] = false
   }
+}
+
+const updateBrowserFavicon = (faviconUrl: string) => {
+  // Update or create favicon link elements
+  const updateFavicon = (href: string, rel: string, type?: string) => {
+    let link = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement
+    if (!link) {
+      link = document.createElement('link')
+      link.rel = rel
+      document.head.appendChild(link)
+    }
+    link.href = href
+    if (type) {
+      link.type = type
+    }
+  }
+
+  // Update all favicon variants
+  updateFavicon(faviconUrl, 'icon', 'image/x-icon')
+  updateFavicon(faviconUrl, 'icon', 'image/png')
+  updateFavicon(faviconUrl, 'shortcut icon')
+  updateFavicon(faviconUrl, 'apple-touch-icon')
 }
 
 const deleteImage = async (key: string) => {
@@ -486,6 +514,12 @@ const deleteImage = async (key: string) => {
 
       // Clear any preview for this key
       clearImagePreview(key)
+
+      // Update browser favicon to default if this is app_favicon
+      if (key === 'app_favicon') {
+        updateBrowserFavicon('/1.png')
+      }
+
       success('Hapus berhasil', 'Gambar telah berhasil dihapus')
     } else {
       error('Hapus gagal', data.message || 'Gagal menghapus gambar')
