@@ -13,10 +13,14 @@ use Inertia\Inertia;
 
 class EmployeeController extends Controller
 {
-    public function __construct()
+    /**
+     * Check if user is admin.
+     */
+    private function checkAdmin()
     {
-        $this->middleware('auth');
-        $this->middleware('admin');
+        if (! auth()->user()->isAdmin()) {
+            abort(403, 'Unauthorized access.');
+        }
     }
 
     /**
@@ -24,6 +28,7 @@ class EmployeeController extends Controller
      */
     public function index(Request $request)
     {
+        $this->checkAdmin();
         $query = Employee::with('user');
 
         if ($request->filled('search')) {

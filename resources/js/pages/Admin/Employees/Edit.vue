@@ -3,11 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, Users, Building2 } from 'lucide-vue-next';
+import { Users, Building2 } from 'lucide-vue-next';
 
 interface Employee {
     id: number;
@@ -87,17 +88,9 @@ const submit = () => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="w-full max-w-none space-y-4 sm:space-y-6">
             <!-- Header -->
-            <div class="flex items-center gap-3">
-                <Button variant="outline" size="sm" asChild>
-                    <Link :href="`/admin/employees/${employee.id}`" class="cursor-pointer">
-                        <ArrowLeft class="mr-2 h-4 w-4" />
-                        Kembali
-                    </Link>
-                </Button>
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Edit Karyawan</h1>
-                    <p class="text-sm sm:text-base text-muted-foreground">Perbarui data karyawan: {{ employee.user.name }}</p>
-                </div>
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Edit Karyawan</h1>
+                <p class="text-sm sm:text-base text-muted-foreground">Perbarui data karyawan: {{ employee.user.name }}</p>
             </div>
 
             <div class="max-w-4xl">
@@ -225,12 +218,11 @@ const submit = () => {
                                 </div>
                                 <div>
                                     <Label for="hire_date">Tanggal Bergabung *</Label>
-                                    <Input
+                                    <DatePicker
                                         id="hire_date"
-                                        type="date"
                                         v-model="form.hire_date"
-                                        :class="{ 'border-red-500': form.errors.hire_date }"
-                                        required
+                                        :error="!!form.errors.hire_date"
+                                        placeholder="Pilih tanggal bergabung"
                                     />
                                     <p v-if="form.errors.hire_date" class="mt-1 text-xs text-red-500">{{ form.errors.hire_date }}</p>
                                 </div>

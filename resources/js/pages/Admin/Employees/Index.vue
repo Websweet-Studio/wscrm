@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
@@ -546,12 +547,11 @@ const resetPassword = (employee: Employee) => {
                             </div>
                             <div>
                                 <Label for="create-hire-date">Tanggal Bergabung *</Label>
-                                <Input
+                                <DatePicker
                                     id="create-hire-date"
-                                    type="date"
                                     v-model="createForm.hire_date"
-                                    :class="{ 'border-red-500': createForm.errors.hire_date }"
-                                    required
+                                    :error="!!createForm.errors.hire_date"
+                                    placeholder="Pilih tanggal bergabung"
                                 />
                                 <p v-if="createForm.errors.hire_date" class="mt-1 text-xs text-red-500">{{ createForm.errors.hire_date }}</p>
                             </div>
@@ -743,12 +743,11 @@ const resetPassword = (employee: Employee) => {
                             </div>
                             <div>
                                 <Label for="edit-hire-date">Tanggal Bergabung *</Label>
-                                <Input
+                                <DatePicker
                                     id="edit-hire-date"
-                                    type="date"
                                     v-model="editForm.hire_date"
-                                    :class="{ 'border-red-500': editForm.errors.hire_date }"
-                                    required
+                                    :error="!!editForm.errors.hire_date"
+                                    placeholder="Pilih tanggal bergabung"
                                 />
                                 <p v-if="editForm.errors.hire_date" class="mt-1 text-xs text-red-500">{{ editForm.errors.hire_date }}</p>
                             </div>

@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
@@ -693,13 +694,11 @@ const markAsPaid = (invoice: Invoice) => {
 
                     <div>
                         <label for="create-due-date" class="mb-2 block text-sm font-medium">Tanggal Jatuh Tempo *</label>
-                        <Input
+                        <DatePicker
                             id="create-due-date"
                             v-model="createForm.due_date"
-                            type="date"
+                            :error="!!createForm.errors.due_date"
                             placeholder="Pilih tanggal jatuh tempo"
-                            :class="{ 'border-red-500': createForm.errors.due_date }"
-                            required
                         />
                         <p v-if="createForm.errors.due_date" class="mt-1 text-xs text-red-500">{{ createForm.errors.due_date }}</p>
                     </div>
