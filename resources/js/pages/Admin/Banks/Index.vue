@@ -206,6 +206,7 @@ const submitEdit = () => {
                 </CardHeader>
                 <CardContent>
                     <div v-if="banks.data.length > 0">
+                        <div class="rounded-md border overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -249,36 +250,33 @@ const submitEdit = () => {
                                         </Badge>
                                     </TableCell>
                                     <TableCell class="text-right">
-                                        <div class="flex items-center justify-end gap-2">
-                                            <Button variant="ghost" size="sm" @click="router.visit(`/admin/banks/${bank.id}`)" class="cursor-pointer">
-                                                <Eye class="h-4 w-4" />
+                                        <div class="flex items-center justify-end gap-1">
+                                            <Button size="sm" variant="outline" @click="router.visit(`/admin/banks/${bank.id}`)" class="cursor-pointer" title="Lihat Detail">
+                                                <Eye class="h-3.5 w-3.5" />
                                             </Button>
-                                            <Button variant="ghost" size="sm" @click="openEditModal(bank)" class="cursor-pointer">
-                                                <Edit class="h-4 w-4" />
+                                            <Button size="sm" variant="outline" @click="openEditModal(bank)" class="cursor-pointer" title="Edit">
+                                                <Edit class="h-3.5 w-3.5" />
                                             </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                @click="toggleBankStatus(bank)"
+                                            <Button size="sm" @click="toggleBankStatus(bank)"
                                                 :title="bank.is_active ? 'Nonaktifkan' : 'Aktifkan'"
+                                                :class="bank.is_active ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-600 hover:bg-gray-700 text-white'"
                                                 class="cursor-pointer"
                                             >
-                                                <ToggleRight v-if="bank.is_active" class="h-4 w-4 text-green-600" />
-                                                <ToggleLeft v-else class="h-4 w-4 text-red-600" />
+                                                <ToggleRight v-if="bank.is_active" class="h-3.5 w-3.5" />
+                                                <ToggleLeft v-else class="h-3.5 w-3.5" />
                                             </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                @click="openDeleteModal(bank)"
-                                                class="cursor-pointer text-red-600 hover:text-red-700"
+                                            <Button size="sm" variant="outline" @click="openDeleteModal(bank)"
+                                                :title="'Hapus ' + bank.bank_name"
+                                                class="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
                                             >
-                                                <Trash2 class="h-4 w-4" />
+                                                <Trash2 class="h-3.5 w-3.5" />
                                             </Button>
                                         </div>
                                     </TableCell>
                                 </TableRow>
                             </TableBody>
                         </Table>
+                        </div>
 
                         <!-- Pagination -->
                         <div v-if="banks.last_page > 1" class="mt-4 flex items-center justify-center space-x-2">

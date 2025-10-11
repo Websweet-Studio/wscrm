@@ -198,7 +198,7 @@ const confirmDelete = () => {
                         <Button @click="handleSearch" class="cursor-pointer">Cari</Button>
                     </div>
 
-                    <div class="rounded-md border">
+                    <div class="rounded-md border overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -320,12 +320,12 @@ const confirmDelete = () => {
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
-                                        <div class="flex items-center space-x-2">
-                                            <Button size="sm" variant="outline" @click="openEditModal(domain)" class="cursor-pointer">
-                                                <Edit class="h-3 w-3" />
+                                        <div class="flex items-center gap-1">
+                                            <Button size="sm" variant="outline" @click="openEditModal(domain)" class="cursor-pointer" title="Edit">
+                                                <Edit class="h-3.5 w-3.5" />
                                             </Button>
-                                            <Button size="sm" variant="outline" @click="openDeleteModal(domain)" class="cursor-pointer">
-                                                <Trash2 class="h-3 w-3" />
+                                            <Button size="sm" variant="outline" @click="openDeleteModal(domain)" class="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50" title="Hapus">
+                                                <Trash2 class="h-3.5 w-3.5" />
                                             </Button>
                                         </div>
                                     </TableCell>
