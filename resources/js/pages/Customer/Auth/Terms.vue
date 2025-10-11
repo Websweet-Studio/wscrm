@@ -112,14 +112,7 @@ import { ArrowLeft, FileText, Clock, Server } from 'lucide-vue-next';
 
             <!-- Back to Login -->
             <div class="text-center pt-4 border-t border-muted">
-                <TextLink
-                    href="/customer/login"
-                    class="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground"
-                >
-                    <ArrowLeft class="h-4 w-4" />
-                    Kembali ke Login
-                </TextLink>
-            </div>
+                            </div>
         </div>
     </AuthCardLayout>
 </template>

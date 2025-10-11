@@ -79,9 +79,6 @@ const canPay = () => {
                     <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Detail invoice dan informasi pembayaran</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <Link :href="'/customer/invoices'" class="text-sm text-muted-foreground hover:text-foreground">
-                        ← Kembali ke Daftar Invoice
-                    </Link>
                     <Button v-if="canPay()" :as="Link" :href="`/customer/invoices/${invoice.id}/payment`">
                         <CreditCard class="mr-2 h-4 w-4" />
                         Bayar Sekarang

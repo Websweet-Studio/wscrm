@@ -109,16 +109,7 @@ const getTypeText = (type: string) => {
 
     <CustomerPublicLayout :title="`${category.name} - Blog WebSweetStudio`">
         <div class="container mx-auto px-4 py-8">
-            <!-- Back Button -->
-            <div class="mb-6">
-                <Link href="/blog">
-                    <Button variant="outline" class="flex items-center space-x-2">
-                        <ArrowLeft class="h-4 w-4" />
-                        <span>Kembali ke Blog</span>
-                    </Button>
-                </Link>
-            </div>
-
+            
             <!-- Category Header -->
             <div class="text-center mb-12">
                 <div class="flex items-center justify-center mb-4">

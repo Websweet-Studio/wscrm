@@ -8,7 +8,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, Users, Building2 } from 'lucide-vue-next';
+import { Users, Building2 } from 'lucide-vue-next';
 
 interface Props {
     departments?: string[];
@@ -54,17 +54,9 @@ const submit = () => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="w-full max-w-none space-y-4 sm:space-y-6">
             <!-- Header -->
-            <div class="flex items-center gap-3">
-                <Button variant="outline" size="sm" asChild>
-                    <Link href="/admin/employees" class="cursor-pointer">
-                        <ArrowLeft class="mr-2 h-4 w-4" />
-                        Kembali
-                    </Link>
-                </Button>
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Tambah Karyawan Baru</h1>
-                    <p class="text-sm sm:text-base text-muted-foreground">Daftarkan karyawan internal baru</p>
-                </div>
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Tambah Karyawan Baru</h1>
+                <p class="text-sm sm:text-base text-muted-foreground">Daftarkan karyawan internal baru</p>
             </div>
 
             <div class="max-w-4xl">

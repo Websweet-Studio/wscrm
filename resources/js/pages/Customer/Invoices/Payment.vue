@@ -101,10 +101,7 @@ if (props.invoice.bank_id) {
                     </h2>
                     <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Pilih metode pembayaran dan selesaikan transaksi</p>
                 </div>
-                <Link :href="`/customer/invoices/${invoice.id}`" class="text-sm text-muted-foreground hover:text-foreground">
-                    ← Kembali ke Detail Invoice
-                </Link>
-            </div>
+                            </div>
         </template>
 
         <div class="py-12">

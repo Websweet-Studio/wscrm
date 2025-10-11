@@ -132,16 +132,7 @@ const copyLink = () => {
 
     <CustomerPublicLayout :title="`${post.title} - Blog WebSweetStudio`">
         <div class="container mx-auto px-4 py-8">
-            <!-- Back Button -->
-            <div class="mb-6">
-                <Link href="/blog">
-                    <Button variant="outline" class="flex items-center space-x-2">
-                        <ArrowLeft class="h-4 w-4" />
-                        <span>Kembali ke Blog</span>
-                    </Button>
-                </Link>
-            </div>
-
+            
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 <!-- Main Content -->
                 <div class="lg:col-span-3">

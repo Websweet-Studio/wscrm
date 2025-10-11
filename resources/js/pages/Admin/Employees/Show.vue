@@ -5,7 +5,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ArrowLeft, Building2, Calendar, DollarSign, Mail, MapPin, Phone, User, Key, Edit, Trash2 } from 'lucide-vue-next';
+import { Building2, Calendar, DollarSign, Mail, MapPin, Phone, User, Key, Edit, Trash2 } from 'lucide-vue-next';
 
 interface Employee {
     id: number;
@@ -122,17 +122,9 @@ const deleteEmployee = () => {
         <div class="w-full max-w-none space-y-4 sm:space-y-6">
             <!-- Header -->
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div class="flex items-center gap-3">
-                    <Button variant="outline" size="sm" asChild>
-                        <Link href="/admin/employees" class="cursor-pointer">
-                            <ArrowLeft class="mr-2 h-4 w-4" />
-                            Kembali
-                        </Link>
-                    </Button>
-                    <div>
-                        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">{{ employee.user.name }}</h1>
-                        <p class="text-sm sm:text-base text-muted-foreground">Detail informasi karyawan</p>
-                    </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">{{ employee.user.name }}</h1>
+                    <p class="text-sm sm:text-base text-muted-foreground">Detail informasi karyawan</p>
                 </div>
                 <div class="flex gap-2">
                     <Button variant="secondary" @click="resetPassword" class="cursor-pointer">

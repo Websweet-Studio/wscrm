@@ -164,13 +164,7 @@ const formatDate = (dateString: string) => {
                         <span>{{ post.likes_count }} likes</span>
                     </div>
                 </div>
-                <div class="flex space-x-2">
-                    <Button @click="router.visit('/admin/blog')" variant="outline" class="flex items-center space-x-2">
-                        <ArrowLeft class="h-4 w-4" />
-                        <span>Kembali</span>
-                    </Button>
-                </div>
-            </div>
+                            </div>
 
             <form @submit.prevent="submit" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Main Content -->

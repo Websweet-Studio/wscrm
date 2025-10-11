@@ -215,10 +215,6 @@ const sharePost = () => {
                     <p class="text-muted-foreground mt-2">{{ post.excerpt }}</p>
                 </div>
                 <div class="flex space-x-2">
-                    <Button @click="router.visit('/admin/blog')" variant="outline" class="flex items-center space-x-2">
-                        <ArrowLeft class="h-4 w-4" />
-                        <span>Kembali</span>
-                    </Button>
                     <Link :href="`/admin/blog/${post.id}/edit`">
                         <Button class="flex items-center space-x-2">
                             <Edit class="h-4 w-4" />
