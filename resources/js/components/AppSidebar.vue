@@ -7,6 +7,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import {
     BookOpen,
     Building,
+    Building2,
     Calculator,
     ChevronDown,
     ChevronRight,
@@ -126,6 +127,11 @@ const mainNavItems: NavItem[] = [
                 icon: ShoppingCart,
             },
         ],
+    },
+    {
+        title: 'Karyawan',
+        href: '/admin/employees',
+        icon: Building2,
     },
     {
         title: 'Hosting',
