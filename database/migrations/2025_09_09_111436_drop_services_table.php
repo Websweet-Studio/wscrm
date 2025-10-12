@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,19 +12,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Drop foreign key constraint from invoices first
-        Schema::table('invoices', function (Blueprint $table) {
-            $table->dropForeign(['service_id']);
-            $table->dropColumn('service_id');
+        // Skip this migration - it was handled in a previous merge operation
+        // The services table and service_id column should already be handled
+        // This migration is kept for compatibility but does nothing
 
-            // Add order_id foreign key instead (if not exists)
-            if (! Schema::hasColumn('invoices', 'order_id')) {
-                $table->foreignId('order_id')->nullable()->constrained()->after('customer_id');
+        // Optional: Only drop services table if it exists and has no data
+        if (Schema::hasTable('services')) {
+            try {
+                // Check if table has any data before dropping
+                $count = \DB::table('services')->count();
+                if ($count == 0) {
+                    Schema::dropIfExists('services');
+                }
+            } catch (\Exception $e) {
+                // Ignore errors when checking/dropping services table
             }
-        });
-
-        // Drop the services table since data is now in orders
-        Schema::dropIfExists('services');
+        }
     }
 
     /**
