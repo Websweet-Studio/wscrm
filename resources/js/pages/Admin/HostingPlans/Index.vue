@@ -90,6 +90,12 @@ const formatPrice = (price: number) => {
     }).format(price);
 };
 
+const getDiscountedPrice = (price: number, discount: number) => {
+    const result = price * (1 - discount / 100);
+    console.log(`Price Debug: Base=${price}, Discount=${discount}%, Final=${result}`);
+    return result;
+};
+
 const handleSearch = () => {
     router.get(
         '/admin/hosting-plans',
@@ -205,8 +211,8 @@ const confirmDelete = () => {
                                 <TableRow>
                                     <TableHead>Nama Paket</TableHead>
                                     <TableHead>Spesifikasi</TableHead>
-                                    <TableHead>Harga Jual</TableHead>
-                                    <TableHead>Biaya</TableHead>
+                                    <TableHead>Harga Final</TableHead>
+                                    <TableHead>Detail Biaya</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead class="w-[100px]">Aksi</TableHead>
                                 </TableRow>
@@ -230,12 +236,25 @@ const confirmDelete = () => {
                                             </div>
                                         </div>
                                     </TableCell>
-                                    <TableCell>{{ formatPrice(plan.selling_price) }}</TableCell>
+                                    <TableCell>
+                                        <div class="space-y-1">
+                                            <div v-if="plan.discount_percent > 0" class="text-sm text-muted-foreground line-through">
+                                                {{ formatPrice(plan.selling_price) }}
+                                            </div>
+                                            <div class="font-semibold text-green-600">
+                                                {{ formatPrice(getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
+                                            </div>
+                                            <div v-if="plan.discount_percent > 0" class="text-xs text-green-600">
+                                                Hemat {{ formatPrice(plan.selling_price - getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
+                                            </div>
+                                        </div>
+                                    </TableCell>
                                     <TableCell>
                                         <div class="space-y-1 text-xs">
                                             <div>Modal: {{ formatPrice(plan.modal_cost) }}</div>
                                             <div>Maintenance: {{ formatPrice(plan.maintenance_cost) }}</div>
                                             <div v-if="plan.discount_percent > 0" class="text-green-600">{{ plan.discount_percent }}% diskon</div>
+                                            <div v-if="plan.use_bulk_pricing" class="text-blue-600">Bulk Pricing</div>
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -703,7 +722,8 @@ const confirmDelete = () => {
                             <strong>Paket:</strong> {{ planToDelete?.plan_name }}<br />
                             <strong>Spesifikasi:</strong> {{ planToDelete?.storage_gb }}GB, {{ planToDelete?.cpu_cores }} CPU,
                             {{ planToDelete?.ram_gb }}GB RAM<br />
-                            <strong>Harga Jual:</strong> {{ planToDelete ? formatPrice(planToDelete.selling_price) : '' }}<br />
+                            <strong>Harga Final:</strong> {{ planToDelete ? formatPrice(getDiscountedPrice(planToDelete.selling_price, planToDelete.discount_percent)) : '' }}<br />
+                            <strong v-if="planToDelete?.discount_percent && planToDelete.discount_percent > 0">Diskon:</strong> {{ planToDelete.discount_percent }}%<br />
                             <strong>Status:</strong> {{ planToDelete?.is_active ? 'Aktif' : 'Nonaktif' }}
                         </p>
                     </div>
