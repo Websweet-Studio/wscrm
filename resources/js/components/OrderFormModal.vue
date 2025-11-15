@@ -360,31 +360,8 @@ const close = () => {
                     </div>
                 </div>
 
-                <!-- Additional fields for edit mode -->
-                <div v-if="isEditMode" class="grid grid-cols-2 gap-4">
-                    <div>
-                        <Label :for="`${mode}-expires-at`">Tanggal Kedaluwarsa</Label>
-                        <DatePicker
-                            v-model="formData.expires_at"
-                            placeholder="Pilih tanggal kedaluwarsa"
-                            :min-date="new Date().toISOString().split('T')[0]"
-                        />
-                        <p v-if="errors.expires_at" class="mt-1 text-xs text-red-500">{{ errors.expires_at }}</p>
-                    </div>
-                    
-                    <div class="flex items-center space-x-2">
-                        <input
-                            :id="`${mode}-auto-renew`"
-                            v-model="formData.auto_renew"
-                            type="checkbox"
-                            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <Label :for="`${mode}-auto-renew`">Perpanjang Otomatis</Label>
-                    </div>
-                </div>
-
-                <!-- Discount Amount for Edit Mode -->
-                <div v-if="isEditMode">
+                <!-- Discount Amount -->
+                <div>
                     <Label :for="`${mode}-discount-amount`">Potongan Harga (Rp)</Label>
                     <Input
                         :id="`${mode}-discount-amount`"
@@ -396,6 +373,29 @@ const close = () => {
                     />
                     <p v-if="errors.discount_amount" class="mt-1 text-xs text-red-500">{{ errors.discount_amount }}</p>
                     <p class="mt-1 text-xs text-muted-foreground">Masukkan nominal dalam Rupiah (contoh: 50000 untuk Rp 50.000)</p>
+                </div>
+
+                <!-- Additional fields for edit mode -->
+                <div v-if="isEditMode" class="grid grid-cols-2 gap-4">
+                    <div>
+                        <Label :for="`${mode}-expires-at`">Tanggal Kedaluwarsa</Label>
+                        <DatePicker
+                            v-model="formData.expires_at"
+                            placeholder="Pilih tanggal kedaluwarsa"
+                            :min-date="new Date().toISOString().split('T')[0]"
+                        />
+                        <p v-if="errors.expires_at" class="mt-1 text-xs text-red-500">{{ errors.expires_at }}</p>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <input
+                            :id="`${mode}-auto-renew`"
+                            v-model="formData.auto_renew"
+                            type="checkbox"
+                            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <Label :for="`${mode}-auto-renew`">Perpanjang Otomatis</Label>
+                    </div>
                 </div>
 
                 <!-- Items Section -->
