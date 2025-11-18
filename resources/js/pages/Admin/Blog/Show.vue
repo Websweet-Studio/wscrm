@@ -1,25 +1,10 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import {
-    ArrowLeft,
-    Edit,
-    Eye,
-    Heart,
-    Calendar,
-    User,
-    Tag,
-    Star,
-    Pin,
-    MessageCircle,
-    Clock,
-    Trash2,
-    Share2
-} from 'lucide-vue-next';
+import { Calendar, Clock, Edit, Eye, Heart, MessageCircle, Pin, Share2, Star, Tag, Trash2, User } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface BlogCategory {
@@ -137,17 +122,25 @@ const getTypeText = (type: string) => {
 };
 
 const toggleFeatured = () => {
-    router.patch(`/admin/blog/${props.post.id}/toggle-featured`, {}, {
-        preserveState: true,
-        preserveScroll: true,
-    });
+    router.patch(
+        `/admin/blog/${props.post.id}/toggle-featured`,
+        {},
+        {
+            preserveState: true,
+            preserveScroll: true,
+        },
+    );
 };
 
 const togglePinned = () => {
-    router.patch(`/admin/blog/${props.post.id}/toggle-pinned`, {}, {
-        preserveState: true,
-        preserveScroll: true,
-    });
+    router.patch(
+        `/admin/blog/${props.post.id}/toggle-pinned`,
+        {},
+        {
+            preserveState: true,
+            preserveScroll: true,
+        },
+    );
 };
 
 const confirmDelete = () => {
@@ -167,7 +160,7 @@ const sharePost = () => {
         navigator.share({
             title: props.post.title,
             text: props.post.excerpt,
-            url: window.location.href
+            url: window.location.href,
         });
     } else {
         // Fallback: copy to clipboard
@@ -189,30 +182,18 @@ const sharePost = () => {
             <!-- Header -->
             <div class="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
                 <div class="flex-1">
-                    <div class="flex items-center space-x-2 mb-2">
-                        <span
-                            class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                            :class="getStatusColor(post.status)"
-                        >
+                    <div class="mb-2 flex items-center space-x-2">
+                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium" :class="getStatusColor(post.status)">
                             {{ getStatusText(post.status) }}
                         </span>
-                        <span
-                            class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                            :class="getTypeColor(post.type)"
-                        >
+                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium" :class="getTypeColor(post.type)">
                             {{ getTypeText(post.type) }}
                         </span>
-                        <Star
-                            v-if="post.is_featured"
-                            class="h-4 w-4 text-yellow-500 fill-yellow-500"
-                        />
-                        <Pin
-                            v-if="post.is_pinned"
-                            class="h-4 w-4 text-blue-500"
-                        />
+                        <Star v-if="post.is_featured" class="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                        <Pin v-if="post.is_pinned" class="h-4 w-4 text-blue-500" />
                     </div>
-                    <h1 class="text-2xl font-bold leading-tight">{{ post.title }}</h1>
-                    <p class="text-muted-foreground mt-2">{{ post.excerpt }}</p>
+                    <h1 class="text-2xl leading-tight font-bold">{{ post.title }}</h1>
+                    <p class="mt-2 text-muted-foreground">{{ post.excerpt }}</p>
                 </div>
                 <div class="flex space-x-2">
                     <Link :href="`/admin/blog/${post.id}/edit`">
@@ -224,17 +205,13 @@ const sharePost = () => {
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <!-- Main Content -->
-                <div class="lg:col-span-2 space-y-6">
+                <div class="space-y-6 lg:col-span-2">
                     <!-- Featured Image -->
                     <Card v-if="post.featured_image">
                         <CardContent class="p-0">
-                            <img
-                                :src="post.featured_image_url"
-                                :alt="post.title"
-                                class="w-full h-64 object-cover rounded-t-lg"
-                            />
+                            <img :src="post.featured_image_url" :alt="post.title" class="h-64 w-full rounded-t-lg object-cover" />
                         </CardContent>
                     </Card>
 
@@ -265,7 +242,7 @@ const sharePost = () => {
                                 class="w-full justify-start"
                                 :class="post.is_featured ? 'border-yellow-500 text-yellow-600' : ''"
                             >
-                                <Star class="h-4 w-4 mr-2" :class="post.is_featured ? 'fill-current' : ''" />
+                                <Star class="mr-2 h-4 w-4" :class="post.is_featured ? 'fill-current' : ''" />
                                 {{ post.is_featured ? 'Hapus dari Unggulan' : 'Jadikan Unggulan' }}
                             </Button>
 
@@ -275,25 +252,17 @@ const sharePost = () => {
                                 class="w-full justify-start"
                                 :class="post.is_pinned ? 'border-blue-500 text-blue-600' : ''"
                             >
-                                <Pin class="h-4 w-4 mr-2" />
+                                <Pin class="mr-2 h-4 w-4" />
                                 {{ post.is_pinned ? 'Unpin Artikel' : 'Pin Artikel' }}
                             </Button>
 
-                            <Button
-                                @click="sharePost"
-                                variant="outline"
-                                class="w-full justify-start"
-                            >
-                                <Share2 class="h-4 w-4 mr-2" />
+                            <Button @click="sharePost" variant="outline" class="w-full justify-start">
+                                <Share2 class="mr-2 h-4 w-4" />
                                 Bagikan
                             </Button>
 
-                            <Button
-                                @click="confirmDelete"
-                                variant="outline"
-                                class="w-full justify-start text-red-600 border-red-300 hover:bg-red-50"
-                            >
-                                <Trash2 class="h-4 w-4 mr-2" />
+                            <Button @click="confirmDelete" variant="outline" class="w-full justify-start border-red-300 text-red-600 hover:bg-red-50">
+                                <Trash2 class="mr-2 h-4 w-4" />
                                 Hapus Artikel
                             </Button>
                         </CardContent>
@@ -329,9 +298,7 @@ const sharePost = () => {
                                     <div class="text-sm">
                                         {{ post.formatted_date || formatDate(post.created_at) }}
                                     </div>
-                                    <div class="text-xs text-muted-foreground">
-                                        Dibuat {{ formatDate(post.created_at) }}
-                                    </div>
+                                    <div class="text-xs text-muted-foreground">Dibuat {{ formatDate(post.created_at) }}</div>
                                 </div>
                             </div>
 
@@ -403,17 +370,12 @@ const sharePost = () => {
                 <div class="mb-4">
                     <h3 class="text-lg font-semibold">Konfirmasi Hapus</h3>
                     <p class="text-sm text-muted-foreground">
-                        Apakah Anda yakin ingin menghapus artikel "{{ post.title }}"?
-                        Tindakan ini tidak dapat dibatalkan.
+                        Apakah Anda yakin ingin menghapus artikel "{{ post.title }}"? Tindakan ini tidak dapat dibatalkan.
                     </p>
                 </div>
                 <div class="flex justify-end space-x-3">
-                    <Button variant="outline" @click="showDeleteModal = false">
-                        Batal
-                    </Button>
-                    <Button variant="destructive" @click="deletePost">
-                        Hapus
-                    </Button>
+                    <Button variant="outline" @click="showDeleteModal = false"> Batal </Button>
+                    <Button variant="destructive" @click="deletePost"> Hapus </Button>
                 </div>
             </div>
         </div>

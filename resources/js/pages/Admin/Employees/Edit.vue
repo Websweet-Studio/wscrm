@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { Users, Building2 } from 'lucide-vue-next';
+import { Building2, Users } from 'lucide-vue-next';
 
 interface Employee {
     id: number;
@@ -89,8 +89,8 @@ const submit = () => {
         <div class="w-full max-w-none space-y-4 sm:space-y-6">
             <!-- Header -->
             <div>
-                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Edit Karyawan</h1>
-                <p class="text-sm sm:text-base text-muted-foreground">Perbarui data karyawan: {{ employee.user.name }}</p>
+                <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Edit Karyawan</h1>
+                <p class="text-sm text-muted-foreground sm:text-base">Perbarui data karyawan: {{ employee.user.name }}</p>
             </div>
 
             <div class="max-w-4xl">
@@ -163,7 +163,9 @@ const submit = () => {
                                     :class="{ 'border-red-500': form.errors.password_confirmation }"
                                     required
                                 />
-                                <p v-if="form.errors.password_confirmation" class="mt-1 text-xs text-red-500">{{ form.errors.password_confirmation }}</p>
+                                <p v-if="form.errors.password_confirmation" class="mt-1 text-xs text-red-500">
+                                    {{ form.errors.password_confirmation }}
+                                </p>
                             </div>
                         </CardContent>
                     </Card>
@@ -278,7 +280,7 @@ const submit = () => {
                                     id="notes"
                                     v-model="form.notes"
                                     rows="3"
-                                    class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                                     :class="{ 'border-red-500': form.errors.notes }"
                                     placeholder="Catatan tambahan tentang karyawan"
                                 ></textarea>

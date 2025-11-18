@@ -38,23 +38,23 @@ const getOrderTypeDisplay = (order) => {
     if (!order || !order.order_items || order.order_items.length === 0) {
         return 'Mixed Order';
     }
-    
-    const itemTypes = order.order_items.map(item => item.item_type);
+
+    const itemTypes = order.order_items.map((item) => item.item_type);
     const uniqueTypes = [...new Set(itemTypes)];
-    
+
     if (uniqueTypes.length === 1) {
         const type = uniqueTypes[0];
         const typeMap = {
-            'hosting': 'Hosting',
-            'domain': 'Domain',
-            'service': 'Service',
-            'app': 'Aplikasi',
-            'web': 'Website',
-            'maintenance': 'Maintenance'
+            hosting: 'Hosting',
+            domain: 'Domain',
+            service: 'Service',
+            app: 'Aplikasi',
+            web: 'Website',
+            maintenance: 'Maintenance',
         };
         return typeMap[type] || type;
     }
-    
+
     return `Mixed (${uniqueTypes.length} types)`;
 };
 

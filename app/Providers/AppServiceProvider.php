@@ -2,9 +2,7 @@
 
 namespace App\Providers;
 
-use App\Http\Controllers\Admin\BrandingController;
 use App\Models\BrandingSetting;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
 

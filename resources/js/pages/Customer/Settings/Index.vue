@@ -13,7 +13,7 @@ const customer = page.props.auth.customer;
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/customer/dashboard' },
-    { title: 'Settings', href: '/customer/settings' }
+    { title: 'Settings', href: '/customer/settings' },
 ];
 
 // Profile form
@@ -65,9 +65,7 @@ const submitPassword = () => {
                 <Card>
                     <CardHeader>
                         <CardTitle>Informasi Profil</CardTitle>
-                        <CardDescription>
-                            Perbarui informasi profil dan alamat email Anda
-                        </CardDescription>
+                        <CardDescription> Perbarui informasi profil dan alamat email Anda </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form @submit.prevent="submitProfile" class="space-y-4">
@@ -170,9 +168,7 @@ const submitPassword = () => {
                 <Card>
                     <CardHeader>
                         <CardTitle>Ubah Password</CardTitle>
-                        <CardDescription>
-                            Perbarui password akun Anda untuk menjaga keamanan
-                        </CardDescription>
+                        <CardDescription> Perbarui password akun Anda untuk menjaga keamanan </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form @submit.prevent="submitPassword" class="space-y-4">

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker';
 import { Plus, Trash2, X } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
@@ -92,15 +92,11 @@ const errors = ref<Record<string, string>>({});
 const processing = ref(false);
 
 const modalTitle = computed(() => {
-    return props.mode === 'create' 
-        ? 'Buat Pesanan Baru' 
-        : `Edit Pesanan #${props.order?.id}`;
+    return props.mode === 'create' ? 'Buat Pesanan Baru' : `Edit Pesanan #${props.order?.id}`;
 });
 
 const modalDescription = computed(() => {
-    return props.mode === 'create' 
-        ? 'Buat pesanan baru untuk pelanggan dengan berbagai item dan layanan.' 
-        : 'Perbarui informasi pesanan ini';
+    return props.mode === 'create' ? 'Buat pesanan baru untuk pelanggan dengan berbagai item dan layanan.' : 'Perbarui informasi pesanan ini';
 });
 
 const isEditMode = computed(() => props.mode === 'edit');
@@ -108,19 +104,23 @@ const isEditMode = computed(() => props.mode === 'edit');
 // Price calculation functions
 const getItemPrice = (item: OrderItem): number => {
     if (!item.item_id || !item.item_type) return 0;
-    
+
     const plans = getPlansForType(item.item_type);
-    const selectedPlan = plans.find(plan => plan.id.toString() === item.item_id.toString());
-    
+    const selectedPlan = plans.find((plan) => plan.id.toString() === item.item_id.toString());
+
     return selectedPlan?.price || 0;
 };
 
 const getBillingCycleMultiplier = (): number => {
     switch (formData.value.billing_cycle) {
-        case 'monthly': return 1;
-        case 'quarterly': return 3;
-        case 'semi_annual': return 6;
-        case 'annual': return 12;
+        case 'monthly':
+            return 1;
+        case 'quarterly':
+            return 3;
+        case 'semi_annual':
+            return 6;
+        case 'annual':
+            return 12;
         case 'onetime':
         default:
             return 1;
@@ -131,7 +131,7 @@ const getBillingCycleMultiplier = (): number => {
 const itemsSubtotal = computed((): number => {
     return formData.value.items.reduce((total, item) => {
         const itemPrice = getItemPrice(item);
-        return total + (itemPrice * getBillingCycleMultiplier());
+        return total + itemPrice * getBillingCycleMultiplier();
     }, 0);
 });
 
@@ -155,12 +155,12 @@ const formatPrice = (amount: number): string => {
 // Function to format date for input[type="date"]
 const formatDateForInput = (dateString: string | null): string => {
     if (!dateString) return '';
-    
+
     try {
         // Handle various date formats and convert to YYYY-MM-DD
         const date = new Date(dateString);
         if (isNaN(date.getTime())) return '';
-        
+
         return date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
     } catch (error) {
         console.warn('Invalid date format:', dateString);
@@ -169,47 +169,56 @@ const formatDateForInput = (dateString: string | null): string => {
 };
 
 // Watch for order changes to populate form
-watch(() => props.order, (order) => {
-    if (order && props.mode === 'edit') {
-        // Reset form data
-        formData.value = {
-            customer_id: order.customer.id.toString(),
-            domain_name: order.domain_name || '',
-            billing_cycle: order.billing_cycle as typeof formData.value.billing_cycle,
-            status: order.status as typeof formData.value.status,
-            expires_at: formatDateForInput(order.expires_at || ''),
-            auto_renew: order.auto_renew || false,
-            discount_amount: order.discount_amount?.toString() || '',
-            items: order.order_items.map(item => ({
-                id: item.id,
-                item_type: item.item_type,
-                item_id: item.item_id?.toString() || '1',
-                price: item.price?.toString() || '',
-            })),
-        };
-        errors.value = {};
-    }
-}, { immediate: true });
+watch(
+    () => props.order,
+    (order) => {
+        if (order && props.mode === 'edit') {
+            // Reset form data
+            formData.value = {
+                customer_id: order.customer.id.toString(),
+                domain_name: order.domain_name || '',
+                billing_cycle: order.billing_cycle as typeof formData.value.billing_cycle,
+                status: order.status as typeof formData.value.status,
+                expires_at: formatDateForInput(order.expires_at || ''),
+                auto_renew: order.auto_renew || false,
+                discount_amount: order.discount_amount?.toString() || '',
+                items: order.order_items.map((item) => ({
+                    id: item.id,
+                    item_type: item.item_type,
+                    item_id: item.item_id?.toString() || '1',
+                    price: item.price?.toString() || '',
+                })),
+            };
+            errors.value = {};
+        }
+    },
+    { immediate: true },
+);
 
 // Reset form when switching to create mode
-watch(() => props.mode, (mode) => {
-    if (mode === 'create') {
-        formData.value = {
-            customer_id: '',
-            domain_name: '',
-            billing_cycle: 'annual',
-            status: 'pending',
-            expires_at: '',
-            auto_renew: false,
-            discount_amount: '',
-            items: [{
-                item_type: 'hosting',
-                item_id: '',
-            }],
-        };
-        errors.value = {};
-    }
-});
+watch(
+    () => props.mode,
+    (mode) => {
+        if (mode === 'create') {
+            formData.value = {
+                customer_id: '',
+                domain_name: '',
+                billing_cycle: 'annual',
+                status: 'pending',
+                expires_at: '',
+                auto_renew: false,
+                discount_amount: '',
+                items: [
+                    {
+                        item_type: 'hosting',
+                        item_id: '',
+                    },
+                ],
+            };
+            errors.value = {};
+        }
+    },
+);
 
 const addItem = () => {
     formData.value.items.push({
@@ -226,32 +235,39 @@ const removeItem = (index: number) => {
 
 const getItemTypeText = (type: string) => {
     switch (type) {
-        case 'hosting': return 'Hosting';
-        case 'domain': return 'Domain';
-        case 'service': return 'Layanan';
-        case 'app': return 'Aplikasi';
-        case 'web': return 'Website';
-        case 'maintenance': return 'Pemeliharaan';
-        default: return type;
+        case 'hosting':
+            return 'Hosting';
+        case 'domain':
+            return 'Domain';
+        case 'service':
+            return 'Layanan';
+        case 'app':
+            return 'Aplikasi';
+        case 'web':
+            return 'Website';
+        case 'maintenance':
+            return 'Pemeliharaan';
+        default:
+            return type;
     }
 };
 
 const getPlansForType = (type: string) => {
     switch (type) {
         case 'hosting':
-            return props.hostingPlans.map(plan => ({
+            return props.hostingPlans.map((plan) => ({
                 id: plan.id,
                 name: `${plan.plan_name} (${plan.storage_gb}GB, ${plan.cpu_cores} CPU, ${plan.ram_gb}GB RAM) - ${formatPrice(plan.selling_price)}`,
                 price: plan.selling_price,
             }));
         case 'domain':
-            return props.domainPrices.map(domain => ({
+            return props.domainPrices.map((domain) => ({
                 id: domain.id,
                 name: `${domain.extension} - ${formatPrice(domain.selling_price)}`,
                 price: domain.selling_price,
             }));
         case 'service':
-            return props.servicePlans.map(service => ({
+            return props.servicePlans.map((service) => ({
                 id: service.id,
                 name: `${service.name} (${service.category}) - ${formatPrice(service.price)}`,
                 price: service.price,
@@ -275,9 +291,9 @@ const close = () => {
     <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center">
         <!-- Overlay -->
         <div class="fixed inset-0 bg-black/50" @click="close"></div>
-        
+
         <!-- Modal Content -->
-        <div class="relative mx-4 w-full max-w-4xl rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900 max-h-[90vh] overflow-y-auto">
+        <div class="relative mx-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
             <!-- Header -->
             <div class="mb-6 flex items-center justify-between">
                 <div>
@@ -307,14 +323,10 @@ const close = () => {
                         </select>
                         <p v-if="errors.customer_id" class="mt-1 text-xs text-red-500">{{ errors.customer_id }}</p>
                     </div>
-                    
+
                     <div>
                         <Label :for="`${mode}-domain`">Nama Domain</Label>
-                        <Input 
-                            :id="`${mode}-domain`"
-                            v-model="formData.domain_name" 
-                            placeholder="Masukkan nama domain (contoh: example.com)" 
-                        />
+                        <Input :id="`${mode}-domain`" v-model="formData.domain_name" placeholder="Masukkan nama domain (contoh: example.com)" />
                         <p v-if="errors.domain_name" class="mt-1 text-xs text-red-500">{{ errors.domain_name }}</p>
                         <p class="mt-1 text-xs text-muted-foreground">Field ini opsional - kosongkan jika tidak ada domain</p>
                     </div>
@@ -402,23 +414,14 @@ const close = () => {
                 <div>
                     <div class="mb-4 flex items-center justify-between">
                         <Label class="text-base font-medium">Item Pesanan *</Label>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            @click="addItem"
-                        >
+                        <Button type="button" variant="outline" size="sm" @click="addItem">
                             <Plus class="mr-2 h-4 w-4" />
                             Tambah Item
                         </Button>
                     </div>
 
                     <div class="space-y-4">
-                        <div
-                            v-for="(item, index) in formData.items"
-                            :key="index"
-                            class="grid grid-cols-12 gap-4 items-end rounded-lg border p-4"
-                        >
+                        <div v-for="(item, index) in formData.items" :key="index" class="grid grid-cols-12 items-end gap-4 rounded-lg border p-4">
                             <!-- Item Type -->
                             <div class="col-span-3">
                                 <Label :for="`item-type-${index}`">Tipe Item</Label>
@@ -450,11 +453,7 @@ const close = () => {
                                     required
                                 >
                                     <option value="">Pilih {{ getItemTypeText(item.item_type) }}</option>
-                                    <option
-                                        v-for="plan in getPlansForType(item.item_type)"
-                                        :key="plan.id"
-                                        :value="plan.id"
-                                    >
+                                    <option v-for="plan in getPlansForType(item.item_type)" :key="plan.id" :value="plan.id">
                                         {{ plan.name }}
                                     </option>
                                 </select>
@@ -480,23 +479,24 @@ const close = () => {
                                 <div class="flex h-9 items-center rounded-md border border-input bg-muted px-3 py-1 text-sm">
                                     <span v-if="item.item_id && item.item_type" class="font-medium text-primary">
                                         {{ formatPrice(getItemPrice(item)) }}
-                                        <span v-if="formData.billing_cycle !== 'onetime'" class="text-xs text-muted-foreground ml-1">
-                                            /{{ formData.billing_cycle === 'monthly' ? 'bulan' : formData.billing_cycle === 'quarterly' ? '3 bulan' : formData.billing_cycle === 'semi_annual' ? '6 bulan' : 'tahun' }}
+                                        <span v-if="formData.billing_cycle !== 'onetime'" class="ml-1 text-xs text-muted-foreground">
+                                            /{{
+                                                formData.billing_cycle === 'monthly'
+                                                    ? 'bulan'
+                                                    : formData.billing_cycle === 'quarterly'
+                                                      ? '3 bulan'
+                                                      : formData.billing_cycle === 'semi_annual'
+                                                        ? '6 bulan'
+                                                        : 'tahun'
+                                            }}
                                         </span>
                                     </span>
-                                    <span v-else class="text-muted-foreground">
-                                        Pilih item untuk melihat harga
-                                    </span>
+                                    <span v-else class="text-muted-foreground"> Pilih item untuk melihat harga </span>
                                 </div>
                             </div>
                             <div v-else class="col-span-4">
                                 <Label :for="`item-price-${index}`">Harga Custom (Opsional)</Label>
-                                <Input
-                                    :id="`item-price-${index}`"
-                                    v-model="item.price"
-                                    type="number"
-                                    placeholder="Kosongkan untuk harga default"
-                                />
+                                <Input :id="`item-price-${index}`" v-model="item.price" type="number" placeholder="Kosongkan untuk harga default" />
                                 <p v-if="errors[`items.${index}.price`]" class="mt-1 text-xs text-red-500">
                                     {{ errors[`items.${index}.price`] }}
                                 </p>
@@ -504,13 +504,7 @@ const close = () => {
 
                             <!-- Remove Button -->
                             <div class="col-span-1">
-                                <Button
-                                    v-if="formData.items.length > 1"
-                                    type="button"
-                                    variant="destructive"
-                                    size="sm"
-                                    @click="removeItem(index)"
-                                >
+                                <Button v-if="formData.items.length > 1" type="button" variant="destructive" size="sm" @click="removeItem(index)">
                                     <Trash2 class="h-4 w-4" />
                                 </Button>
                             </div>
@@ -521,20 +515,29 @@ const close = () => {
 
                 <!-- Price Summary -->
                 <div v-if="!isEditMode" class="rounded-lg border bg-muted/30 p-4">
-                    <h3 class="text-lg font-medium mb-4">Ringkasan Harga</h3>
-                    
+                    <h3 class="mb-4 text-lg font-medium">Ringkasan Harga</h3>
+
                     <!-- Individual Item Prices -->
-                    <div class="space-y-2 mb-4">
-                        <div 
-                            v-for="(item, index) in formData.items" 
-                            :key="index"
-                            class="flex justify-between text-sm"
-                        >
+                    <div class="mb-4 space-y-2">
+                        <div v-for="(item, index) in formData.items" :key="index" class="flex justify-between text-sm">
                             <span v-if="item.item_id && item.item_type">
-                                {{ getItemTypeText(item.item_type) }} - 
-                                {{ getPlansForType(item.item_type).find(p => p.id.toString() === item.item_id.toString())?.name?.split(' - ')[0] || 'Item' }}
+                                {{ getItemTypeText(item.item_type) }} -
+                                {{
+                                    getPlansForType(item.item_type)
+                                        .find((p) => p.id.toString() === item.item_id.toString())
+                                        ?.name?.split(' - ')[0] || 'Item'
+                                }}
                                 <span v-if="formData.billing_cycle !== 'onetime'" class="text-muted-foreground">
-                                    ({{ getBillingCycleMultiplier() }} {{ formData.billing_cycle === 'monthly' ? 'bulan' : formData.billing_cycle === 'quarterly' ? 'kuartal' : formData.billing_cycle === 'semi_annual' ? 'semester' : 'tahun' }})
+                                    ({{ getBillingCycleMultiplier() }}
+                                    {{
+                                        formData.billing_cycle === 'monthly'
+                                            ? 'bulan'
+                                            : formData.billing_cycle === 'quarterly'
+                                              ? 'kuartal'
+                                              : formData.billing_cycle === 'semi_annual'
+                                                ? 'semester'
+                                                : 'tahun'
+                                    }})
                                 </span>
                             </span>
                             <span v-if="item.item_id && item.item_type" class="font-medium">
@@ -542,40 +545,48 @@ const close = () => {
                             </span>
                         </div>
                     </div>
-                    
+
                     <div class="border-t pt-4">
                         <!-- Subtotal -->
-                        <div class="flex justify-between text-sm mb-2">
+                        <div class="mb-2 flex justify-between text-sm">
                             <span>Subtotal:</span>
                             <span class="font-medium">{{ formatPrice(itemsSubtotal) }}</span>
                         </div>
-                        
+
                         <!-- Discount -->
-                        <div v-if="discountAmount > 0" class="flex justify-between text-sm text-green-600 mb-2">
+                        <div v-if="discountAmount > 0" class="mb-2 flex justify-between text-sm text-green-600">
                             <span>Potongan Harga:</span>
                             <span class="font-medium">-{{ formatPrice(discountAmount) }}</span>
                         </div>
-                        
+
                         <!-- Total -->
-                        <div class="flex justify-between text-lg font-bold pt-2 border-t">
+                        <div class="flex justify-between border-t pt-2 text-lg font-bold">
                             <span>Total:</span>
                             <span class="text-primary">{{ formatPrice(totalAmount) }}</span>
                         </div>
-                        
+
                         <!-- Billing Cycle Info -->
-                        <div v-if="formData.billing_cycle !== 'onetime'" class="text-xs text-muted-foreground mt-2">
-                            Total untuk {{ formData.billing_cycle === 'monthly' ? '1 bulan' : formData.billing_cycle === 'quarterly' ? '3 bulan' : formData.billing_cycle === 'semi_annual' ? '6 bulan' : '12 bulan' }} periode
+                        <div v-if="formData.billing_cycle !== 'onetime'" class="mt-2 text-xs text-muted-foreground">
+                            Total untuk
+                            {{
+                                formData.billing_cycle === 'monthly'
+                                    ? '1 bulan'
+                                    : formData.billing_cycle === 'quarterly'
+                                      ? '3 bulan'
+                                      : formData.billing_cycle === 'semi_annual'
+                                        ? '6 bulan'
+                                        : '12 bulan'
+                            }}
+                            periode
                         </div>
                     </div>
                 </div>
 
                 <!-- Actions -->
                 <div class="flex justify-end space-x-3 pt-6">
-                    <Button type="button" variant="outline" @click="close">
-                        Batal
-                    </Button>
+                    <Button type="button" variant="outline" @click="close"> Batal </Button>
                     <Button type="submit" :disabled="processing">
-                        {{ processing ? 'Menyimpan...' : (isEditMode ? 'Perbarui Pesanan' : 'Buat Pesanan') }}
+                        {{ processing ? 'Menyimpan...' : isEditMode ? 'Perbarui Pesanan' : 'Buat Pesanan' }}
                     </Button>
                 </div>
             </form>

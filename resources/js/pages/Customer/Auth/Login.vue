@@ -7,8 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthCardLayout from '@/layouts/auth/AuthCardLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import { X } from 'lucide-vue-next';
 
 const form = useForm({
     email: '',

@@ -19,12 +19,7 @@ defineProps<{
             A new verification link has been sent to the email address you provided during registration.
         </div>
 
-        <Form
-            action="/email/verification-notification"
-            method="post"
-            class="space-y-6 text-center"
-            v-slot="{ processing }"
-        >
+        <Form action="/email/verification-notification" method="post" class="space-y-6 text-center" v-slot="{ processing }">
             <Button :disabled="processing" variant="secondary">
                 <LoaderCircle v-if="processing" class="h-4 w-4 animate-spin" />
                 Resend verification email

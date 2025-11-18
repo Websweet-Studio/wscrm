@@ -6,9 +6,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
 import axios from 'axios';
-import { AlertTriangle, Calendar, FileText, Mail, MapPin, Package, Phone, ShoppingCart, ArrowUpDown, Loader2 } from 'lucide-vue-next';
+import { AlertTriangle, ArrowUpDown, Calendar, FileText, Loader2, Mail, MapPin, Package, Phone, ShoppingCart } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
 interface Customer {
     id: number;
@@ -187,7 +187,7 @@ const currentHostingPlan = computed(() => {
 
     // Then check order items for hosting type
     if (props.order.order_items) {
-        const hostingItem = props.order.order_items.find(item => item.item_type === 'hosting');
+        const hostingItem = props.order.order_items.find((item) => item.item_type === 'hosting');
         if (hostingItem && hostingItem.hosting_plan) {
             return hostingItem.hosting_plan;
         }
@@ -199,11 +199,13 @@ const currentHostingPlan = computed(() => {
 const canUpgradeDowngrade = computed(() => {
     const hasHostingPlan = currentHostingPlan.value !== null;
 
-    return props.order.status === 'active' &&
-           hasHostingPlan &&
-           props.order.change_status !== 'pending' &&
-           props.order.expires_at &&
-           getDaysUntilExpiry(props.order.expires_at) > 0;
+    return (
+        props.order.status === 'active' &&
+        hasHostingPlan &&
+        props.order.change_status !== 'pending' &&
+        props.order.expires_at &&
+        getDaysUntilExpiry(props.order.expires_at) > 0
+    );
 });
 
 const openUpgradeModal = () => {
@@ -226,7 +228,7 @@ const simulateUpgradeDowngrade = async () => {
     isSimulating.value = true;
     try {
         const response = await axios.post(`/admin/orders/${props.order.id}/simulate-upgrade-downgrade`, {
-            new_plan_id: selectedPlanId.value
+            new_plan_id: selectedPlanId.value,
         });
         simulation.value = response.data;
     } catch (error) {
@@ -240,14 +242,18 @@ const processUpgradeDowngrade = () => {
     if (!selectedPlanId.value) return;
 
     isProcessing.value = true;
-    router.post(`/admin/orders/${props.order.id}/process-upgrade-downgrade`, {
-        new_plan_id: selectedPlanId.value
-    }, {
-        onFinish: () => {
-            isProcessing.value = false;
-            closeUpgradeModal();
-        }
-    });
+    router.post(
+        `/admin/orders/${props.order.id}/process-upgrade-downgrade`,
+        {
+            new_plan_id: selectedPlanId.value,
+        },
+        {
+            onFinish: () => {
+                isProcessing.value = false;
+                closeUpgradeModal();
+            },
+        },
+    );
 };
 </script>
 
@@ -262,12 +268,7 @@ const processUpgradeDowngrade = () => {
                     <p class="text-muted-foreground">Order details and customer information</p>
                 </div>
                 <div class="flex gap-3">
-                    <Button
-                        v-if="canUpgradeDowngrade"
-                        variant="outline"
-                        @click="openUpgradeModal"
-                        class="flex items-center gap-2"
-                    >
+                    <Button v-if="canUpgradeDowngrade" variant="outline" @click="openUpgradeModal" class="flex items-center gap-2">
                         <ArrowUpDown class="h-4 w-4" />
                         Upgrade/Downgrade
                     </Button>
@@ -278,11 +279,15 @@ const processUpgradeDowngrade = () => {
             </div>
 
             <!-- Expiry Warning for Services -->
-            <Card v-if="order.expires_at && ['active', 'suspended'].includes(order.status)" 
-                  :class="getDaysUntilExpiry(order.expires_at) <= 30 ? 'border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950' : ''">
+            <Card
+                v-if="order.expires_at && ['active', 'suspended'].includes(order.status)"
+                :class="getDaysUntilExpiry(order.expires_at) <= 30 ? 'border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950' : ''"
+            >
                 <CardHeader>
-                    <CardTitle class="flex items-center gap-2" 
-                               :class="getDaysUntilExpiry(order.expires_at) <= 30 ? 'text-orange-800 dark:text-orange-200' : ''">
+                    <CardTitle
+                        class="flex items-center gap-2"
+                        :class="getDaysUntilExpiry(order.expires_at) <= 30 ? 'text-orange-800 dark:text-orange-200' : ''"
+                    >
                         <AlertTriangle v-if="getDaysUntilExpiry(order.expires_at) <= 30" class="h-5 w-5" />
                         <Calendar v-else class="h-5 w-5" />
                         Informasi Masa Aktif
@@ -293,28 +298,23 @@ const processUpgradeDowngrade = () => {
                         <div>
                             <div class="text-sm text-muted-foreground">Berakhir pada</div>
                             <div class="font-medium">{{ formatDate(order.expires_at) }}</div>
-                            <div v-if="order.auto_renew" class="text-xs text-green-600 dark:text-green-400 mt-1">
-                                ✓ Perpanjangan otomatis aktif
-                            </div>
+                            <div v-if="order.auto_renew" class="mt-1 text-xs text-green-600 dark:text-green-400">✓ Perpanjangan otomatis aktif</div>
                         </div>
                         <div class="text-right">
-                            <Badge 
-                                :class="getExpiryBadgeClass(getDaysUntilExpiry(order.expires_at))"
-                                class="mb-2"
-                            >
-                                <template v-if="getDaysUntilExpiry(order.expires_at) <= 0">
-                                    Sudah Berakhir
-                                </template>
-                                <template v-else>
-                                    {{ getDaysUntilExpiry(order.expires_at) }} hari lagi
-                                </template>
+                            <Badge :class="getExpiryBadgeClass(getDaysUntilExpiry(order.expires_at))" class="mb-2">
+                                <template v-if="getDaysUntilExpiry(order.expires_at) <= 0"> Sudah Berakhir </template>
+                                <template v-else> {{ getDaysUntilExpiry(order.expires_at) }} hari lagi </template>
                             </Badge>
-                            <div v-if="getDaysUntilExpiry(order.expires_at) <= 15 && getDaysUntilExpiry(order.expires_at) > 0" 
-                                 class="text-xs text-red-600 dark:text-red-400">
+                            <div
+                                v-if="getDaysUntilExpiry(order.expires_at) <= 15 && getDaysUntilExpiry(order.expires_at) > 0"
+                                class="text-xs text-red-600 dark:text-red-400"
+                            >
                                 ⚠️ Segera perpanjang
                             </div>
-                            <div v-else-if="getDaysUntilExpiry(order.expires_at) <= 30 && getDaysUntilExpiry(order.expires_at) > 15" 
-                                 class="text-xs text-orange-600 dark:text-orange-400">
+                            <div
+                                v-else-if="getDaysUntilExpiry(order.expires_at) <= 30 && getDaysUntilExpiry(order.expires_at) > 15"
+                                class="text-xs text-orange-600 dark:text-orange-400"
+                            >
                                 🔔 Persiapkan perpanjangan
                             </div>
                         </div>
@@ -361,9 +361,7 @@ const processUpgradeDowngrade = () => {
                                         <div class="text-lg font-bold text-green-600 dark:text-green-400">
                                             {{ formatPrice(totalItemsAmount - Number(order.discount_amount)) }}
                                         </div>
-                                        <div class="text-xs text-green-600 dark:text-green-400">
-                                            Hemat: {{ formatPrice(order.discount_amount) }}
-                                        </div>
+                                        <div class="text-xs text-green-600 dark:text-green-400">Hemat: {{ formatPrice(order.discount_amount) }}</div>
                                     </template>
                                     <template v-else>
                                         <div class="text-lg font-bold">{{ formatPrice(order.total_amount) }}</div>
@@ -530,49 +528,51 @@ const processUpgradeDowngrade = () => {
                 <div class="fixed inset-0 bg-black/50" @click="closeUpgradeModal"></div>
 
                 <!-- Modal Content -->
-                <div class="relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 dark:bg-gray-900">
+                <div class="relative mx-4 w-full max-w-2xl rounded-lg bg-white shadow-xl dark:bg-gray-900">
                     <div class="p-6">
-                        <div class="flex items-center justify-between mb-6">
+                        <div class="mb-6 flex items-center justify-between">
                             <h2 class="text-xl font-semibold">Upgrade/Downgrade Layanan</h2>
-                            <Button variant="ghost" size="sm" @click="closeUpgradeModal">
-                                ×
-                            </Button>
+                            <Button variant="ghost" size="sm" @click="closeUpgradeModal"> × </Button>
                         </div>
 
                         <!-- Current Plan Info -->
-                        <div v-if="currentHostingPlan" class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-6">
-                            <h3 class="font-medium mb-3">Plan Saat Ini</h3>
+                        <div v-if="currentHostingPlan" class="mb-6 rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+                            <h3 class="mb-3 font-medium">Plan Saat Ini</h3>
                             <div class="space-y-2">
-                                <div class="flex justify-between items-center">
-                                    <span class="font-semibold text-lg">{{ currentHostingPlan.plan_name }}</span>
-                                    <span class="font-bold text-blue-600 dark:text-blue-400">{{ formatPrice(currentHostingPlan.selling_price) }}/bulan</span>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-lg font-semibold">{{ currentHostingPlan.plan_name }}</span>
+                                    <span class="font-bold text-blue-600 dark:text-blue-400"
+                                        >{{ formatPrice(currentHostingPlan.selling_price) }}/bulan</span
+                                    >
                                 </div>
 
                                 <!-- Plan Specifications -->
                                 <div class="grid grid-cols-3 gap-4 py-3 text-sm">
                                     <div class="text-center">
                                         <div class="font-medium text-gray-900 dark:text-gray-100">{{ currentHostingPlan.storage_gb }}GB</div>
-                                        <div class="text-gray-500 text-xs">Storage</div>
+                                        <div class="text-xs text-gray-500">Storage</div>
                                     </div>
                                     <div class="text-center">
                                         <div class="font-medium text-gray-900 dark:text-gray-100">{{ currentHostingPlan.cpu_cores }} Core</div>
-                                        <div class="text-gray-500 text-xs">CPU</div>
+                                        <div class="text-xs text-gray-500">CPU</div>
                                     </div>
                                     <div class="text-center">
                                         <div class="font-medium text-gray-900 dark:text-gray-100">{{ currentHostingPlan.ram_gb }}GB</div>
-                                        <div class="text-gray-500 text-xs">RAM</div>
+                                        <div class="text-xs text-gray-500">RAM</div>
                                     </div>
                                 </div>
 
                                 <!-- Service Info -->
-                                <div class="pt-2 border-t border-gray-200 dark:border-gray-600 text-sm space-y-1">
+                                <div class="space-y-1 border-t border-gray-200 pt-2 text-sm dark:border-gray-600">
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-400">Berakhir:</span>
                                         <span class="font-medium">{{ order.expires_at ? formatDate(order.expires_at) : '-' }}</span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-400">Sisa hari:</span>
-                                        <span class="font-medium text-orange-600 dark:text-orange-400">{{ order.expires_at ? getDaysUntilExpiry(order.expires_at) : 0 }} hari</span>
+                                        <span class="font-medium text-orange-600 dark:text-orange-400"
+                                            >{{ order.expires_at ? getDaysUntilExpiry(order.expires_at) : 0 }} hari</span
+                                        >
                                     </div>
                                 </div>
                             </div>
@@ -580,20 +580,16 @@ const processUpgradeDowngrade = () => {
 
                         <!-- New Plan Selection -->
                         <div class="mb-6">
-                            <label class="block text-sm font-medium mb-2">Pilih Plan Baru:</label>
+                            <label class="mb-2 block text-sm font-medium">Pilih Plan Baru:</label>
                             <select
                                 v-model="selectedPlanId"
                                 @change="simulateUpgradeDowngrade"
-                                class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                class="w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                             >
                                 <option value="">Pilih plan baru...</option>
-                                <option
-                                    v-for="plan in availablePlans"
-                                    :key="plan.id"
-                                    :value="plan.id"
-                                >
-                                    {{ plan.plan_name }} - {{ formatPrice(plan.selling_price) }}/bulan
-                                    ({{ plan.storage_gb }}GB, {{ plan.cpu_cores }} CPU, {{ plan.ram_gb }}GB RAM)
+                                <option v-for="plan in availablePlans" :key="plan.id" :value="plan.id">
+                                    {{ plan.plan_name }} - {{ formatPrice(plan.selling_price) }}/bulan ({{ plan.storage_gb }}GB,
+                                    {{ plan.cpu_cores }} CPU, {{ plan.ram_gb }}GB RAM)
                                 </option>
                             </select>
                         </div>
@@ -604,84 +600,93 @@ const processUpgradeDowngrade = () => {
                             <span class="ml-2">Menghitung biaya...</span>
                         </div>
 
-                        <div v-else-if="simulation" class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-6">
-                            <h4 class="font-medium mb-4">💰 Simulasi Biaya Upgrade</h4>
+                        <div v-else-if="simulation" class="mb-6 rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+                            <h4 class="mb-4 font-medium">💰 Simulasi Biaya Upgrade</h4>
 
                             <!-- Plan Comparison -->
-                            <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div class="mb-4 grid grid-cols-2 gap-4">
                                 <!-- Current Plan -->
-                                <div class="bg-white dark:bg-gray-800 p-3 rounded-lg">
-                                    <h5 class="text-xs text-gray-500 mb-1">PLAN SAAT INI</h5>
-                                    <div class="font-semibold text-sm">{{ simulation.current_plan.name }}</div>
-                                    <div class="text-lg font-bold text-gray-600">{{ formatPrice(simulation.current_plan.price) }}<span class="text-xs font-normal">/bulan</span></div>
-                                    <div class="text-xs text-orange-600 mt-1">Pro-rated {{ simulation.calculation.remaining_days }} hari: {{ formatPrice(simulation.current_plan.prorated_amount) }}</div>
+                                <div class="rounded-lg bg-white p-3 dark:bg-gray-800">
+                                    <h5 class="mb-1 text-xs text-gray-500">PLAN SAAT INI</h5>
+                                    <div class="text-sm font-semibold">{{ simulation.current_plan.name }}</div>
+                                    <div class="text-lg font-bold text-gray-600">
+                                        {{ formatPrice(simulation.current_plan.price) }}<span class="text-xs font-normal">/bulan</span>
+                                    </div>
+                                    <div class="mt-1 text-xs text-orange-600">
+                                        Pro-rated {{ simulation.calculation.remaining_days }} hari:
+                                        {{ formatPrice(simulation.current_plan.prorated_amount) }}
+                                    </div>
                                 </div>
 
                                 <!-- New Plan -->
-                                <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border-2 border-blue-200 dark:border-blue-600">
-                                    <h5 class="text-xs text-blue-600 mb-1">PLAN BARU</h5>
-                                    <div class="font-semibold text-sm">{{ simulation.new_plan.name }}</div>
-                                    <div class="text-lg font-bold text-blue-600">{{ formatPrice(simulation.new_plan.price) }}<span class="text-xs font-normal">/bulan</span></div>
-                                    <div class="text-xs text-orange-600 mt-1">Pro-rated {{ simulation.calculation.remaining_days }} hari: {{ formatPrice(simulation.new_plan.prorated_amount) }}</div>
+                                <div class="rounded-lg border-2 border-blue-200 bg-white p-3 dark:border-blue-600 dark:bg-gray-800">
+                                    <h5 class="mb-1 text-xs text-blue-600">PLAN BARU</h5>
+                                    <div class="text-sm font-semibold">{{ simulation.new_plan.name }}</div>
+                                    <div class="text-lg font-bold text-blue-600">
+                                        {{ formatPrice(simulation.new_plan.price) }}<span class="text-xs font-normal">/bulan</span>
+                                    </div>
+                                    <div class="mt-1 text-xs text-orange-600">
+                                        Pro-rated {{ simulation.calculation.remaining_days }} hari:
+                                        {{ formatPrice(simulation.new_plan.prorated_amount) }}
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Calculation Summary -->
-                            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg">
+                            <div class="rounded-lg bg-white p-4 dark:bg-gray-800">
                                 <div class="space-y-2 text-sm">
                                     <div class="flex justify-between">
                                         <span>Biaya Plan Lama (sisa {{ simulation.calculation.remaining_days }} hari):</span>
-                                        <span class="line-through text-gray-500">{{ formatPrice(simulation.current_plan.prorated_amount) }}</span>
+                                        <span class="text-gray-500 line-through">{{ formatPrice(simulation.current_plan.prorated_amount) }}</span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span>Biaya Plan Baru ({{ simulation.calculation.remaining_days }} hari):</span>
                                         <span class="font-semibold">{{ formatPrice(simulation.new_plan.prorated_amount) }}</span>
                                     </div>
-                                    <hr class="border-gray-300 dark:border-gray-600">
-                                    <div class="flex justify-between font-bold text-lg">
+                                    <hr class="border-gray-300 dark:border-gray-600" />
+                                    <div class="flex justify-between text-lg font-bold">
                                         <span v-if="simulation.calculation.is_upgrade">💳 Yang Harus Dibayar:</span>
                                         <span v-else-if="simulation.calculation.is_downgrade">💚 Penghematan:</span>
                                         <span v-else>Tidak ada perubahan biaya</span>
 
                                         <span
-                                            class="px-3 py-1 rounded-full text-white font-bold"
-                                            :class="simulation.calculation.is_upgrade ? 'bg-red-500' : simulation.calculation.is_downgrade ? 'bg-green-500' : 'bg-gray-500'"
+                                            class="rounded-full px-3 py-1 font-bold text-white"
+                                            :class="
+                                                simulation.calculation.is_upgrade
+                                                    ? 'bg-red-500'
+                                                    : simulation.calculation.is_downgrade
+                                                      ? 'bg-green-500'
+                                                      : 'bg-gray-500'
+                                            "
                                         >
-                                            {{ simulation.calculation.cost_difference > 0 ? '+' : '' }}{{ formatPrice(Math.abs(simulation.calculation.cost_difference)) }}
+                                            {{ simulation.calculation.cost_difference > 0 ? '+' : ''
+                                            }}{{ formatPrice(Math.abs(simulation.calculation.cost_difference)) }}
                                         </span>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Warning for Downgrade -->
-                            <div v-if="simulation.calculation.is_downgrade" class="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+                            <div
+                                v-if="simulation.calculation.is_downgrade"
+                                class="mt-3 rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-700 dark:bg-yellow-900/20"
+                            >
                                 <p class="text-sm text-yellow-800 dark:text-yellow-200">
-                                    ⚠️ <strong>Perhatian:</strong> Downgrade tidak ada refund. Penghematan akan diterapkan pada billing period berikutnya.
+                                    ⚠️ <strong>Perhatian:</strong> Downgrade tidak ada refund. Penghematan akan diterapkan pada billing period
+                                    berikutnya.
                                 </p>
                             </div>
                         </div>
 
                         <!-- Actions -->
                         <div class="flex gap-3">
-                            <Button
-                                @click="processUpgradeDowngrade"
-                                :disabled="!selectedPlanId || isProcessing"
-                                class="flex-1"
-                            >
-                                <Loader2 v-if="isProcessing" class="h-4 w-4 animate-spin mr-2" />
-                                <template v-if="simulation?.calculation.is_upgrade">
-                                    Buat Invoice Upgrade
-                                </template>
-                                <template v-else-if="simulation?.calculation.is_downgrade">
-                                    Proses Downgrade
-                                </template>
-                                <template v-else>
-                                    Proses Perubahan
-                                </template>
+                            <Button @click="processUpgradeDowngrade" :disabled="!selectedPlanId || isProcessing" class="flex-1">
+                                <Loader2 v-if="isProcessing" class="mr-2 h-4 w-4 animate-spin" />
+                                <template v-if="simulation?.calculation.is_upgrade"> Buat Invoice Upgrade </template>
+                                <template v-else-if="simulation?.calculation.is_downgrade"> Proses Downgrade </template>
+                                <template v-else> Proses Perubahan </template>
                             </Button>
-                            <Button variant="outline" @click="closeUpgradeModal" :disabled="isProcessing">
-                                Batal
-                            </Button>
+                            <Button variant="outline" @click="closeUpgradeModal" :disabled="isProcessing"> Batal </Button>
                         </div>
                     </div>
                 </div>

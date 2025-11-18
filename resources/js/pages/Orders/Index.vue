@@ -34,7 +34,7 @@ const props = defineProps<Props>();
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/customer/dashboard' },
-    { title: 'My Orders', href: '/customer/orders' }
+    { title: 'My Orders', href: '/customer/orders' },
 ];
 
 const deletingOrders = ref<Set<number>>(new Set());
@@ -42,7 +42,7 @@ const deletingOrders = ref<Set<number>>(new Set());
 const deleteOrder = (orderId: number) => {
     if (confirm('Apakah Anda yakin ingin menghapus order ini?')) {
         deletingOrders.value.add(orderId);
-        
+
         router.delete(`/customer/orders/${orderId}`, {
             onSuccess: () => {
                 deletingOrders.value.delete(orderId);
@@ -50,7 +50,7 @@ const deleteOrder = (orderId: number) => {
             onError: () => {
                 deletingOrders.value.delete(orderId);
                 alert('Gagal menghapus order. Silakan coba lagi.');
-            }
+            },
         });
     }
 };
@@ -148,9 +148,7 @@ const getStatusText = (status: string) => {
                                         <div class="text-lg font-bold text-green-600 dark:text-green-400">
                                             {{ formatPrice(Number(order.total_amount) - Number(order.discount_amount)) }}
                                         </div>
-                                        <div class="text-xs text-green-600 dark:text-green-400">
-                                            Hemat: {{ formatPrice(order.discount_amount) }}
-                                        </div>
+                                        <div class="text-xs text-green-600 dark:text-green-400">Hemat: {{ formatPrice(order.discount_amount) }}</div>
                                     </template>
                                     <template v-else>
                                         <div class="text-lg font-bold">{{ formatPrice(order.total_amount) }}</div>
@@ -191,15 +189,15 @@ const getStatusText = (status: string) => {
                                 <Button variant="outline" size="sm" asChild>
                                     <Link :href="`/customer/orders/${order.id}`">View Details</Link>
                                 </Button>
-                                <Button 
-                                    v-if="order.status === 'pending'" 
-                                    variant="destructive" 
+                                <Button
+                                    v-if="order.status === 'pending'"
+                                    variant="destructive"
                                     size="sm"
                                     :disabled="deletingOrders.has(order.id)"
                                     @click="deleteOrder(order.id)"
                                     class="cursor-pointer"
                                 >
-                                    <Trash2 class="h-4 w-4 mr-1" />
+                                    <Trash2 class="mr-1 h-4 w-4" />
                                     {{ deletingOrders.has(order.id) ? 'Menghapus...' : 'Hapus' }}
                                 </Button>
                             </div>

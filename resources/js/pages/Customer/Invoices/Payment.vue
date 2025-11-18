@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 
 import { Separator } from '@/components/ui/separator';
 import { formatDate, formatPrice } from '@/lib/utils';
@@ -101,7 +101,7 @@ if (props.invoice.bank_id) {
                     </h2>
                     <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Pilih metode pembayaran dan selesaikan transaksi</p>
                 </div>
-                            </div>
+            </div>
         </template>
 
         <div class="py-12">

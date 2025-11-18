@@ -7,7 +7,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { Clock, Edit, LogIn, Plus, Search, Trash2, UserCheck, Users, UserX, X, ChevronUp, ChevronDown } from 'lucide-vue-next';
+import { ChevronDown, ChevronUp, Clock, Edit, LogIn, Plus, Search, Trash2, UserCheck, Users, UserX, X } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 
 interface Customer {
@@ -210,17 +210,20 @@ const checkUsernameAvailability = async (username: string, excludeId?: number) =
 };
 
 // Watch for username changes in edit form
-watch(() => editForm.username, (newValue) => {
-    clearTimeout(usernameDebounceTimer);
-    if (newValue && newValue.length >= 3) {
-        usernameDebounceTimer = setTimeout(() => {
-            checkUsernameAvailability(newValue, selectedCustomer.value?.id);
-        }, 500);
-    } else {
-        usernameStatus.value = 'idle';
-        usernameMessage.value = '';
-    }
-});
+watch(
+    () => editForm.username,
+    (newValue) => {
+        clearTimeout(usernameDebounceTimer);
+        if (newValue && newValue.length >= 3) {
+            usernameDebounceTimer = setTimeout(() => {
+                checkUsernameAvailability(newValue, selectedCustomer.value?.id);
+            }, 500);
+        } else {
+            usernameStatus.value = 'idle';
+            usernameMessage.value = '';
+        }
+    },
+);
 
 const submitEdit = () => {
     if (!selectedCustomer.value) return;
@@ -255,7 +258,7 @@ const submitEdit = () => {
             console.error('Update customer error:', errors);
             // Show detailed error info
             if (typeof errors === 'object') {
-                Object.keys(errors).forEach(key => {
+                Object.keys(errors).forEach((key) => {
                     console.error(`${key}: ${errors[key]}`);
                 });
             }
@@ -288,15 +291,19 @@ const confirmDelete = () => {
 
 const impersonateCustomer = (customer: Customer) => {
     if (confirm(`Login sebagai ${customer.name}?`)) {
-        router.post(`/admin/impersonate/${customer.id}`, {}, {
-            onSuccess: () => {
-                // Redirect akan ditangani oleh controller
+        router.post(
+            `/admin/impersonate/${customer.id}`,
+            {},
+            {
+                onSuccess: () => {
+                    // Redirect akan ditangani oleh controller
+                },
+                onError: (errors) => {
+                    console.error('Impersonation error:', errors);
+                    alert('Gagal login sebagai customer. Silakan coba lagi.');
+                },
             },
-            onError: (errors) => {
-                console.error('Impersonation error:', errors);
-                alert('Gagal login sebagai customer. Silakan coba lagi.');
-            },
-        });
+        );
     }
 };
 
@@ -333,10 +340,10 @@ const getSortIcon = (field: string) => {
         <div class="w-full max-w-none space-y-4 sm:space-y-6">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Kelola Pelanggan</h1>
-                    <p class="text-sm sm:text-base text-muted-foreground">Kelola akun dan informasi pelanggan</p>
+                    <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Kelola Pelanggan</h1>
+                    <p class="text-sm text-muted-foreground sm:text-base">Kelola akun dan informasi pelanggan</p>
                 </div>
-                <Button @click="showCreateModal = true" class="cursor-pointer w-full sm:w-auto">
+                <Button @click="showCreateModal = true" class="w-full cursor-pointer sm:w-auto">
                     <Plus class="mr-2 h-4 w-4" />
                     <span class="hidden sm:inline">Tambah Pelanggan</span>
                     <span class="sm:hidden">Tambah</span>
@@ -347,21 +354,21 @@ const getSortIcon = (field: string) => {
             <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-xs sm:text-sm font-medium">Total Pelanggan</CardTitle>
-                        <Users class="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                        <CardTitle class="text-xs font-medium sm:text-sm">Total Pelanggan</CardTitle>
+                        <Users class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent>
-                        <div class="text-xl sm:text-2xl font-bold">{{ customers?.total || 0 }}</div>
+                        <div class="text-xl font-bold sm:text-2xl">{{ customers?.total || 0 }}</div>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-xs sm:text-sm font-medium">Aktif</CardTitle>
-                        <UserCheck class="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
+                        <CardTitle class="text-xs font-medium sm:text-sm">Aktif</CardTitle>
+                        <UserCheck class="h-3 w-3 text-green-600 sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent>
-                        <div class="text-xl sm:text-2xl font-bold text-green-600">
+                        <div class="text-xl font-bold text-green-600 sm:text-2xl">
                             {{ customers?.data?.filter((c) => c.status === 'active').length || 0 }}
                         </div>
                     </CardContent>
@@ -369,11 +376,11 @@ const getSortIcon = (field: string) => {
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-xs sm:text-sm font-medium">Ditangguhkan</CardTitle>
-                        <UserX class="h-3 w-3 sm:h-4 sm:w-4 text-red-600" />
+                        <CardTitle class="text-xs font-medium sm:text-sm">Ditangguhkan</CardTitle>
+                        <UserX class="h-3 w-3 text-red-600 sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent>
-                        <div class="text-xl sm:text-2xl font-bold text-red-600">
+                        <div class="text-xl font-bold text-red-600 sm:text-2xl">
                             {{ customers?.data?.filter((c) => c.status === 'suspended').length || 0 }}
                         </div>
                     </CardContent>
@@ -381,11 +388,11 @@ const getSortIcon = (field: string) => {
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-xs sm:text-sm font-medium">Tidak Aktif</CardTitle>
-                        <Clock class="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                        <CardTitle class="text-xs font-medium sm:text-sm">Tidak Aktif</CardTitle>
+                        <Clock class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent>
-                        <div class="text-xl sm:text-2xl font-bold text-muted-foreground">
+                        <div class="text-xl font-bold text-muted-foreground sm:text-2xl">
                             {{ customers?.data?.filter((c) => c.status === 'inactive').length || 0 }}
                         </div>
                     </CardContent>
@@ -400,14 +407,14 @@ const getSortIcon = (field: string) => {
                 </CardHeader>
                 <CardContent class="px-3 sm:px-4 lg:px-6">
                     <!-- Search and Filter -->
-                    <div class="mb-4 sm:mb-6 flex flex-col gap-3 sm:gap-4 sm:flex-row">
-                        <div class="relative flex-1 max-w-none sm:max-w-sm">
+                    <div class="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:gap-4">
+                        <div class="relative max-w-none flex-1 sm:max-w-sm">
                             <Search class="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
                             <Input v-model="search" placeholder="Cari pelanggan..." class="pl-8" @keyup.enter="handleSearch" />
                         </div>
                         <select
                             v-model="status"
-                            class="flex h-9 w-full sm:w-[180px] cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                            class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none sm:w-[180px] dark:bg-gray-800 dark:text-white"
                         >
                             <option value="">Semua Status</option>
                             <option value="active">Aktif</option>
@@ -428,145 +435,84 @@ const getSortIcon = (field: string) => {
                         <table class="w-full border-collapse">
                             <thead>
                                 <tr class="border-b border-border">
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        <button
-                                            @click="sortBy('id')"
-                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
-                                        >
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                        <button @click="sortBy('id')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>ID</span>
-                                            <component
-                                                :is="getSortIcon('id')"
-                                                v-if="getSortIcon('id')"
-                                                class="h-3 w-3"
-                                            />
+                                            <component :is="getSortIcon('id')" v-if="getSortIcon('id')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        <button
-                                            @click="sortBy('name')"
-                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
-                                        >
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                        <button @click="sortBy('name')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Nama</span>
-                                            <component
-                                                :is="getSortIcon('name')"
-                                                v-if="getSortIcon('name')"
-                                                class="h-3 w-3"
-                                            />
+                                            <component :is="getSortIcon('name')" v-if="getSortIcon('name')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        <button
-                                            @click="sortBy('email')"
-                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
-                                        >
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                        <button @click="sortBy('email')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Email</span>
-                                            <component
-                                                :is="getSortIcon('email')"
-                                                v-if="getSortIcon('email')"
-                                                class="h-3 w-3"
-                                            />
+                                            <component :is="getSortIcon('email')" v-if="getSortIcon('email')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        <button
-                                            @click="sortBy('username')"
-                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
-                                        >
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                        <button @click="sortBy('username')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Username</span>
-                                            <component
-                                                :is="getSortIcon('username')"
-                                                v-if="getSortIcon('username')"
-                                                class="h-3 w-3"
-                                            />
+                                            <component :is="getSortIcon('username')" v-if="getSortIcon('username')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        <button
-                                            @click="sortBy('phone')"
-                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
-                                        >
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                        <button @click="sortBy('phone')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Telepon</span>
-                                            <component
-                                                :is="getSortIcon('phone')"
-                                                v-if="getSortIcon('phone')"
-                                                class="h-3 w-3"
-                                            />
+                                            <component :is="getSortIcon('phone')" v-if="getSortIcon('phone')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        <button
-                                            @click="sortBy('city')"
-                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
-                                        >
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                        <button @click="sortBy('city')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Kota</span>
-                                            <component
-                                                :is="getSortIcon('city')"
-                                                v-if="getSortIcon('city')"
-                                                class="h-3 w-3"
-                                            />
+                                            <component :is="getSortIcon('city')" v-if="getSortIcon('city')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        <button
-                                            @click="sortBy('status')"
-                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
-                                        >
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                        <button @click="sortBy('status')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Status</span>
-                                            <component
-                                                :is="getSortIcon('status')"
-                                                v-if="getSortIcon('status')"
-                                                class="h-3 w-3"
-                                            />
+                                            <component :is="getSortIcon('status')" v-if="getSortIcon('status')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        <button
-                                            @click="sortBy('orders_count')"
-                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
-                                        >
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                        <button @click="sortBy('orders_count')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Pesanan</span>
-                                            <component
-                                                :is="getSortIcon('orders_count')"
-                                                v-if="getSortIcon('orders_count')"
-                                                class="h-3 w-3"
-                                            />
+                                            <component :is="getSortIcon('orders_count')" v-if="getSortIcon('orders_count')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Layanan</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        <button
-                                            @click="sortBy('created_at')"
-                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
-                                        >
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Layanan</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                        <button @click="sortBy('created_at')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Bergabung</span>
-                                            <component
-                                                :is="getSortIcon('created_at')"
-                                                v-if="getSortIcon('created_at')"
-                                                class="h-3 w-3"
-                                            />
+                                            <component :is="getSortIcon('created_at')" v-if="getSortIcon('created_at')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Aksi</th>
+                                    <th class="px-3 py-3 text-center text-xs font-medium tracking-wider text-muted-foreground uppercase">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr
                                     v-for="customer in customers.data"
                                     :key="customer.id"
-                                    class="border-b border-border hover:bg-muted/30 transition-colors"
+                                    class="border-b border-border transition-colors hover:bg-muted/30"
                                 >
-                                    <td class="px-3 py-4 text-sm text-foreground font-medium">#{{ customer.id }}</td>
-                                    <td class="px-3 py-4 text-sm text-foreground font-medium">{{ customer.name }}</td>
+                                    <td class="px-3 py-4 text-sm font-medium text-foreground">#{{ customer.id }}</td>
+                                    <td class="px-3 py-4 text-sm font-medium text-foreground">{{ customer.name }}</td>
                                     <td class="px-3 py-4 text-sm text-muted-foreground">{{ customer.email }}</td>
                                     <td class="px-3 py-4 text-sm text-muted-foreground">{{ customer.phone || '-' }}</td>
                                     <td class="px-3 py-4 text-sm text-muted-foreground">{{ customer.city || '-' }}</td>
                                     <td class="px-3 py-4">
-                                        <span :class="`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusClass(customer.status)}`">
+                                        <span
+                                            :class="`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusClass(customer.status)}`"
+                                        >
                                             {{ customer.status }}
                                         </span>
                                     </td>
-                                    <td class="px-3 py-4 text-sm text-center font-medium text-foreground">{{ customer.orders_count }}</td>
-                                    <td class="px-3 py-4 text-sm text-center font-medium text-foreground">{{ customer.services_count }}</td>
+                                    <td class="px-3 py-4 text-center text-sm font-medium text-foreground">{{ customer.orders_count }}</td>
+                                    <td class="px-3 py-4 text-center text-sm font-medium text-foreground">{{ customer.services_count }}</td>
                                     <td class="px-3 py-4 text-sm text-muted-foreground">{{ formatDate(customer.created_at) }}</td>
                                     <td class="px-3 py-4">
                                         <div class="flex items-center justify-center gap-1">
@@ -575,13 +521,24 @@ const getSortIcon = (field: string) => {
                                                     <Users class="h-3.5 w-3.5" />
                                                 </Link>
                                             </Button>
-                                            <Button size="sm" @click="impersonateCustomer(customer)" class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white" :title="`Login sebagai ${customer.name}`">
+                                            <Button
+                                                size="sm"
+                                                @click="impersonateCustomer(customer)"
+                                                class="cursor-pointer bg-blue-600 text-white hover:bg-blue-700"
+                                                :title="`Login sebagai ${customer.name}`"
+                                            >
                                                 <LogIn class="h-3.5 w-3.5" />
                                             </Button>
                                             <Button size="sm" variant="outline" @click="openEditModal(customer)" class="cursor-pointer" title="Edit">
                                                 <Edit class="h-3.5 w-3.5" />
                                             </Button>
-                                            <Button size="sm" variant="outline" @click="openDeleteModal(customer)" class="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50" title="Hapus">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                @click="openDeleteModal(customer)"
+                                                class="cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                title="Hapus"
+                                            >
                                                 <Trash2 class="h-3.5 w-3.5" />
                                             </Button>
                                         </div>
@@ -781,30 +738,44 @@ const getSortIcon = (field: string) => {
                                     :class="{
                                         'border-red-500': editForm.errors.username || usernameStatus === 'unavailable',
                                         'border-green-500': usernameStatus === 'available',
-                                        'border-yellow-500': usernameStatus === 'checking'
+                                        'border-yellow-500': usernameStatus === 'checking',
                                     }"
                                     placeholder="Username (opsional, minimal 5 karakter)"
                                 />
-                                <div v-if="usernameStatus === 'checking'" class="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                    <div class="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                                <div v-if="usernameStatus === 'checking'" class="absolute top-1/2 right-3 -translate-y-1/2 transform">
+                                    <div class="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
                                 </div>
-                                <div v-else-if="usernameStatus === 'available'" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <div v-else-if="usernameStatus === 'available'" class="absolute top-1/2 right-3 -translate-y-1/2 transform">
                                     <svg class="h-4 w-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                        <path
+                                            fill-rule="evenodd"
+                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                            clip-rule="evenodd"
+                                        />
                                     </svg>
                                 </div>
-                                <div v-else-if="usernameStatus === 'unavailable'" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <div v-else-if="usernameStatus === 'unavailable'" class="absolute top-1/2 right-3 -translate-y-1/2 transform">
                                     <svg class="h-4 w-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        <path
+                                            fill-rule="evenodd"
+                                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                            clip-rule="evenodd"
+                                        />
                                     </svg>
                                 </div>
                             </div>
                             <p v-if="editForm.errors.username" class="mt-1 text-xs text-red-500">{{ editForm.errors.username }}</p>
-                            <p v-else-if="usernameMessage" class="mt-1 text-xs" :class="{
-                                'text-green-600': usernameStatus === 'available',
-                                'text-red-600': usernameStatus === 'unavailable',
-                                'text-blue-600': usernameStatus === 'checking'
-                            }">{{ usernameMessage }}</p>
+                            <p
+                                v-else-if="usernameMessage"
+                                class="mt-1 text-xs"
+                                :class="{
+                                    'text-green-600': usernameStatus === 'available',
+                                    'text-red-600': usernameStatus === 'unavailable',
+                                    'text-blue-600': usernameStatus === 'checking',
+                                }"
+                            >
+                                {{ usernameMessage }}
+                            </p>
                         </div>
                         <div>
                             <!-- Kosong untuk spacing -->

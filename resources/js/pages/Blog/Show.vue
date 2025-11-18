@@ -1,24 +1,10 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
-import {
-    Calendar,
-    User,
-    Eye,
-    Heart,
-    Clock,
-    Tag,
-    Share2,
-    ArrowLeft,
-    Facebook,
-    Twitter,
-    Linkedin,
-    Link as LinkIcon
-} from 'lucide-vue-next';
-import { ref } from 'vue';
+import { Calendar, Clock, Eye, Facebook, Heart, Linkedin, Link as LinkIcon, Twitter, User } from 'lucide-vue-next';
 
 interface BlogCategory {
     id: number;
@@ -132,27 +118,19 @@ const copyLink = () => {
 
     <CustomerPublicLayout :title="`${post.title} - Blog WebSweetStudio`">
         <div class="container mx-auto px-4 py-8">
-            
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-4">
                 <!-- Main Content -->
                 <div class="lg:col-span-3">
-                    <article class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                    <article class="overflow-hidden rounded-lg bg-white shadow-sm dark:bg-gray-800">
                         <!-- Featured Image -->
-                        <div v-if="post.featured_image" class="h-64 md:h-96 overflow-hidden">
-                            <img
-                                :src="post.featured_image_url"
-                                :alt="post.title"
-                                class="w-full h-full object-cover"
-                            />
+                        <div v-if="post.featured_image" class="h-64 overflow-hidden md:h-96">
+                            <img :src="post.featured_image_url" :alt="post.title" class="h-full w-full object-cover" />
                         </div>
 
                         <div class="p-6">
                             <!-- Meta Info -->
-                            <div class="flex flex-wrap items-center gap-4 mb-6">
-                                <Badge
-                                    :style="{ backgroundColor: post.category.color + '20', color: post.category.color }"
-                                    class="text-sm"
-                                >
+                            <div class="mb-6 flex flex-wrap items-center gap-4">
+                                <Badge :style="{ backgroundColor: post.category.color + '20', color: post.category.color }" class="text-sm">
                                     {{ post.category.name }}
                                 </Badge>
                                 <Badge :class="getTypeColor(post.type)" class="text-sm">
@@ -175,17 +153,17 @@ const copyLink = () => {
                             </div>
 
                             <!-- Title -->
-                            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
+                            <h1 class="mb-6 text-3xl leading-tight font-bold text-gray-900 md:text-4xl dark:text-white">
                                 {{ post.title }}
                             </h1>
 
                             <!-- Excerpt -->
-                            <p class="text-xl text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+                            <p class="mb-8 text-xl leading-relaxed text-gray-600 dark:text-gray-400">
                                 {{ post.excerpt }}
                             </p>
 
                             <!-- Article Stats -->
-                            <div class="flex items-center justify-between mb-8 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div class="mb-8 flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
                                 <div class="flex items-center space-x-6">
                                     <div class="flex items-center space-x-2">
                                         <Eye class="h-5 w-5 text-gray-400" />
@@ -199,7 +177,7 @@ const copyLink = () => {
 
                                 <!-- Share Buttons -->
                                 <div class="flex items-center space-x-2">
-                                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400 mr-2">Bagikan:</span>
+                                    <span class="mr-2 text-sm font-medium text-gray-600 dark:text-gray-400">Bagikan:</span>
                                     <Button @click="sharePost('facebook')" variant="outline" size="sm">
                                         <Facebook class="h-4 w-4" />
                                     </Button>
@@ -221,19 +199,17 @@ const copyLink = () => {
                             </div>
 
                             <!-- Author Info -->
-                            <div class="mt-12 p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                <h3 class="text-lg font-semibold mb-3">Tentang Penulis</h3>
+                            <div class="mt-12 rounded-lg bg-gray-50 p-6 dark:bg-gray-700">
+                                <h3 class="mb-3 text-lg font-semibold">Tentang Penulis</h3>
                                 <div class="flex items-center space-x-4">
-                                    <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                                        <span class="text-white font-bold text-lg">
+                                    <div class="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600">
+                                        <span class="text-lg font-bold text-white">
                                             {{ post.author.name.charAt(0).toUpperCase() }}
                                         </span>
                                     </div>
                                     <div>
                                         <h4 class="font-semibold">{{ post.author.name }}</h4>
-                                        <p class="text-gray-600 dark:text-gray-400 text-sm">
-                                            Penulis konten di WebSweetStudio
-                                        </p>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">Penulis konten di WebSweetStudio</p>
                                     </div>
                                 </div>
                             </div>
@@ -242,18 +218,18 @@ const copyLink = () => {
 
                     <!-- Related Posts -->
                     <div v-if="relatedPosts.length > 0" class="mt-12">
-                        <h2 class="text-2xl font-bold mb-6">Artikel Terkait</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Card v-for="relatedPost in relatedPosts" :key="relatedPost.id" class="overflow-hidden hover:shadow-lg transition-shadow">
+                        <h2 class="mb-6 text-2xl font-bold">Artikel Terkait</h2>
+                        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <Card v-for="relatedPost in relatedPosts" :key="relatedPost.id" class="overflow-hidden transition-shadow hover:shadow-lg">
                                 <div v-if="relatedPost.featured_image" class="h-48 overflow-hidden">
                                     <img
                                         :src="relatedPost.featured_image_url"
                                         :alt="relatedPost.title"
-                                        class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                                        class="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                                     />
                                 </div>
                                 <CardContent>
-                                    <div class="flex items-center justify-between mb-3">
+                                    <div class="mb-3 flex items-center justify-between">
                                         <Badge
                                             :style="{ backgroundColor: relatedPost.category.color + '20', color: relatedPost.category.color }"
                                             class="text-xs"
@@ -264,9 +240,9 @@ const copyLink = () => {
                                             {{ getTypeText(relatedPost.type) }}
                                         </Badge>
                                     </div>
-                                    <h3 class="text-lg font-semibold mb-2 line-clamp-2">{{ relatedPost.title }}</h3>
-                                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-3">{{ relatedPost.excerpt }}</p>
-                                    <div class="flex items-center justify-between text-xs text-gray-500 mb-4">
+                                    <h3 class="mb-2 line-clamp-2 text-lg font-semibold">{{ relatedPost.title }}</h3>
+                                    <p class="mb-4 line-clamp-3 text-sm text-gray-600 dark:text-gray-400">{{ relatedPost.excerpt }}</p>
+                                    <div class="mb-4 flex items-center justify-between text-xs text-gray-500">
                                         <div class="flex items-center space-x-2">
                                             <User class="h-3 w-3" />
                                             <span>{{ relatedPost.author.name }}</span>
@@ -294,25 +270,20 @@ const copyLink = () => {
                         </CardHeader>
                         <CardContent>
                             <div class="space-y-4">
-                                <Link
-                                    v-for="recentPost in recentPosts"
-                                    :key="recentPost.id"
-                                    :href="`/blog/${recentPost.slug}`"
-                                    class="block group"
-                                >
+                                <Link v-for="recentPost in recentPosts" :key="recentPost.id" :href="`/blog/${recentPost.slug}`" class="group block">
                                     <div class="flex space-x-3">
                                         <div v-if="recentPost.featured_image" class="flex-shrink-0">
                                             <img
                                                 :src="recentPost.featured_image_url"
                                                 :alt="recentPost.title"
-                                                class="w-16 h-16 object-cover rounded group-hover:scale-105 transition-transform"
+                                                class="h-16 w-16 rounded object-cover transition-transform group-hover:scale-105"
                                             />
                                         </div>
-                                        <div class="flex-1 min-w-0">
-                                            <h4 class="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                                        <div class="min-w-0 flex-1">
+                                            <h4 class="line-clamp-2 text-sm font-medium transition-colors group-hover:text-primary">
                                                 {{ recentPost.title }}
                                             </h4>
-                                            <div class="flex items-center space-x-2 mt-1 text-xs text-gray-500">
+                                            <div class="mt-1 flex items-center space-x-2 text-xs text-gray-500">
                                                 <Calendar class="h-3 w-3" />
                                                 <span>{{ recentPost.formatted_date || formatDate(recentPost.created_at) }}</span>
                                             </div>
@@ -327,9 +298,7 @@ const copyLink = () => {
                     <Card>
                         <CardContent>
                             <Link href="/blog">
-                                <Button class="w-full">
-                                    Lihat Semua Artikel
-                                </Button>
+                                <Button class="w-full"> Lihat Semua Artikel </Button>
                             </Link>
                         </CardContent>
                     </Card>

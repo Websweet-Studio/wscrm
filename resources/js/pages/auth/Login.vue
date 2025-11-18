@@ -36,13 +36,7 @@ const csrfToken = computed(() => {
             {{ status }}
         </div>
 
-        <Form
-            action="/login"
-            method="post"
-            :reset-on-success="['password']"
-            v-slot="{ errors, processing }"
-            class="flex flex-col gap-6"
-        >
+        <Form action="/login" method="post" :reset-on-success="['password']" v-slot="{ errors, processing }" class="flex flex-col gap-6">
             <!-- CSRF Token -->
             <input type="hidden" name="_token" :value="csrfToken" />
 

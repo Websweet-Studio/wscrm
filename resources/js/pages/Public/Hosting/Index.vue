@@ -129,7 +129,7 @@ const filteredPlans = computed(() => {
             <!-- Search -->
             <Card class="mx-auto mb-8 max-w-2xl sm:mb-12">
                 <CardContent class="pt-6">
-                    <div class="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-x-2 sm:space-y-0">
+                    <div class="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2">
                         <div class="relative flex-1">
                             <Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                             <Input v-model="search" placeholder="Cari paket hosting..." class="pl-10" @keyup.enter="handleSearch" />
@@ -145,11 +145,21 @@ const filteredPlans = computed(() => {
                     <CardContent class="pt-6">
                         <div class="flex items-center justify-center">
                             <div class="grid w-full max-w-2xl grid-cols-2 gap-1 rounded-lg bg-muted p-1 md:flex md:items-center md:space-x-1">
-                                <Button @click="activeTab = 'basic'" :variant="activeTab === 'basic' ? 'default' : 'ghost'" size="sm" class="flex-1 px-2 text-xs md:px-4 md:text-sm">
+                                <Button
+                                    @click="activeTab = 'basic'"
+                                    :variant="activeTab === 'basic' ? 'default' : 'ghost'"
+                                    size="sm"
+                                    class="flex-1 px-2 text-xs md:px-4 md:text-sm"
+                                >
                                     <Filter class="mr-1 h-3 w-3 md:mr-2 md:h-4 md:w-4" />
                                     <span class="hidden md:inline">Paket </span>Dasar
                                 </Button>
-                                <Button @click="activeTab = 'lite'" :variant="activeTab === 'lite' ? 'default' : 'ghost'" size="sm" class="flex-1 px-2 text-xs md:px-4 md:text-sm">
+                                <Button
+                                    @click="activeTab = 'lite'"
+                                    :variant="activeTab === 'lite' ? 'default' : 'ghost'"
+                                    size="sm"
+                                    class="flex-1 px-2 text-xs md:px-4 md:text-sm"
+                                >
                                     <Server class="mr-1 h-3 w-3 md:mr-2 md:h-4 md:w-4" />
                                     <span class="hidden md:inline">Paket </span>Lite
                                 </Button>
@@ -162,7 +172,12 @@ const filteredPlans = computed(() => {
                                     <Check class="mr-1 h-3 w-3 md:mr-2 md:h-4 md:w-4" />
                                     <span class="hidden md:inline">Paket </span>Premium
                                 </Button>
-                                <Button @click="activeTab = 'all'" :variant="activeTab === 'all' ? 'default' : 'ghost'" size="sm" class="flex-1 px-2 text-xs md:px-4 md:text-sm">
+                                <Button
+                                    @click="activeTab = 'all'"
+                                    :variant="activeTab === 'all' ? 'default' : 'ghost'"
+                                    size="sm"
+                                    class="flex-1 px-2 text-xs md:px-4 md:text-sm"
+                                >
                                     <span class="hidden sm:inline">Semua </span>Paket
                                 </Button>
                             </div>

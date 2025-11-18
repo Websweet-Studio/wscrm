@@ -12,10 +12,10 @@ import { Link } from '@inertiajs/vue3';
                     <span class="text-lg font-bold text-white sm:text-xl">WebsweetStudio.com</span>
                 </div>
                 <div class="flex flex-wrap justify-center gap-4 text-sm sm:gap-6">
-                    <Link href="/hosting" class="hover:text-white transition-colors">Hosting</Link>
-                    <Link href="/domains" class="hover:text-white transition-colors">Domain</Link>
-                    <Link href="/customer/login" class="hover:text-white transition-colors">Login Pelanggan</Link>
-                    <Link href="/login" class="hover:text-white transition-colors">Login Admin</Link>
+                    <Link href="/hosting" class="transition-colors hover:text-white">Hosting</Link>
+                    <Link href="/domains" class="transition-colors hover:text-white">Domain</Link>
+                    <Link href="/customer/login" class="transition-colors hover:text-white">Login Pelanggan</Link>
+                    <Link href="/login" class="transition-colors hover:text-white">Login Admin</Link>
                 </div>
             </div>
             <div class="mt-4 border-t border-gray-700 pt-4 text-center text-xs sm:mt-6 sm:pt-6 sm:text-sm">

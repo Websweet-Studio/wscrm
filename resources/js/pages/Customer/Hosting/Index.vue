@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import HostingOrderModal from '@/components/HostingOrderModal.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import HostingOrderModal from '@/components/HostingOrderModal.vue';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
@@ -119,22 +119,18 @@ const orderPlan = (plan: HostingPlan) => {
                         <table class="w-full border-collapse">
                             <thead>
                                 <tr class="border-b border-border">
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Plan</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Storage</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">CPU</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">RAM</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Bandwidth</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Features</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Price</th>
-                                    <th class="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Plan</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Storage</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">CPU</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">RAM</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Bandwidth</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Features</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Price</th>
+                                    <th class="px-3 py-3 text-center text-xs font-medium tracking-wider text-muted-foreground uppercase">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr
-                                    v-for="plan in hostingPlans"
-                                    :key="plan.id"
-                                    class="border-b border-border hover:bg-muted/30 transition-colors"
-                                >
+                                <tr v-for="plan in hostingPlans" :key="plan.id" class="border-b border-border transition-colors hover:bg-muted/30">
                                     <td class="px-3 py-4 text-sm">
                                         <div class="flex items-center gap-3">
                                             <div class="rounded-full bg-blue-100 p-2">
@@ -143,7 +139,7 @@ const orderPlan = (plan: HostingPlan) => {
                                             <div>
                                                 <div class="font-medium text-foreground">{{ plan.plan_name }}</div>
                                                 <div v-if="plan.discount_percent > 0" class="flex items-center">
-                                                    <Badge class="bg-red-500 text-white text-xs">{{ plan.discount_percent }}% OFF</Badge>
+                                                    <Badge class="bg-red-500 text-xs text-white">{{ plan.discount_percent }}% OFF</Badge>
                                                 </div>
                                             </div>
                                         </div>
@@ -172,10 +168,14 @@ const orderPlan = (plan: HostingPlan) => {
                                             <span class="font-medium">{{ plan.bandwidth }}</span>
                                         </div>
                                     </td>
-                                    <td class="px-3 py-4 text-sm max-w-xs">
+                                    <td class="max-w-xs px-3 py-4 text-sm">
                                         <div v-if="plan.features && plan.features.length > 0" class="space-y-1">
-                                            <div v-for="(feature, index) in plan.features.slice(0, 2)" :key="index" class="flex items-center gap-1 text-xs">
-                                                <Check class="h-3 w-3 text-green-500 flex-shrink-0" />
+                                            <div
+                                                v-for="(feature, index) in plan.features.slice(0, 2)"
+                                                :key="index"
+                                                class="flex items-center gap-1 text-xs"
+                                            >
+                                                <Check class="h-3 w-3 flex-shrink-0 text-green-500" />
                                                 <span>{{ feature }}</span>
                                             </div>
                                             <div v-if="plan.features.length > 2" class="text-xs text-blue-600">

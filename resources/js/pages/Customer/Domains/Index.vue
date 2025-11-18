@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import DomainBundleModal from '@/components/DomainBundleModal.vue';
+import HostingOrderModal from '@/components/HostingOrderModal.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import HostingOrderModal from '@/components/HostingOrderModal.vue';
-import DomainBundleModal from '@/components/DomainBundleModal.vue';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import customer from '@/routes/customer';
 import { type BreadcrumbItem } from '@/types';
@@ -106,13 +106,13 @@ const showHostingOfferModal = (hostingPlan: HostingPlan) => {
 // Show bundle selection popup when registering domain
 const orderDomain = (domainPriceId: number) => {
     selectedDomainId.value = domainPriceId;
-    
+
     // Find the selected domain
-    const selectedDomain = props.domainPrices.find(d => d.id === domainPriceId);
+    const selectedDomain = props.domainPrices.find((d) => d.id === domainPriceId);
     if (selectedDomain) {
         selectedDomainPrice.value = selectedDomain;
         selectedDomainExtension.value = selectedDomain.extension;
-        
+
         // If there are hosting plans available, show bundle selection modal
         if (props.hostingPlans.length > 0) {
             selectedHostingPlan.value = props.hostingPlans[0];
@@ -252,17 +252,25 @@ const orderDomainOnly = (domainPriceId: number) => {
                             <table class="w-full border-collapse">
                                 <thead>
                                     <tr class="border-b border-border">
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Extension</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Registration</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Renewal</th>
-                                        <th class="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                            Extension
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                            Registration
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                            Renewal
+                                        </th>
+                                        <th class="px-4 py-3 text-center text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                            Actions
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr
                                         v-for="domain in domainPrices"
                                         :key="domain.id"
-                                        class="border-b border-border hover:bg-muted/30 transition-colors"
+                                        class="border-b border-border transition-colors hover:bg-muted/30"
                                     >
                                         <td class="px-4 py-4">
                                             <div class="flex items-center gap-3">
@@ -368,7 +376,7 @@ const orderDomainOnly = (domainPriceId: number) => {
                             <div class="mx-auto w-fit rounded-full bg-blue-100 p-3">
                                 <Server class="h-8 w-8 text-blue-600" />
                             </div>
-                            
+
                             <div class="text-xl font-bold">{{ plan.plan_name }}</div>
 
                             <div class="space-y-2 text-sm text-muted-foreground">

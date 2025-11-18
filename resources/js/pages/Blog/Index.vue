@@ -1,26 +1,11 @@
 <script setup lang="ts">
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import CustomerPublicLayout from "@/layouts/CustomerPublicLayout.vue";
+import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import {
-    Search,
-    Calendar,
-    User,
-    Eye,
-    Heart,
-    Clock,
-    Tag,
-    ChevronLeft,
-    ChevronRight,
-    Star,
-    Pin,
-    TrendingUp,
-    Filter
-} from 'lucide-vue-next';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { Calendar, ChevronLeft, ChevronRight, Clock, Eye, Heart, Pin, Search, Star, User } from 'lucide-vue-next';
+import { onMounted, onUnmounted, ref } from 'vue';
 
 interface BlogCategory {
     id: number;
@@ -184,8 +169,8 @@ onUnmounted(() => {
     <CustomerPublicLayout title="Blog - WebSweetStudio">
         <div class="container mx-auto px-4 py-8">
             <!-- Header -->
-            <div class="text-center mb-12">
-                <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">Blog</h1>
+            <div class="mb-12 text-center">
+                <h1 class="mb-4 text-4xl font-bold text-gray-900 md:text-5xl dark:text-white">Blog</h1>
             </div>
 
             <!-- Featured Posts Carousel -->
@@ -195,10 +180,7 @@ onUnmounted(() => {
                         <div
                             v-for="(post, index) in featuredPosts"
                             :key="post.id"
-                            :class="[
-                                'absolute inset-0 transition-opacity duration-500',
-                                currentSlide === index ? 'opacity-100' : 'opacity-0'
-                            ]"
+                            :class="['absolute inset-0 transition-opacity duration-500', currentSlide === index ? 'opacity-100' : 'opacity-0']"
                         >
                             <div class="relative h-full">
                                 <div
@@ -206,23 +188,23 @@ onUnmounted(() => {
                                     class="absolute inset-0 bg-cover bg-center"
                                     :style="{ backgroundImage: `url(${post.featured_image_url})` }"
                                 >
-                                    <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+                                    <div class="bg-opacity-50 absolute inset-0 bg-black"></div>
                                 </div>
                                 <div v-else class="absolute inset-0 bg-gradient-to-br from-blue-600 to-purple-700"></div>
 
-                                <div class="relative h-full flex items-end p-8">
-                                    <div class="text-white max-w-2xl py-8">
-                                        <div class="flex items-center space-x-3 mb-4">
-                                            <Star class="h-5 w-5 text-yellow-400 fill-current" />
-                                            <span class="text-yellow-400 font-medium">Artikel Unggulan</span>
+                                <div class="relative flex h-full items-end p-8">
+                                    <div class="max-w-2xl py-8 text-white">
+                                        <div class="mb-4 flex items-center space-x-3">
+                                            <Star class="h-5 w-5 fill-current text-yellow-400" />
+                                            <span class="font-medium text-yellow-400">Artikel Unggulan</span>
                                             <Badge :class="getTypeColor(post.type)" class="text-xs">
                                                 {{ getTypeText(post.type) }}
                                             </Badge>
                                         </div>
-                                        <h2 class="text-3xl md:text-4xl font-bold mb-4 leading-tight">
+                                        <h2 class="mb-4 text-3xl leading-tight font-bold md:text-4xl">
                                             {{ post.title }}
                                         </h2>
-                                        <div class="flex items-center space-x-6 text-sm mb-6">
+                                        <div class="mb-6 flex items-center space-x-6 text-sm">
                                             <div class="flex items-center space-x-2">
                                                 <User class="h-4 w-4" />
                                                 <span>{{ post.author.name }}</span>
@@ -237,9 +219,7 @@ onUnmounted(() => {
                                             </div>
                                         </div>
                                         <Link :href="`/blog/${post.slug}`">
-                                            <Button size="lg" class="bg-white text-gray-900 hover:bg-gray-100">
-                                                Baca Artikel
-                                            </Button>
+                                            <Button size="lg" class="bg-white text-gray-900 hover:bg-gray-100"> Baca Artikel </Button>
                                         </Link>
                                     </div>
                                 </div>
@@ -249,28 +229,26 @@ onUnmounted(() => {
                         <button
                             v-if="featuredPosts.length > 1"
                             @click="prevSlide"
-                            class="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black bg-opacity-50 text-white hover:bg-opacity-75 transition-all"
+                            class="bg-opacity-50 hover:bg-opacity-75 absolute top-1/2 left-4 -translate-y-1/2 rounded-full bg-black p-2 text-white transition-all"
                         >
                             <ChevronLeft class="h-6 w-6" />
                         </button>
                         <button
                             v-if="featuredPosts.length > 1"
                             @click="nextSlide"
-                            class="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black bg-opacity-50 text-white hover:bg-opacity-75 transition-all"
+                            class="bg-opacity-50 hover:bg-opacity-75 absolute top-1/2 right-4 -translate-y-1/2 rounded-full bg-black p-2 text-white transition-all"
                         >
                             <ChevronRight class="h-6 w-6" />
                         </button>
 
-                        <div v-if="featuredPosts.length > 1" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+                        <div v-if="featuredPosts.length > 1" class="absolute bottom-4 left-1/2 flex -translate-x-1/2 space-x-2">
                             <button
                                 v-for="(post, index) in featuredPosts"
                                 :key="index"
                                 @click="goToSlide(index)"
                                 :class="[
-                                    'w-3 h-3 rounded-full transition-all',
-                                    currentSlide === index
-                                        ? 'bg-white'
-                                        : 'bg-white bg-opacity-50 hover:bg-opacity-75'
+                                    'h-3 w-3 rounded-full transition-all',
+                                    currentSlide === index ? 'bg-white' : 'bg-opacity-50 hover:bg-opacity-75 bg-white',
                                 ]"
                             />
                         </div>
@@ -280,19 +258,24 @@ onUnmounted(() => {
 
             <!-- Pinned Posts -->
             <div v-if="pinnedPosts.length > 0" class="mb-12">
-                <div class="flex items-center space-x-2 mb-6">
+                <div class="mb-6 flex items-center space-x-2">
                     <Pin class="h-5 w-5 text-blue-600" />
                     <h2 class="text-2xl font-bold">Artikel Terpilih</h2>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                     <article v-for="post in pinnedPosts" :key="post.id" class="group cursor-pointer">
                         <Link :href="`/blog/${post.slug}`" class="block">
-                            <div class="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 group-hover:-translate-y-2">
+                            <div
+                                class="overflow-hidden rounded-2xl bg-white shadow-md transition-all duration-300 group-hover:-translate-y-2 hover:shadow-2xl dark:bg-gray-800"
+                            >
                                 <div class="relative h-48 overflow-hidden">
                                     <img
-                                        :src="post.featured_image_url || `https://via.placeholder.com/400x300/3B82F6/FFFFFF?text=${encodeURIComponent(post.category.name)}`"
+                                        :src="
+                                            post.featured_image_url ||
+                                            `https://via.placeholder.com/400x300/3B82F6/FFFFFF?text=${encodeURIComponent(post.category.name)}`
+                                        "
                                         :alt="post.title"
-                                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                        class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                                     />
                                     <div class="absolute top-4 left-4">
                                         <Badge
@@ -303,11 +286,11 @@ onUnmounted(() => {
                                         </Badge>
                                     </div>
                                     <div class="absolute top-4 right-4">
-                                        <Pin class="h-4 w-4 text-yellow-400 fill-current" />
+                                        <Pin class="h-4 w-4 fill-current text-yellow-400" />
                                     </div>
                                 </div>
                                 <div class="p-6">
-                                    <div class="flex items-center justify-between mb-4">
+                                    <div class="mb-4 flex items-center justify-between">
                                         <Badge :class="getTypeColor(post.type)" class="text-xs">
                                             {{ getTypeText(post.type) }}
                                         </Badge>
@@ -322,10 +305,12 @@ onUnmounted(() => {
                                             </div>
                                         </div>
                                     </div>
-                                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
+                                    <h3
+                                        class="mb-3 line-clamp-2 text-xl font-bold text-gray-900 transition-colors group-hover:text-blue-600 dark:text-white"
+                                    >
                                         {{ post.title }}
                                     </h3>
-                                    <p class="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3 leading-relaxed">
+                                    <p class="mb-4 line-clamp-3 leading-relaxed text-gray-600 dark:text-gray-300">
                                         {{ post.excerpt }}
                                     </p>
                                     <div class="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
@@ -351,16 +336,18 @@ onUnmounted(() => {
 
             <!-- Articles Grid -->
             <div v-if="posts.data.length > 0">
-                <h2 class="text-3xl font-bold mb-8">Artikel Terbaru</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <h2 class="mb-8 text-3xl font-bold">Artikel Terbaru</h2>
+                <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                     <article v-for="post in posts.data" :key="post.id" class="group cursor-pointer">
                         <Link :href="`/blog/${post.slug}`" class="block">
-                            <div class="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 group-hover:-translate-y-2">
+                            <div
+                                class="overflow-hidden rounded-2xl bg-white shadow-md transition-all duration-300 group-hover:-translate-y-2 hover:shadow-2xl dark:bg-gray-800"
+                            >
                                 <div class="relative h-48 overflow-hidden">
                                     <img
                                         :src="post.featured_image_url || `https://via.placeholder.com/400x300/3B82F6/FFFFFF?text=WebSweetStudio`"
                                         :alt="post.title"
-                                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                        class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                                     />
                                     <div class="absolute top-4 left-4">
                                         <Badge
@@ -372,7 +359,7 @@ onUnmounted(() => {
                                     </div>
                                 </div>
                                 <div class="p-6">
-                                    <div class="flex items-center justify-between mb-4">
+                                    <div class="mb-4 flex items-center justify-between">
                                         <Badge :class="getTypeColor(post.type)" class="text-xs">
                                             {{ getTypeText(post.type) }}
                                         </Badge>
@@ -387,10 +374,12 @@ onUnmounted(() => {
                                             </div>
                                         </div>
                                     </div>
-                                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
+                                    <h3
+                                        class="mb-3 line-clamp-2 text-xl font-bold text-gray-900 transition-colors group-hover:text-blue-600 dark:text-white"
+                                    >
                                         {{ post.title }}
                                     </h3>
-                                    <p class="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3 leading-relaxed">
+                                    <p class="mb-4 line-clamp-3 leading-relaxed text-gray-600 dark:text-gray-300">
                                         {{ post.excerpt }}
                                     </p>
                                     <div class="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
@@ -421,18 +410,16 @@ onUnmounted(() => {
                                 v-if="link.url"
                                 :href="link.url"
                                 :class="[
-                                    'px-4 py-2 rounded-xl text-sm font-medium transition-all',
+                                    'rounded-xl px-4 py-2 text-sm font-medium transition-all',
                                     link.active
                                         ? 'bg-blue-600 text-white shadow-lg'
-                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700'
+                                        : 'border border-gray-200 bg-white text-gray-700 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700',
                                 ]"
                                 v-html="link.label"
                             />
                             <span
                                 v-else
-                                :class="[
-                                    'px-4 py-2 rounded-xl text-sm cursor-not-allowed opacity-50 bg-gray-100 dark:bg-gray-800 text-gray-500'
-                                ]"
+                                :class="['cursor-not-allowed rounded-xl bg-gray-100 px-4 py-2 text-sm text-gray-500 opacity-50 dark:bg-gray-800']"
                                 v-html="link.label"
                             />
                         </template>
@@ -441,11 +428,11 @@ onUnmounted(() => {
             </div>
 
             <!-- Empty State -->
-            <div v-else class="text-center py-16">
-                <div class="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div v-else class="py-16 text-center">
+                <div class="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
                     <Search class="h-12 w-12 text-gray-400" />
                 </div>
-                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Tidak ada artikel ditemukan</h3>
+                <h3 class="mb-3 text-2xl font-bold text-gray-900 dark:text-white">Tidak ada artikel ditemukan</h3>
                 <p class="text-gray-600 dark:text-gray-400">Silakan kembali lagi nanti untuk artikel terbaru.</p>
             </div>
         </div>

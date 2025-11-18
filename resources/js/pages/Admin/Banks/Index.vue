@@ -206,76 +206,91 @@ const submitEdit = () => {
                 </CardHeader>
                 <CardContent>
                     <div v-if="banks.data.length > 0">
-                        <div class="rounded-md border overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Bank</TableHead>
-                                    <TableHead>Kode</TableHead>
-                                    <TableHead>Rekening</TableHead>
-                                    <TableHead>Tipe</TableHead>
-                                    <TableHead>Admin Fee</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead class="text-right">Aksi</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow v-for="bank in banks.data" :key="bank.id">
-                                    <TableCell>
-                                        <div>
-                                            <div class="font-medium">{{ bank.bank_name }}</div>
-                                            <div class="text-sm text-muted-foreground">{{ bank.account_name }}</div>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <code class="rounded bg-muted px-2 py-1 text-sm">{{ bank.bank_code }}</code>
-                                    </TableCell>
-                                    <TableCell>
-                                        <div>
-                                            <div class="font-mono text-sm">{{ bank.account_number }}</div>
-                                            <div v-if="bank.branch" class="text-sm text-muted-foreground">{{ bank.branch }}</div>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge :class="getBankTypeClass(bank.bank_type)">
-                                            {{ bank.bank_type === 'local' ? 'Lokal' : 'Internasional' }}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        {{ formatPrice(bank.admin_fee) }}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge :class="getStatusClass(bank.is_active)">
-                                            {{ bank.is_active ? 'Aktif' : 'Nonaktif' }}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell class="text-right">
-                                        <div class="flex items-center justify-end gap-1">
-                                            <Button size="sm" variant="outline" @click="router.visit(`/admin/banks/${bank.id}`)" class="cursor-pointer" title="Lihat Detail">
-                                                <Eye class="h-3.5 w-3.5" />
-                                            </Button>
-                                            <Button size="sm" variant="outline" @click="openEditModal(bank)" class="cursor-pointer" title="Edit">
-                                                <Edit class="h-3.5 w-3.5" />
-                                            </Button>
-                                            <Button size="sm" @click="toggleBankStatus(bank)"
-                                                :title="bank.is_active ? 'Nonaktifkan' : 'Aktifkan'"
-                                                :class="bank.is_active ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-600 hover:bg-gray-700 text-white'"
-                                                class="cursor-pointer"
-                                            >
-                                                <ToggleRight v-if="bank.is_active" class="h-3.5 w-3.5" />
-                                                <ToggleLeft v-else class="h-3.5 w-3.5" />
-                                            </Button>
-                                            <Button size="sm" variant="outline" @click="openDeleteModal(bank)"
-                                                :title="'Hapus ' + bank.bank_name"
-                                                class="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
-                                            >
-                                                <Trash2 class="h-3.5 w-3.5" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
+                        <div class="overflow-x-auto rounded-md border">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Bank</TableHead>
+                                        <TableHead>Kode</TableHead>
+                                        <TableHead>Rekening</TableHead>
+                                        <TableHead>Tipe</TableHead>
+                                        <TableHead>Admin Fee</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead class="text-right">Aksi</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow v-for="bank in banks.data" :key="bank.id">
+                                        <TableCell>
+                                            <div>
+                                                <div class="font-medium">{{ bank.bank_name }}</div>
+                                                <div class="text-sm text-muted-foreground">{{ bank.account_name }}</div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <code class="rounded bg-muted px-2 py-1 text-sm">{{ bank.bank_code }}</code>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div>
+                                                <div class="font-mono text-sm">{{ bank.account_number }}</div>
+                                                <div v-if="bank.branch" class="text-sm text-muted-foreground">{{ bank.branch }}</div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge :class="getBankTypeClass(bank.bank_type)">
+                                                {{ bank.bank_type === 'local' ? 'Lokal' : 'Internasional' }}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            {{ formatPrice(bank.admin_fee) }}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge :class="getStatusClass(bank.is_active)">
+                                                {{ bank.is_active ? 'Aktif' : 'Nonaktif' }}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell class="text-right">
+                                            <div class="flex items-center justify-end gap-1">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    @click="router.visit(`/admin/banks/${bank.id}`)"
+                                                    class="cursor-pointer"
+                                                    title="Lihat Detail"
+                                                >
+                                                    <Eye class="h-3.5 w-3.5" />
+                                                </Button>
+                                                <Button size="sm" variant="outline" @click="openEditModal(bank)" class="cursor-pointer" title="Edit">
+                                                    <Edit class="h-3.5 w-3.5" />
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    @click="toggleBankStatus(bank)"
+                                                    :title="bank.is_active ? 'Nonaktifkan' : 'Aktifkan'"
+                                                    :class="
+                                                        bank.is_active
+                                                            ? 'bg-green-600 text-white hover:bg-green-700'
+                                                            : 'bg-gray-600 text-white hover:bg-gray-700'
+                                                    "
+                                                    class="cursor-pointer"
+                                                >
+                                                    <ToggleRight v-if="bank.is_active" class="h-3.5 w-3.5" />
+                                                    <ToggleLeft v-else class="h-3.5 w-3.5" />
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    @click="openDeleteModal(bank)"
+                                                    :title="'Hapus ' + bank.bank_name"
+                                                    class="cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                >
+                                                    <Trash2 class="h-3.5 w-3.5" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
                         </div>
 
                         <!-- Pagination -->

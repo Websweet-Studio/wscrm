@@ -205,7 +205,7 @@ const getTypeColor = (type: string) => {
                                         <span>{{ formatPrice(invoice.amount) }}</span>
                                     </div>
                                 </div>
-                                <div class="text-3xl font-bold mt-2">{{ formatPrice(invoice.amount) }}</div>
+                                <div class="mt-2 text-3xl font-bold">{{ formatPrice(invoice.amount) }}</div>
                                 <div class="mt-1 text-sm text-muted-foreground">Siklus Tagihan: {{ invoice.billing_cycle.replace('_', ' ') }}</div>
                             </div>
 

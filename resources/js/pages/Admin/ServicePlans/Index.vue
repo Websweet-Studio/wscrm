@@ -261,35 +261,38 @@ const removeFeature = (form: any, featureName: string) => {
                         <table class="w-full border-collapse">
                             <thead>
                                 <tr class="border-b border-border">
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">ID</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Nama</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Kategori</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Harga</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Deskripsi</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Fitur</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                                    <th class="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Aksi</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">ID</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Nama</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Kategori</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Harga</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Deskripsi</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Fitur</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Status</th>
+                                    <th class="px-3 py-3 text-center text-xs font-medium tracking-wider text-muted-foreground uppercase">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr
                                     v-for="plan in servicePlans.data"
                                     :key="plan.id"
-                                    class="border-b border-border hover:bg-muted/30 transition-colors"
+                                    class="border-b border-border transition-colors hover:bg-muted/30"
                                 >
-                                    <td class="px-3 py-4 text-sm text-foreground font-medium">#{{ plan.id }}</td>
-                                    <td class="px-3 py-4 text-sm text-foreground font-medium">{{ plan.name }}</td>
+                                    <td class="px-3 py-4 text-sm font-medium text-foreground">#{{ plan.id }}</td>
+                                    <td class="px-3 py-4 text-sm font-medium text-foreground">{{ plan.name }}</td>
                                     <td class="px-3 py-4">
                                         <Badge :class="getCategoryColor(plan.category)" class="text-xs">
                                             {{ categories[plan.category] || plan.category }}
                                         </Badge>
                                     </td>
-                                    <td class="px-3 py-4 text-sm text-foreground font-medium">{{ formatPrice(plan.price) }}</td>
-                                    <td class="px-3 py-4 text-sm text-muted-foreground max-w-xs truncate" :title="plan.description">
+                                    <td class="px-3 py-4 text-sm font-medium text-foreground">{{ formatPrice(plan.price) }}</td>
+                                    <td class="max-w-xs truncate px-3 py-4 text-sm text-muted-foreground" :title="plan.description">
                                         {{ plan.description || '-' }}
                                     </td>
-                                    <td class="px-3 py-4 text-sm text-muted-foreground max-w-xs truncate">
-                                        <span v-if="plan.features && Object.keys(plan.features).length > 0" :title="Object.keys(plan.features).join(', ')">
+                                    <td class="max-w-xs truncate px-3 py-4 text-sm text-muted-foreground">
+                                        <span
+                                            v-if="plan.features && Object.keys(plan.features).length > 0"
+                                            :title="Object.keys(plan.features).join(', ')"
+                                        >
                                             {{ Object.keys(plan.features).join(', ') }}
                                         </span>
                                         <span v-else>-</span>

@@ -22,7 +22,7 @@ class AdminAuthorization
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Anda tidak memiliki otorisasi untuk mengakses halaman ini.',
-                    'redirect' => route('home')
+                    'redirect' => route('home'),
                 ], 403);
             }
 
@@ -30,7 +30,7 @@ class AdminAuthorization
             session()->flash('toast', [
                 'type' => 'error',
                 'title' => 'Akses Ditolak',
-                'message' => 'Anda tidak memiliki otorisasi untuk mengakses halaman admin.'
+                'message' => 'Anda tidak memiliki otorisasi untuk mengakses halaman admin.',
             ]);
 
             return redirect()->route('home');

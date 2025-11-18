@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import HostingOrderModal from '@/components/HostingOrderModal.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import HostingOrderModal from '@/components/HostingOrderModal.vue';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import customer from '@/routes/customer';
 import { type BreadcrumbItem } from '@/types';
@@ -98,7 +98,7 @@ const getDomainStatus = (extension: string) => {
 
 const orderDomain = (domainPriceId: number, extension: string) => {
     const fullDomain = `${props.domain}.${extension}`;
-    
+
     // Show hosting offer first
     if (props.hostingPlans.length > 0) {
         selectedDomainForHosting.value = fullDomain;
@@ -225,7 +225,10 @@ const otherDomains = computed(() => {
                                         </Button>
                                         <Button
                                             @click="
-                                                orderDomainOnly(domainPrices.find((d) => d.extension === requestedExtension)?.id || 0, requestedExtension)
+                                                orderDomainOnly(
+                                                    domainPrices.find((d) => d.extension === requestedExtension)?.id || 0,
+                                                    requestedExtension,
+                                                )
                                             "
                                             variant="outline"
                                             size="sm"
@@ -318,7 +321,12 @@ const otherDomains = computed(() => {
                                         <ShoppingCart class="mr-2 h-4 w-4" />
                                         Register + Hosting
                                     </Button>
-                                    <Button @click="orderDomainOnly(domainPrice.id, domainPrice.extension)" variant="outline" size="sm" class="w-full">
+                                    <Button
+                                        @click="orderDomainOnly(domainPrice.id, domainPrice.extension)"
+                                        variant="outline"
+                                        size="sm"
+                                        class="w-full"
+                                    >
                                         Domain Only
                                     </Button>
                                 </div>
@@ -369,7 +377,12 @@ const otherDomains = computed(() => {
                                     <Button @click="orderDomain(domainPrice.id, domainPrice.extension)" size="sm" class="w-full text-xs">
                                         Register + Hosting
                                     </Button>
-                                    <Button @click="orderDomainOnly(domainPrice.id, domainPrice.extension)" variant="outline" size="sm" class="w-full text-xs">
+                                    <Button
+                                        @click="orderDomainOnly(domainPrice.id, domainPrice.extension)"
+                                        variant="outline"
+                                        size="sm"
+                                        class="w-full text-xs"
+                                    >
                                         Domain Only
                                     </Button>
                                 </div>

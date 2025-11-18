@@ -200,7 +200,10 @@ const footerNavItems: NavItem[] = [
 
 <template>
     <aside
-        :class="['fixed inset-y-0 left-0 flex flex-col border-r border-border bg-sidebar transition-all duration-300', props.forceExpanded ? 'w-full' : (shouldShowIconsOnly ? 'w-16' : 'w-64')]"
+        :class="[
+            'fixed inset-y-0 left-0 flex flex-col border-r border-border bg-sidebar transition-all duration-300',
+            props.forceExpanded ? 'w-full' : shouldShowIconsOnly ? 'w-16' : 'w-64',
+        ]"
     >
         <!-- Header -->
         <div class="border-b border-border p-4">

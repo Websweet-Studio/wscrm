@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import CustomerHeader from '@/components/CustomerHeader.vue';
 import CustomerFooter from '@/components/CustomerFooter.vue';
+import CustomerHeader from '@/components/CustomerHeader.vue';
 import { Head } from '@inertiajs/vue3';
 
 interface Props {
@@ -8,7 +8,7 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
-    title: 'WebSweetStudio - Hosting & Domain Services'
+    title: 'WebSweetStudio - Hosting & Domain Services',
 });
 </script>
 

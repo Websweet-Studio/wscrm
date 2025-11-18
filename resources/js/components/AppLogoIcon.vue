@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import type { HTMLAttributes } from 'vue';
+import { computed } from 'vue';
 
 defineOptions({
     inheritAttrs: false,

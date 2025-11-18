@@ -54,7 +54,6 @@ interface Order {
     order_items: OrderItem[];
 }
 
-
 interface ChartDataPoint {
     date: string;
     day: number;
@@ -142,24 +141,26 @@ const getExpiryBadgeClass = (daysLeft: number) => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-4 sm:space-y-6">
             <!-- Welcome Header -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+            <div class="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                 <div>
-                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
-                    <p class="text-sm sm:text-base text-muted-foreground hidden sm:block">Welcome back! Here's what's happening with your dashboard.</p>
+                    <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Dashboard</h1>
+                    <p class="hidden text-sm text-muted-foreground sm:block sm:text-base">
+                        Welcome back! Here's what's happening with your dashboard.
+                    </p>
                     <p class="text-sm text-muted-foreground sm:hidden">Overview singkat sistem Anda</p>
                 </div>
             </div>
 
             <!-- Key Metrics Cards -->
-            <div class="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
                 <!-- Customers Card -->
                 <Card>
-                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2 px-4 sm:px-6">
-                        <CardTitle class="text-xs sm:text-sm font-medium">Total Customers</CardTitle>
-                        <Users class="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 px-4 pb-2 sm:px-6">
+                        <CardTitle class="text-xs font-medium sm:text-sm">Total Customers</CardTitle>
+                        <Users class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
-                        <div class="text-xl sm:text-2xl font-bold truncate">{{ stats.customers.total.toLocaleString() }}</div>
+                        <div class="truncate text-xl font-bold sm:text-2xl">{{ stats.customers.total.toLocaleString() }}</div>
                         <div class="flex items-center space-x-2 text-xs">
                             <component
                                 :is="formatGrowth(stats.customers.growth).icon"
@@ -170,7 +171,9 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                             </span>
                         </div>
                         <p class="mt-1 text-xs text-muted-foreground">
-                            <span class="hidden sm:inline">{{ stats.customers.active }} active • {{ stats.customers.newThisMonth }} new this month</span>
+                            <span class="hidden sm:inline"
+                                >{{ stats.customers.active }} active • {{ stats.customers.newThisMonth }} new this month</span
+                            >
                             <span class="sm:hidden">{{ stats.customers.active }} aktif • {{ stats.customers.newThisMonth }} baru</span>
                         </p>
                     </CardContent>
@@ -178,12 +181,12 @@ const getExpiryBadgeClass = (daysLeft: number) => {
 
                 <!-- Orders Card -->
                 <Card>
-                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2 px-4 sm:px-6">
-                        <CardTitle class="text-xs sm:text-sm font-medium">Total Orders</CardTitle>
-                        <ShoppingCart class="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 px-4 pb-2 sm:px-6">
+                        <CardTitle class="text-xs font-medium sm:text-sm">Total Orders</CardTitle>
+                        <ShoppingCart class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
-                        <div class="text-xl sm:text-2xl font-bold truncate">{{ stats.orders.total.toLocaleString() }}</div>
+                        <div class="truncate text-xl font-bold sm:text-2xl">{{ stats.orders.total.toLocaleString() }}</div>
                         <div class="flex items-center space-x-2 text-xs">
                             <component :is="formatGrowth(stats.orders.growth).icon" :class="`h-3 w-3 ${formatGrowth(stats.orders.growth).color}`" />
                             <span :class="formatGrowth(stats.orders.growth).color" class="truncate">
@@ -199,29 +202,28 @@ const getExpiryBadgeClass = (daysLeft: number) => {
 
                 <!-- Revenue Card -->
                 <Card>
-                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2 px-4 sm:px-6">
-                        <CardTitle class="text-xs sm:text-sm font-medium">Total Revenue</CardTitle>
-                        <DollarSign class="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 px-4 pb-2 sm:px-6">
+                        <CardTitle class="text-xs font-medium sm:text-sm">Total Revenue</CardTitle>
+                        <DollarSign class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
-                        <div class="text-lg sm:text-xl lg:text-2xl font-bold truncate">{{ formatPrice(stats.revenue.total) }}</div>
+                        <div class="truncate text-lg font-bold sm:text-xl lg:text-2xl">{{ formatPrice(stats.revenue.total) }}</div>
                         <div class="flex items-center space-x-2 text-xs">
                             <component :is="formatGrowth(stats.revenue.growth).icon" :class="`h-3 w-3 ${formatGrowth(stats.revenue.growth).color}`" />
                             <span :class="formatGrowth(stats.revenue.growth).color" class="truncate">
                                 {{ formatGrowth(stats.revenue.growth).value }}%<span class="hidden sm:inline"> from last month</span>
                             </span>
                         </div>
-                        <p class="mt-1 text-xs text-muted-foreground truncate">
+                        <p class="mt-1 truncate text-xs text-muted-foreground">
                             <span class="hidden sm:inline">{{ formatPrice(stats.revenue.thisMonth) }} this month</span>
                             <span class="sm:hidden">{{ formatPrice(stats.revenue.thisMonth) }} bulan ini</span>
                         </p>
                     </CardContent>
                 </Card>
-
             </div>
 
             <!-- Charts Section -->
-            <div class="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
+            <div class="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
                 <!-- Daily Orders Chart -->
                 <Card>
                     <CardHeader class="px-4 sm:px-6">
@@ -266,11 +268,11 @@ const getExpiryBadgeClass = (daysLeft: number) => {
             <!-- Expiring Services Alert -->
             <Card v-if="expiringServices.length > 0" class="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
                 <CardHeader class="px-4 sm:px-6">
-                    <CardTitle class="flex items-center gap-2 text-base sm:text-lg text-orange-800 dark:text-orange-200">
+                    <CardTitle class="flex items-center gap-2 text-base text-orange-800 sm:text-lg dark:text-orange-200">
                         <AlertTriangle class="h-4 w-4 sm:h-5 sm:w-5" />
                         Layanan Akan Berakhir
                     </CardTitle>
-                    <CardDescription class="text-xs sm:text-sm text-orange-700 dark:text-orange-300">
+                    <CardDescription class="text-xs text-orange-700 sm:text-sm dark:text-orange-300">
                         {{ expiringServices.length }} layanan akan berakhir dalam 1 bulan ke depan
                     </CardDescription>
                 </CardHeader>
@@ -281,19 +283,19 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                             :key="service.id"
                             class="flex items-center justify-between rounded-md bg-white/50 p-3 dark:bg-gray-900/50"
                         >
-                            <div class="flex-1 min-w-0">
-                                <div class="text-xs sm:text-sm font-medium truncate">{{ service.domain_name || `Service #${service.id}` }}</div>
-                                <div class="text-xs text-muted-foreground truncate">{{ service.customer.name }}</div>
+                            <div class="min-w-0 flex-1">
+                                <div class="truncate text-xs font-medium sm:text-sm">{{ service.domain_name || `Service #${service.id}` }}</div>
+                                <div class="truncate text-xs text-muted-foreground">{{ service.customer.name }}</div>
                             </div>
-                            <div class="text-right ml-3 flex-shrink-0">
+                            <div class="ml-3 flex-shrink-0 text-right">
                                 <span
                                     v-if="service.expires_at"
-                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                    class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
                                     :class="getExpiryBadgeClass(getDaysUntilExpiry(service.expires_at))"
                                 >
                                     {{ getDaysUntilExpiry(service.expires_at) }} hari lagi
                                 </span>
-                                <div class="text-xs text-muted-foreground mt-1">{{ formatDate(service.expires_at!) }}</div>
+                                <div class="mt-1 text-xs text-muted-foreground">{{ formatDate(service.expires_at!) }}</div>
                             </div>
                         </div>
                     </div>
@@ -306,7 +308,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
             </Card>
 
             <!-- Recent Activities Grid -->
-            <div class="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
+            <div class="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
                 <!-- Recent Orders -->
                 <Card>
                     <CardHeader class="px-4 sm:px-6">
@@ -314,32 +316,32 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                         <CardDescription class="text-xs sm:text-sm">Latest customer orders</CardDescription>
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
-                        <div v-if="recentActivities.orders.length === 0" class="py-4 text-center text-muted-foreground text-xs sm:text-sm">No recent orders</div>
+                        <div v-if="recentActivities.orders.length === 0" class="py-4 text-center text-xs text-muted-foreground sm:text-sm">
+                            No recent orders
+                        </div>
                         <div v-else class="space-y-3">
                             <div
                                 v-for="order in recentActivities.orders"
                                 :key="order.id"
                                 class="flex items-center justify-between rounded-md bg-muted/30 p-3"
                             >
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-xs sm:text-sm font-medium truncate">Order #{{ order.id }}</div>
-                                    <div class="text-xs text-muted-foreground truncate">{{ order.customer.name }}</div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="truncate text-xs font-medium sm:text-sm">Order #{{ order.id }}</div>
+                                    <div class="truncate text-xs text-muted-foreground">{{ order.customer.name }}</div>
                                     <div class="text-xs text-muted-foreground">{{ formatDate(order.created_at) }}</div>
                                 </div>
-                                <div class="text-right ml-3 flex-shrink-0">
+                                <div class="ml-3 flex-shrink-0 text-right">
                                     <template v-if="order.discount_amount && order.discount_amount > 0">
                                         <div class="text-xs text-muted-foreground line-through">
                                             {{ formatPrice(order.total_amount) }}
                                         </div>
-                                        <div class="text-xs sm:text-sm font-bold text-green-600 dark:text-green-400">
+                                        <div class="text-xs font-bold text-green-600 sm:text-sm dark:text-green-400">
                                             {{ formatPrice(Number(order.total_amount) - Number(order.discount_amount)) }}
                                         </div>
-                                        <div class="text-xs text-green-600 dark:text-green-400">
-                                            Hemat: {{ formatPrice(order.discount_amount) }}
-                                        </div>
+                                        <div class="text-xs text-green-600 dark:text-green-400">Hemat: {{ formatPrice(order.discount_amount) }}</div>
                                     </template>
                                     <template v-else>
-                                        <div class="text-xs sm:text-sm font-bold">{{ formatPrice(order.total_amount) }}</div>
+                                        <div class="text-xs font-bold sm:text-sm">{{ formatPrice(order.total_amount) }}</div>
                                     </template>
                                     <div class="text-xs text-muted-foreground capitalize">{{ order.status }}</div>
                                 </div>
@@ -360,18 +362,20 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                         <CardDescription class="text-xs sm:text-sm">Recently registered customers</CardDescription>
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
-                        <div v-if="recentActivities.customers.length === 0" class="py-4 text-center text-muted-foreground text-xs sm:text-sm">No new customers</div>
+                        <div v-if="recentActivities.customers.length === 0" class="py-4 text-center text-xs text-muted-foreground sm:text-sm">
+                            No new customers
+                        </div>
                         <div v-else class="space-y-3">
                             <div
                                 v-for="customer in recentActivities.customers"
                                 :key="customer.id"
                                 class="flex items-center justify-between rounded-md bg-muted/30 p-3"
                             >
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-xs sm:text-sm font-medium truncate">{{ customer.name }}</div>
-                                    <div class="text-xs text-muted-foreground truncate">{{ customer.email }}</div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="truncate text-xs font-medium sm:text-sm">{{ customer.name }}</div>
+                                    <div class="truncate text-xs text-muted-foreground">{{ customer.email }}</div>
                                 </div>
-                                <div class="text-right ml-3 flex-shrink-0">
+                                <div class="ml-3 flex-shrink-0 text-right">
                                     <div class="text-xs text-muted-foreground">{{ formatDate(customer.created_at) }}</div>
                                 </div>
                             </div>
@@ -383,7 +387,6 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                         </div>
                     </CardContent>
                 </Card>
-
             </div>
 
             <!-- Quick Actions -->
@@ -393,7 +396,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                     <CardDescription class="text-xs sm:text-sm">Common administrative tasks</CardDescription>
                 </CardHeader>
                 <CardContent class="px-4 sm:px-6">
-                    <div class="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
                         <Button asChild size="sm" class="text-xs sm:text-sm">
                             <Link href="/admin/customers">Manage Customers</Link>
                         </Button>

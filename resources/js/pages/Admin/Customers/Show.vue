@@ -5,8 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { Calendar, Edit, FileText, Mail, MapPin, Phone, Settings, ShoppingCart, Send } from 'lucide-vue-next';
+import { Head, router } from '@inertiajs/vue3';
+import { Calendar, Edit, FileText, Mail, MapPin, Phone, Send, Settings, ShoppingCart } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface Customer {
@@ -83,19 +83,23 @@ const sendCredentials = () => {
     if (sendingCredentials.value) return;
 
     const confirmed = confirm(
-        `Kirim kredensial login ke ${props.customer.email}?\n\nIni akan mengubah password user dan mengirim email dengan username dan password baru.`
+        `Kirim kredensial login ke ${props.customer.email}?\n\nIni akan mengubah password user dan mengirim email dengan username dan password baru.`,
     );
 
     if (confirmed) {
         sendingCredentials.value = true;
-        router.post(`/admin/users/${props.customer.id}/send-credentials`, {}, {
-            onSuccess: () => {
-                sendingCredentials.value = false;
+        router.post(
+            `/admin/users/${props.customer.id}/send-credentials`,
+            {},
+            {
+                onSuccess: () => {
+                    sendingCredentials.value = false;
+                },
+                onError: () => {
+                    sendingCredentials.value = false;
+                },
             },
-            onError: () => {
-                sendingCredentials.value = false;
-            }
-        });
+        );
     }
 };
 
@@ -273,9 +277,7 @@ const getStatusClass = (status: string) => {
                                         <div class="font-medium text-green-600 dark:text-green-400">
                                             {{ formatPrice(Number(order.total_amount) - Number(order.discount_amount)) }}
                                         </div>
-                                        <div class="text-xs text-green-600 dark:text-green-400">
-                                            Hemat: {{ formatPrice(order.discount_amount) }}
-                                        </div>
+                                        <div class="text-xs text-green-600 dark:text-green-400">Hemat: {{ formatPrice(order.discount_amount) }}</div>
                                     </template>
                                     <template v-else>
                                         <div class="font-medium">{{ formatPrice(order.total_amount) }}</div>

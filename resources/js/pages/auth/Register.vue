@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { login } from '@/routes';
 import { Form, Head } from '@inertiajs/vue3';
-import { LoaderCircle, Check, X } from 'lucide-vue-next';
+import { Check, LoaderCircle, X } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 
 const username = ref('');
@@ -79,7 +79,7 @@ watch(username, (newValue) => {
                             name="username"
                             placeholder="Username (minimal 3 karakter)"
                             v-model="username"
-                            @input="(e: Event) => username = (e.target as HTMLInputElement).value"
+                            @input="(e: Event) => (username = (e.target as HTMLInputElement).value)"
                         />
                         <div class="absolute inset-y-0 right-0 flex items-center pr-3">
                             <LoaderCircle v-if="usernameStatus === 'checking'" class="h-4 w-4 animate-spin text-gray-400" />
@@ -87,10 +87,14 @@ watch(username, (newValue) => {
                             <X v-else-if="usernameStatus === 'taken' || usernameStatus === 'invalid'" class="h-4 w-4 text-red-500" />
                         </div>
                     </div>
-                    <div v-if="usernameMessage" class="text-sm" :class="{
-                        'text-green-600': usernameStatus === 'available',
-                        'text-red-600': usernameStatus === 'taken' || usernameStatus === 'invalid'
-                    }">
+                    <div
+                        v-if="usernameMessage"
+                        class="text-sm"
+                        :class="{
+                            'text-green-600': usernameStatus === 'available',
+                            'text-red-600': usernameStatus === 'taken' || usernameStatus === 'invalid',
+                        }"
+                    >
                         {{ usernameMessage }}
                     </div>
                     <InputError :message="errors.username" />
@@ -122,7 +126,12 @@ watch(username, (newValue) => {
                     <InputError :message="errors.password_confirmation" />
                 </div>
 
-                <Button type="submit" class="mt-2 w-full" tabindex="6" :disabled="processing || usernameStatus === 'taken' || usernameStatus === 'invalid'">
+                <Button
+                    type="submit"
+                    class="mt-2 w-full"
+                    tabindex="6"
+                    :disabled="processing || usernameStatus === 'taken' || usernameStatus === 'invalid'"
+                >
                     <LoaderCircle v-if="processing" class="h-4 w-4 animate-spin" />
                     Buat Akun
                 </Button>

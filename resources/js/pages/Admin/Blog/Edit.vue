@@ -1,15 +1,15 @@
 <script setup lang="ts">
+import RichTextEditor from '@/components/RichTextEditor.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import RichTextEditor from '@/components/RichTextEditor.vue';
+import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, router, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, Save, Image as ImageIcon, Calendar, Tag, Settings, Trash2 } from 'lucide-vue-next';
+import { Head, useForm } from '@inertiajs/vue3';
+import { Calendar, Image as ImageIcon, Save, Settings, Tag } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface BlogCategory {
@@ -67,9 +67,7 @@ const form = useForm({
     is_featured: props.post.is_featured,
     is_pinned: props.post.is_pinned,
     allow_comments: props.post.allow_comments,
-    published_at: props.post.published_at
-        ? new Date(props.post.published_at).toISOString().slice(0, 16)
-        : '',
+    published_at: props.post.published_at ? new Date(props.post.published_at).toISOString().slice(0, 16) : '',
     meta_data: props.post.meta_data || {},
 });
 
@@ -153,10 +151,8 @@ const formatDate = (dateString: string) => {
             <div class="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
                 <div>
                     <h1 class="text-2xl font-bold">Edit Artikel</h1>
-                    <p class="text-muted-foreground">
-                        Edit "{{ post.title }}"
-                    </p>
-                    <div class="flex items-center space-x-4 text-sm text-muted-foreground mt-2">
+                    <p class="text-muted-foreground">Edit "{{ post.title }}"</p>
+                    <div class="mt-2 flex items-center space-x-4 text-sm text-muted-foreground">
                         <span>Dibuat: {{ formatDate(post.created_at) }}</span>
                         <span>•</span>
                         <span>{{ post.views_count }} views</span>
@@ -164,11 +160,11 @@ const formatDate = (dateString: string) => {
                         <span>{{ post.likes_count }} likes</span>
                     </div>
                 </div>
-                            </div>
+            </div>
 
-            <form @submit.prevent="submit" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <form @submit.prevent="submit" class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <!-- Main Content -->
-                <div class="lg:col-span-2 space-y-6">
+                <div class="space-y-6 lg:col-span-2">
                     <!-- Basic Information -->
                     <Card>
                         <CardHeader>
@@ -186,23 +182,16 @@ const formatDate = (dateString: string) => {
                                     required
                                     :class="{ 'border-red-500': form.errors.title }"
                                 />
-                                <div v-if="form.errors.title" class="text-red-500 text-sm mt-1">
+                                <div v-if="form.errors.title" class="mt-1 text-sm text-red-500">
                                     {{ form.errors.title }}
                                 </div>
                             </div>
 
                             <div>
                                 <Label for="slug">URL Slug</Label>
-                                <Input
-                                    id="slug"
-                                    v-model="form.slug"
-                                    placeholder="artikel-slug-url"
-                                    :class="{ 'border-red-500': form.errors.slug }"
-                                />
-                                <p class="text-sm text-muted-foreground mt-1">
-                                    URL akan menjadi: /blog/{{ form.slug || 'artikel-slug-url' }}
-                                </p>
-                                <div v-if="form.errors.slug" class="text-red-500 text-sm mt-1">
+                                <Input id="slug" v-model="form.slug" placeholder="artikel-slug-url" :class="{ 'border-red-500': form.errors.slug }" />
+                                <p class="mt-1 text-sm text-muted-foreground">URL akan menjadi: /blog/{{ form.slug || 'artikel-slug-url' }}</p>
+                                <div v-if="form.errors.slug" class="mt-1 text-sm text-red-500">
                                     {{ form.errors.slug }}
                                 </div>
                             </div>
@@ -217,10 +206,8 @@ const formatDate = (dateString: string) => {
                                     maxlength="500"
                                     :class="{ 'border-red-500': form.errors.excerpt }"
                                 />
-                                <p class="text-sm text-muted-foreground mt-1">
-                                    {{ form.excerpt?.length || 0 }}/500 karakter
-                                </p>
-                                <div v-if="form.errors.excerpt" class="text-red-500 text-sm mt-1">
+                                <p class="mt-1 text-sm text-muted-foreground">{{ form.excerpt?.length || 0 }}/500 karakter</p>
+                                <div v-if="form.errors.excerpt" class="mt-1 text-sm text-red-500">
                                     {{ form.errors.excerpt }}
                                 </div>
                             </div>
@@ -244,10 +231,10 @@ const formatDate = (dateString: string) => {
                                         :class="{ 'border-red-500': form.errors.content }"
                                     />
                                 </div>
-                                <div v-if="form.errors.content" class="text-red-500 text-sm mt-1">
+                                <div v-if="form.errors.content" class="mt-1 text-sm text-red-500">
                                     {{ form.errors.content }}
                                 </div>
-                                <p class="text-sm text-muted-foreground mt-1">
+                                <p class="mt-1 text-sm text-muted-foreground">
                                     Gunakan toolbar sederhana untuk formatting dasar: bold, italic, list, link, dan heading
                                 </p>
                             </div>
@@ -272,7 +259,7 @@ const formatDate = (dateString: string) => {
                                         <img
                                             :src="post.featured_image_url"
                                             :alt="post.title"
-                                            class="w-full max-w-md h-48 object-cover rounded-lg border"
+                                            class="h-48 w-full max-w-md rounded-lg border object-cover"
                                         />
                                     </div>
                                 </div>
@@ -286,10 +273,8 @@ const formatDate = (dateString: string) => {
                                         @change="handleImageChange"
                                         :class="{ 'border-red-500': form.errors.featured_image }"
                                     />
-                                    <p class="text-sm text-muted-foreground mt-1">
-                                        Format: JPEG, PNG, JPG, GIF, WebP. Maksimal 2MB.
-                                    </p>
-                                    <div v-if="form.errors.featured_image" class="text-red-500 text-sm mt-1">
+                                    <p class="mt-1 text-sm text-muted-foreground">Format: JPEG, PNG, JPG, GIF, WebP. Maksimal 2MB.</p>
+                                    <div v-if="form.errors.featured_image" class="mt-1 text-sm text-red-500">
                                         {{ form.errors.featured_image }}
                                     </div>
                                 </div>
@@ -298,11 +283,7 @@ const formatDate = (dateString: string) => {
                                 <div v-if="featuredImagePreview?.startsWith('data:')" class="mt-4">
                                     <Label>Preview Gambar Baru</Label>
                                     <div class="mt-2">
-                                        <img
-                                            :src="featuredImagePreview"
-                                            alt="Preview"
-                                            class="w-full max-w-md h-48 object-cover rounded-lg border"
-                                        />
+                                        <img :src="featuredImagePreview" alt="Preview" class="h-48 w-full max-w-md rounded-lg border object-cover" />
                                     </div>
                                 </div>
                             </div>
@@ -355,7 +336,7 @@ const formatDate = (dateString: string) => {
                                     type="datetime-local"
                                     :class="{ 'border-red-500': form.errors.published_at }"
                                 />
-                                <div v-if="form.errors.published_at" class="text-red-500 text-sm mt-1">
+                                <div v-if="form.errors.published_at" class="mt-1 text-sm text-red-500">
                                     {{ form.errors.published_at }}
                                 </div>
                             </div>
@@ -396,7 +377,7 @@ const formatDate = (dateString: string) => {
                                     required
                                     :class="[
                                         'flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none',
-                                        { 'border-red-500': form.errors.blog_category_id }
+                                        { 'border-red-500': form.errors.blog_category_id },
                                     ]"
                                 >
                                     <option value="">Pilih kategori...</option>
@@ -404,7 +385,7 @@ const formatDate = (dateString: string) => {
                                         {{ category.name }}
                                     </option>
                                 </select>
-                                <div v-if="form.errors.blog_category_id" class="text-red-500 text-sm mt-1">
+                                <div v-if="form.errors.blog_category_id" class="mt-1 text-sm text-red-500">
                                     {{ form.errors.blog_category_id }}
                                 </div>
                             </div>
@@ -415,31 +396,18 @@ const formatDate = (dateString: string) => {
                     <Card>
                         <CardContent class="pt-6">
                             <div class="space-y-3">
-                                <Button
-                                    @click="saveAsDraft"
-                                    type="button"
-                                    variant="outline"
-                                    class="w-full"
-                                    :disabled="form.processing"
-                                >
-                                    <Save class="h-4 w-4 mr-2" />
+                                <Button @click="saveAsDraft" type="button" variant="outline" class="w-full" :disabled="form.processing">
+                                    <Save class="mr-2 h-4 w-4" />
                                     Simpan Draft
                                 </Button>
 
-                                <Button
-                                    @click="publish"
-                                    type="button"
-                                    class="w-full"
-                                    :disabled="form.processing"
-                                >
-                                    <Calendar class="h-4 w-4 mr-2" />
+                                <Button @click="publish" type="button" class="w-full" :disabled="form.processing">
+                                    <Calendar class="mr-2 h-4 w-4" />
                                     {{ form.status === 'published' ? 'Update' : 'Publikasikan' }}
                                 </Button>
                             </div>
 
-                            <div v-if="form.processing" class="text-center text-sm text-muted-foreground mt-3">
-                                Menyimpan perubahan...
-                            </div>
+                            <div v-if="form.processing" class="mt-3 text-center text-sm text-muted-foreground">Menyimpan perubahan...</div>
                         </CardContent>
                     </Card>
 

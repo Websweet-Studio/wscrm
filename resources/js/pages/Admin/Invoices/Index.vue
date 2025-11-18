@@ -2,12 +2,12 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
+import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { AlertTriangle, CheckCircle, Clock, DollarSign, Edit, Eye, FileText, Plus, Search, X, ChevronUp, ChevronDown } from 'lucide-vue-next';
+import { AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Clock, DollarSign, Edit, Eye, FileText, Plus, Search, X } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface Customer {
@@ -253,12 +253,16 @@ const markAsPaid = (invoice: Invoice) => {
         return; // Already paid
     }
 
-    router.patch(`/admin/invoices/${invoice.id}/mark-paid`, {}, {
-        preserveScroll: true,
-        onSuccess: () => {
-            // Success message will be shown via flash message
+    router.patch(
+        `/admin/invoices/${invoice.id}/mark-paid`,
+        {},
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                // Success message will be shown via flash message
+            },
         },
-    });
+    );
 };
 </script>
 
@@ -268,7 +272,7 @@ const markAsPaid = (invoice: Invoice) => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6">
             <!-- Auto-generation Message -->
-            <div v-if="generationMessage" class="rounded-lg bg-blue-50 border border-blue-200 p-4 dark:bg-blue-950 dark:border-blue-800">
+            <div v-if="generationMessage" class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
                 <div class="flex items-center gap-2">
                     <FileText class="h-5 w-5 text-blue-600 dark:text-blue-400" />
                     <span class="font-medium text-blue-800 dark:text-blue-200">{{ generationMessage }}</span>
@@ -387,136 +391,85 @@ const markAsPaid = (invoice: Invoice) => {
                         <table class="w-full border-collapse">
                             <thead>
                                 <tr class="border-b border-border">
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                                         <button
                                             @click="sortBy('invoice_number')"
-                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
+                                            class="flex cursor-pointer items-center space-x-1 hover:text-foreground"
                                         >
                                             <span>No. Invoice</span>
-                                            <ChevronUp
-                                                v-if="props.sort === 'invoice_number' && props.direction === 'asc'"
-                                                class="h-4 w-4"
-                                            />
-                                            <ChevronDown
-                                                v-else-if="props.sort === 'invoice_number' && props.direction === 'desc'"
-                                                class="h-4 w-4"
-                                            />
+                                            <ChevronUp v-if="props.sort === 'invoice_number' && props.direction === 'asc'" class="h-4 w-4" />
+                                            <ChevronDown v-else-if="props.sort === 'invoice_number' && props.direction === 'desc'" class="h-4 w-4" />
                                             <div v-else class="h-4 w-4"></div>
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                                         <button
                                             @click="sortBy('customer_name')"
-                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
+                                            class="flex cursor-pointer items-center space-x-1 hover:text-foreground"
                                         >
                                             <span>Pelanggan</span>
-                                            <ChevronUp
-                                                v-if="props.sort === 'customer_name' && props.direction === 'asc'"
-                                                class="h-4 w-4"
-                                            />
-                                            <ChevronDown
-                                                v-else-if="props.sort === 'customer_name' && props.direction === 'desc'"
-                                                class="h-4 w-4"
-                                            />
+                                            <ChevronUp v-if="props.sort === 'customer_name' && props.direction === 'asc'" class="h-4 w-4" />
+                                            <ChevronDown v-else-if="props.sort === 'customer_name' && props.direction === 'desc'" class="h-4 w-4" />
                                             <div v-else class="h-4 w-4"></div>
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Layanan</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Layanan</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                                         <button
                                             @click="sortBy('invoice_type')"
-                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
+                                            class="flex cursor-pointer items-center space-x-1 hover:text-foreground"
                                         >
                                             <span>Tipe</span>
-                                            <ChevronUp
-                                                v-if="props.sort === 'invoice_type' && props.direction === 'asc'"
-                                                class="h-4 w-4"
-                                            />
-                                            <ChevronDown
-                                                v-else-if="props.sort === 'invoice_type' && props.direction === 'desc'"
-                                                class="h-4 w-4"
-                                            />
+                                            <ChevronUp v-if="props.sort === 'invoice_type' && props.direction === 'asc'" class="h-4 w-4" />
+                                            <ChevronDown v-else-if="props.sort === 'invoice_type' && props.direction === 'desc'" class="h-4 w-4" />
                                             <div v-else class="h-4 w-4"></div>
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        <button
-                                            @click="sortBy('amount')"
-                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
-                                        >
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                        <button @click="sortBy('amount')" class="flex cursor-pointer items-center space-x-1 hover:text-foreground">
                                             <span>Jumlah</span>
-                                            <ChevronUp
-                                                v-if="props.sort === 'amount' && props.direction === 'asc'"
-                                                class="h-4 w-4"
-                                            />
-                                            <ChevronDown
-                                                v-else-if="props.sort === 'amount' && props.direction === 'desc'"
-                                                class="h-4 w-4"
-                                            />
+                                            <ChevronUp v-if="props.sort === 'amount' && props.direction === 'asc'" class="h-4 w-4" />
+                                            <ChevronDown v-else-if="props.sort === 'amount' && props.direction === 'desc'" class="h-4 w-4" />
                                             <div v-else class="h-4 w-4"></div>
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                                         <button
                                             @click="sortBy('billing_cycle')"
-                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
+                                            class="flex cursor-pointer items-center space-x-1 hover:text-foreground"
                                         >
                                             <span>Siklus</span>
-                                            <ChevronUp
-                                                v-if="props.sort === 'billing_cycle' && props.direction === 'asc'"
-                                                class="h-4 w-4"
-                                            />
-                                            <ChevronDown
-                                                v-else-if="props.sort === 'billing_cycle' && props.direction === 'desc'"
-                                                class="h-4 w-4"
-                                            />
+                                            <ChevronUp v-if="props.sort === 'billing_cycle' && props.direction === 'asc'" class="h-4 w-4" />
+                                            <ChevronDown v-else-if="props.sort === 'billing_cycle' && props.direction === 'desc'" class="h-4 w-4" />
                                             <div v-else class="h-4 w-4"></div>
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        <button
-                                            @click="sortBy('due_date')"
-                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
-                                        >
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                        <button @click="sortBy('due_date')" class="flex cursor-pointer items-center space-x-1 hover:text-foreground">
                                             <span>Jatuh Tempo</span>
-                                            <ChevronUp
-                                                v-if="props.sort === 'due_date' && props.direction === 'asc'"
-                                                class="h-4 w-4"
-                                            />
-                                            <ChevronDown
-                                                v-else-if="props.sort === 'due_date' && props.direction === 'desc'"
-                                                class="h-4 w-4"
-                                            />
+                                            <ChevronUp v-if="props.sort === 'due_date' && props.direction === 'asc'" class="h-4 w-4" />
+                                            <ChevronDown v-else-if="props.sort === 'due_date' && props.direction === 'desc'" class="h-4 w-4" />
                                             <div v-else class="h-4 w-4"></div>
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        <button
-                                            @click="sortBy('status')"
-                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
-                                        >
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                        <button @click="sortBy('status')" class="flex cursor-pointer items-center space-x-1 hover:text-foreground">
                                             <span>Status</span>
-                                            <ChevronUp
-                                                v-if="props.sort === 'status' && props.direction === 'asc'"
-                                                class="h-4 w-4"
-                                            />
-                                            <ChevronDown
-                                                v-else-if="props.sort === 'status' && props.direction === 'desc'"
-                                                class="h-4 w-4"
-                                            />
+                                            <ChevronUp v-if="props.sort === 'status' && props.direction === 'asc'" class="h-4 w-4" />
+                                            <ChevronDown v-else-if="props.sort === 'status' && props.direction === 'desc'" class="h-4 w-4" />
                                             <div v-else class="h-4 w-4"></div>
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Aksi</th>
+                                    <th class="px-3 py-3 text-center text-xs font-medium tracking-wider text-muted-foreground uppercase">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr
                                     v-for="invoice in invoices.data"
                                     :key="invoice.id"
-                                    class="border-b border-border hover:bg-muted/30 transition-colors"
+                                    class="border-b border-border transition-colors hover:bg-muted/30"
                                 >
-                                    <td class="px-3 py-4 text-sm text-foreground font-medium">{{ invoice.invoice_number }}</td>
+                                    <td class="px-3 py-4 text-sm font-medium text-foreground">{{ invoice.invoice_number }}</td>
                                     <td class="px-3 py-4 text-sm">
                                         <div class="font-medium text-foreground">{{ invoice.customer.name }}</div>
                                         <div class="text-xs text-muted-foreground">{{ invoice.customer.email }}</div>
@@ -561,7 +514,7 @@ const markAsPaid = (invoice: Invoice) => {
                                                 v-if="invoice.status !== 'paid'"
                                                 size="sm"
                                                 @click="markAsPaid(invoice)"
-                                                class="bg-green-600 hover:bg-green-700 text-white border-green-600"
+                                                class="border-green-600 bg-green-600 text-white hover:bg-green-700"
                                                 title="Tandai sebagai dibayar"
                                             >
                                                 <CheckCircle class="h-3 w-3" />

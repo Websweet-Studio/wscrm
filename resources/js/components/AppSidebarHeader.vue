@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItemType } from '@/types';
 import { Menu } from 'lucide-vue-next';
-import { inject, ref } from 'vue';
+import { inject } from 'vue';
 
 interface Props {
     breadcrumbs?: BreadcrumbItemType[];
@@ -28,29 +28,21 @@ const emit = defineEmits<{
 </script>
 
 <template>
-    <header class="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 sm:px-6">
+    <header
+        class="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-6"
+    >
         <!-- Reka UI Sidebar Trigger (for CustomerLayout) -->
         <SidebarTrigger v-if="hasRekaUISidebar" />
 
         <!-- Custom Sidebar Triggers (for AppSidebarLayout) -->
         <template v-else>
             <!-- Mobile Menu Button -->
-            <Button
-                variant="ghost"
-                size="icon"
-                @click="emit('toggleMobileSidebar')"
-                class="h-9 w-9 lg:hidden"
-            >
+            <Button variant="ghost" size="icon" @click="emit('toggleMobileSidebar')" class="h-9 w-9 lg:hidden">
                 <Menu class="h-4 w-4" />
             </Button>
 
             <!-- Desktop Sidebar Toggle -->
-            <Button
-                variant="ghost"
-                size="icon"
-                @click="emit('toggleSidebar')"
-                class="hidden lg:flex h-9 w-9"
-            >
+            <Button variant="ghost" size="icon" @click="emit('toggleSidebar')" class="hidden h-9 w-9 lg:flex">
                 <Menu class="h-4 w-4" />
             </Button>
         </template>

@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { Clock, Edit, Plus, Search, Trash2, UserCheck, Users, UserX, X, Key, Building2, Calendar, DollarSign } from 'lucide-vue-next';
-import { ref, watch } from 'vue';
+import { Building2, Clock, Edit, Key, Plus, Search, Trash2, UserCheck, Users, UserX, X } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 interface Employee {
     id: number;
@@ -236,15 +236,19 @@ const confirmDelete = () => {
 
 const resetPassword = (employee: Employee) => {
     if (confirm(`Reset password untuk ${employee.user.name}? Password baru akan dikirim ke email ${employee.user.email}`)) {
-        router.post(`/admin/employees/${employee.id}/reset-password`, {}, {
-            onSuccess: () => {
-                alert('Password berhasil direset. Email dengan password baru telah dikirim.');
+        router.post(
+            `/admin/employees/${employee.id}/reset-password`,
+            {},
+            {
+                onSuccess: () => {
+                    alert('Password berhasil direset. Email dengan password baru telah dikirim.');
+                },
+                onError: (errors) => {
+                    console.error('Reset password error:', errors);
+                    alert('Gagal mereset password. Silakan coba lagi.');
+                },
             },
-            onError: (errors) => {
-                console.error('Reset password error:', errors);
-                alert('Gagal mereset password. Silakan coba lagi.');
-            },
-        });
+        );
     }
 };
 </script>
@@ -256,10 +260,10 @@ const resetPassword = (employee: Employee) => {
         <div class="w-full max-w-none space-y-4 sm:space-y-6">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Kelola Karyawan</h1>
-                    <p class="text-sm sm:text-base text-muted-foreground">Kelola akun dan data karyawan internal</p>
+                    <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Kelola Karyawan</h1>
+                    <p class="text-sm text-muted-foreground sm:text-base">Kelola akun dan data karyawan internal</p>
                 </div>
-                <Button @click="showCreateModal = true" class="cursor-pointer w-full sm:w-auto">
+                <Button @click="showCreateModal = true" class="w-full cursor-pointer sm:w-auto">
                     <Plus class="mr-2 h-4 w-4" />
                     <span class="hidden sm:inline">Tambah Karyawan</span>
                     <span class="sm:hidden">Tambah</span>
@@ -270,21 +274,21 @@ const resetPassword = (employee: Employee) => {
             <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-xs sm:text-sm font-medium">Total Karyawan</CardTitle>
-                        <Users class="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                        <CardTitle class="text-xs font-medium sm:text-sm">Total Karyawan</CardTitle>
+                        <Users class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent>
-                        <div class="text-xl sm:text-2xl font-bold">{{ employees?.total || 0 }}</div>
+                        <div class="text-xl font-bold sm:text-2xl">{{ employees?.total || 0 }}</div>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-xs sm:text-sm font-medium">Aktif</CardTitle>
-                        <UserCheck class="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
+                        <CardTitle class="text-xs font-medium sm:text-sm">Aktif</CardTitle>
+                        <UserCheck class="h-3 w-3 text-green-600 sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent>
-                        <div class="text-xl sm:text-2xl font-bold text-green-600">
+                        <div class="text-xl font-bold text-green-600 sm:text-2xl">
                             {{ employees?.data?.filter((e) => e.status === 'active').length || 0 }}
                         </div>
                     </CardContent>
@@ -292,11 +296,11 @@ const resetPassword = (employee: Employee) => {
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-xs sm:text-sm font-medium">Tidak Aktif</CardTitle>
-                        <UserX class="h-3 w-3 sm:h-4 sm:w-4 text-gray-600" />
+                        <CardTitle class="text-xs font-medium sm:text-sm">Tidak Aktif</CardTitle>
+                        <UserX class="h-3 w-3 text-gray-600 sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent>
-                        <div class="text-xl sm:text-2xl font-bold text-gray-600">
+                        <div class="text-xl font-bold text-gray-600 sm:text-2xl">
                             {{ employees?.data?.filter((e) => e.status === 'inactive').length || 0 }}
                         </div>
                     </CardContent>
@@ -304,11 +308,11 @@ const resetPassword = (employee: Employee) => {
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-xs sm:text-sm font-medium">Berhenti</CardTitle>
-                        <Clock class="h-3 w-3 sm:h-4 sm:w-4 text-red-600" />
+                        <CardTitle class="text-xs font-medium sm:text-sm">Berhenti</CardTitle>
+                        <Clock class="h-3 w-3 text-red-600 sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent>
-                        <div class="text-xl sm:text-2xl font-bold text-red-600">
+                        <div class="text-xl font-bold text-red-600 sm:text-2xl">
                             {{ employees?.data?.filter((e) => e.status === 'terminated').length || 0 }}
                         </div>
                     </CardContent>
@@ -323,21 +327,21 @@ const resetPassword = (employee: Employee) => {
                 </CardHeader>
                 <CardContent class="px-3 sm:px-4 lg:px-6">
                     <!-- Search and Filter -->
-                    <div class="mb-4 sm:mb-6 flex flex-col gap-3 sm:gap-4 sm:flex-row">
-                        <div class="relative flex-1 max-w-none sm:max-w-sm">
+                    <div class="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:gap-4">
+                        <div class="relative max-w-none flex-1 sm:max-w-sm">
                             <Search class="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
                             <Input v-model="search" placeholder="Cari karyawan..." class="pl-8" @keyup.enter="handleSearch" />
                         </div>
                         <select
                             v-model="department"
-                            class="flex h-9 w-full sm:w-[180px] cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                            class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none sm:w-[180px] dark:bg-gray-800 dark:text-white"
                         >
                             <option value="">Semua Departemen</option>
                             <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
                         </select>
                         <select
                             v-model="status"
-                            class="flex h-9 w-full sm:w-[180px] cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                            class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none sm:w-[180px] dark:bg-gray-800 dark:text-white"
                         >
                             <option value="">Semua Status</option>
                             <option value="active">Aktif</option>
@@ -358,33 +362,35 @@ const resetPassword = (employee: Employee) => {
                         <table class="w-full border-collapse">
                             <thead>
                                 <tr class="border-b border-border">
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">NIK</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Nama</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Email</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Jabatan</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Departemen</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Telepon</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Gaji</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Bergabung</th>
-                                    <th class="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Aksi</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">NIK</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Nama</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Email</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Jabatan</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Departemen</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Telepon</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Gaji</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Status</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Bergabung</th>
+                                    <th class="px-3 py-3 text-center text-xs font-medium tracking-wider text-muted-foreground uppercase">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr
                                     v-for="employee in employees.data"
                                     :key="employee.id"
-                                    class="border-b border-border hover:bg-muted/30 transition-colors"
+                                    class="border-b border-border transition-colors hover:bg-muted/30"
                                 >
-                                    <td class="px-3 py-4 text-sm text-foreground font-medium">{{ employee.nik }}</td>
-                                    <td class="px-3 py-4 text-sm text-foreground font-medium">{{ employee.user.name }}</td>
+                                    <td class="px-3 py-4 text-sm font-medium text-foreground">{{ employee.nik }}</td>
+                                    <td class="px-3 py-4 text-sm font-medium text-foreground">{{ employee.user.name }}</td>
                                     <td class="px-3 py-4 text-sm text-muted-foreground">{{ employee.user.email }}</td>
                                     <td class="px-3 py-4 text-sm text-muted-foreground">{{ employee.position }}</td>
                                     <td class="px-3 py-4 text-sm text-muted-foreground">{{ employee.department }}</td>
                                     <td class="px-3 py-4 text-sm text-muted-foreground">{{ employee.phone || '-' }}</td>
                                     <td class="px-3 py-4 text-sm text-muted-foreground">{{ formatCurrency(employee.salary) }}</td>
                                     <td class="px-3 py-4">
-                                        <span :class="`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusClass(employee.status)}`">
+                                        <span
+                                            :class="`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusClass(employee.status)}`"
+                                        >
                                             {{ getStatusText(employee.status) }}
                                         </span>
                                     </td>
@@ -396,13 +402,25 @@ const resetPassword = (employee: Employee) => {
                                                     <Users class="h-3.5 w-3.5" />
                                                 </Link>
                                             </Button>
-                                            <Button size="sm" variant="outline" @click="resetPassword(employee)" class="cursor-pointer" title="Reset Password">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                @click="resetPassword(employee)"
+                                                class="cursor-pointer"
+                                                title="Reset Password"
+                                            >
                                                 <Key class="h-3.5 w-3.5" />
                                             </Button>
                                             <Button size="sm" variant="outline" @click="openEditModal(employee)" class="cursor-pointer" title="Edit">
                                                 <Edit class="h-3.5 w-3.5" />
                                             </Button>
-                                            <Button size="sm" variant="outline" @click="openDeleteModal(employee)" class="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50" title="Hapus">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                @click="openDeleteModal(employee)"
+                                                class="cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                title="Hapus"
+                                            >
                                                 <Trash2 class="h-3.5 w-3.5" />
                                             </Button>
                                         </div>
@@ -440,7 +458,7 @@ const resetPassword = (employee: Employee) => {
         <!-- Create Employee Modal -->
         <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center">
             <div class="fixed inset-0 bg-black/50" @click="showCreateModal = false"></div>
-            <div class="relative mx-4 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
+            <div class="relative mx-4 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
                 <div class="mb-4 flex items-center justify-between">
                     <h2 class="text-lg font-semibold">Tambah Karyawan Baru</h2>
                     <button @click="showCreateModal = false" class="cursor-pointer text-gray-500 hover:text-gray-700">
@@ -450,8 +468,8 @@ const resetPassword = (employee: Employee) => {
                 <form @submit.prevent="submitCreate" class="space-y-4">
                     <!-- User Information -->
                     <div class="border-b pb-4">
-                        <h3 class="text-sm font-medium mb-3 flex items-center">
-                            <Users class="h-4 w-4 mr-2" />
+                        <h3 class="mb-3 flex items-center text-sm font-medium">
+                            <Users class="mr-2 h-4 w-4" />
                             Informasi Akun
                         </h3>
                         <div class="grid grid-cols-2 gap-4">
@@ -479,7 +497,7 @@ const resetPassword = (employee: Employee) => {
                                 <p v-if="createForm.errors.email" class="mt-1 text-xs text-red-500">{{ createForm.errors.email }}</p>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div class="mt-4 grid grid-cols-2 gap-4">
                             <div>
                                 <Label for="create-username">Username *</Label>
                                 <Input
@@ -508,19 +526,14 @@ const resetPassword = (employee: Employee) => {
 
                     <!-- Employee Information -->
                     <div>
-                        <h3 class="text-sm font-medium mb-3 flex items-center">
-                            <Building2 class="h-4 w-4 mr-2" />
+                        <h3 class="mb-3 flex items-center text-sm font-medium">
+                            <Building2 class="mr-2 h-4 w-4" />
                             Informasi Karyawan
                         </h3>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <Label for="create-nik">NIK *</Label>
-                                <Input
-                                    id="create-nik"
-                                    v-model="createForm.nik"
-                                    :class="{ 'border-red-500': createForm.errors.nik }"
-                                    required
-                                />
+                                <Input id="create-nik" v-model="createForm.nik" :class="{ 'border-red-500': createForm.errors.nik }" required />
                                 <p v-if="createForm.errors.nik" class="mt-1 text-xs text-red-500">{{ createForm.errors.nik }}</p>
                             </div>
                             <div>
@@ -534,7 +547,7 @@ const resetPassword = (employee: Employee) => {
                                 <p v-if="createForm.errors.position" class="mt-1 text-xs text-red-500">{{ createForm.errors.position }}</p>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div class="mt-4 grid grid-cols-2 gap-4">
                             <div>
                                 <Label for="create-department">Departemen *</Label>
                                 <Input
@@ -556,14 +569,10 @@ const resetPassword = (employee: Employee) => {
                                 <p v-if="createForm.errors.hire_date" class="mt-1 text-xs text-red-500">{{ createForm.errors.hire_date }}</p>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div class="mt-4 grid grid-cols-2 gap-4">
                             <div>
                                 <Label for="create-phone">Telepon</Label>
-                                <Input
-                                    id="create-phone"
-                                    v-model="createForm.phone"
-                                    :class="{ 'border-red-500': createForm.errors.phone }"
-                                />
+                                <Input id="create-phone" v-model="createForm.phone" :class="{ 'border-red-500': createForm.errors.phone }" />
                                 <p v-if="createForm.errors.phone" class="mt-1 text-xs text-red-500">{{ createForm.errors.phone }}</p>
                             </div>
                             <div>
@@ -579,14 +588,10 @@ const resetPassword = (employee: Employee) => {
                         </div>
                         <div class="mt-4">
                             <Label for="create-address">Alamat</Label>
-                            <Input
-                                id="create-address"
-                                v-model="createForm.address"
-                                :class="{ 'border-red-500': createForm.errors.address }"
-                            />
+                            <Input id="create-address" v-model="createForm.address" :class="{ 'border-red-500': createForm.errors.address }" />
                             <p v-if="createForm.errors.address" class="mt-1 text-xs text-red-500">{{ createForm.errors.address }}</p>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div class="mt-4 grid grid-cols-2 gap-4">
                             <div>
                                 <Label for="create-status">Status *</Label>
                                 <select
@@ -617,7 +622,7 @@ const resetPassword = (employee: Employee) => {
                             <textarea
                                 id="create-notes"
                                 v-model="createForm.notes"
-                                class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                                 :class="{ 'border-red-500': createForm.errors.notes }"
                             ></textarea>
                             <p v-if="createForm.errors.notes" class="mt-1 text-xs text-red-500">{{ createForm.errors.notes }}</p>
@@ -637,7 +642,7 @@ const resetPassword = (employee: Employee) => {
         <!-- Edit Employee Modal -->
         <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center">
             <div class="fixed inset-0 bg-black/50" @click="showEditModal = false"></div>
-            <div class="relative mx-4 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
+            <div class="relative mx-4 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
                 <div class="mb-4 flex items-center justify-between">
                     <h2 class="text-lg font-semibold">Edit Karyawan</h2>
                     <button @click="showEditModal = false" class="cursor-pointer text-gray-500 hover:text-gray-700">
@@ -647,8 +652,8 @@ const resetPassword = (employee: Employee) => {
                 <form @submit.prevent="submitEdit" class="space-y-4">
                     <!-- User Information -->
                     <div class="border-b pb-4">
-                        <h3 class="text-sm font-medium mb-3 flex items-center">
-                            <Users class="h-4 w-4 mr-2" />
+                        <h3 class="mb-3 flex items-center text-sm font-medium">
+                            <Users class="mr-2 h-4 w-4" />
                             Informasi Akun
                         </h3>
                         <div class="grid grid-cols-2 gap-4">
@@ -676,7 +681,7 @@ const resetPassword = (employee: Employee) => {
                                 <p v-if="editForm.errors.email" class="mt-1 text-xs text-red-500">{{ editForm.errors.email }}</p>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div class="mt-4 grid grid-cols-2 gap-4">
                             <div>
                                 <Label for="edit-username">Username *</Label>
                                 <Input
@@ -704,19 +709,14 @@ const resetPassword = (employee: Employee) => {
 
                     <!-- Employee Information -->
                     <div>
-                        <h3 class="text-sm font-medium mb-3 flex items-center">
-                            <Building2 class="h-4 w-4 mr-2" />
+                        <h3 class="mb-3 flex items-center text-sm font-medium">
+                            <Building2 class="mr-2 h-4 w-4" />
                             Informasi Karyawan
                         </h3>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <Label for="edit-nik">NIK *</Label>
-                                <Input
-                                    id="edit-nik"
-                                    v-model="editForm.nik"
-                                    :class="{ 'border-red-500': editForm.errors.nik }"
-                                    required
-                                />
+                                <Input id="edit-nik" v-model="editForm.nik" :class="{ 'border-red-500': editForm.errors.nik }" required />
                                 <p v-if="editForm.errors.nik" class="mt-1 text-xs text-red-500">{{ editForm.errors.nik }}</p>
                             </div>
                             <div>
@@ -730,7 +730,7 @@ const resetPassword = (employee: Employee) => {
                                 <p v-if="editForm.errors.position" class="mt-1 text-xs text-red-500">{{ editForm.errors.position }}</p>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div class="mt-4 grid grid-cols-2 gap-4">
                             <div>
                                 <Label for="edit-department">Departemen *</Label>
                                 <Input
@@ -752,14 +752,10 @@ const resetPassword = (employee: Employee) => {
                                 <p v-if="editForm.errors.hire_date" class="mt-1 text-xs text-red-500">{{ editForm.errors.hire_date }}</p>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div class="mt-4 grid grid-cols-2 gap-4">
                             <div>
                                 <Label for="edit-phone">Telepon</Label>
-                                <Input
-                                    id="edit-phone"
-                                    v-model="editForm.phone"
-                                    :class="{ 'border-red-500': editForm.errors.phone }"
-                                />
+                                <Input id="edit-phone" v-model="editForm.phone" :class="{ 'border-red-500': editForm.errors.phone }" />
                                 <p v-if="editForm.errors.phone" class="mt-1 text-xs text-red-500">{{ editForm.errors.phone }}</p>
                             </div>
                             <div>
@@ -775,14 +771,10 @@ const resetPassword = (employee: Employee) => {
                         </div>
                         <div class="mt-4">
                             <Label for="edit-address">Alamat</Label>
-                            <Input
-                                id="edit-address"
-                                v-model="editForm.address"
-                                :class="{ 'border-red-500': editForm.errors.address }"
-                            />
+                            <Input id="edit-address" v-model="editForm.address" :class="{ 'border-red-500': editForm.errors.address }" />
                             <p v-if="editForm.errors.address" class="mt-1 text-xs text-red-500">{{ editForm.errors.address }}</p>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div class="mt-4 grid grid-cols-2 gap-4">
                             <div>
                                 <Label for="edit-status">Status *</Label>
                                 <select
@@ -812,7 +804,7 @@ const resetPassword = (employee: Employee) => {
                             <textarea
                                 id="edit-notes"
                                 v-model="editForm.notes"
-                                class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                                 :class="{ 'border-red-500': editForm.errors.notes }"
                             ></textarea>
                             <p v-if="editForm.errors.notes" class="mt-1 text-xs text-red-500">{{ editForm.errors.notes }}</p>
@@ -856,7 +848,8 @@ const resetPassword = (employee: Employee) => {
                                 <h3 class="text-sm font-medium text-red-800 dark:text-red-200">Peringatan: Tindakan ini tidak dapat dibatalkan</h3>
                                 <div class="mt-2 text-sm text-red-700 dark:text-red-300">
                                     <p>
-                                        Anda akan menghapus secara permanen <strong>{{ employeeToDelete?.user.name }}</strong>.
+                                        Anda akan menghapus secara permanen <strong>{{ employeeToDelete?.user.name }}</strong
+                                        >.
                                     </p>
                                     <div class="mt-3 space-y-1">
                                         <p><strong>Ini juga akan menghapus:</strong></p>

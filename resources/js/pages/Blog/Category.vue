@@ -1,19 +1,10 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
-import {
-    Calendar,
-    User,
-    Eye,
-    Heart,
-    Clock,
-    Tag,
-    ArrowLeft,
-    TrendingUp
-} from 'lucide-vue-next';
+import { Calendar, Clock, Eye, Heart, Tag, User } from 'lucide-vue-next';
 
 interface BlogCategory {
     id: number;
@@ -109,69 +100,57 @@ const getTypeText = (type: string) => {
 
     <CustomerPublicLayout :title="`${category.name} - Blog WebSweetStudio`">
         <div class="container mx-auto px-4 py-8">
-            
             <!-- Category Header -->
-            <div class="text-center mb-12">
-                <div class="flex items-center justify-center mb-4">
-                    <div
-                        class="w-16 h-16 rounded-full flex items-center justify-center mr-4"
-                        :style="{ backgroundColor: category.color + '20' }"
-                    >
+            <div class="mb-12 text-center">
+                <div class="mb-4 flex items-center justify-center">
+                    <div class="mr-4 flex h-16 w-16 items-center justify-center rounded-full" :style="{ backgroundColor: category.color + '20' }">
                         <Tag class="h-8 w-8" :style="{ color: category.color }" />
                     </div>
                     <div>
-                        <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-2">
+                        <h1 class="mb-2 text-4xl font-bold text-gray-900 md:text-5xl dark:text-white">
                             {{ category.name }}
                         </h1>
-                        <Badge
-                            :style="{ backgroundColor: category.color + '20', color: category.color }"
-                            class="text-sm"
-                        >
+                        <Badge :style="{ backgroundColor: category.color + '20', color: category.color }" class="text-sm">
                             {{ posts.total }} artikel
                         </Badge>
                     </div>
                 </div>
-                <p v-if="category.description" class="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                <p v-if="category.description" class="mx-auto max-w-2xl text-xl text-gray-600 dark:text-gray-400">
                     {{ category.description }}
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-4">
                 <!-- Main Content -->
                 <div class="lg:col-span-3">
                     <!-- Posts Grid -->
                     <div v-if="posts.data.length > 0">
-                        <div class="flex items-center justify-between mb-6">
+                        <div class="mb-6 flex items-center justify-between">
                             <h2 class="text-2xl font-bold">Artikel dalam kategori {{ category.name }}</h2>
-                            <span class="text-gray-500 text-sm">
-                                Menampilkan {{ posts.data.length }} dari {{ posts.total }} artikel
-                            </span>
+                            <span class="text-sm text-gray-500"> Menampilkan {{ posts.data.length }} dari {{ posts.total }} artikel </span>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Card v-for="post in posts.data" :key="post.id" class="overflow-hidden hover:shadow-lg transition-shadow">
+                        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <Card v-for="post in posts.data" :key="post.id" class="overflow-hidden transition-shadow hover:shadow-lg">
                                 <div v-if="post.featured_image" class="h-48 overflow-hidden">
                                     <img
                                         :src="post.featured_image_url"
                                         :alt="post.title"
-                                        class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                                        class="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                                     />
                                 </div>
                                 <CardContent class="p-6">
-                                    <div class="flex items-center justify-between mb-3">
-                                        <Badge
-                                            :style="{ backgroundColor: post.category.color + '20', color: post.category.color }"
-                                            class="text-xs"
-                                        >
+                                    <div class="mb-3 flex items-center justify-between">
+                                        <Badge :style="{ backgroundColor: post.category.color + '20', color: post.category.color }" class="text-xs">
                                             {{ post.category.name }}
                                         </Badge>
                                         <Badge :class="getTypeColor(post.type)" class="text-xs">
                                             {{ getTypeText(post.type) }}
                                         </Badge>
                                     </div>
-                                    <h3 class="text-lg font-semibold mb-2 line-clamp-2">{{ post.title }}</h3>
-                                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-3">{{ post.excerpt }}</p>
-                                    <div class="flex items-center justify-between text-xs text-gray-500 mb-4">
+                                    <h3 class="mb-2 line-clamp-2 text-lg font-semibold">{{ post.title }}</h3>
+                                    <p class="mb-4 line-clamp-3 text-sm text-gray-600 dark:text-gray-400">{{ post.excerpt }}</p>
+                                    <div class="mb-4 flex items-center justify-between text-xs text-gray-500">
                                         <div class="flex items-center space-x-2">
                                             <User class="h-3 w-3" />
                                             <span>{{ post.author.name }}</span>
@@ -181,7 +160,7 @@ const getTypeText = (type: string) => {
                                             <span>{{ post.formatted_date || formatDate(post.created_at) }}</span>
                                         </div>
                                     </div>
-                                    <div class="flex items-center justify-between text-xs text-gray-500 mb-4">
+                                    <div class="mb-4 flex items-center justify-between text-xs text-gray-500">
                                         <div class="flex items-center space-x-4">
                                             <div class="flex items-center space-x-1">
                                                 <Eye class="h-3 w-3" />
@@ -208,33 +187,20 @@ const getTypeText = (type: string) => {
                                     <Link
                                         v-if="link.url"
                                         :href="link.url"
-                                        :class="[
-                                            'rounded px-3 py-2 text-sm',
-                                            link.active
-                                                ? 'bg-primary text-primary-foreground'
-                                                : 'hover:bg-muted'
-                                        ]"
+                                        :class="['rounded px-3 py-2 text-sm', link.active ? 'bg-primary text-primary-foreground' : 'hover:bg-muted']"
                                         v-html="link.label"
                                     />
-                                    <span
-                                        v-else
-                                        :class="[
-                                            'rounded px-3 py-2 text-sm cursor-not-allowed opacity-50'
-                                        ]"
-                                        v-html="link.label"
-                                    />
+                                    <span v-else :class="['cursor-not-allowed rounded px-3 py-2 text-sm opacity-50']" v-html="link.label" />
                                 </template>
                             </nav>
                         </div>
                     </div>
 
                     <!-- No posts found -->
-                    <div v-else class="text-center py-12">
-                        <Tag class="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Belum ada artikel</h3>
-                        <p class="text-gray-600 dark:text-gray-400">
-                            Kategori {{ category.name }} belum memiliki artikel yang dipublikasikan.
-                        </p>
+                    <div v-else class="py-12 text-center">
+                        <Tag class="mx-auto mb-4 h-16 w-16 text-gray-400" />
+                        <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">Belum ada artikel</h3>
+                        <p class="text-gray-600 dark:text-gray-400">Kategori {{ category.name }} belum memiliki artikel yang dipublikasikan.</p>
                         <Link href="/blog">
                             <Button variant="outline" class="mt-4">Lihat Semua Artikel</Button>
                         </Link>
@@ -254,16 +220,13 @@ const getTypeText = (type: string) => {
                         <CardContent>
                             <div class="space-y-2">
                                 <Link
-                                    v-for="cat in categories.filter(c => c.id !== category.id)"
+                                    v-for="cat in categories.filter((c) => c.id !== category.id)"
                                     :key="cat.id"
                                     :href="`/blog/category/${cat.slug}`"
-                                    class="flex items-center justify-between p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                    class="flex items-center justify-between rounded p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
                                 >
                                     <div class="flex items-center space-x-2">
-                                        <div
-                                            class="w-3 h-3 rounded-full"
-                                            :style="{ backgroundColor: cat.color }"
-                                        ></div>
+                                        <div class="h-3 w-3 rounded-full" :style="{ backgroundColor: cat.color }"></div>
                                         <span class="text-sm">{{ cat.name }}</span>
                                     </div>
                                     <Badge variant="secondary" class="text-xs">
@@ -284,25 +247,20 @@ const getTypeText = (type: string) => {
                         </CardHeader>
                         <CardContent>
                             <div class="space-y-4">
-                                <Link
-                                    v-for="post in recentPosts"
-                                    :key="post.id"
-                                    :href="`/blog/${post.slug}`"
-                                    class="block group"
-                                >
+                                <Link v-for="post in recentPosts" :key="post.id" :href="`/blog/${post.slug}`" class="group block">
                                     <div class="flex space-x-3">
                                         <div v-if="post.featured_image" class="flex-shrink-0">
                                             <img
                                                 :src="post.featured_image_url"
                                                 :alt="post.title"
-                                                class="w-16 h-16 object-cover rounded group-hover:scale-105 transition-transform"
+                                                class="h-16 w-16 rounded object-cover transition-transform group-hover:scale-105"
                                             />
                                         </div>
-                                        <div class="flex-1 min-w-0">
-                                            <h4 class="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                                        <div class="min-w-0 flex-1">
+                                            <h4 class="line-clamp-2 text-sm font-medium transition-colors group-hover:text-primary">
                                                 {{ post.title }}
                                             </h4>
-                                            <div class="flex items-center space-x-2 mt-1 text-xs text-gray-500">
+                                            <div class="mt-1 flex items-center space-x-2 text-xs text-gray-500">
                                                 <Calendar class="h-3 w-3" />
                                                 <span>{{ post.formatted_date || formatDate(post.created_at) }}</span>
                                             </div>
@@ -317,9 +275,7 @@ const getTypeText = (type: string) => {
                     <Card>
                         <CardContent class="pt-6">
                             <Link href="/blog">
-                                <Button class="w-full">
-                                    Lihat Semua Artikel
-                                </Button>
+                                <Button class="w-full"> Lihat Semua Artikel </Button>
                             </Link>
                         </CardContent>
                     </Card>

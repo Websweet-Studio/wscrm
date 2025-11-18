@@ -245,7 +245,8 @@ const confirmDelete = () => {
                                                 {{ formatPrice(getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
                                             </div>
                                             <div v-if="plan.discount_percent > 0" class="text-xs text-green-600">
-                                                Hemat {{ formatPrice(plan.selling_price - getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
+                                                Hemat
+                                                {{ formatPrice(plan.selling_price - getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
                                             </div>
                                         </div>
                                     </TableCell>
@@ -722,8 +723,10 @@ const confirmDelete = () => {
                             <strong>Paket:</strong> {{ planToDelete?.plan_name }}<br />
                             <strong>Spesifikasi:</strong> {{ planToDelete?.storage_gb }}GB, {{ planToDelete?.cpu_cores }} CPU,
                             {{ planToDelete?.ram_gb }}GB RAM<br />
-                            <strong>Harga Final:</strong> {{ planToDelete ? formatPrice(getDiscountedPrice(planToDelete.selling_price, planToDelete.discount_percent)) : '' }}<br />
-                            <strong v-if="planToDelete?.discount_percent && planToDelete.discount_percent > 0">Diskon:</strong> {{ planToDelete.discount_percent }}%<br />
+                            <strong>Harga Final:</strong>
+                            {{ planToDelete ? formatPrice(getDiscountedPrice(planToDelete.selling_price, planToDelete.discount_percent)) : '' }}<br />
+                            <strong v-if="planToDelete?.discount_percent && planToDelete.discount_percent > 0">Diskon:</strong>
+                            {{ planToDelete.discount_percent }}%<br />
                             <strong>Status:</strong> {{ planToDelete?.is_active ? 'Aktif' : 'Nonaktif' }}
                         </p>
                     </div>

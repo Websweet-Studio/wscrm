@@ -12,7 +12,7 @@ function initializeFavicon() {
     // Check if we have branding settings with favicon
     if ((window as any).brandingSettings) {
         const faviconUrl = (window as any).brandingSettings.app_favicon;
-        
+
         if (faviconUrl) {
             // Update or create favicon link elements
             const updateFavicon = (href: string, rel: string, type?: string) => {

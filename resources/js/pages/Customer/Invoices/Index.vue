@@ -53,23 +53,23 @@ const getOrderTypeDisplay = (order) => {
     if (!order || !order.order_items || order.order_items.length === 0) {
         return 'Mixed Order';
     }
-    
-    const itemTypes = order.order_items.map(item => item.item_type);
+
+    const itemTypes = order.order_items.map((item) => item.item_type);
     const uniqueTypes = [...new Set(itemTypes)];
-    
+
     if (uniqueTypes.length === 1) {
         const type = uniqueTypes[0];
         const typeMap = {
-            'hosting': 'Hosting',
-            'domain': 'Domain',
-            'service': 'Service',
-            'app': 'Aplikasi',
-            'web': 'Website',
-            'maintenance': 'Maintenance'
+            hosting: 'Hosting',
+            domain: 'Domain',
+            service: 'Service',
+            app: 'Aplikasi',
+            web: 'Website',
+            maintenance: 'Maintenance',
         };
         return typeMap[type] || type;
     }
-    
+
     return `Mixed (${uniqueTypes.length} types)`;
 };
 </script>
@@ -78,7 +78,6 @@ const getOrderTypeDisplay = (order) => {
     <Head title="Invoice Saya" />
 
     <CustomerLayout :breadcrumbs="breadcrumbs">
-
         <div class="space-y-6">
             <div>
                 <h1 class="text-3xl font-bold tracking-tight">Invoice Saya</h1>
@@ -178,17 +177,14 @@ const getOrderTypeDisplay = (order) => {
                                             v-if="link.url"
                                             :href="link.url"
                                             :class="[
-                                                'rounded-md px-3 py-2 text-sm cursor-pointer',
+                                                'cursor-pointer rounded-md px-3 py-2 text-sm',
                                                 link.active ? 'bg-primary text-primary-foreground' : 'border bg-background hover:bg-muted',
                                             ]"
                                             v-html="link.label"
                                         />
                                         <span
                                             v-else
-                                            :class="[
-                                                'rounded-md px-3 py-2 text-sm cursor-not-allowed opacity-50',
-                                                'border bg-background',
-                                            ]"
+                                            :class="['cursor-not-allowed rounded-md px-3 py-2 text-sm opacity-50', 'border bg-background']"
                                             v-html="link.label"
                                         />
                                     </template>

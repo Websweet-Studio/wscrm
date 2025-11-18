@@ -21,5 +21,5 @@ $plan = App\Models\HostingPlan::where('plan_name', 'Basic')
 
 if ($plan) {
     $finalPrice = $plan->selling_price * (1 - $plan->discount_percent / 100);
-    echo "✅ 2GB Basic Plan: {$plan->selling_price} - {$plan->discount_percent}% = Rp" . number_format($finalPrice, 0, ',', '.') . "\n";
+    echo "✅ 2GB Basic Plan: {$plan->selling_price} - {$plan->discount_percent}% = Rp".number_format($finalPrice, 0, ',', '.')."\n";
 }

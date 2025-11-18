@@ -172,7 +172,8 @@ const logout = () => {
                     </CardHeader>
                     <CardContent>
                         <div v-if="services.length === 0" class="py-4 text-center text-muted-foreground">
-                            Belum ada layanan. <Link :href="customer.hosting.index().url" class="text-primary hover:underline">Jelajahi paket hosting</Link>
+                            Belum ada layanan.
+                            <Link :href="customer.hosting.index().url" class="text-primary hover:underline">Jelajahi paket hosting</Link>
                         </div>
                         <div v-else class="space-y-3">
                             <div
@@ -235,7 +236,7 @@ const logout = () => {
                                         <div class="font-medium text-green-600 dark:text-green-400">
                                             {{ formatPrice(Number(order.total_amount) - Number(order.discount_amount)) }}
                                         </div>
-                                        <div class="text-xs text-green-600 dark:text-green-400 mb-1">
+                                        <div class="mb-1 text-xs text-green-600 dark:text-green-400">
                                             Hemat: {{ formatPrice(order.discount_amount) }}
                                         </div>
                                     </template>
@@ -272,7 +273,7 @@ const logout = () => {
                         <div
                             v-for="invoice in unpaidInvoices"
                             :key="invoice.id"
-                            class="flex flex-col gap-2 rounded-md bg-white/50 px-3 py-2 dark:bg-black/20 sm:flex-row sm:items-center sm:justify-between sm:gap-0"
+                            class="flex flex-col gap-2 rounded-md bg-white/50 px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-0 dark:bg-black/20"
                         >
                             <div>
                                 <Link :href="customer.invoices.show(invoice.id).url" class="font-medium hover:underline">
@@ -292,8 +293,16 @@ const logout = () => {
                         </div>
                     </div>
                     <div class="mt-4 flex flex-col gap-2 sm:flex-row">
-                        <Button :as="Link" :href="customer.invoices.index().url" variant="outline" size="sm" class="w-full sm:w-auto"> Lihat Semua Tagihan </Button>
-                        <Button v-if="unpaidInvoices.length > 0" :as="Link" :href="customer.invoices.payment(unpaidInvoices[0].id).url" size="sm" class="w-full sm:w-auto">
+                        <Button :as="Link" :href="customer.invoices.index().url" variant="outline" size="sm" class="w-full sm:w-auto">
+                            Lihat Semua Tagihan
+                        </Button>
+                        <Button
+                            v-if="unpaidInvoices.length > 0"
+                            :as="Link"
+                            :href="customer.invoices.payment(unpaidInvoices[0].id).url"
+                            size="sm"
+                            class="w-full sm:w-auto"
+                        >
                             Bayar Sekarang
                         </Button>
                     </div>

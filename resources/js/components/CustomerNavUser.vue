@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import UserInfo from '@/components/UserInfo.vue';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import customer from '@/routes/customer';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { ChevronsUpDown, LogOut, User } from 'lucide-vue-next';

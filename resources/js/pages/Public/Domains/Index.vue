@@ -83,7 +83,9 @@ const isPopular = (extension: string) => {
                 class="mb-12 space-y-6 rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 text-center sm:mb-16 sm:space-y-8 sm:py-20"
             >
                 <div class="space-y-4 sm:space-y-6">
-                    <div class="inline-flex items-center rounded-full border border-blue-200 bg-white/80 px-3 py-1 text-xs font-medium text-blue-700 sm:px-4 sm:py-2 sm:text-sm">
+                    <div
+                        class="inline-flex items-center rounded-full border border-blue-200 bg-white/80 px-3 py-1 text-xs font-medium text-blue-700 sm:px-4 sm:py-2 sm:text-sm"
+                    >
                         <Star class="mr-1 h-3 w-3 text-yellow-500 sm:mr-2 sm:h-4 sm:w-4" />
                         Mulai perjalanan online Anda hari ini
                     </div>
@@ -141,11 +143,11 @@ const isPopular = (extension: string) => {
                     </p>
                 </div>
 
-                <div class="mx-auto grid max-w-4xl gap-4 grid-cols-1 sm:gap-6 lg:grid-cols-3">
+                <div class="mx-auto grid max-w-4xl grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
                     <Card
                         v-for="domain in getPopularExtensions()"
                         :key="domain.id"
-                        class="group relative cursor-pointer overflow-hidden border-2 transition-all hover:scale-105 hover:border-blue-300 hover:shadow-xl lg:max-w-none max-w-sm mx-auto"
+                        class="group relative mx-auto max-w-sm cursor-pointer overflow-hidden border-2 transition-all hover:scale-105 hover:border-blue-300 hover:shadow-xl lg:max-w-none"
                     >
                         <!-- Premium Badge -->
                         <div v-if="isPremium(domain.extension)" class="absolute top-2 right-2 z-10 sm:top-3 sm:right-3">
@@ -170,7 +172,9 @@ const isPopular = (extension: string) => {
                                 </div>
 
                                 <div class="space-y-1 border-t pt-2">
-                                    <div class="text-xs text-muted-foreground">Perpanjangan: {{ formatPrice(domain.renewal_price_with_tax) }}/tahun</div>
+                                    <div class="text-xs text-muted-foreground">
+                                        Perpanjangan: {{ formatPrice(domain.renewal_price_with_tax) }}/tahun
+                                    </div>
                                 </div>
                             </div>
 
@@ -195,7 +199,9 @@ const isPopular = (extension: string) => {
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div class="space-y-1">
                         <h2 class="text-xl font-bold sm:text-2xl">Harga Domain Lengkap</h2>
-                        <p class="text-sm text-muted-foreground sm:text-base">Bandingkan harga dan temukan ekstensi yang sempurna untuk kebutuhan Anda</p>
+                        <p class="text-sm text-muted-foreground sm:text-base">
+                            Bandingkan harga dan temukan ekstensi yang sempurna untuk kebutuhan Anda
+                        </p>
                     </div>
 
                     <!-- Extension Search -->
@@ -261,7 +267,9 @@ const isPopular = (extension: string) => {
                                         </td>
                                         <td class="px-3 py-3 text-right sm:px-6 sm:py-4">
                                             <div class="space-y-1">
-                                                <div class="text-base font-bold text-green-600 sm:text-lg">{{ formatPrice(domain.selling_price) }}</div>
+                                                <div class="text-base font-bold text-green-600 sm:text-lg">
+                                                    {{ formatPrice(domain.selling_price) }}
+                                                </div>
                                                 <div class="text-xs text-muted-foreground">tahun pertama</div>
                                             </div>
                                         </td>
@@ -300,7 +308,9 @@ const isPopular = (extension: string) => {
                                     <Globe class="h-5 w-5 text-blue-600 sm:h-6 sm:w-6" />
                                 </div>
                                 <h3 class="text-sm font-semibold sm:text-base">Pengelolaan Mudah</h3>
-                                <p class="text-xs text-muted-foreground sm:text-sm">Panel kontrol intuitif untuk mengelola semua domain Anda di satu tempat</p>
+                                <p class="text-xs text-muted-foreground sm:text-sm">
+                                    Panel kontrol intuitif untuk mengelola semua domain Anda di satu tempat
+                                </p>
                             </div>
 
                             <div class="space-y-2 text-center sm:space-y-3">
@@ -308,7 +318,9 @@ const isPopular = (extension: string) => {
                                     <TrendingUp class="h-5 w-5 text-green-600 sm:h-6 sm:w-6" />
                                 </div>
                                 <h3 class="text-sm font-semibold sm:text-base">Harga Kompetitif</h3>
-                                <p class="text-xs text-muted-foreground sm:text-sm">Harga terbaik di pasar dengan tarif perpanjangan yang transparan</p>
+                                <p class="text-xs text-muted-foreground sm:text-sm">
+                                    Harga terbaik di pasar dengan tarif perpanjangan yang transparan
+                                </p>
                             </div>
 
                             <div class="space-y-2 text-center sm:space-y-3">

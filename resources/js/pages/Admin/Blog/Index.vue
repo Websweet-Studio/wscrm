@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Edit, Eye, Plus, Search, Star, Pin, Trash2, ChevronUp, ChevronDown, Calendar, User, Tag } from 'lucide-vue-next';
+import { Calendar, ChevronDown, ChevronUp, Edit, Eye, Pin, Plus, Search, Star, Tag, Trash2, User } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface BlogCategory {
@@ -188,17 +188,25 @@ const getSortIcon = (field: string) => {
 };
 
 const toggleFeatured = (post: BlogPost) => {
-    router.patch(`/admin/blog/${post.id}/toggle-featured`, {}, {
-        preserveState: true,
-        preserveScroll: true,
-    });
+    router.patch(
+        `/admin/blog/${post.id}/toggle-featured`,
+        {},
+        {
+            preserveState: true,
+            preserveScroll: true,
+        },
+    );
 };
 
 const togglePinned = (post: BlogPost) => {
-    router.patch(`/admin/blog/${post.id}/toggle-pinned`, {}, {
-        preserveState: true,
-        preserveScroll: true,
-    });
+    router.patch(
+        `/admin/blog/${post.id}/toggle-pinned`,
+        {},
+        {
+            preserveState: true,
+            preserveScroll: true,
+        },
+    );
 };
 
 const confirmDelete = (post: BlogPost) => {
@@ -231,9 +239,7 @@ const deletePost = () => {
             <div class="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
                 <div>
                     <h1 class="text-2xl font-bold">Manajemen Blog</h1>
-                    <p class="text-muted-foreground">
-                        Kelola artikel, pengumuman, dan konten blog
-                    </p>
+                    <p class="text-muted-foreground">Kelola artikel, pengumuman, dan konten blog</p>
                 </div>
                 <div class="flex space-x-2">
                     <Link href="/admin/blog/create">
@@ -257,12 +263,7 @@ const deletePost = () => {
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
                         <div>
                             <Label for="search">Pencarian</Label>
-                            <Input
-                                id="search"
-                                v-model="search"
-                                placeholder="Cari judul atau konten..."
-                                @input="applyFilters"
-                            />
+                            <Input id="search" v-model="search" placeholder="Cari judul atau konten..." @input="applyFilters" />
                         </div>
                         <div>
                             <Label for="category">Kategori</Label>
@@ -307,9 +308,7 @@ const deletePost = () => {
                             </select>
                         </div>
                         <div class="flex items-end">
-                            <Button @click="resetFilters" variant="outline" class="w-full">
-                                Reset Filter
-                            </Button>
+                            <Button @click="resetFilters" variant="outline" class="w-full"> Reset Filter </Button>
                         </div>
                     </div>
                 </CardContent>
@@ -321,9 +320,7 @@ const deletePost = () => {
                     <div class="flex items-center justify-between">
                         <div>
                             <CardTitle>Daftar Artikel</CardTitle>
-                            <CardDescription>
-                                Total {{ posts.total }} artikel ditemukan
-                            </CardDescription>
+                            <CardDescription> Total {{ posts.total }} artikel ditemukan </CardDescription>
                         </div>
                     </div>
                 </CardHeader>
@@ -333,81 +330,42 @@ const deletePost = () => {
                             <thead>
                                 <tr class="border-b">
                                     <th class="pb-3 text-left font-medium">
-                                        <button
-                                            @click="sortBy('title')"
-                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
-                                        >
+                                        <button @click="sortBy('title')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Judul</span>
-                                            <component
-                                                :is="getSortIcon('title')"
-                                                v-if="getSortIcon('title')"
-                                                class="h-4 w-4"
-                                            />
+                                            <component :is="getSortIcon('title')" v-if="getSortIcon('title')" class="h-4 w-4" />
                                         </button>
                                     </th>
                                     <th class="pb-3 text-left font-medium">Kategori</th>
                                     <th class="pb-3 text-left font-medium">Penulis</th>
                                     <th class="pb-3 text-left font-medium">
-                                        <button
-                                            @click="sortBy('status')"
-                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
-                                        >
+                                        <button @click="sortBy('status')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Status</span>
-                                            <component
-                                                :is="getSortIcon('status')"
-                                                v-if="getSortIcon('status')"
-                                                class="h-4 w-4"
-                                            />
+                                            <component :is="getSortIcon('status')" v-if="getSortIcon('status')" class="h-4 w-4" />
                                         </button>
                                     </th>
                                     <th class="pb-3 text-left font-medium">
-                                        <button
-                                            @click="sortBy('type')"
-                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
-                                        >
+                                        <button @click="sortBy('type')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Tipe</span>
-                                            <component
-                                                :is="getSortIcon('type')"
-                                                v-if="getSortIcon('type')"
-                                                class="h-4 w-4"
-                                            />
+                                            <component :is="getSortIcon('type')" v-if="getSortIcon('type')" class="h-4 w-4" />
                                         </button>
                                     </th>
                                     <th class="pb-3 text-left font-medium">
-                                        <button
-                                            @click="sortBy('views_count')"
-                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
-                                        >
+                                        <button @click="sortBy('views_count')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Views</span>
-                                            <component
-                                                :is="getSortIcon('views_count')"
-                                                v-if="getSortIcon('views_count')"
-                                                class="h-4 w-4"
-                                            />
+                                            <component :is="getSortIcon('views_count')" v-if="getSortIcon('views_count')" class="h-4 w-4" />
                                         </button>
                                     </th>
                                     <th class="pb-3 text-left font-medium">
-                                        <button
-                                            @click="sortBy('published_at')"
-                                            class="flex items-center space-x-1 hover:text-primary cursor-pointer"
-                                        >
+                                        <button @click="sortBy('published_at')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Tanggal</span>
-                                            <component
-                                                :is="getSortIcon('published_at')"
-                                                v-if="getSortIcon('published_at')"
-                                                class="h-4 w-4"
-                                            />
+                                            <component :is="getSortIcon('published_at')" v-if="getSortIcon('published_at')" class="h-4 w-4" />
                                         </button>
                                     </th>
                                     <th class="pb-3 text-center font-medium">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr
-                                    v-for="post in posts.data"
-                                    :key="post.id"
-                                    class="border-b hover:bg-muted/50"
-                                >
+                                <tr v-for="post in posts.data" :key="post.id" class="border-b hover:bg-muted/50">
                                     <td class="py-3">
                                         <div class="flex items-start space-x-3">
                                             <img
@@ -416,20 +374,14 @@ const deletePost = () => {
                                                 :alt="post.title"
                                                 class="h-12 w-16 rounded object-cover"
                                             />
-                                            <div class="flex-1 min-w-0">
+                                            <div class="min-w-0 flex-1">
                                                 <div class="flex items-center space-x-2">
-                                                    <h3 class="font-medium text-sm leading-tight">{{ post.title }}</h3>
-                                                    <Star
-                                                        v-if="post.is_featured"
-                                                        class="h-4 w-4 text-yellow-500 fill-yellow-500"
-                                                    />
-                                                    <Pin
-                                                        v-if="post.is_pinned"
-                                                        class="h-4 w-4 text-blue-500"
-                                                    />
+                                                    <h3 class="text-sm leading-tight font-medium">{{ post.title }}</h3>
+                                                    <Star v-if="post.is_featured" class="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                                                    <Pin v-if="post.is_pinned" class="h-4 w-4 text-blue-500" />
                                                 </div>
-                                                <p class="text-xs text-muted-foreground mt-1 line-clamp-2">{{ post.excerpt }}</p>
-                                                <div class="flex items-center space-x-2 mt-1">
+                                                <p class="mt-1 line-clamp-2 text-xs text-muted-foreground">{{ post.excerpt }}</p>
+                                                <div class="mt-1 flex items-center space-x-2">
                                                     <span class="text-xs text-muted-foreground">{{ post.reading_time }}</span>
                                                     <span class="text-xs text-muted-foreground">•</span>
                                                     <span class="text-xs text-muted-foreground">{{ post.likes_count }} suka</span>
@@ -442,7 +394,7 @@ const deletePost = () => {
                                             class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
                                             :style="{ backgroundColor: post.category.color + '20', color: post.category.color }"
                                         >
-                                            <Tag class="h-3 w-3 mr-1" />
+                                            <Tag class="mr-1 h-3 w-3" />
                                             {{ post.category.name }}
                                         </span>
                                     </td>
@@ -457,14 +409,20 @@ const deletePost = () => {
                                     </td>
                                     <td class="py-3">
                                         <span
-                                            :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', getStatusColor(post.status)]"
+                                            :class="[
+                                                'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+                                                getStatusColor(post.status),
+                                            ]"
                                         >
                                             {{ getStatusText(post.status) }}
                                         </span>
                                     </td>
                                     <td class="py-3">
                                         <span
-                                            :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', getTypeColor(post.type)]"
+                                            :class="[
+                                                'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+                                                getTypeColor(post.type),
+                                            ]"
                                         >
                                             {{ getTypeText(post.type) }}
                                         </span>
@@ -509,12 +467,7 @@ const deletePost = () => {
                                             >
                                                 <Pin class="h-4 w-4" />
                                             </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                @click="confirmDelete(post)"
-                                                class="text-red-600 hover:text-red-700"
-                                            >
+                                            <Button variant="ghost" size="sm" @click="confirmDelete(post)" class="text-red-600 hover:text-red-700">
                                                 <Trash2 class="h-4 w-4" />
                                             </Button>
                                         </div>
@@ -531,21 +484,10 @@ const deletePost = () => {
                                 <Link
                                     v-if="link.url"
                                     :href="link.url"
-                                    :class="[
-                                        'rounded px-3 py-2 text-sm',
-                                        link.active
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'hover:bg-muted'
-                                    ]"
+                                    :class="['rounded px-3 py-2 text-sm', link.active ? 'bg-primary text-primary-foreground' : 'hover:bg-muted']"
                                     v-html="link.label"
                                 />
-                                <span
-                                    v-else
-                                    :class="[
-                                        'rounded px-3 py-2 text-sm cursor-not-allowed opacity-50'
-                                    ]"
-                                    v-html="link.label"
-                                />
+                                <span v-else :class="['cursor-not-allowed rounded px-3 py-2 text-sm opacity-50']" v-html="link.label" />
                             </template>
                         </nav>
                     </div>
@@ -562,17 +504,12 @@ const deletePost = () => {
                 <div class="mb-4">
                     <h3 class="text-lg font-semibold">Konfirmasi Hapus</h3>
                     <p class="text-sm text-muted-foreground">
-                        Apakah Anda yakin ingin menghapus artikel "{{ postToDelete?.title }}"?
-                        Tindakan ini tidak dapat dibatalkan.
+                        Apakah Anda yakin ingin menghapus artikel "{{ postToDelete?.title }}"? Tindakan ini tidak dapat dibatalkan.
                     </p>
                 </div>
                 <div class="flex justify-end space-x-3">
-                    <Button variant="outline" @click="showDeleteModal = false">
-                        Batal
-                    </Button>
-                    <Button variant="destructive" @click="deletePost">
-                        Hapus
-                    </Button>
+                    <Button variant="outline" @click="showDeleteModal = false"> Batal </Button>
+                    <Button variant="destructive" @click="deletePost"> Hapus </Button>
                 </div>
             </div>
         </div>

@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { Edit, Plus, Search, Trash2, X, ChevronUp, ChevronDown } from 'lucide-vue-next';
+import { ChevronDown, ChevronUp, Edit, Plus, Search, Trash2, X } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface DomainPrice {
@@ -198,88 +198,55 @@ const confirmDelete = () => {
                         <Button @click="handleSearch" class="cursor-pointer">Cari</Button>
                     </div>
 
-                    <div class="rounded-md border overflow-x-auto">
+                    <div class="overflow-x-auto rounded-md border">
                         <Table>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>
-                                        <button
-                                            @click="sortBy('extension')"
-                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
-                                        >
+                                        <button @click="sortBy('extension')" class="flex cursor-pointer items-center space-x-1 hover:text-foreground">
                                             <span>Ekstensi</span>
-                                            <ChevronUp
-                                                v-if="props.sort === 'extension' && props.direction === 'asc'"
-                                                class="h-4 w-4"
-                                            />
-                                            <ChevronDown
-                                                v-else-if="props.sort === 'extension' && props.direction === 'desc'"
-                                                class="h-4 w-4"
-                                            />
+                                            <ChevronUp v-if="props.sort === 'extension' && props.direction === 'asc'" class="h-4 w-4" />
+                                            <ChevronDown v-else-if="props.sort === 'extension' && props.direction === 'desc'" class="h-4 w-4" />
                                             <div v-else class="h-4 w-4"></div>
                                         </button>
                                     </TableHead>
                                     <TableHead>
-                                        <button
-                                            @click="sortBy('base_cost')"
-                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
-                                        >
+                                        <button @click="sortBy('base_cost')" class="flex cursor-pointer items-center space-x-1 hover:text-foreground">
                                             <span>Biaya Dasar</span>
-                                            <ChevronUp
-                                                v-if="props.sort === 'base_cost' && props.direction === 'asc'"
-                                                class="h-4 w-4"
-                                            />
-                                            <ChevronDown
-                                                v-else-if="props.sort === 'base_cost' && props.direction === 'desc'"
-                                                class="h-4 w-4"
-                                            />
+                                            <ChevronUp v-if="props.sort === 'base_cost' && props.direction === 'asc'" class="h-4 w-4" />
+                                            <ChevronDown v-else-if="props.sort === 'base_cost' && props.direction === 'desc'" class="h-4 w-4" />
                                             <div v-else class="h-4 w-4"></div>
                                         </button>
                                     </TableHead>
                                     <TableHead>
                                         <button
                                             @click="sortBy('renewal_cost')"
-                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
+                                            class="flex cursor-pointer items-center space-x-1 hover:text-foreground"
                                         >
                                             <span>Biaya Perpanjangan</span>
-                                            <ChevronUp
-                                                v-if="props.sort === 'renewal_cost' && props.direction === 'asc'"
-                                                class="h-4 w-4"
-                                            />
-                                            <ChevronDown
-                                                v-else-if="props.sort === 'renewal_cost' && props.direction === 'desc'"
-                                                class="h-4 w-4"
-                                            />
+                                            <ChevronUp v-if="props.sort === 'renewal_cost' && props.direction === 'asc'" class="h-4 w-4" />
+                                            <ChevronDown v-else-if="props.sort === 'renewal_cost' && props.direction === 'desc'" class="h-4 w-4" />
                                             <div v-else class="h-4 w-4"></div>
                                         </button>
                                     </TableHead>
                                     <TableHead>
                                         <button
                                             @click="sortBy('selling_price')"
-                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
+                                            class="flex cursor-pointer items-center space-x-1 hover:text-foreground"
                                         >
                                             <span>Harga Jual</span>
-                                            <ChevronUp
-                                                v-if="props.sort === 'selling_price' && props.direction === 'asc'"
-                                                class="h-4 w-4"
-                                            />
-                                            <ChevronDown
-                                                v-else-if="props.sort === 'selling_price' && props.direction === 'desc'"
-                                                class="h-4 w-4"
-                                            />
+                                            <ChevronUp v-if="props.sort === 'selling_price' && props.direction === 'asc'" class="h-4 w-4" />
+                                            <ChevronDown v-else-if="props.sort === 'selling_price' && props.direction === 'desc'" class="h-4 w-4" />
                                             <div v-else class="h-4 w-4"></div>
                                         </button>
                                     </TableHead>
                                     <TableHead>
                                         <button
                                             @click="sortBy('renewal_price_with_tax')"
-                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
+                                            class="flex cursor-pointer items-center space-x-1 hover:text-foreground"
                                         >
                                             <span>Perpanjangan + Pajak</span>
-                                            <ChevronUp
-                                                v-if="props.sort === 'renewal_price_with_tax' && props.direction === 'asc'"
-                                                class="h-4 w-4"
-                                            />
+                                            <ChevronUp v-if="props.sort === 'renewal_price_with_tax' && props.direction === 'asc'" class="h-4 w-4" />
                                             <ChevronDown
                                                 v-else-if="props.sort === 'renewal_price_with_tax' && props.direction === 'desc'"
                                                 class="h-4 w-4"
@@ -288,19 +255,10 @@ const confirmDelete = () => {
                                         </button>
                                     </TableHead>
                                     <TableHead>
-                                        <button
-                                            @click="sortBy('is_active')"
-                                            class="flex items-center space-x-1 hover:text-foreground cursor-pointer"
-                                        >
+                                        <button @click="sortBy('is_active')" class="flex cursor-pointer items-center space-x-1 hover:text-foreground">
                                             <span>Status</span>
-                                            <ChevronUp
-                                                v-if="props.sort === 'is_active' && props.direction === 'asc'"
-                                                class="h-4 w-4"
-                                            />
-                                            <ChevronDown
-                                                v-else-if="props.sort === 'is_active' && props.direction === 'desc'"
-                                                class="h-4 w-4"
-                                            />
+                                            <ChevronUp v-if="props.sort === 'is_active' && props.direction === 'asc'" class="h-4 w-4" />
+                                            <ChevronDown v-else-if="props.sort === 'is_active' && props.direction === 'desc'" class="h-4 w-4" />
                                             <div v-else class="h-4 w-4"></div>
                                         </button>
                                     </TableHead>
@@ -324,7 +282,13 @@ const confirmDelete = () => {
                                             <Button size="sm" variant="outline" @click="openEditModal(domain)" class="cursor-pointer" title="Edit">
                                                 <Edit class="h-3.5 w-3.5" />
                                             </Button>
-                                            <Button size="sm" variant="outline" @click="openDeleteModal(domain)" class="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50" title="Hapus">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                @click="openDeleteModal(domain)"
+                                                class="cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                title="Hapus"
+                                            >
                                                 <Trash2 class="h-3.5 w-3.5" />
                                             </Button>
                                         </div>

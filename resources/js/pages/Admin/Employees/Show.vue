@@ -5,7 +5,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Building2, Calendar, DollarSign, Mail, MapPin, Phone, User, Key, Edit, Trash2 } from 'lucide-vue-next';
+import { Building2, Calendar, DollarSign, Edit, Key, Mail, MapPin, Phone, Trash2, User } from 'lucide-vue-next';
 
 interface Employee {
     id: number;
@@ -88,15 +88,19 @@ const getStatusText = (status: string) => {
 
 const resetPassword = () => {
     if (confirm(`Reset password untuk ${props.employee.user.name}? Password baru akan dikirim ke email ${props.employee.user.email}`)) {
-        router.post(`/admin/employees/${props.employee.id}/reset-password`, {}, {
-            onSuccess: () => {
-                alert('Password berhasil direset. Email dengan password baru telah dikirim.');
+        router.post(
+            `/admin/employees/${props.employee.id}/reset-password`,
+            {},
+            {
+                onSuccess: () => {
+                    alert('Password berhasil direset. Email dengan password baru telah dikirim.');
+                },
+                onError: (errors) => {
+                    console.error('Reset password error:', errors);
+                    alert('Gagal mereset password. Silakan coba lagi.');
+                },
             },
-            onError: (errors) => {
-                console.error('Reset password error:', errors);
-                alert('Gagal mereset password. Silakan coba lagi.');
-            },
-        });
+        );
     }
 };
 
@@ -123,8 +127,8 @@ const deleteEmployee = () => {
             <!-- Header -->
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">{{ employee.user.name }}</h1>
-                    <p class="text-sm sm:text-base text-muted-foreground">Detail informasi karyawan</p>
+                    <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">{{ employee.user.name }}</h1>
+                    <p class="text-sm text-muted-foreground sm:text-base">Detail informasi karyawan</p>
                 </div>
                 <div class="flex gap-2">
                     <Button variant="outline" @click="resetPassword" class="cursor-pointer">
@@ -137,7 +141,7 @@ const deleteEmployee = () => {
                             Edit
                         </Link>
                     </Button>
-                    <Button variant="outline" @click="deleteEmployee" class="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50">
+                    <Button variant="outline" @click="deleteEmployee" class="cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700">
                         <Trash2 class="mr-2 h-4 w-4" />
                         Hapus
                     </Button>
@@ -146,7 +150,7 @@ const deleteEmployee = () => {
 
             <div class="grid gap-6 lg:grid-cols-3">
                 <!-- Main Information -->
-                <div class="lg:col-span-2 space-y-6">
+                <div class="space-y-6 lg:col-span-2">
                     <!-- Personal Information -->
                     <Card>
                         <CardHeader>
@@ -187,7 +191,7 @@ const deleteEmployee = () => {
                                 <div>
                                     <label class="text-sm font-medium text-muted-foreground">Alamat</label>
                                     <div class="flex items-start gap-2">
-                                        <MapPin class="h-4 w-4 text-muted-foreground mt-0.5" />
+                                        <MapPin class="mt-0.5 h-4 w-4 text-muted-foreground" />
                                         <p class="text-base">{{ employee.address || '-' }}</p>
                                     </div>
                                 </div>
@@ -231,7 +235,9 @@ const deleteEmployee = () => {
                                 <div>
                                     <label class="text-sm font-medium text-muted-foreground">Status</label>
                                     <div>
-                                        <span :class="`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusClass(employee.status)}`">
+                                        <span
+                                            :class="`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusClass(employee.status)}`"
+                                        >
                                             {{ getStatusText(employee.status) }}
                                         </span>
                                     </div>
@@ -239,13 +245,16 @@ const deleteEmployee = () => {
                                 <div>
                                     <label class="text-sm font-medium text-muted-foreground">Lama Bekerja</label>
                                     <p class="text-base">
-                                        {{ Math.floor((new Date().getTime() - new Date(employee.hire_date).getTime()) / (1000 * 60 * 60 * 24 * 30)) }} bulan
+                                        {{
+                                            Math.floor((new Date().getTime() - new Date(employee.hire_date).getTime()) / (1000 * 60 * 60 * 24 * 30))
+                                        }}
+                                        bulan
                                     </p>
                                 </div>
                             </div>
                             <div v-if="employee.notes" class="mt-4">
                                 <label class="text-sm font-medium text-muted-foreground">Catatan</label>
-                                <p class="text-base mt-1 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">{{ employee.notes }}</p>
+                                <p class="mt-1 rounded-md bg-gray-50 p-3 text-base dark:bg-gray-800">{{ employee.notes }}</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -260,13 +269,19 @@ const deleteEmployee = () => {
                         </CardHeader>
                         <CardContent>
                             <div class="text-center">
-                                <span :class="`inline-flex items-center rounded-full px-3 py-2 text-sm font-medium ${getStatusClass(employee.status)}`">
+                                <span
+                                    :class="`inline-flex items-center rounded-full px-3 py-2 text-sm font-medium ${getStatusClass(employee.status)}`"
+                                >
                                     {{ getStatusText(employee.status) }}
                                 </span>
                                 <p class="mt-2 text-sm text-muted-foreground">
-                                    {{ employee.status === 'active' ? 'Karyawan aktif dan dapat mengakses sistem' :
-                                       employee.status === 'inactive' ? 'Karyawan tidak aktif sementara' :
-                                       'Karyawan telah berhenti bekerja' }}
+                                    {{
+                                        employee.status === 'active'
+                                            ? 'Karyawan aktif dan dapat mengakses sistem'
+                                            : employee.status === 'inactive'
+                                              ? 'Karyawan tidak aktif sementara'
+                                              : 'Karyawan telah berhenti bekerja'
+                                    }}
                                 </p>
                             </div>
                         </CardContent>
@@ -299,11 +314,11 @@ const deleteEmployee = () => {
                         <CardContent class="space-y-3">
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground">ID Karyawan</label>
-                                <p class="text-base font-mono">#{{ employee.id }}</p>
+                                <p class="font-mono text-base">#{{ employee.id }}</p>
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground">ID User</label>
-                                <p class="text-base font-mono">#{{ employee.user_id }}</p>
+                                <p class="font-mono text-base">#{{ employee.user_id }}</p>
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground">Dibuat</label>

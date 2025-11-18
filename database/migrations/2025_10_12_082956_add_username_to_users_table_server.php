@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // Only add username column if it doesn't exist
-        if (!Schema::hasColumn('users', 'username')) {
+        if (! Schema::hasColumn('users', 'username')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->string('username')->unique()->nullable()->after('name');
             });
