@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Customer\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -37,6 +38,28 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
+        // Check if it's an admin account trying to login
+        if ($request->email === 'admin@example.com') {
+            $user = User::where('email', $request->email)->first();
+            
+            if ($user && Hash::check($request->password, $user->password)) {
+                // Login as admin using web guard
+                Auth::guard('web')->login($user, $request->boolean('remember'));
+                \Log::info('Admin login successful via customer portal', ['user_id' => $user->id, 'email' => $user->email]);
+                
+                $request->session()->regenerate();
+                
+                // Redirect to admin dashboard
+                return redirect('/dashboard');
+            } else {
+                \Log::warning('Admin login failed via customer portal - invalid credentials', ['email' => $request->email]);
+                throw ValidationException::withMessages([
+                    'email' => 'The provided credentials do not match our records.',
+                ]);
+            }
+        }
+
+        // Regular customer login process
         $customer = Customer::where('email', $request->email)->first();
 
         if (! $customer) {
