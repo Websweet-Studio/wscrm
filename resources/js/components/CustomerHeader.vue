@@ -2,12 +2,17 @@
 import { Button } from '@/components/ui/button';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { LayoutGrid, LogOut, Menu, X } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 const page = usePage();
 const isAdmin = page.props.auth?.user !== null; // User yang login melalui guard 'web' adalah admin
 const isCustomer = page.props.auth?.customer !== null; // Customer yang login melalui guard 'customer'
 const mobileMenuOpen = ref(false);
+
+const brandingSettings = computed(() => page.props.brandingSettings || {});
+const appName = computed(() => brandingSettings.value.app_name || 'WSCRM');
+const appLogo = computed(() => brandingSettings.value.app_logo);
+const appLogoDark = computed(() => brandingSettings.value.app_logo_dark || brandingSettings.value.app_logo);
 
 const handleLogout = () => {
     if (isAdmin) {
@@ -25,8 +30,9 @@ const handleLogout = () => {
             <div class="flex items-center justify-between">
                 <!-- Logo -->
                 <Link href="/" class="flex items-center space-x-2 transition-opacity hover:opacity-80">
-                    <img src="/1.png" alt="WebSweetStudio" class="h-8 w-8 object-contain" />
-                    <span class="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">WebsweetStudio.com</span>
+                    <img v-if="appLogo" :src="appLogo" :alt="appName" class="h-8 w-8 object-contain dark:hidden" />
+                    <img v-if="appLogoDark" :src="appLogoDark" :alt="appName" class="hidden h-8 w-8 object-contain dark:block" />
+                    <span class="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">{{ appName }}</span>
                 </Link>
 
                 <!-- Desktop Navigation -->
@@ -100,8 +106,9 @@ const handleLogout = () => {
                             <!-- Header -->
                             <div class="flex items-center justify-between border-b p-4">
                                 <div class="flex items-center space-x-2">
-                                    <img src="/1.png" alt="WebSweetStudio" class="h-6 w-6 object-contain" />
-                                    <span class="text-sm font-bold text-gray-900 dark:text-white">Menu</span>
+                                    <img v-if="appLogo" :src="appLogo" :alt="appName" class="h-6 w-6 object-contain dark:hidden" />
+                                    <img v-if="appLogoDark" :src="appLogoDark" :alt="appName" class="hidden h-6 w-6 object-contain dark:block" />
+                                    <span class="text-sm font-bold text-gray-900 dark:text-white">{{ appName }}</span>
                                 </div>
                                 <Button variant="ghost" size="sm" @click="mobileMenuOpen = false">
                                     <X class="h-4 w-4" />

@@ -3,9 +3,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { Calendar, ChevronLeft, ChevronRight, Clock, Eye, Heart, Pin, Search, Star, User } from 'lucide-vue-next';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+
+const page = usePage();
+const brandingSettings = computed(() => page.props.brandingSettings || {});
+const appName = computed(() => brandingSettings.value.app_name || 'WSCRM');
 
 interface BlogCategory {
     id: number;
@@ -67,9 +71,6 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const search = ref(props.filters?.search || '');
-const categoryFilter = ref(props.filters?.category || '');
-const typeFilter = ref(props.filters?.type || '');
 const currentSlide = ref(0);
 let carouselInterval: NodeJS.Timeout | null = null;
 
@@ -136,24 +137,6 @@ const stopCarousel = () => {
     }
 };
 
-const applyFilters = () => {
-    const params = new URLSearchParams();
-
-    if (search.value) params.set('search', search.value);
-    if (categoryFilter.value) params.set('category', categoryFilter.value);
-    if (typeFilter.value) params.set('type', typeFilter.value);
-
-    const url = `/blog${params.toString() ? '?' + params.toString() : ''}`;
-    router.get(url, {}, { preserveState: true });
-};
-
-const resetFilters = () => {
-    search.value = '';
-    categoryFilter.value = '';
-    typeFilter.value = '';
-    applyFilters();
-};
-
 onMounted(() => {
     startCarousel();
 });
@@ -164,9 +147,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <Head title="Blog - WSCRM" />
-
-    <CustomerPublicLayout title="Blog - WebSweetStudio">
+    <CustomerPublicLayout title="Blog">
         <div class="container mx-auto px-4 py-8">
             <!-- Header -->
             <div class="mb-12 text-center">
@@ -270,12 +251,9 @@ onUnmounted(() => {
                             >
                                 <div class="relative h-48 overflow-hidden">
                                     <img
-                                        :src="
-                                            post.featured_image_url ||
-                                            `https://via.placeholder.com/400x300/3B82F6/FFFFFF?text=${encodeURIComponent(post.category.name)}`
-                                        "
+                                        :src="post.featured_image_url || `https://via.placeholder.com/400x300/3B82F6/FFFFFF?text=${appName}`"
                                         :alt="post.title"
-                                        class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                        class="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                                     />
                                     <div class="absolute top-4 left-4">
                                         <Badge
@@ -345,9 +323,9 @@ onUnmounted(() => {
                             >
                                 <div class="relative h-48 overflow-hidden">
                                     <img
-                                        :src="post.featured_image_url || `https://via.placeholder.com/400x300/3B82F6/FFFFFF?text=WebSweetStudio`"
+                                        :src="post.featured_image_url || `https://via.placeholder.com/400x300/3B82F6/FFFFFF?text=${appName}`"
                                         :alt="post.title"
-                                        class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                        class="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                                     />
                                     <div class="absolute top-4 left-4">
                                         <Badge

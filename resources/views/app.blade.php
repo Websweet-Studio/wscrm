@@ -31,7 +31,11 @@
             }
         </style>
 
-        <title inertia>{{ $brandingSettings['app_name'] ?? config('app.name', 'WebSweetStudio') }}</title>
+        <title inertia>{{ $brandingSettings['app_name'] ?? config('app.name', 'WSCRM') }}</title>
+
+        <script>
+            window.brandingSettings = @json($brandingSettings ?? []);
+        </script>
 
         {{-- Favicon from branding settings with fallback to default --}}
         <link rel="icon" href="{{ $brandingSettings['app_favicon'] ?? '/1.png' }}" sizes="any">

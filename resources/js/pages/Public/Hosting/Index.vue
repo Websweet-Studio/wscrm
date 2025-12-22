@@ -116,7 +116,7 @@ const filteredPlans = computed(() => {
 </script>
 
 <template>
-    <CustomerPublicLayout title="Paket Hosting Web Profesional - WebSweetStudio">
+    <CustomerPublicLayout title="Paket Hosting Web Profesional">
         <!-- Hero Section -->
         <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
             <div class="mb-8 space-y-4 text-center sm:mb-12 sm:space-y-6">

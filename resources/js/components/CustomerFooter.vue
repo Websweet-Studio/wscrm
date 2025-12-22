@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
+
+const page = usePage();
+const brandingSettings = computed(() => page.props.brandingSettings || {});
+const appName = computed(() => brandingSettings.value.app_name || 'WSCRM');
+const appLogo = computed(() => brandingSettings.value.app_logo);
+const appLogoDark = computed(() => brandingSettings.value.app_logo_dark || brandingSettings.value.app_logo);
+const footerText = computed(() => brandingSettings.value.footer_text || '© 2024 WebSweetStudio. All rights reserved.');
 </script>
 
 <template>
@@ -8,8 +16,9 @@ import { Link } from '@inertiajs/vue3';
         <div class="mx-auto max-w-6xl px-4 sm:px-6">
             <div class="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
                 <div class="flex items-center space-x-2">
-                    <img src="/1.png" alt="WebSweetStudio" class="h-8 w-8 object-contain" />
-                    <span class="text-lg font-bold text-white sm:text-xl">WebsweetStudio.com</span>
+                    <img v-if="appLogo" :src="appLogo" :alt="appName" class="h-8 w-8 object-contain dark:hidden" />
+                    <img v-if="appLogoDark" :src="appLogoDark" :alt="appName" class="hidden h-8 w-8 object-contain dark:block" />
+                    <span class="text-lg font-bold text-white sm:text-xl">{{ appName }}</span>
                 </div>
                 <div class="flex flex-wrap justify-center gap-4 text-sm sm:gap-6">
                     <Link href="/hosting" class="transition-colors hover:text-white">Hosting</Link>
@@ -19,7 +28,7 @@ import { Link } from '@inertiajs/vue3';
                 </div>
             </div>
             <div class="mt-4 border-t border-gray-700 pt-4 text-center text-xs sm:mt-6 sm:pt-6 sm:text-sm">
-                <p>&copy; 2024 WebSweetStudio. Semua hak dilindungi.</p>
+                <p>{{ footerText }}</p>
             </div>
         </div>
     </footer>

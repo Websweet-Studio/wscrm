@@ -76,7 +76,7 @@ const isPopular = (extension: string) => {
 </script>
 
 <template>
-    <CustomerPublicLayout title="Registrasi Domain - Temukan Domain Sempurna Anda - WebSweetStudio">
+    <CustomerPublicLayout title="Registrasi Domain - Temukan Domain Sempurna Anda">
         <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
             <!-- Hero Section -->
             <div

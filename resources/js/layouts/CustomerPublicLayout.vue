@@ -8,7 +8,7 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
-    title: 'WebSweetStudio - Hosting & Domain Services',
+    title: 'Layanan Hosting & Domain',
 });
 </script>
 

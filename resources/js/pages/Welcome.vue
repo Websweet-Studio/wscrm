@@ -1,37 +1,52 @@
 <script setup lang="ts">
 import { dashboard, login, register } from '@/routes';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
+
+const page = usePage();
+const brandingSettings = computed(() => page.props.brandingSettings || {});
+const appName = computed(() => brandingSettings.value.app_name || 'WSCRM');
+const appLogo = computed(() => brandingSettings.value.app_logo);
+const appLogoDark = computed(() => brandingSettings.value.app_logo_dark || brandingSettings.value.app_logo);
+const footerText = computed(() => brandingSettings.value.footer_text || '© 2024 WebSweetStudio. All rights reserved.');
 </script>
 
 <template>
-    <Head title="Welcome">
+    <Head :title="appName">
         <link rel="preconnect" href="https://rsms.me/" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
     </Head>
     <div class="flex min-h-screen flex-col items-center bg-[#FDFDFC] p-6 text-[#1b1b18] lg:justify-center lg:p-8 dark:bg-[#0a0a0a]">
         <header class="mb-6 w-full max-w-[335px] text-sm not-has-[nav]:hidden lg:max-w-4xl">
-            <nav class="flex items-center justify-end gap-4">
-                <Link
-                    v-if="$page.props.auth.user"
-                    :href="dashboard()"
-                    class="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
-                >
-                    Dashboard
-                </Link>
-                <template v-else>
+            <nav class="flex items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                    <img v-if="appLogo" :src="appLogo" :alt="appName" class="h-8 w-auto dark:hidden" />
+                    <img v-if="appLogoDark" :src="appLogoDark" :alt="appName" class="hidden h-8 w-auto dark:block" />
+                    <span class="text-lg font-semibold">{{ appName }}</span>
+                </div>
+                <div class="flex items-center gap-4">
                     <Link
-                        :href="login()"
-                        class="inline-block rounded-sm border border-transparent px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#19140035] dark:text-[#EDEDEC] dark:hover:border-[#3E3E3A]"
-                    >
-                        Log in
-                    </Link>
-                    <Link
-                        :href="register()"
+                        v-if="$page.props.auth.user"
+                        :href="dashboard()"
                         class="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
                     >
-                        Register
+                        Dashboard
                     </Link>
-                </template>
+                    <template v-else>
+                        <Link
+                            :href="login()"
+                            class="inline-block rounded-sm border border-transparent px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#19140035] dark:text-[#EDEDEC] dark:hover:border-[#3E3E3A]"
+                        >
+                            Log in
+                        </Link>
+                        <Link
+                            :href="register()"
+                            class="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
+                        >
+                            Register
+                        </Link>
+                    </template>
+                </div>
             </nav>
         </header>
         <div class="flex w-full items-center justify-center opacity-100 transition-opacity duration-750 lg:grow starting:opacity-0">
@@ -783,6 +798,8 @@ import { Head, Link } from '@inertiajs/vue3';
                 </div>
             </main>
         </div>
-        <div class="hidden h-14.5 lg:block"></div>
+        <footer class="py-16 text-center text-sm text-black dark:text-white/70">
+            {{ footerText }}
+        </footer>
     </div>
 </template>
