@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Illuminate\Http\Request;
 
 Route::get('/', function () {
     return Inertia::render('CustomerWelcome');
@@ -40,6 +41,10 @@ Route::get('dashboard', [App\Http\Controllers\DashboardController::class, 'index
 Route::get('admin', function () {
     return redirect('/dashboard');
 })->middleware(['auth', 'verified']);
+
+Route::post('/_boost/browser-logs', function (Request $request) {
+    return response()->noContent();
+});
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

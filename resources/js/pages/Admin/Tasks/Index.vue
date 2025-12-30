@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
@@ -60,8 +61,20 @@ const statusFilter = ref(props.filters?.status || '');
 const assignedUserId = ref(props.filters?.assigned_user_id || '');
 const assignedDepartment = ref(props.filters?.assigned_department || '');
 const showCreateModal = ref(false);
+const showEditModal = ref(false);
 
 const createForm = useForm({
+    title: '',
+    description: '',
+    status: 'todo' as 'todo' | 'in_progress' | 'done' | 'cancelled',
+    priority: 'medium' as 'low' | 'medium' | 'high',
+    due_date: '',
+    assigned_user_id: '' as number | '' | null,
+    assigned_department: '' as string | '',
+});
+
+const editForm = useForm({
+    id: 0,
     title: '',
     description: '',
     status: 'todo' as 'todo' | 'in_progress' | 'done' | 'cancelled',
@@ -101,6 +114,36 @@ const submitCreate = () => {
     });
 };
 
+const openEditModal = (task: Task) => {
+    editForm.id = task.id;
+    editForm.title = task.title;
+    editForm.description = task.description || '';
+    editForm.status = task.status;
+    editForm.priority = task.priority;
+    editForm.due_date = task.due_date || '';
+    editForm.assigned_user_id = task.assigned_user_id || '';
+    editForm.assigned_department = task.assigned_department || '';
+    showEditModal.value = true;
+};
+
+const submitEdit = () => {
+    const payload: any = {
+        title: editForm.title,
+        description: editForm.description || undefined,
+        status: editForm.status,
+        priority: editForm.priority,
+        due_date: editForm.due_date || undefined,
+        assigned_user_id: editForm.assigned_user_id || undefined,
+        assigned_department: editForm.assigned_department || undefined,
+    };
+    editForm.patch(`/admin/tasks/${editForm.id}`, {
+        data: payload,
+        onSuccess: () => {
+            showEditModal.value = false;
+        },
+    });
+};
+
 const statusBadgeClass = (status: Task['status']) => {
     switch (status) {
         case 'todo':
@@ -127,6 +170,13 @@ const priorityBadgeClass = (priority: Task['priority']) => {
         default:
             return '';
     }
+};
+
+const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return dateString;
+    return d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 </script>
 
@@ -166,14 +216,14 @@ const priorityBadgeClass = (priority: Task['priority']) => {
                         <div>
                             <Label for="assignedUserId">Assign ke User</Label>
                             <select id="assignedUserId" v-model="assignedUserId" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
-                                <option value="">(Kosong)</option>
+                                <option value="">-</option>
                                 <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
                             </select>
                         </div>
                         <div>
                             <Label for="assignedDepartment">Assign ke Departemen</Label>
                             <select id="assignedDepartment" v-model="assignedDepartment" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
-                                <option value="">(Kosong)</option>
+                                <option value="">-</option>
                                 <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
                             </select>
                         </div>
@@ -208,7 +258,7 @@ const priorityBadgeClass = (priority: Task['priority']) => {
                                         <span :class="['rounded px-2 py-1', statusBadgeClass(task.status)]">{{ task.status }}</span>
                                         <span :class="['rounded px-2 py-1', priorityBadgeClass(task.priority)]">{{ task.priority }}</span>
                                         <span v-if="task.due_date" class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                                            <Calendar class="h-3 w-3" /> {{ task.due_date }}
+                                            <Calendar class="h-3 w-3" /> {{ formatDate(task.due_date) }}
                                         </span>
                                         <span v-if="task.assigned_user" class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                                             <Clock class="h-3 w-3" /> {{ task.assigned_user.name }}
@@ -219,10 +269,8 @@ const priorityBadgeClass = (priority: Task['priority']) => {
                                     </div>
                                 </div>
                                 <div class="flex gap-2">
-                                    <Button size="sm" variant="outline" class="cursor-pointer" asChild>
-                                        <Link :href="`/admin/tasks/${task.id}`">
-                                            <Edit class="h-3.5 w-3.5" />
-                                        </Link>
+                                    <Button size="sm" variant="outline" class="cursor-pointer" @click="openEditModal(task)">
+                                        <Edit class="h-3.5 w-3.5" />
                                     </Button>
                                     <Button size="sm" variant="outline" class="cursor-pointer bg-green-600 text-white hover:bg-green-700" @click="router.patch(`/admin/tasks/${task.id}`, { status: 'done' })">
                                         <CheckCircle2 class="h-3.5 w-3.5" />
@@ -296,7 +344,7 @@ const priorityBadgeClass = (priority: Task['priority']) => {
                         </div>
                         <div>
                             <Label for="due_date">Jatuh Tempo</Label>
-                            <Input id="due_date" type="date" v-model="createForm.due_date" />
+                            <DatePicker id="due_date" v-model="createForm.due_date" placeholder="Pilih tanggal jatuh tempo" />
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
@@ -318,6 +366,66 @@ const priorityBadgeClass = (priority: Task['priority']) => {
                         <div class="mt-4 flex justify-end gap-2">
                             <Button type="button" variant="outline" @click="showCreateModal = false" class="cursor-pointer">Batal</Button>
                             <Button type="button" @click="submitCreate" class="cursor-pointer">Simpan</Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div class="fixed inset-0 bg-black/50" @click="showEditModal = false"></div>
+                <div class="relative w-full max-w-lg rounded-lg bg-white p-6 shadow-lg dark:bg-gray-900">
+                    <h3 class="mb-4 text-lg font-semibold">Edit Task</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <Label for="edit_title">Judul</Label>
+                            <Input id="edit_title" v-model="editForm.title" placeholder="Judul task" />
+                        </div>
+                        <div>
+                            <Label for="edit_description">Deskripsi</Label>
+                            <textarea id="edit_description" v-model="editForm.description" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white" rows="3" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <Label for="edit_status">Status</Label>
+                                <select id="edit_status" v-model="editForm.status" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                                    <option value="todo">Todo</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="done">Done</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            <div>
+                                <Label for="edit_priority">Prioritas</Label>
+                                <select id="edit_priority" v-model="editForm.priority" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <Label for="edit_due_date">Jatuh Tempo</Label>
+                            <DatePicker id="edit_due_date" v-model="editForm.due_date" placeholder="Pilih tanggal jatuh tempo" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <Label for="edit_assigned_user_id">Assign ke User</Label>
+                                <select id="edit_assigned_user_id" v-model="editForm.assigned_user_id" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                                    <option value="">(Kosong)</option>
+                                    <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
+                                </select>
+                            </div>
+                            <div>
+                                <Label for="edit_assigned_department">Assign ke Departemen</Label>
+                                <select id="edit_assigned_department" v-model="editForm.assigned_department" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                                    <option value="">(Kosong)</option>
+                                    <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-end gap-2">
+                            <Button type="button" variant="outline" @click="showEditModal = false" class="cursor-pointer">Batal</Button>
+                            <Button type="button" @click="submitEdit" class="cursor-pointer">Simpan</Button>
                         </div>
                     </div>
                 </div>
