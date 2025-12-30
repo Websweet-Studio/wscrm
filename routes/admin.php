@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\HostingPlanController;
 use App\Http\Controllers\Admin\ImpersonateController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\ServicePlanController;
 use App\Http\Controllers\Admin\UserCredentialController;
 use Illuminate\Support\Facades\Route;
@@ -61,6 +62,9 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
 
     // User Credential Management
     Route::post('users/{user}/send-credentials', [UserCredentialController::class, 'sendCredentials'])->name('users.send-credentials');
+
+    // Tasks Management
+    Route::resource('tasks', TaskController::class)->only(['index', 'store', 'update', 'destroy']);
 
     // Branding Settings
     Route::middleware('no.cache')->group(function () {

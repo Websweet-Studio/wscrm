@@ -1,0 +1,327 @@
+<script setup lang="ts">
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { type BreadcrumbItem } from '@/types';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Calendar, CheckCircle2, Clock, Edit, Plus, Search, Trash2 } from 'lucide-vue-next';
+import { ref } from 'vue';
+
+interface User {
+    id: number;
+    name: string;
+    email: string;
+}
+
+interface Task {
+    id: number;
+    title: string;
+    description?: string;
+    status: 'todo' | 'in_progress' | 'done' | 'cancelled';
+    priority: 'low' | 'medium' | 'high';
+    due_date?: string;
+    assigned_user_id?: number | null;
+    assigned_department?: string | null;
+    created_by_user_id: number;
+    created_at: string;
+    updated_at: string;
+    assigned_user?: User | null;
+    creator?: User | null;
+}
+
+interface Props {
+    tasks: {
+        data: Task[];
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+        links: any[];
+    };
+    departments: string[];
+    users: User[];
+    filters?: {
+        status?: string;
+        assigned_user_id?: number;
+        assigned_department?: string;
+    };
+}
+
+const props = defineProps<Props>();
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Tasks', href: '/admin/tasks' },
+];
+
+const statusFilter = ref(props.filters?.status || '');
+const assignedUserId = ref(props.filters?.assigned_user_id || '');
+const assignedDepartment = ref(props.filters?.assigned_department || '');
+const showCreateModal = ref(false);
+
+const createForm = useForm({
+    title: '',
+    description: '',
+    status: 'todo' as 'todo' | 'in_progress' | 'done' | 'cancelled',
+    priority: 'medium' as 'low' | 'medium' | 'high',
+    due_date: '',
+    assigned_user_id: '' as number | '' | null,
+    assigned_department: '' as string | '',
+});
+
+const handleSearch = () => {
+    router.get('/admin/tasks', {
+        status: statusFilter.value || undefined,
+        assigned_user_id: assignedUserId.value || undefined,
+        assigned_department: assignedDepartment.value || undefined,
+    }, { preserveState: true, replace: true });
+};
+
+const submitCreate = () => {
+    // If neither assigned_user_id nor assigned_department provided, backend will default to self
+    const payload: any = {
+        title: createForm.title,
+        description: createForm.description || undefined,
+        status: createForm.status,
+        priority: createForm.priority,
+        due_date: createForm.due_date || undefined,
+        assigned_user_id: createForm.assigned_user_id || undefined,
+        assigned_department: createForm.assigned_department || undefined,
+    };
+    createForm.post('/admin/tasks', {
+        data: payload,
+        onSuccess: () => {
+            showCreateModal.value = false;
+            createForm.reset();
+            createForm.status = 'todo';
+            createForm.priority = 'medium';
+        },
+    });
+};
+
+const statusBadgeClass = (status: Task['status']) => {
+    switch (status) {
+        case 'todo':
+            return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+        case 'in_progress':
+            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+        case 'done':
+            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+        case 'cancelled':
+            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+        default:
+            return '';
+    }
+};
+
+const priorityBadgeClass = (priority: Task['priority']) => {
+    switch (priority) {
+        case 'low':
+            return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+        case 'medium':
+            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+        case 'high':
+            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+        default:
+            return '';
+    }
+};
+</script>
+
+<template>
+    <Head title="Admin - Tasks" />
+    <AppLayout :breadcrumbs="breadcrumbs">
+        <div class="space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight">Kelola Tasks</h1>
+                    <p class="text-muted-foreground">Buat dan kelola tugas untuk user atau departemen</p>
+                </div>
+                <Button @click="showCreateModal = true" class="cursor-pointer">
+                    <Plus class="mr-2 h-4 w-4" />
+                    Buat Task
+                </Button>
+            </div>
+
+            <!-- Filters -->
+            <Card>
+                <CardHeader>
+                    <CardTitle class="text-base">Filter</CardTitle>
+                    <CardDescription>Pilih status atau penerima tugas</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-4">
+                        <div>
+                            <Label for="statusFilter">Status</Label>
+                            <select id="statusFilter" v-model="statusFilter" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                                <option value="">Semua</option>
+                                <option value="todo">Todo</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="done">Done</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                        <div>
+                            <Label for="assignedUserId">Assign ke User</Label>
+                            <select id="assignedUserId" v-model="assignedUserId" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                                <option value="">(Kosong)</option>
+                                <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <Label for="assignedDepartment">Assign ke Departemen</Label>
+                            <select id="assignedDepartment" v-model="assignedDepartment" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                                <option value="">(Kosong)</option>
+                                <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <Button @click="handleSearch" class="w-full cursor-pointer">Cari</Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <!-- Tasks List -->
+            <Card>
+                <CardHeader>
+                    <CardTitle class="text-base">Daftar Tasks</CardTitle>
+                    <CardDescription>Tugas yang ditugaskan ke Anda atau yang Anda buat</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div v-if="tasks.data.length === 0" class="py-12 text-center text-muted-foreground">
+                        <Search class="mx-auto h-12 w-12 text-muted-foreground/40" />
+                        <h3 class="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100">Belum ada task</h3>
+                        <p class="mt-1 text-sm">Buat task baru untuk memulai.</p>
+                    </div>
+                    <div v-else class="space-y-3">
+                        <div v-for="task in tasks.data" :key="task.id" class="rounded-lg border p-4 dark:border-gray-700">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <h3 class="text-lg font-semibold">{{ task.title }}</h3>
+                                    <p v-if="task.description" class="mt-1 text-sm text-muted-foreground">
+                                        {{ task.description }}
+                                    </p>
+                                    <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                                        <span :class="['rounded px-2 py-1', statusBadgeClass(task.status)]">{{ task.status }}</span>
+                                        <span :class="['rounded px-2 py-1', priorityBadgeClass(task.priority)]">{{ task.priority }}</span>
+                                        <span v-if="task.due_date" class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                            <Calendar class="h-3 w-3" /> {{ task.due_date }}
+                                        </span>
+                                        <span v-if="task.assigned_user" class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                            <Clock class="h-3 w-3" /> {{ task.assigned_user.name }}
+                                        </span>
+                                        <span v-else-if="task.assigned_department" class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                            <Clock class="h-3 w-3" /> Departemen: {{ task.assigned_department }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <Button size="sm" variant="outline" class="cursor-pointer" asChild>
+                                        <Link :href="`/admin/tasks/${task.id}`">
+                                            <Edit class="h-3.5 w-3.5" />
+                                        </Link>
+                                    </Button>
+                                    <Button size="sm" variant="outline" class="cursor-pointer bg-green-600 text-white hover:bg-green-700" @click="router.patch(`/admin/tasks/${task.id}`, { status: 'done' })">
+                                        <CheckCircle2 class="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button size="sm" variant="outline" class="cursor-pointer" @click="router.delete(`/admin/tasks/${task.id}`)">
+                                        <Trash2 class="h-3.5 w-3.5" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div v-if="tasks.links && tasks.links.length > 3" class="mt-6 flex justify-center">
+                        <nav class="flex items-center space-x-2">
+                            <template v-for="link in tasks.links" :key="link.label">
+                                <Link
+                                    v-if="link.url"
+                                    :href="link.url"
+                                    :class="[
+                                        'rounded-xl px-4 py-2 text-sm font-medium transition-all',
+                                        link.active
+                                            ? 'bg-blue-600 text-white shadow-lg'
+                                            : 'border border-gray-200 bg-white text-gray-700 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700',
+                                    ]"
+                                    v-html="link.label"
+                                />
+                                <span
+                                    v-else
+                                    :class="['cursor-not-allowed rounded-xl bg-gray-100 px-4 py-2 text-sm text-gray-500 opacity-50 dark:bg-gray-800']"
+                                    v-html="link.label"
+                                />
+                            </template>
+                        </nav>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <!-- Create Modal -->
+            <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div class="fixed inset-0 bg-black/50" @click="showCreateModal = false"></div>
+                <div class="relative w-full max-w-lg rounded-lg bg-white p-6 shadow-lg dark:bg-gray-900">
+                    <h3 class="mb-4 text-lg font-semibold">Buat Task</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <Label for="title">Judul</Label>
+                            <Input id="title" v-model="createForm.title" placeholder="Judul task" />
+                        </div>
+                        <div>
+                            <Label for="description">Deskripsi</Label>
+                            <textarea id="description" v-model="createForm.description" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white" rows="3" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <Label for="status">Status</Label>
+                                <select id="status" v-model="createForm.status" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                                    <option value="todo">Todo</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="done">Done</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            <div>
+                                <Label for="priority">Prioritas</Label>
+                                <select id="priority" v-model="createForm.priority" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <Label for="due_date">Jatuh Tempo</Label>
+                            <Input id="due_date" type="date" v-model="createForm.due_date" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <Label for="assigned_user_id">Assign ke User</Label>
+                                <select id="assigned_user_id" v-model="createForm.assigned_user_id" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                                    <option value="">(Default: diri sendiri)</option>
+                                    <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
+                                </select>
+                            </div>
+                            <div>
+                                <Label for="assigned_department">Assign ke Departemen</Label>
+                                <select id="assigned_department" v-model="createForm.assigned_department" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                                    <option value="">(Kosong)</option>
+                                    <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
+                                </select>
+                                <p class="mt-1 text-xs text-muted-foreground">Jika keduanya kosong, otomatis assign ke diri sendiri.</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-end gap-2">
+                            <Button type="button" variant="outline" @click="showCreateModal = false" class="cursor-pointer">Batal</Button>
+                            <Button type="button" @click="submitCreate" class="cursor-pointer">Simpan</Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </AppLayout>
+</template>

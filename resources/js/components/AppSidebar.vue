@@ -9,6 +9,7 @@ import {
     Building,
     Building2,
     Calculator,
+    CheckSquare,
     ChevronDown,
     ChevronRight,
     CreditCard,
@@ -159,6 +160,11 @@ const mainNavItems: NavItem[] = [
         title: 'Blog',
         href: '/admin/blog',
         icon: PenTool,
+    },
+    {
+        title: 'Tasks',
+        href: '/admin/tasks',
+        icon: CheckSquare,
     },
     {
         title: 'Financial',
