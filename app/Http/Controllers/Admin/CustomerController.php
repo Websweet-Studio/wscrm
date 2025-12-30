@@ -36,7 +36,7 @@ class CustomerController extends Controller
                 $direction = request('direction', 'asc');
 
                 // Validate sort field
-                $allowedSorts = ['id', 'name', 'email', 'phone', 'city', 'status', 'created_at', 'orders_count'];
+                $allowedSorts = ['id', 'name', 'email', 'username', 'phone', 'city', 'status', 'created_at', 'orders_count'];
                 if (! in_array($sort, $allowedSorts)) {
                     $sort = 'created_at';
                 }

@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             InvoiceSeeder::class,
             BankSeeder::class,
             ExpenseSeeder::class,
+            TaskSeeder::class,
         ]);
     }
 }

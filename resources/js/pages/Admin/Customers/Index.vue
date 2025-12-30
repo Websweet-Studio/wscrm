@@ -435,62 +435,62 @@ const getSortIcon = (field: string) => {
                         <table class="w-full border-collapse">
                             <thead>
                                 <tr class="border-b border-border">
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
                                         <button @click="sortBy('id')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>ID</span>
                                             <component :is="getSortIcon('id')" v-if="getSortIcon('id')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
                                         <button @click="sortBy('name')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Nama</span>
                                             <component :is="getSortIcon('name')" v-if="getSortIcon('name')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
                                         <button @click="sortBy('email')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Email</span>
                                             <component :is="getSortIcon('email')" v-if="getSortIcon('email')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
                                         <button @click="sortBy('username')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Username</span>
                                             <component :is="getSortIcon('username')" v-if="getSortIcon('username')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
                                         <button @click="sortBy('phone')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Telepon</span>
                                             <component :is="getSortIcon('phone')" v-if="getSortIcon('phone')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
                                         <button @click="sortBy('city')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Kota</span>
                                             <component :is="getSortIcon('city')" v-if="getSortIcon('city')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
                                         <button @click="sortBy('status')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Status</span>
                                             <component :is="getSortIcon('status')" v-if="getSortIcon('status')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
                                         <button @click="sortBy('orders_count')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Pesanan</span>
                                             <component :is="getSortIcon('orders_count')" v-if="getSortIcon('orders_count')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Layanan</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">Layanan</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
                                         <button @click="sortBy('created_at')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Bergabung</span>
                                             <component :is="getSortIcon('created_at')" v-if="getSortIcon('created_at')" class="h-3 w-3" />
                                         </button>
                                     </th>
-                                    <th class="px-3 py-3 text-center text-xs font-medium tracking-wider text-muted-foreground uppercase">Aksi</th>
+                                    <th class="px-3 py-3 text-center text-xs font-medium tracking-wider text-muted-foreground">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -502,6 +502,7 @@ const getSortIcon = (field: string) => {
                                     <td class="px-3 py-4 text-sm font-medium text-foreground">#{{ customer.id }}</td>
                                     <td class="px-3 py-4 text-sm font-medium text-foreground">{{ customer.name }}</td>
                                     <td class="px-3 py-4 text-sm text-muted-foreground">{{ customer.email }}</td>
+                                    <td class="px-3 py-4 text-sm text-muted-foreground">{{ customer.username || '-' }}</td>
                                     <td class="px-3 py-4 text-sm text-muted-foreground">{{ customer.phone || '-' }}</td>
                                     <td class="px-3 py-4 text-sm text-muted-foreground">{{ customer.city || '-' }}</td>
                                     <td class="px-3 py-4">

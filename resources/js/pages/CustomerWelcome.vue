@@ -45,7 +45,6 @@ const benefits = [
             <div class="mb-12 text-center sm:mb-16">
                 <h1 class="mb-4 text-3xl leading-tight font-bold text-gray-900 sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl dark:text-white">
                     Hosting Web Profesional
-                    <span class="block text-blue-600 dark:text-blue-400">Dibuat Sederhana</span>
                 </h1>
                 <p class="mx-auto mb-6 max-w-2xl text-base text-gray-600 sm:mb-8 sm:max-w-3xl sm:text-lg lg:text-xl dark:text-gray-300">
                     Dapatkan layanan hosting web terpercaya dan registrasi domain dengan dukungan ahli. Sempurna untuk bisnis, developer, dan website
