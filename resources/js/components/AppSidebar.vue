@@ -113,6 +113,11 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
+        title: 'Tasks',
+        href: '/admin/tasks?calendar_date=2025-12-31&view_mode=calendar',
+        icon: CheckSquare,
+    },
+    {
         title: 'Customer',
         href: '#',
         icon: Users,
@@ -160,11 +165,6 @@ const mainNavItems: NavItem[] = [
         title: 'Blog',
         href: '/admin/blog',
         icon: PenTool,
-    },
-    {
-        title: 'Tasks',
-        href: '/admin/tasks',
-        icon: CheckSquare,
     },
     {
         title: 'Financial',
@@ -224,7 +224,7 @@ const footerNavItems: NavItem[] = [
         </div>
 
         <!-- Navigation -->
-        <nav class="custom-scrollbar flex-1 overflow-y-auto p-4">
+        <nav class="custom-scrollbar flex-1 overflow-y-auto p-0">
             <div class="space-y-1">
                 <template v-for="item in mainNavItems" :key="item.title">
                     <!-- Single menu item -->
@@ -268,7 +268,7 @@ const footerNavItems: NavItem[] = [
                             v-else
                             @click="toggleGroup(item.title.toLowerCase().replace(' ', '-'))"
                             :class="[
-                                'flex cursor-pointer items-center justify-center rounded-md px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent',
+                                'w-full flex cursor-pointer items-center justify-center rounded-md px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent',
                                 expandedGroups.has(item.title.toLowerCase().replace(' ', '-')) ? 'bg-sidebar-accent' : '',
                             ]"
                             :title="item.title"

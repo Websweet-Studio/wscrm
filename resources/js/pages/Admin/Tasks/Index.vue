@@ -7,13 +7,18 @@ import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { Calendar, CheckCircle2, Clock, Edit, Plus, Search, Trash2 } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { Calendar, CheckCircle2, Clock, Edit, Plus, Search, Trash2, LayoutList, CalendarDays, ChevronLeft, ChevronRight, AlertCircle, Circle, ArrowRightCircle, XCircle } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
+import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isSameDay, addMonths, subMonths, parseISO } from 'date-fns';
+import { id } from 'date-fns/locale';
 
 interface User {
     id: number;
     name: string;
     email: string;
+    employee?: {
+        department?: string;
+    };
 }
 
 interface Task {
@@ -43,10 +48,13 @@ interface Props {
     };
     departments: string[];
     users: User[];
+    userDepartments: Record<number, string>;
     filters?: {
         status?: string;
         assigned_user_id?: number;
         assigned_department?: string;
+        view_mode?: 'list' | 'calendar';
+        calendar_date?: string;
     };
 }
 
@@ -60,8 +68,24 @@ const breadcrumbs: BreadcrumbItem[] = [
 const statusFilter = ref(props.filters?.status || '');
 const assignedUserId = ref(props.filters?.assigned_user_id || '');
 const assignedDepartment = ref(props.filters?.assigned_department || '');
+const viewMode = ref(props.filters?.view_mode || 'list');
+const currentDate = ref(props.filters?.calendar_date ? parseISO(props.filters.calendar_date) : new Date());
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
+
+const isCalendarView = computed(() => viewMode.value === 'calendar');
+
+const calendarDays = computed(() => {
+    const monthStart = startOfMonth(currentDate.value);
+    const monthEnd = endOfMonth(monthStart);
+    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
+    const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
+
+    return eachDayOfInterval({
+        start: startDate,
+        end: endDate,
+    });
+});
 
 const createForm = useForm({
     title: '',
@@ -89,7 +113,31 @@ const handleSearch = () => {
         status: statusFilter.value || undefined,
         assigned_user_id: assignedUserId.value || undefined,
         assigned_department: assignedDepartment.value || undefined,
+        view_mode: viewMode.value,
+        calendar_date: viewMode.value === 'calendar' ? format(currentDate.value, 'yyyy-MM-dd') : undefined,
     }, { preserveState: true, replace: true });
+};
+
+const toggleView = () => {
+    viewMode.value = viewMode.value === 'list' ? 'calendar' : 'list';
+    handleSearch();
+};
+
+const prevMonth = () => {
+    currentDate.value = subMonths(currentDate.value, 1);
+    handleSearch();
+};
+
+const nextMonth = () => {
+    currentDate.value = addMonths(currentDate.value, 1);
+    handleSearch();
+};
+
+const getTasksForDay = (date: Date) => {
+    return props.tasks.data.filter(task => {
+        if (!task.due_date) return false;
+        return isSameDay(parseISO(task.due_date), date);
+    });
 };
 
 const submitCreate = () => {
@@ -114,6 +162,14 @@ const submitCreate = () => {
     });
 };
 
+watch(() => createForm.assigned_user_id, (val) => {
+    if (typeof val === 'number' && props.userDepartments[val]) {
+        createForm.assigned_department = props.userDepartments[val];
+    } else if (val === '' || val === null) {
+        createForm.assigned_department = '';
+    }
+});
+
 const openEditModal = (task: Task) => {
     editForm.id = task.id;
     editForm.title = task.title;
@@ -123,6 +179,9 @@ const openEditModal = (task: Task) => {
     editForm.due_date = task.due_date || '';
     editForm.assigned_user_id = task.assigned_user_id || '';
     editForm.assigned_department = task.assigned_department || '';
+    if (typeof editForm.assigned_user_id === 'number' && props.userDepartments[editForm.assigned_user_id]) {
+        editForm.assigned_department = props.userDepartments[editForm.assigned_user_id];
+    }
     showEditModal.value = true;
 };
 
@@ -144,6 +203,13 @@ const submitEdit = () => {
     });
 };
 
+watch(() => editForm.assigned_user_id, (val) => {
+    if (typeof val === 'number' && props.userDepartments[val]) {
+        editForm.assigned_department = props.userDepartments[val];
+    } else if (val === '' || val === null) {
+        editForm.assigned_department = '';
+    }
+});
 const statusBadgeClass = (status: Task['status']) => {
     switch (status) {
         case 'todo':
@@ -178,6 +244,20 @@ const formatDate = (dateString?: string) => {
     if (isNaN(d.getTime())) return dateString;
     return d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
 };
+
+const getTaskIcon = (status: Task['status']) => {
+    switch (status) {
+        case 'done':
+            return CheckCircle2;
+        case 'in_progress':
+            return ArrowRightCircle;
+        case 'cancelled':
+            return XCircle;
+        case 'todo':
+        default:
+            return Circle;
+    }
+};
 </script>
 
 <template>
@@ -189,22 +269,23 @@ const formatDate = (dateString?: string) => {
                     <h1 class="text-3xl font-bold tracking-tight">Kelola Tasks</h1>
                     <p class="text-muted-foreground">Buat dan kelola tugas untuk user atau departemen</p>
                 </div>
-                <Button @click="showCreateModal = true" class="cursor-pointer">
-                    <Plus class="mr-2 h-4 w-4" />
-                    Buat Task
-                </Button>
+                <div class="flex items-center gap-2">
+                    <Button @click="toggleView" variant="outline" class="cursor-pointer">
+                        <component :is="isCalendarView ? LayoutList : CalendarDays" class="mr-2 h-4 w-4" />
+                        {{ isCalendarView ? 'Tampilkan List' : 'Tampilkan Kalender' }}
+                    </Button>
+                    <Button @click="showCreateModal = true" class="cursor-pointer">
+                        <Plus class="mr-2 h-4 w-4" />
+                        Buat Task
+                    </Button>
+                </div>
             </div>
 
             <!-- Filters -->
             <Card>
-                <CardHeader>
-                    <CardTitle class="text-base">Filter</CardTitle>
-                    <CardDescription>Pilih status atau penerima tugas</CardDescription>
-                </CardHeader>
                 <CardContent>
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-4">
                         <div>
-                            <Label for="statusFilter">Status</Label>
                             <select id="statusFilter" v-model="statusFilter" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
                                 <option value="">Semua</option>
                                 <option value="todo">Todo</option>
@@ -214,16 +295,14 @@ const formatDate = (dateString?: string) => {
                             </select>
                         </div>
                         <div>
-                            <Label for="assignedUserId">Assign ke User</Label>
                             <select id="assignedUserId" v-model="assignedUserId" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
-                                <option value="">-</option>
+                                <option value="">Semua</option>
                                 <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
                             </select>
                         </div>
                         <div>
-                            <Label for="assignedDepartment">Assign ke Departemen</Label>
                             <select id="assignedDepartment" v-model="assignedDepartment" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
-                                <option value="">-</option>
+                                <option value="">Semua</option>
                                 <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
                             </select>
                         </div>
@@ -234,8 +313,70 @@ const formatDate = (dateString?: string) => {
                 </CardContent>
             </Card>
 
+            <!-- Calendar View -->
+            <Card v-if="isCalendarView" class="h-full border-none shadow-none bg-transparent">
+                <div class="mb-4 flex items-center justify-between bg-white p-4 rounded-lg shadow dark:bg-gray-800">
+                    <div class="flex items-center space-x-4">
+                        <Button variant="outline" size="icon" @click="prevMonth" class="h-8 w-8 cursor-pointer">
+                            <ChevronLeft class="h-4 w-4" />
+                        </Button>
+                        <h2 class="text-xl font-bold">{{ format(currentDate, 'MMMM yyyy', { locale: id }) }}</h2>
+                        <Button variant="outline" size="icon" @click="nextMonth" class="h-8 w-8 cursor-pointer">
+                            <ChevronRight class="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <div class="text-sm text-muted-foreground">
+                        {{ tasks.data.length }} tasks
+                    </div>
+                </div>
+                
+                <div class="rounded-lg border bg-white shadow dark:border-gray-700 dark:bg-gray-900">
+                    <div class="grid grid-cols-7 border-b dark:border-gray-700">
+                        <div v-for="day in ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Ming']" :key="day" class="py-3 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            {{ day }}
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-7 bg-gray-200 gap-px dark:bg-gray-700">
+                        <div
+                            v-for="date in calendarDays"
+                            :key="date.toString()"
+                            :class="[
+                                'min-h-[120px] bg-white p-2 dark:bg-gray-900 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800',
+                                !isSameMonth(date, currentDate) ? 'bg-gray-50/50 text-gray-400 dark:bg-gray-900/50 dark:text-gray-600' : ''
+                            ]"
+                        >
+                            <div class="mb-2 flex justify-between items-start">
+                                <span :class="['flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium', isSameDay(date, new Date()) ? 'bg-blue-600 text-white' : '']">
+                                    {{ format(date, 'd') }}
+                                </span>
+                            </div>
+                            <div class="space-y-1">
+                                <div
+                                    v-for="task in getTasksForDay(date)"
+                                    :key="task.id"
+                                    class="group relative cursor-pointer truncate rounded px-1.5 py-1 text-xs font-medium transition-all hover:ring-2 hover:ring-blue-500 hover:z-10"
+                                    :class="[
+                                        task.priority === 'high' ? 'bg-red-50 text-red-700 border border-red-100 dark:bg-red-900/30 dark:text-red-300 dark:border-red-900/50' :
+                                        task.priority === 'medium' ? 'bg-yellow-50 text-yellow-700 border border-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-900/50' :
+                                        'bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-900/50',
+                                        task.status === 'done' ? 'line-through opacity-60 grayscale' : ''
+                                    ]"
+                                    @click="openEditModal(task)"
+                                    :title="task.title"
+                                >
+                                    <div class="flex items-center gap-1">
+                                        <component :is="getTaskIcon(task.status)" class="h-3 w-3 shrink-0" />
+                                        <span class="truncate">{{ task.title }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Card>
+
             <!-- Tasks List -->
-            <Card>
+            <Card v-else>
                 <CardHeader>
                     <CardTitle class="text-base">Daftar Tasks</CardTitle>
                     <CardDescription>Tugas yang ditugaskan ke Anda atau yang Anda buat</CardDescription>
@@ -263,7 +404,13 @@ const formatDate = (dateString?: string) => {
                                         <span v-if="task.assigned_user" class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                                             <Clock class="h-3 w-3" /> {{ task.assigned_user.name }}
                                         </span>
-                                        <span v-if="task.assigned_department" class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                        <span
+                                            v-if="task.assigned_user?.employee?.department"
+                                            class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                                        >
+                                            <Clock class="h-3 w-3" /> Departemen: {{ task.assigned_user.employee.department }}
+                                        </span>
+                                        <span v-else-if="task.assigned_department" class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                                             <Clock class="h-3 w-3" /> Departemen: {{ task.assigned_department }}
                                         </span>
                                     </div>
@@ -350,14 +497,14 @@ const formatDate = (dateString?: string) => {
                             <div>
                                 <Label for="assigned_user_id">Assign ke User</Label>
                                 <select id="assigned_user_id" v-model="createForm.assigned_user_id" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
-                                    <option value="">(Default: diri sendiri)</option>
+                                    <option value="">— Pilih user —</option>
                                     <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
                                 </select>
                             </div>
                             <div>
                                 <Label for="assigned_department">Assign ke Departemen</Label>
                                 <select id="assigned_department" v-model="createForm.assigned_department" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
-                                    <option value="">(Kosong)</option>
+                                    <option value="">— Pilih departemen —</option>
                                     <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
                                 </select>
                                 <p class="mt-1 text-xs text-muted-foreground">Jika keduanya kosong, otomatis assign ke diri sendiri.</p>
@@ -411,14 +558,14 @@ const formatDate = (dateString?: string) => {
                             <div>
                                 <Label for="edit_assigned_user_id">Assign ke User</Label>
                                 <select id="edit_assigned_user_id" v-model="editForm.assigned_user_id" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
-                                    <option value="">(Kosong)</option>
+                                    <option value="">— Pilih user —</option>
                                     <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
                                 </select>
                             </div>
                             <div>
                                 <Label for="edit_assigned_department">Assign ke Departemen</Label>
                                 <select id="edit_assigned_department" v-model="editForm.assigned_department" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
-                                    <option value="">(Kosong)</option>
+                                    <option value="">— Pilih departemen —</option>
                                     <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
                                 </select>
                             </div>

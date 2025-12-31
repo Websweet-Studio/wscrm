@@ -24,28 +24,43 @@ class TaskController extends Controller
         $this->checkAdmin();
         $userId = auth()->id();
 
-        $query = Task::with(['assignedUser', 'creator'])
+        $query = Task::with(['assignedUser.employee', 'creator'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('assigned_department'), fn ($q) => $q->where('assigned_department', $request->assigned_department))
             ->when($request->filled('assigned_user_id'), fn ($q) => $q->where('assigned_user_id', $request->assigned_user_id))
             ->orderBy('due_date', 'asc')
             ->orderBy('created_at', 'desc');
 
+        $perPage = 10;
+        if ($request->get('view_mode') === 'calendar') {
+            $date = $request->get('calendar_date') ? \Carbon\Carbon::parse($request->get('calendar_date')) : now();
+            $start = $date->copy()->startOfMonth()->startOfWeek();
+            $end = $date->copy()->endOfMonth()->endOfWeek();
+            
+            $query->whereBetween('due_date', [$start, $end]);
+            $perPage = 500;
+        }
+
         // Default: show my tasks (assigned to me or created by me)
         if (! $request->filled('assigned_user_id') && ! $request->filled('assigned_department')) {
             $query->my($userId);
         }
 
-        $tasks = $query->paginate(10);
+        $tasks = $query->paginate($perPage);
 
         $departments = Employee::distinct()->pluck('department')->filter()->values();
         $users = User::orderBy('name')->get(['id', 'name', 'email']);
+        $userDepartments = Employee::select('user_id', 'department')
+            ->whereNotNull('department')
+            ->get()
+            ->pluck('department', 'user_id');
 
         return Inertia::render('Admin/Tasks/Index', [
             'tasks' => $tasks,
             'departments' => $departments,
             'users' => $users,
-            'filters' => $request->only(['status', 'assigned_user_id', 'assigned_department']),
+            'userDepartments' => $userDepartments,
+            'filters' => $request->only(['status', 'assigned_user_id', 'assigned_department', 'view_mode', 'calendar_date']),
         ]);
     }
 
@@ -102,4 +117,3 @@ class TaskController extends Controller
         return redirect()->route('admin.tasks.index')->with('success', 'Task berhasil dihapus.');
     }
 }
-
