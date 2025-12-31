@@ -55,12 +55,18 @@ class TaskController extends Controller
             ->get()
             ->pluck('department', 'user_id');
 
+        $editingTask = null;
+        if ($request->filled('edit')) {
+            $editingTask = Task::find($request->edit);
+        }
+
         return Inertia::render('Admin/Tasks/Index', [
             'tasks' => $tasks,
             'departments' => $departments,
             'users' => $users,
             'userDepartments' => $userDepartments,
             'filters' => $request->only(['status', 'assigned_user_id', 'assigned_department', 'view_mode', 'calendar_date']),
+            'editingTask' => $editingTask,
         ]);
     }
 

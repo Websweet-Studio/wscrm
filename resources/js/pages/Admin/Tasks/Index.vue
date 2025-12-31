@@ -8,7 +8,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Calendar, CheckCircle2, Clock, Edit, Plus, Search, Trash2, LayoutList, CalendarDays, ChevronLeft, ChevronRight, AlertCircle, Circle, ArrowRightCircle, XCircle } from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted } from 'vue';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isSameDay, addMonths, subMonths, parseISO } from 'date-fns';
 import { id } from 'date-fns/locale';
 
@@ -56,6 +56,7 @@ interface Props {
         view_mode?: 'list' | 'calendar';
         calendar_date?: string;
     };
+    editingTask?: Task | null;
 }
 
 const props = defineProps<Props>();
@@ -184,6 +185,13 @@ const openEditModal = (task: Task) => {
     }
     showEditModal.value = true;
 };
+
+onMounted(() => {
+    if (props.editingTask) {
+        openEditModal(props.editingTask);
+    }
+});
+
 
 const submitEdit = () => {
     const payload: any = {

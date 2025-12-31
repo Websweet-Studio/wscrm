@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/vue3';
-import { AlertTriangle, BarChart3, Calendar, DollarSign, ShoppingCart, TrendingDown, TrendingUp, Users } from 'lucide-vue-next';
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
+import { AlertTriangle, BarChart3, Calendar, DollarSign, ShoppingCart, TrendingDown, TrendingUp, Users, CheckCircle2, Clock, ArrowRight, Plus, RefreshCw, CheckSquare, ListTodo, UserPlus, CreditCard } from 'lucide-vue-next';
+import { computed } from 'vue';
 
 interface Stats {
     customers: {
@@ -27,6 +28,17 @@ interface Stats {
         thisMonth: number;
         growth: number;
     };
+    tasks: {
+        pendingCount: number;
+    };
+}
+
+interface Task {
+    id: number;
+    title: string;
+    status: 'todo' | 'in_progress' | 'done' | 'cancelled';
+    priority: 'low' | 'medium' | 'high';
+    due_date?: string;
 }
 
 interface Customer {
@@ -79,9 +91,11 @@ interface Props {
         dailyOrders: ChartDataPoint[];
         monthlyStats: MonthlyStats[];
     };
+    myPendingTasks: Task[];
 }
 
 const props = defineProps<Props>();
+const page = usePage();
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -89,6 +103,20 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: dashboard().url,
     },
 ];
+
+const greeting = computed(() => {
+    const hour = new Date().getHours();
+    const user = page.props.auth.user;
+    const name = user.name.split(' ')[0]; // First name
+
+    if (hour < 12) return `Good Morning, ${name}`;
+    if (hour < 18) return `Good Afternoon, ${name}`;
+    return `Good Evening, ${name}`;
+});
+
+const refreshDashboard = () => {
+    router.reload({ only: ['stats', 'recentActivities', 'expiringServices', 'chartData', 'myPendingTasks'] });
+};
 
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -145,9 +173,15 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Dashboard</h1>
                     <p class="hidden text-sm text-muted-foreground sm:block sm:text-base">
-                        Welcome back! Here's what's happening with your dashboard.
+                        {{ greeting }}! Here's what's happening today.
                     </p>
-                    <p class="text-sm text-muted-foreground sm:hidden">Overview singkat sistem Anda</p>
+                    <p class="text-sm text-muted-foreground sm:hidden">{{ greeting }}</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <Button variant="outline" size="sm" @click="refreshDashboard">
+                        <RefreshCw class="mr-2 h-4 w-4" />
+                        Refresh
+                    </Button>
                 </div>
             </div>
 
@@ -218,6 +252,66 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                             <span class="hidden sm:inline">{{ formatPrice(stats.revenue.thisMonth) }} this month</span>
                             <span class="sm:hidden">{{ formatPrice(stats.revenue.thisMonth) }} bulan ini</span>
                         </p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <!-- My Tasks Section -->
+            <div class="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
+                 <Card class="lg:col-span-2">
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 px-4 pb-2 sm:px-6">
+                        <div class="flex items-center gap-2">
+                            <ListTodo class="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
+                             <CardTitle class="text-base sm:text-lg">My Pending Tasks</CardTitle>
+                        </div>
+                        <Button variant="ghost" size="sm" asChild class="text-xs">
+                             <Link href="/admin/tasks">View All</Link>
+                        </Button>
+                    </CardHeader>
+                    <CardContent class="px-4 sm:px-6">
+                         <div v-if="props.myPendingTasks.length === 0" class="py-6 text-center text-sm text-muted-foreground">
+                             No pending tasks. Great job!
+                         </div>
+                         <div v-else class="space-y-2">
+                             <div v-for="task in props.myPendingTasks" :key="task.id" class="flex items-center justify-between rounded-md border p-3 hover:bg-muted/50 transition-colors">
+                                 <div class="flex items-center gap-3">
+                                     <div :class="{
+                                         'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': task.priority === 'high',
+                                         'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400': task.priority === 'medium',
+                                         'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400': task.priority === 'low'
+                                     }" class="flex h-8 w-8 items-center justify-center rounded-full shrink-0">
+                                         <Clock class="h-4 w-4" />
+                                     </div>
+                                     <div class="min-w-0">
+                                         <div class="font-medium text-sm truncate">{{ task.title }}</div>
+                                         <div class="text-xs text-muted-foreground" v-if="task.due_date">Due: {{ formatDate(task.due_date) }}</div>
+                                     </div>
+                                 </div>
+                                 <Link :href="`/admin/tasks?edit=${task.id}`" class="shrink-0">
+                                     <Button variant="ghost" size="icon" class="h-8 w-8">
+                                         <ArrowRight class="h-4 w-4" />
+                                     </Button>
+                                 </Link>
+                             </div>
+                         </div>
+                    </CardContent>
+                 </Card>
+
+                 <Card>
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 px-4 pb-2 sm:px-6">
+                        <CardTitle class="text-xs font-medium sm:text-sm">Pending Tasks</CardTitle>
+                        <CheckSquare class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
+                    </CardHeader>
+                    <CardContent class="px-4 sm:px-6">
+                        <div class="truncate text-xl font-bold sm:text-2xl">{{ stats.tasks.pendingCount }}</div>
+                        <p class="mt-1 text-xs text-muted-foreground">
+                            Tasks assigned to you that are not done.
+                        </p>
+                        <div class="mt-4">
+                             <Button class="w-full" size="sm" asChild>
+                                 <Link href="/admin/tasks/create">Create New Task</Link>
+                             </Button>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -396,19 +490,23 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                     <CardDescription class="text-xs sm:text-sm">Common administrative tasks</CardDescription>
                 </CardHeader>
                 <CardContent class="px-4 sm:px-6">
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
-                        <Button asChild size="sm" class="text-xs sm:text-sm">
-                            <Link href="/admin/customers">Manage Customers</Link>
-                        </Button>
-                        <Button asChild size="sm" class="text-xs sm:text-sm">
-                            <Link href="/admin/orders">View Orders</Link>
-                        </Button>
-                        <Button asChild size="sm" class="text-xs sm:text-sm">
-                            <Link href="/hosting">View Hosting Plans</Link>
-                        </Button>
-                        <Button asChild size="sm" class="text-xs sm:text-sm">
-                            <Link href="/domains">Check Domain Pricing</Link>
-                        </Button>
+                    <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+                        <Link href="/admin/customers/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
+                            <UserPlus class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
+                            <span class="text-xs font-medium sm:text-sm">Add Customer</span>
+                        </Link>
+                        <Link href="/admin/orders/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
+                            <ShoppingCart class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
+                            <span class="text-xs font-medium sm:text-sm">New Order</span>
+                        </Link>
+                         <Link href="/admin/tasks/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
+                            <CheckSquare class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
+                            <span class="text-xs font-medium sm:text-sm">New Task</span>
+                        </Link>
+                        <Link href="/admin/invoices/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
+                            <CreditCard class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
+                            <span class="text-xs font-medium sm:text-sm">New Invoice</span>
+                        </Link>
                     </div>
                 </CardContent>
             </Card>

@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\Task;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -13,6 +15,19 @@ class DashboardController extends Controller
     public function index(): Response
     {
         $now = Carbon::now();
+        $user = Auth::user();
+
+        // Task Statistics
+        $myPendingTasks = Task::where('assigned_user_id', $user->id)
+            ->where('status', '!=', 'done')
+            ->orderBy('due_date', 'asc')
+            ->limit(5)
+            ->get();
+            
+        $myPendingTasksCount = Task::where('assigned_user_id', $user->id)
+            ->where('status', '!=', 'done')
+            ->count();
+
         $thisMonth = $now->startOfMonth();
         $lastMonth = $now->copy()->subMonth()->startOfMonth();
 
@@ -125,7 +140,11 @@ class DashboardController extends Controller
                     'thisMonth' => $revenueThisMonth,
                     'growth' => round($revenueGrowth, 1),
                 ],
+                'tasks' => [
+                    'pendingCount' => $myPendingTasksCount,
+                ]
             ],
+            'myPendingTasks' => $myPendingTasks,
             'recentActivities' => [
                 'orders' => $recentOrders,
                 'customers' => $recentCustomers,
