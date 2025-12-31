@@ -263,7 +263,7 @@ const formatDate = (dateString?: string) => {
                                         <span v-if="task.assigned_user" class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                                             <Clock class="h-3 w-3" /> {{ task.assigned_user.name }}
                                         </span>
-                                        <span v-else-if="task.assigned_department" class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                        <span v-if="task.assigned_department" class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                                             <Clock class="h-3 w-3" /> Departemen: {{ task.assigned_department }}
                                         </span>
                                     </div>
