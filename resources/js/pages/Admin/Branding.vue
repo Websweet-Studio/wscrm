@@ -5,33 +5,6 @@
                 <div class="border-b border-gray-200 p-6 dark:border-gray-700">
                     <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Pengaturan Branding</h1>
                     <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">Kelola logo, warna, dan identitas visual aplikasi</p>
-
-                    <!-- Dark Mode Toggle -->
-                    <div class="mt-4">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="text-sm font-medium text-gray-900 dark:text-white">Tampilan Mode</h3>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Pilih preferensi tampilan untuk aplikasi</p>
-                            </div>
-                            <div class="inline-flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
-                                <button
-                                    v-for="{ value, Icon, label } in themeTabs"
-                                    :key="value"
-                                    @click="updateTheme(value)"
-                                    :class="[
-                                        'flex items-center rounded-md px-3 py-1.5 transition-colors',
-                                        currentTheme === value
-                                            ? 'bg-white shadow-xs dark:bg-neutral-700 dark:text-neutral-100'
-                                            : 'text-neutral-500 hover:bg-neutral-200/60 hover:text-black dark:text-neutral-400 dark:hover:bg-neutral-700/60',
-                                    ]"
-                                    :title="label"
-                                >
-                                    <component :is="Icon" class="h-4 w-4" />
-                                    <span class="ml-1.5 text-sm">{{ label }}</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <form @submit.prevent="submitSettings" class="p-6">
@@ -221,11 +194,9 @@
 </template>
 
 <script setup lang="ts">
-import { useAppearance } from '@/composables/useAppearance';
 import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useForm } from '@inertiajs/vue3';
-import { Monitor, Moon, Sun } from 'lucide-vue-next';
 import { onMounted, ref } from 'vue';
 
 interface BrandingSetting {
@@ -248,17 +219,6 @@ interface Props {
 
 const props = defineProps<Props>();
 const { success, error } = useToast();
-const { appearance, updateAppearance } = useAppearance();
-
-// Theme tabs configuration
-const themeTabs = [
-    { value: 'light', Icon: Sun, label: 'Terang' },
-    { value: 'dark', Icon: Moon, label: 'Gelap' },
-    { value: 'system', Icon: Monitor, label: 'Sistem' },
-] as const;
-
-// Current theme state
-const currentTheme = ref(appearance);
 
 // Form setup
 const form = useForm({
@@ -285,12 +245,6 @@ const clearImagePreview = (key: string) => {
     }
 };
 
-// Theme update function
-const updateTheme = (theme: 'light' | 'dark' | 'system') => {
-    currentTheme.value = theme;
-    updateAppearance(theme);
-};
-
 // Initialize form with current settings
 onMounted(() => {
     Object.values(props.settings)
@@ -298,9 +252,6 @@ onMounted(() => {
         .forEach((setting) => {
             form.settings[setting.key] = setting.value;
         });
-
-    // Sync current theme
-    currentTheme.value = appearance;
 });
 
 // Setting labels mapping
