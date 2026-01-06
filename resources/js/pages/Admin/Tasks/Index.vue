@@ -55,6 +55,7 @@ interface Props {
         assigned_department?: string;
         view_mode?: 'list' | 'calendar';
         calendar_date?: string;
+        scope?: 'all' | 'assigned' | 'created';
     };
     editingTask?: Task | null;
 }
@@ -71,6 +72,7 @@ const assignedUserId = ref(props.filters?.assigned_user_id || '');
 const assignedDepartment = ref(props.filters?.assigned_department || '');
 const viewMode = ref(props.filters?.view_mode || 'list');
 const currentDate = ref(props.filters?.calendar_date ? parseISO(props.filters.calendar_date) : new Date());
+const scopeFilter = ref(props.filters?.scope || 'all');
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
 
@@ -116,6 +118,7 @@ const handleSearch = () => {
         assigned_department: assignedDepartment.value || undefined,
         view_mode: viewMode.value,
         calendar_date: viewMode.value === 'calendar' ? format(currentDate.value, 'yyyy-MM-dd') : undefined,
+        scope: scopeFilter.value || undefined,
     }, { preserveState: true, replace: true });
 };
 
@@ -292,6 +295,26 @@ const getTaskIcon = (status: Task['status']) => {
             <!-- Filters -->
             <Card>
                 <CardContent>
+                    <div class="mb-3 flex items-center gap-2">
+                        <Button
+                            :variant="scopeFilter === 'all' ? 'default' : 'outline'"
+                            size="sm"
+                            class="cursor-pointer"
+                            @click="scopeFilter = 'all'; handleSearch();"
+                        >Semua</Button>
+                        <Button
+                            :variant="scopeFilter === 'assigned' ? 'default' : 'outline'"
+                            size="sm"
+                            class="cursor-pointer"
+                            @click="scopeFilter = 'assigned'; handleSearch();"
+                        >Ditugaskan ke Saya</Button>
+                        <Button
+                            :variant="scopeFilter === 'created' ? 'default' : 'outline'"
+                            size="sm"
+                            class="cursor-pointer"
+                            @click="scopeFilter = 'created'; handleSearch();"
+                        >Dibuat oleh Saya</Button>
+                    </div>
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-4">
                         <div>
                             <select id="statusFilter" v-model="statusFilter" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
@@ -364,6 +387,7 @@ const getTaskIcon = (status: Task['status']) => {
                                     :key="task.id"
                                     class="group relative cursor-pointer truncate rounded px-1.5 py-1 text-xs font-medium transition-all hover:ring-2 hover:ring-blue-500 hover:z-10"
                                     :class="[
+                                        (task.status === 'todo' && task.assigned_user_id == null) ? 'ring-2 ring-amber-500 dark:ring-amber-400' : '',
                                         task.priority === 'high' ? 'bg-red-50 text-red-700 border border-red-100 dark:bg-red-900/30 dark:text-red-300 dark:border-red-900/50' :
                                         task.priority === 'medium' ? 'bg-yellow-50 text-yellow-700 border border-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-900/50' :
                                         'bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-900/50',
@@ -396,7 +420,12 @@ const getTaskIcon = (status: Task['status']) => {
                         <p class="mt-1 text-sm">Buat task baru untuk memulai.</p>
                     </div>
                     <div v-else class="space-y-3">
-                        <div v-for="task in tasks.data" :key="task.id" class="rounded-lg border p-4 dark:border-gray-700">
+                        <div
+                            v-for="task in tasks.data"
+                            :key="task.id"
+                            class="rounded-lg border p-4 dark:border-gray-700"
+                            :class="[(task.status === 'todo' && task.assigned_user_id == null) ? 'ring-2 ring-amber-500 dark:ring-amber-400' : '']"
+                        >
                             <div class="flex items-start justify-between">
                                 <div>
                                     <h3 class="text-lg font-semibold">{{ task.title }}</h3>

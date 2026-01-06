@@ -57,6 +57,8 @@ const handleLinkClick = () => {
 
 // Get current user for role-based access
 const user = $page.props.auth.user;
+const unassignedTodoCount = (($page.props as any)?.adminBadges?.tasks_unassigned_todo as number) ?? 0;
+const inProgressCount = (($page.props as any)?.adminBadges?.tasks_in_progress as number) ?? 0;
 
 // Track expanded state for menu groups with persistence
 const expandedGroups = ref(new Set<string>());
@@ -116,6 +118,7 @@ const mainNavItems: NavItem[] = [
         title: 'Tasks',
         href: '/admin/tasks?calendar_date=2025-12-31&view_mode=calendar',
         icon: CheckSquare,
+        badge: unassignedTodoCount,
     },
     {
         title: 'Customer',
@@ -238,7 +241,7 @@ const footerNavItems: NavItem[] = [
                         :href="item.href"
                         @click="handleLinkClick"
                         :class="[
-                            'flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent',
+                            'relative flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent',
                             item.href === $page.url ? 'bg-sidebar-accent font-medium' : '',
                             shouldShowIconsOnly ? 'justify-center' : '',
                         ]"
@@ -246,6 +249,18 @@ const footerNavItems: NavItem[] = [
                     >
                         <component :is="item.icon" class="h-4 w-4 flex-shrink-0" />
                         <span v-if="!shouldShowIconsOnly" class="truncate">{{ item.title }}</span>
+                        <span
+                            v-if="(item.title === 'Tasks' ? unassignedTodoCount > 0 : (item.badge && item.badge > 0))"
+                            class="absolute top-3 right-3 rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white"
+                        >
+                            {{ item.title === 'Tasks' ? unassignedTodoCount : item.badge }}
+                        </span>
+                        <span
+                            v-if="item.title === 'Tasks' && inProgressCount > 0"
+                            class="absolute top-8 right-3 rounded-full bg-orange-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white"
+                        >
+                            {{ inProgressCount }}
+                        </span>
                     </Link>
 
                     <!-- Group with children -->

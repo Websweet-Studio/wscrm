@@ -24,6 +24,8 @@ class TaskController extends Controller
         $this->checkAdmin();
         $userId = auth()->id();
 
+        $scope = $request->get('scope'); // all | assigned | created
+
         $query = Task::with(['assignedUser.employee', 'creator'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('assigned_department'), fn ($q) => $q->where('assigned_department', $request->assigned_department))
@@ -41,9 +43,16 @@ class TaskController extends Controller
             $perPage = 500;
         }
 
-        // Default: show my tasks (assigned to me or created by me)
-        if (! $request->filled('assigned_user_id') && ! $request->filled('assigned_department')) {
-            $query->my($userId);
+        // Scope selection
+        if ($scope === 'assigned') {
+            $query->where('assigned_user_id', $userId);
+        } elseif ($scope === 'created') {
+            $query->where('created_by_user_id', $userId);
+        } else {
+            // Default: show my tasks (assigned to me or created by me)
+            if (! $request->filled('assigned_user_id') && ! $request->filled('assigned_department')) {
+                $query->my($userId);
+            }
         }
 
         $tasks = $query->paginate($perPage);
@@ -65,7 +74,7 @@ class TaskController extends Controller
             'departments' => $departments,
             'users' => $users,
             'userDepartments' => $userDepartments,
-            'filters' => $request->only(['status', 'assigned_user_id', 'assigned_department', 'view_mode', 'calendar_date']),
+            'filters' => $request->only(['status', 'assigned_user_id', 'assigned_department', 'view_mode', 'calendar_date', 'scope']),
             'editingTask' => $editingTask,
         ]);
     }

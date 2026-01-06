@@ -3,6 +3,8 @@
 namespace App\Http\Middleware;
 
 use App\Models\BrandingSetting;
+use App\Models\Employee;
+use App\Models\Task;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -57,6 +59,38 @@ class HandleInertiaRequests extends Middleware
             ];
         }
 
+        $adminBadges = [];
+        if ($user = $request->user()) {
+            $department = Employee::where('user_id', $user->id)->value('department');
+            $pendingTasksCount = Task::query()
+                ->where('status', '!=', 'done')
+                ->where(function ($q) use ($user, $department) {
+                    $q->where('assigned_user_id', $user->id);
+                    if ($department) {
+                        $q->orWhere('assigned_department', $department);
+                    }
+                })
+                ->count();
+            $unassignedTodoCount = Task::query()
+                ->where('status', 'todo')
+                ->whereNull('assigned_user_id')
+                ->where('created_by_user_id', $user->id)
+                ->count();
+            $inProgressCount = Task::query()
+                ->where('status', 'in_progress')
+                ->where(function ($q) use ($user) {
+                    $q->where('assigned_user_id', $user->id)
+                        ->orWhere('created_by_user_id', $user->id);
+                })
+                ->count();
+
+            $adminBadges = [
+                'pending_tasks' => $pendingTasksCount,
+                'tasks_unassigned_todo' => $unassignedTodoCount,
+                'tasks_in_progress' => $inProgressCount,
+            ];
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -68,6 +102,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'customerBadges' => $customerBadges,
+            'adminBadges' => $adminBadges,
             'flash' => [
                 'toast' => $request->session()->get('toast'),
                 'error' => $request->session()->get('error'),
