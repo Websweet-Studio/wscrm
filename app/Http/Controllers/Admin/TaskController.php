@@ -44,14 +44,14 @@ class TaskController extends Controller
         }
 
         // Scope selection
-        if ($scope === 'assigned') {
-            $query->where('assigned_user_id', $userId);
-        } elseif ($scope === 'created') {
+        if ($scope === 'created') {
             $query->where('created_by_user_id', $userId);
+        } elseif ($scope === 'all') {
+            // show all tasks (no default user filter)
         } else {
-            // Default: show my tasks (assigned to me or created by me)
+            // Default: show tasks assigned to current user
             if (! $request->filled('assigned_user_id') && ! $request->filled('assigned_department')) {
-                $query->my($userId);
+                $query->where('assigned_user_id', $userId);
             }
         }
 

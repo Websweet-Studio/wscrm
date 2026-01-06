@@ -73,7 +73,7 @@ const assignedUserId = ref(props.filters?.assigned_user_id || '');
 const assignedDepartment = ref(props.filters?.assigned_department || '');
 const viewMode = ref(props.filters?.view_mode || 'list');
 const currentDate = ref(props.filters?.calendar_date ? parseISO(props.filters.calendar_date) : new Date());
-const scopeFilter = ref(props.filters?.scope || 'all');
+const scopeFilter = ref(props.filters?.scope || 'assigned');
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
 
