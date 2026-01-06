@@ -132,6 +132,11 @@ const mainNavItems: NavItem[] = [
                 href: '/admin/orders',
                 icon: ShoppingCart,
             },
+            {
+                title: 'Services',
+                href: '/admin/orders?view=services&status=active',
+                icon: Package,
+            },
         ],
     },
     {

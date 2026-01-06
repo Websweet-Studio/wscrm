@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ChevronDown, ChevronUp, Edit, Package, Plus, Search, ShoppingCart, Trash2 } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { ChevronDown, ChevronUp, Edit, Package, Plus, Search, Trash2 } from 'lucide-vue-next';
+import { onMounted, ref } from 'vue';
 
 interface Customer {
     id: number;
@@ -97,6 +97,16 @@ const orderFormMode = ref<'create' | 'edit'>('create');
 const showDeleteModal = ref(false);
 const selectedOrder = ref<Order | null>(null);
 const orderToDelete = ref<Order | null>(null);
+
+if (currentView.value === 'services' && !props.filters?.status) {
+    statusFilter.value = 'active';
+}
+
+onMounted(() => {
+    if (currentView.value === 'services' && !props.filters?.status) {
+        applyFilters();
+    }
+});
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -319,10 +329,7 @@ const resetFilters = () => {
     applyFilters();
 };
 
-const changeView = (view: 'orders' | 'services') => {
-    currentView.value = view;
-    applyFilters();
-};
+// View is controlled via navigation/menu; no toggle in-page
 
 const openCreateModal = () => {
     orderFormMode.value = 'create';
@@ -450,30 +457,6 @@ const getSortIcon = (field: string) => {
                 </div>
             </div>
 
-            <!-- View Toggle -->
-            <div class="flex space-x-1 rounded-lg bg-muted p-1">
-                <button
-                    @click="changeView('orders')"
-                    :class="[
-                        'flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                        currentView === 'orders' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
-                    ]"
-                >
-                    <ShoppingCart class="mr-2 inline h-4 w-4" />
-                    Pesanan
-                </button>
-                <button
-                    @click="changeView('services')"
-                    :class="[
-                        'flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                        currentView === 'services' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
-                    ]"
-                >
-                    <Package class="mr-2 inline h-4 w-4" />
-                    Layanan
-                </button>
-            </div>
-
             <!-- Filters -->
             <Card>
                 <CardHeader>
@@ -485,11 +468,9 @@ const getSortIcon = (field: string) => {
                 <CardContent>
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
                         <div>
-                            <Label for="search">Pencarian</Label>
                             <Input id="search" v-model="search" placeholder="Cari nama, email, atau domain..." @input="applyFilters" />
                         </div>
                         <div>
-                            <Label for="status">Status</Label>
                             <select
                                 id="status"
                                 v-model="statusFilter"
@@ -507,7 +488,6 @@ const getSortIcon = (field: string) => {
                             </select>
                         </div>
                         <div>
-                            <Label for="service_type">Tipe Layanan</Label>
                             <select
                                 id="service_type"
                                 v-model="serviceTypeFilter"
@@ -524,7 +504,6 @@ const getSortIcon = (field: string) => {
                             </select>
                         </div>
                         <div>
-                            <Label for="customer">Pelanggan</Label>
                             <select
                                 id="customer"
                                 v-model="customerFilter"
