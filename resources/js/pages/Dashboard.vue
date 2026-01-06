@@ -185,6 +185,34 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                 </div>
             </div>
 
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+                <Button variant="outline" asChild class="cursor-pointer">
+                    <Link href="/admin/tasks">
+                        <Plus class="mr-2 h-4 w-4" />
+                        Tambah/kelola Task
+                    </Link>
+                </Button>
+                <Button variant="outline" asChild class="cursor-pointer">
+                    <Link href="/admin/customers">
+                        <UserPlus class="mr-2 h-4 w-4" />
+                        Tambah/kelola Customer
+                    </Link>
+                </Button>
+                <Button variant="outline" asChild class="cursor-pointer">
+                    <Link href="/admin/orders">
+                        <ShoppingCart class="mr-2 h-4 w-4" />
+                        Kelola Orders
+                    </Link>
+                </Button>
+                <Button variant="outline" asChild class="cursor-pointer">
+                    <Link href="/admin/invoices">
+                        <CreditCard class="mr-2 h-4 w-4" />
+                        Kelola Invoices
+                    </Link>
+                </Button>
+            </div>
+
             <!-- Key Metrics Cards -->
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
                 <!-- Customers Card -->
@@ -227,10 +255,14 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                                 {{ formatGrowth(stats.orders.growth).value }}%<span class="hidden sm:inline"> from last month</span>
                             </span>
                         </div>
-                        <p class="mt-1 text-xs text-muted-foreground">
-                            <span class="hidden sm:inline">{{ stats.orders.completed }} completed • {{ stats.orders.thisMonth }} this month</span>
-                            <span class="sm:hidden">{{ stats.orders.completed }} selesai • {{ stats.orders.thisMonth }} bulan ini</span>
-                        </p>
+                        <div class="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                            <span class="inline-flex items-center gap-1 rounded bg-green-100 px-2 py-0.5 text-green-800 dark:bg-green-900/40 dark:text-green-300">
+                                <CheckCircle2 class="h-3 w-3" /> {{ stats.orders.completed }} completed
+                            </span>
+                            <span class="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-0.5 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                                <Calendar class="h-3 w-3" /> {{ stats.orders.thisMonth }} this month
+                            </span>
+                        </div>
                     </CardContent>
                 </Card>
 

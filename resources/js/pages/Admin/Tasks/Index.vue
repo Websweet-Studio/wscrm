@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { Calendar, CheckCircle2, Clock, Edit, Plus, Search, Trash2, LayoutList, CalendarDays, ChevronLeft, ChevronRight, AlertCircle, Circle, ArrowRightCircle, XCircle } from 'lucide-vue-next';
 import { computed, ref, watch, onMounted } from 'vue';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isSameDay, addMonths, subMonths, parseISO } from 'date-fns';
@@ -61,6 +61,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const $page = usePage();
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -453,15 +454,26 @@ const getTaskIcon = (status: Task['status']) => {
                                     </div>
                                 </div>
                                 <div class="flex gap-2">
-                                    <Button size="sm" variant="outline" class="cursor-pointer" @click="openEditModal(task)">
-                                        <Edit class="h-3.5 w-3.5" />
-                                    </Button>
-                                    <Button size="sm" variant="outline" class="cursor-pointer bg-green-600 text-white hover:bg-green-700" @click="router.patch(`/admin/tasks/${task.id}`, { status: 'done' })">
-                                        <CheckCircle2 class="h-3.5 w-3.5" />
-                                    </Button>
-                                    <Button size="sm" variant="outline" class="cursor-pointer" @click="router.delete(`/admin/tasks/${task.id}`)">
-                                        <Trash2 class="h-3.5 w-3.5" />
-                                    </Button>
+                                    <template v-if="task.created_by_user_id === ($page.props as any).auth.user.id">
+                                        <Button size="sm" variant="outline" class="cursor-pointer" @click="openEditModal(task)">
+                                            <Edit class="h-3.5 w-3.5" />
+                                        </Button>
+                                    </template>
+                                    <template v-if="task.status === 'in_progress'">
+                                        <Button size="sm" variant="outline" class="cursor-pointer bg-green-600 text-white hover:bg-green-700" @click="router.patch(`/admin/tasks/${task.id}`, { status: 'done' })">
+                                            <CheckCircle2 class="h-3.5 w-3.5" />
+                                        </Button>
+                                    </template>
+                                    <template v-else-if="!task.status || task.status === 'todo'">
+                                        <Button size="sm" variant="outline" class="cursor-pointer bg-blue-600 text-white hover:bg-blue-700" @click="router.patch(`/admin/tasks/${task.id}`, { status: 'in_progress' })">
+                                            <ArrowRightCircle class="h-3.5 w-3.5" />
+                                        </Button>
+                                    </template>
+                                    <template v-if="task.created_by_user_id === ($page.props as any).auth.user.id">
+                                        <Button size="sm" variant="outline" class="cursor-pointer" @click="router.delete(`/admin/tasks/${task.id}`)">
+                                            <Trash2 class="h-3.5 w-3.5" />
+                                        </Button>
+                                    </template>
                                 </div>
                             </div>
                         </div>

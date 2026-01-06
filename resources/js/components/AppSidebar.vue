@@ -120,7 +120,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Tasks',
-        href: '/admin/tasks?calendar_date=2025-12-31&view_mode=calendar',
+        href: '/admin/tasks',
         icon: CheckSquare,
         badge: 0,
     },
