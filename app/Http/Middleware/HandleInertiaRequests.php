@@ -83,11 +83,16 @@ class HandleInertiaRequests extends Middleware
                         ->orWhere('created_by_user_id', $user->id);
                 })
                 ->count();
+            $todoAssignedToMeCount = Task::query()
+                ->where('status', 'todo')
+                ->where('assigned_user_id', $user->id)
+                ->count();
 
             $adminBadges = [
                 'pending_tasks' => $pendingTasksCount,
                 'tasks_unassigned_todo' => $unassignedTodoCount,
                 'tasks_in_progress' => $inProgressCount,
+                'tasks_todo_assigned' => $todoAssignedToMeCount,
             ];
         }
 
