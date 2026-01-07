@@ -189,6 +189,11 @@ const mainNavItems: NavItem[] = [
         href: '/admin/branding',
         icon: Palette,
     },
+    {
+        title: 'Database',
+        href: '/admin/database',
+        icon: FileText,
+    },
 ];
 
 const toggleGroup = (groupTitle: string) => {

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\BulkPricingController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DomainPriceController;
 use App\Http\Controllers\Admin\EmployeeController;
+use App\Http\Controllers\Admin\DatabaseController;
 use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\HostingPlanController;
 use App\Http\Controllers\Admin\ImpersonateController;
@@ -73,4 +74,9 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
         Route::post('branding/upload-image', [BrandingController::class, 'uploadImage'])->name('branding.upload-image');
         Route::delete('branding/delete-image', [BrandingController::class, 'deleteImage'])->name('branding.delete-image');
     });
+
+    // Database Export/Import
+    Route::get('database', [DatabaseController::class, 'index'])->name('database.index');
+    Route::get('database/export', [DatabaseController::class, 'export'])->name('database.export');
+    Route::post('database/import', [DatabaseController::class, 'import'])->name('database.import');
 });
