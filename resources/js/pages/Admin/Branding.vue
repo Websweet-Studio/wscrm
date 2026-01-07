@@ -1,14 +1,17 @@
 <template>
     <AppLayout>
-        <div class="mx-auto max-w-6xl p-6">
-            <div class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                <div class="border-b border-gray-200 p-6 dark:border-gray-700">
-                    <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Pengaturan Branding</h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">Kelola logo, warna, dan identitas visual aplikasi</p>
+        <div class="space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight">Pengaturan Branding</h1>
+                    <p class="text-muted-foreground">Kelola logo, warna, dan identitas visual aplikasi</p>
                 </div>
+            </div>
 
-                <form @submit.prevent="submitSettings" class="p-6">
-                    <div class="space-y-8">
+            <Card>
+                <CardContent class="p-6">
+                    <form @submit.prevent="submitSettings">
+                        <div class="space-y-8">
                         <!-- Identitas Aplikasi -->
                         <div v-if="settings.text?.length" class="space-y-6">
                             <h2 class="text-lg font-medium text-gray-900 dark:text-white">Identitas Aplikasi</h2>
@@ -169,31 +172,23 @@
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="mt-8 flex justify-end space-x-3 border-t border-gray-200 pt-6 dark:border-gray-700">
-                        <button
-                            type="button"
-                            @click="resetForm"
-                            class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                        >
-                            Reset
-                        </button>
-                        <button
-                            type="submit"
-                            :disabled="form.processing"
-                            class="rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                            <span v-if="form.processing">Menyimpan...</span>
-                            <span v-else>Simpan Perubahan</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
+                        <div class="mt-8 flex justify-end gap-2 border-t pt-6">
+                            <Button type="button" variant="outline" @click="resetForm">Reset</Button>
+                            <Button type="submit" :disabled="form.processing">
+                                <span v-if="form.processing">Menyimpan...</span>
+                                <span v-else>Simpan Perubahan</span>
+                            </Button>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
         </div>
     </AppLayout>
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useForm } from '@inertiajs/vue3';

@@ -219,7 +219,7 @@ const footerNavItems: NavItem[] = [
 <template>
     <aside
         :class="[
-            'fixed inset-y-0 left-0 flex flex-col border-r border-border bg-sidebar transition-all duration-300',
+            'fixed inset-y-0 left-0 flex flex-col border-r border-border bg-sidebar shadow-md transition-all duration-300',
             props.forceExpanded ? 'w-full' : shouldShowIconsOnly ? 'w-16' : 'w-64',
         ]"
     >
@@ -253,7 +253,7 @@ const footerNavItems: NavItem[] = [
                     >
                         <component :is="item.icon" class="h-4 w-4 flex-shrink-0" />
                         <span v-if="!shouldShowIconsOnly" class="truncate">{{ item.title }}</span>
-                        <div class="absolute top-3 right-3 flex items-center gap-1">
+                        <div :class="['absolute gap-1', shouldShowIconsOnly ? 'flex flex-col items-end -bottom-1 -right-1' : 'flex items-center top-3 right-3']">
                             <span
                                 v-if="(item.title === 'Tasks' ? todoAssignedCount > 0 : (item.badge && item.badge > 0))"
                                 class="rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white"
@@ -261,7 +261,7 @@ const footerNavItems: NavItem[] = [
                                 {{ item.title === 'Tasks' ? todoAssignedCount : item.badge }}
                             </span>
                             <span
-                                v-if="item.title === 'Tasks' && inProgressCount > 0"
+                                v-if="item.title === 'Tasks' && inProgressCount > 0 && !shouldShowIconsOnly"
                                 class="rounded-full bg-orange-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white"
                             >
                                 {{ inProgressCount }}
