@@ -87,6 +87,7 @@ interface Props {
         customers: Customer[];
     };
     expiringServices: Order[];
+    activeServices: Order[];
     chartData: {
         dailyOrders: ChartDataPoint[];
         monthlyStats: MonthlyStats[];
@@ -115,7 +116,7 @@ const greeting = computed(() => {
 });
 
 const refreshDashboard = () => {
-    router.reload({ only: ['stats', 'recentActivities', 'expiringServices', 'chartData', 'myPendingTasks'] });
+    router.reload({ only: ['stats', 'recentActivities', 'expiringServices', 'activeServices', 'chartData', 'myPendingTasks'] });
 };
 
 const formatPrice = (price: number) => {
@@ -390,6 +391,51 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                     </CardContent>
                 </Card>
             </div>
+
+            <!-- Active Services -->
+            <Card>
+                <CardHeader class="px-4 sm:px-6">
+                    <CardTitle class="flex items-center gap-2 text-base sm:text-lg">
+                        <CheckCircle2 class="h-4 w-4 sm:h-5 sm:w-5" />
+                        Layanan Aktif
+                    </CardTitle>
+                    <CardDescription class="text-xs sm:text-sm">
+                        Diurutkan dari yang akan kadaluarsa
+                    </CardDescription>
+                </CardHeader>
+                <CardContent class="px-4 sm:px-6">
+                    <div v-if="activeServices.length === 0" class="py-4 text-center text-xs text-muted-foreground sm:text-sm">
+                        Tidak ada layanan aktif.
+                    </div>
+                    <div v-else class="space-y-3">
+                        <div
+                            v-for="service in activeServices"
+                            :key="service.id"
+                            class="flex items-center justify-between rounded-md bg-muted/30 p-3"
+                        >
+                            <div class="min-w-0 flex-1">
+                                <div class="truncate text-xs font-medium sm:text-sm">{{ service.domain_name || `Service #${service.id}` }}</div>
+                                <div class="truncate text-xs text-muted-foreground">{{ service.customer.name }}</div>
+                            </div>
+                            <div class="ml-3 flex-shrink-0 text-right">
+                                <span
+                                    v-if="service.expires_at"
+                                    class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+                                    :class="getExpiryBadgeClass(getDaysUntilExpiry(service.expires_at))"
+                                >
+                                    {{ getDaysUntilExpiry(service.expires_at) }} hari lagi
+                                </span>
+                                <div class="mt-1 text-xs text-muted-foreground" v-if="service.expires_at">{{ formatDate(service.expires_at!) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <Button variant="outline" size="sm" asChild class="w-full text-xs sm:text-sm">
+                            <Link href="/admin/orders?view=services&status=active">Kelola Layanan</Link>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
 
             <!-- Expiring Services Alert -->
             <Card v-if="expiringServices.length > 0" class="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">

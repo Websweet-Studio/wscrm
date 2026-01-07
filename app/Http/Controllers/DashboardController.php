@@ -72,6 +72,13 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
+        // Active Services sorted by nearest expiry
+        $activeServices = Order::active()
+            ->with(['customer'])
+            ->orderBy('expires_at', 'asc')
+            ->limit(10)
+            ->get();
+
         // Calculate growth percentages
         $customerGrowth = $newCustomersLastMonth > 0
             ? (($newCustomersThisMonth - $newCustomersLastMonth) / $newCustomersLastMonth) * 100
@@ -150,6 +157,7 @@ class DashboardController extends Controller
                 'customers' => $recentCustomers,
             ],
             'expiringServices' => $expiringServices,
+            'activeServices' => $activeServices,
             'chartData' => [
                 'dailyOrders' => $dailyOrders,
                 'monthlyStats' => $monthlyStats,
