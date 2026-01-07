@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 interface MonthlyStats {
     month: string;
     month_short: string;
@@ -31,6 +32,13 @@ const formatCompactPrice = (price: number) => {
     }
     return price.toString();
 };
+
+const maxStats = computed(() => {
+    const orders = Math.max(...props.data.map((m) => m.orders), 1);
+    const revenue = Math.max(...props.data.map((m) => m.revenue), 1);
+    const customers = Math.max(...props.data.map((m) => m.customers), 1);
+    return { orders, revenue, customers };
+});
 </script>
 
 <template>
@@ -61,6 +69,9 @@ const formatCompactPrice = (price: number) => {
                     </span>
                     <span class="text-sm font-bold">{{ month.orders }}</span>
                 </div>
+                <div class="mt-1 h-1.5 w-full rounded bg-muted">
+                    <div class="h-1.5 rounded bg-blue-500" :style="{ width: `${(month.orders / maxStats.orders) * 100}%` }"></div>
+                </div>
 
                 <!-- Revenue -->
                 <div class="flex items-center justify-between">
@@ -72,6 +83,9 @@ const formatCompactPrice = (price: number) => {
                         {{ formatCompactPrice(month.revenue) }}
                     </span>
                 </div>
+                <div class="mt-1 h-1.5 w-full rounded bg-muted">
+                    <div class="h-1.5 rounded bg-green-500" :style="{ width: `${(month.revenue / maxStats.revenue) * 100}%` }"></div>
+                </div>
 
                 <!-- Customers -->
                 <div class="flex items-center justify-between">
@@ -80,6 +94,9 @@ const formatCompactPrice = (price: number) => {
                         New Customers
                     </span>
                     <span class="text-sm font-bold">{{ month.customers }}</span>
+                </div>
+                <div class="mt-1 h-1.5 w-full rounded bg-muted">
+                    <div class="h-1.5 rounded bg-purple-500" :style="{ width: `${(month.customers / maxStats.customers) * 100}%` }"></div>
                 </div>
             </div>
 

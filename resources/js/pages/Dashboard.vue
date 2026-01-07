@@ -7,7 +7,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
-import { AlertTriangle, BarChart3, Calendar, DollarSign, ShoppingCart, TrendingDown, TrendingUp, Users, CheckCircle2, Clock, ArrowRight, Plus, RefreshCw, CheckSquare, ListTodo, UserPlus, CreditCard } from 'lucide-vue-next';
+import { BarChart3, Calendar, DollarSign, ShoppingCart, TrendingDown, TrendingUp, Users, CheckCircle2, Clock, ArrowRight, RefreshCw, CheckSquare, ListTodo, UserPlus, CreditCard } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 interface Stats {
@@ -187,32 +187,32 @@ const getExpiryBadgeClass = (daysLeft: number) => {
             </div>
 
             <!-- Quick Actions -->
-            <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-                <Button variant="outline" asChild class="cursor-pointer">
-                    <Link href="/admin/tasks">
-                        <Plus class="mr-2 h-4 w-4" />
-                        Tambah/kelola Task
-                    </Link>
-                </Button>
-                <Button variant="outline" asChild class="cursor-pointer">
-                    <Link href="/admin/customers">
-                        <UserPlus class="mr-2 h-4 w-4" />
-                        Tambah/kelola Customer
-                    </Link>
-                </Button>
-                <Button variant="outline" asChild class="cursor-pointer">
-                    <Link href="/admin/orders">
-                        <ShoppingCart class="mr-2 h-4 w-4" />
-                        Kelola Orders
-                    </Link>
-                </Button>
-                <Button variant="outline" asChild class="cursor-pointer">
-                    <Link href="/admin/invoices">
-                        <CreditCard class="mr-2 h-4 w-4" />
-                        Kelola Invoices
-                    </Link>
-                </Button>
-            </div>
+            <Card>
+                <CardHeader class="px-4 sm:px-6">
+                    <CardTitle class="text-base sm:text-lg">Quick Actions</CardTitle>
+                    <CardDescription class="text-xs sm:text-sm">Tugas admin umum</CardDescription>
+                </CardHeader>
+                <CardContent class="px-4 sm:px-6">
+                    <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+                        <Link href="/admin/customers/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
+                            <UserPlus class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
+                            <span class="text-xs font-medium sm:text-sm">Add Customer</span>
+                        </Link>
+                        <Link href="/admin/orders/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
+                            <ShoppingCart class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
+                            <span class="text-xs font-medium sm:text-sm">New Order</span>
+                        </Link>
+                        <Link href="/admin/tasks/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
+                            <CheckSquare class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
+                            <span class="text-xs font-medium sm:text-sm">New Task</span>
+                        </Link>
+                        <Link href="/admin/invoices/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
+                            <CreditCard class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
+                            <span class="text-xs font-medium sm:text-sm">New Invoice</span>
+                        </Link>
+                    </div>
+                </CardContent>
+            </Card>
 
             <!-- Key Metrics Cards -->
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
@@ -392,92 +392,53 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                 </Card>
             </div>
 
-            <!-- Active Services -->
-            <Card>
-                <CardHeader class="px-4 sm:px-6">
-                    <CardTitle class="flex items-center gap-2 text-base sm:text-lg">
-                        <CheckCircle2 class="h-4 w-4 sm:h-5 sm:w-5" />
-                        Layanan Aktif
-                    </CardTitle>
-                    <CardDescription class="text-xs sm:text-sm">
-                        Diurutkan dari yang akan kadaluarsa
-                    </CardDescription>
-                </CardHeader>
-                <CardContent class="px-4 sm:px-6">
-                    <div v-if="activeServices.length === 0" class="py-4 text-center text-xs text-muted-foreground sm:text-sm">
-                        Tidak ada layanan aktif.
-                    </div>
-                    <div v-else class="space-y-3">
-                        <div
-                            v-for="service in activeServices"
-                            :key="service.id"
-                            class="flex items-center justify-between rounded-md bg-muted/30 p-3"
-                        >
-                            <div class="min-w-0 flex-1">
-                                <div class="truncate text-xs font-medium sm:text-sm">{{ service.domain_name || `Service #${service.id}` }}</div>
-                                <div class="truncate text-xs text-muted-foreground">{{ service.customer.name }}</div>
-                            </div>
-                            <div class="ml-3 flex-shrink-0 text-right">
-                                <span
-                                    v-if="service.expires_at"
-                                    class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
-                                    :class="getExpiryBadgeClass(getDaysUntilExpiry(service.expires_at))"
-                                >
-                                    {{ getDaysUntilExpiry(service.expires_at) }} hari lagi
-                                </span>
-                                <div class="mt-1 text-xs text-muted-foreground" v-if="service.expires_at">{{ formatDate(service.expires_at!) }}</div>
+            <!-- Services Section -->
+            <div class="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
+                <Card>
+                    <CardHeader class="px-4 sm:px-6">
+                        <CardTitle class="flex items-center gap-2 text-base sm:text-lg">
+                            <CheckCircle2 class="h-4 w-4 sm:h-5 sm:w-5" />
+                            Layanan Aktif
+                        </CardTitle>
+                        <CardDescription class="text-xs sm:text-sm">
+                            Diurutkan dari yang akan kadaluarsa
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent class="px-4 sm:px-6">
+                        <div v-if="activeServices.length === 0" class="py-4 text-center text-xs text-muted-foreground sm:text-sm">
+                            Tidak ada layanan aktif.
+                        </div>
+                        <div v-else class="space-y-3">
+                            <div
+                                v-for="service in activeServices"
+                                :key="service.id"
+                                class="flex items-center justify-between rounded-md bg-muted/30 p-3"
+                            >
+                                <div class="min-w-0 flex-1">
+                                    <div class="truncate text-xs font-medium sm:text-sm">{{ service.domain_name || `Service #${service.id}` }}</div>
+                                    <div class="truncate text-xs text-muted-foreground">{{ service.customer.name }}</div>
+                                </div>
+                                <div class="ml-3 flex-shrink-0 text-right">
+                                    <span
+                                        v-if="service.expires_at"
+                                        class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+                                        :class="getExpiryBadgeClass(getDaysUntilExpiry(service.expires_at))"
+                                    >
+                                        {{ getDaysUntilExpiry(service.expires_at) }} hari lagi
+                                    </span>
+                                    <div class="mt-1 text-xs text-muted-foreground" v-if="service.expires_at">{{ formatDate(service.expires_at!) }}</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="mt-4">
-                        <Button variant="outline" size="sm" asChild class="w-full text-xs sm:text-sm">
-                            <Link href="/admin/orders?view=services&status=active">Kelola Layanan</Link>
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
+                        <div class="mt-4">
+                            <Button variant="outline" size="sm" asChild class="w-full text-xs sm:text-sm">
+                                <Link href="/admin/orders?view=services&status=active">Kelola Layanan</Link>
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
 
-            <!-- Expiring Services Alert -->
-            <Card v-if="expiringServices.length > 0" class="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
-                <CardHeader class="px-4 sm:px-6">
-                    <CardTitle class="flex items-center gap-2 text-base text-orange-800 sm:text-lg dark:text-orange-200">
-                        <AlertTriangle class="h-4 w-4 sm:h-5 sm:w-5" />
-                        Layanan Akan Berakhir
-                    </CardTitle>
-                    <CardDescription class="text-xs text-orange-700 sm:text-sm dark:text-orange-300">
-                        {{ expiringServices.length }} layanan akan berakhir dalam 1 bulan ke depan
-                    </CardDescription>
-                </CardHeader>
-                <CardContent class="px-4 sm:px-6">
-                    <div class="space-y-3">
-                        <div
-                            v-for="service in expiringServices"
-                            :key="service.id"
-                            class="flex items-center justify-between rounded-md bg-white/50 p-3 dark:bg-gray-900/50"
-                        >
-                            <div class="min-w-0 flex-1">
-                                <div class="truncate text-xs font-medium sm:text-sm">{{ service.domain_name || `Service #${service.id}` }}</div>
-                                <div class="truncate text-xs text-muted-foreground">{{ service.customer.name }}</div>
-                            </div>
-                            <div class="ml-3 flex-shrink-0 text-right">
-                                <span
-                                    v-if="service.expires_at"
-                                    class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
-                                    :class="getExpiryBadgeClass(getDaysUntilExpiry(service.expires_at))"
-                                >
-                                    {{ getDaysUntilExpiry(service.expires_at) }} hari lagi
-                                </span>
-                                <div class="mt-1 text-xs text-muted-foreground">{{ formatDate(service.expires_at!) }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-4">
-                        <Button variant="outline" size="sm" asChild class="w-full text-xs sm:text-sm">
-                            <Link href="/admin/orders?view=services&status=active">Lihat Semua Layanan</Link>
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
+            </div>
 
             <!-- Recent Activities Grid -->
             <div class="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
@@ -565,7 +526,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
             <Card>
                 <CardHeader class="px-4 sm:px-6">
                     <CardTitle class="text-base sm:text-lg">Quick Actions</CardTitle>
-                    <CardDescription class="text-xs sm:text-sm">Common administrative tasks</CardDescription>
+                    <CardDescription class="text-xs sm:text-sm">Tugas admin umum</CardDescription>
                 </CardHeader>
                 <CardContent class="px-4 sm:px-6">
                     <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
@@ -577,7 +538,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                             <ShoppingCart class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
                             <span class="text-xs font-medium sm:text-sm">New Order</span>
                         </Link>
-                         <Link href="/admin/tasks/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
+                        <Link href="/admin/tasks/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
                             <CheckSquare class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
                             <span class="text-xs font-medium sm:text-sm">New Task</span>
                         </Link>

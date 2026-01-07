@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 interface ChartDataPoint {
     date: string;
@@ -36,12 +36,21 @@ const chartData = computed(() => {
 
 const pathD = computed(() => {
     if (chartData.value.length === 0) return '';
-
-    const points = chartData.value.map((d) => `${d.x},${d.y}`).join(' L');
-    return `M${points}`;
+    const pts = chartData.value;
+    let d = `M${pts[0].x},${pts[0].y}`;
+    for (let i = 1; i < pts.length; i++) {
+        const prev = pts[i - 1];
+        const curr = pts[i];
+        const cx = (prev.x + curr.x) / 2;
+        d += ` Q ${cx},${prev.y} ${curr.x},${curr.y}`;
+    }
+    return d;
 });
 
 const maxOrders = computed(() => Math.max(...props.data.map((d) => d.orders), 1));
+
+const hoveredIndex = ref<number | null>(null);
+const hoverPoint = computed(() => (hoveredIndex.value !== null ? chartData.value[hoveredIndex.value] : null));
 </script>
 
 <template>
@@ -65,7 +74,18 @@ const maxOrders = computed(() => Math.max(...props.data.map((d) => d.orders), 1)
                 />
 
                 <!-- Line chart -->
-                <path v-if="chartData.length > 1" :d="pathD" fill="none" stroke="hsl(var(--primary))" stroke-width="2" class="drop-shadow-sm" />
+                <path
+                    v-if="chartData.length > 1"
+                    :d="pathD"
+                    fill="none"
+                    stroke="hsl(var(--primary))"
+                    stroke-width="2"
+                    class="drop-shadow-sm"
+                    stroke-dasharray="600"
+                    stroke-dashoffset="600"
+                >
+                    <animate attributeName="stroke-dashoffset" from="600" to="0" dur="0.8s" fill="freeze" />
+                </path>
 
                 <!-- Data points -->
                 <circle
@@ -76,9 +96,28 @@ const maxOrders = computed(() => Math.max(...props.data.map((d) => d.orders), 1)
                     r="3"
                     fill="hsl(var(--primary))"
                     class="hover:r-4 cursor-pointer drop-shadow-sm transition-all"
+                    @mouseenter="hoveredIndex = chartData.indexOf(point)"
+                    @mouseleave="hoveredIndex = null"
                 >
                     <title>Day {{ point.day }}: {{ point.orders }} orders</title>
                 </circle>
+
+                <!-- Hover guide and tooltip within SVG -->
+                <line
+                    v-if="hoverPoint"
+                    :x1="hoverPoint.x"
+                    y1="0"
+                    :x2="hoverPoint.x"
+                    y2="160"
+                    stroke="hsl(var(--primary))"
+                    stroke-opacity="0.2"
+                />
+                <g v-if="hoverPoint" :transform="`translate(${hoverPoint.x},${hoverPoint.y - 20})`">
+                    <rect x="-30" y="-18" width="90" height="24" rx="6" fill="hsl(var(--background))" stroke="hsl(var(--primary))" stroke-opacity="0.3" />
+                    <text x="0" y="0" text-anchor="middle" class="fill-foreground text-[10px]">
+                        Day {{ hoverPoint.day }} • {{ hoverPoint.orders }}
+                    </text>
+                </g>
 
                 <!-- Gradient definition -->
                 <defs>
