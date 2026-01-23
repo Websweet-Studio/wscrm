@@ -104,6 +104,7 @@ const createForm = useForm({
 const editForm = useForm({
     id: 0,
     title: '',
+    category: '',
     description: '',
     status: 'todo' as 'todo' | 'in_progress' | 'done' | 'cancelled',
     priority: 'medium' as 'low' | 'medium' | 'high',
@@ -115,6 +116,7 @@ const editForm = useForm({
 const handleSearch = () => {
     router.get('/admin/tasks', {
         status: statusFilter.value || undefined,
+        category: categoryFilter.value || undefined,
         assigned_user_id: assignedUserId.value || undefined,
         assigned_department: assignedDepartment.value || undefined,
         view_mode: viewMode.value,
@@ -200,6 +202,7 @@ onMounted(() => {
 const submitEdit = () => {
     const payload: any = {
         title: editForm.title,
+        category: editForm.category || undefined,
         description: editForm.description || undefined,
         status: editForm.status,
         priority: editForm.priority,
@@ -316,10 +319,10 @@ const getTaskIcon = (status: Task['status']) => {
                             @click="scopeFilter = 'created'; handleSearch();"
                         >Dibuat oleh Saya</Button>
                     </div>
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-4">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-5">
                         <div>
                             <select id="statusFilter" v-model="statusFilter" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
-                                <option value="">Semua</option>
+                                <option value="">Semua Status</option>
                                 <option value="todo">Todo</option>
                                 <option value="in_progress">In Progress</option>
                                 <option value="done">Done</option>
@@ -327,14 +330,20 @@ const getTaskIcon = (status: Task['status']) => {
                             </select>
                         </div>
                         <div>
+                            <select id="categoryFilter" v-model="categoryFilter" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                                <option value="">Semua Kategori</option>
+                                <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                            </select>
+                        </div>
+                        <div>
                             <select id="assignedUserId" v-model="assignedUserId" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
-                                <option value="">Semua</option>
+                                <option value="">Semua User</option>
                                 <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
                             </select>
                         </div>
                         <div>
                             <select id="assignedDepartment" v-model="assignedDepartment" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
-                                <option value="">Semua</option>
+                                <option value="">Semua Dept</option>
                                 <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
                             </select>
                         </div>
@@ -436,6 +445,7 @@ const getTaskIcon = (status: Task['status']) => {
                                     <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
                                         <span :class="['rounded px-2 py-1', statusBadgeClass(task.status)]">{{ task.status }}</span>
                                         <span :class="['rounded px-2 py-1', priorityBadgeClass(task.priority)]">{{ task.priority }}</span>
+                                        <span v-if="task.category" class="rounded bg-purple-100 px-2 py-1 text-purple-800 dark:bg-purple-900 dark:text-purple-300">{{ task.category }}</span>
                                         <span v-if="task.due_date" class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                                             <Calendar class="h-3 w-3" /> {{ formatDate(task.due_date) }}
                                         </span>
@@ -516,6 +526,10 @@ const getTaskIcon = (status: Task['status']) => {
                             <Input id="title" v-model="createForm.title" placeholder="Judul task" />
                         </div>
                         <div>
+                            <Label for="category">Kategori</Label>
+                            <Input id="category" v-model="createForm.category" placeholder="Kategori task (opsional)" />
+                        </div>
+                        <div>
                             <Label for="description">Deskripsi</Label>
                             <textarea id="description" v-model="createForm.description" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white" rows="3" />
                         </div>
@@ -575,6 +589,15 @@ const getTaskIcon = (status: Task['status']) => {
                         <div>
                             <Label for="edit_title">Judul</Label>
                             <Input id="edit_title" v-model="editForm.title" placeholder="Judul task" />
+                        </div>
+                        <div>
+                            <Label for="edit_category">Kategori</Label>
+                            <div class="relative">
+                                <Input id="edit_category" v-model="editForm.category" placeholder="Kategori task (opsional)" list="edit-category-list" />
+                                <datalist id="edit-category-list">
+                                    <option v-for="cat in categories" :key="cat" :value="cat" />
+                                </datalist>
+                            </div>
                         </div>
                         <div>
                             <Label for="edit_description">Deskripsi</Label>

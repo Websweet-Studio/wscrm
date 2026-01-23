@@ -72,9 +72,10 @@ class TaskController extends Controller
         return Inertia::render('Admin/Tasks/Index', [
             'tasks' => $tasks,
             'departments' => $departments,
+            'categories' => $categories,
             'users' => $users,
             'userDepartments' => $userDepartments,
-            'filters' => $request->only(['status', 'assigned_user_id', 'assigned_department', 'view_mode', 'calendar_date', 'scope']),
+            'filters' => $request->only(['status', 'category', 'assigned_user_id', 'assigned_department', 'view_mode', 'calendar_date', 'scope']),
             'editingTask' => $editingTask,
         ]);
     }
@@ -112,6 +113,7 @@ class TaskController extends Controller
         $this->checkAdmin();
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
+            'category' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:5000',
             'status' => 'nullable|in:todo,in_progress,done,cancelled',
             'priority' => 'nullable|in:low,medium,high',
