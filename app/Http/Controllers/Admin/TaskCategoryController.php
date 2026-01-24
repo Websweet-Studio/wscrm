@@ -29,6 +29,7 @@ class TaskCategoryController extends Controller
             'name' => 'required|string|max:255|unique:task_categories,name',
             'color' => 'nullable|string|max:7',
             'description' => 'nullable|string',
+            'qc_checklist' => 'nullable|array',
         ]);
 
         TaskCategory::create($validated);
@@ -45,6 +46,7 @@ class TaskCategoryController extends Controller
             'name' => 'required|string|max:255|unique:task_categories,name,' . $taskCategory->id,
             'color' => 'nullable|string|max:7',
             'description' => 'nullable|string',
+            'qc_checklist' => 'nullable|array',
         ]);
 
         $taskCategory->update($validated);

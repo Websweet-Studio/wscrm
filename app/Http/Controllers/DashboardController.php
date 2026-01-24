@@ -18,7 +18,8 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         // Task Statistics
-        $myPendingTasks = Task::where('assigned_user_id', $user->id)
+        $myPendingTasks = Task::with('category')
+            ->where('assigned_user_id', $user->id)
             ->where('status', '!=', 'done')
             ->orderBy('due_date', 'asc')
             ->limit(5)

@@ -11,6 +11,11 @@ class TaskCategory extends Model
         'name',
         'color',
         'description',
+        'qc_checklist',
+    ];
+
+    protected $casts = [
+        'qc_checklist' => 'array',
     ];
 
     public function tasks(): HasMany

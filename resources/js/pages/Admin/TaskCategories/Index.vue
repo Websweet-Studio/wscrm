@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, Plus } from 'lucide-vue-next';
+import { Pencil, Trash2, Plus, X } from 'lucide-vue-next';
 import { useToast } from '@/composables/useToast';
 import { store, update, destroy } from '@/routes/admin/task-categories';
 
@@ -18,6 +18,7 @@ interface TaskCategory {
     name: string;
     color: string | null;
     description: string | null;
+    qc_checklist: string[] | null;
     tasks_count?: number;
 }
 
@@ -29,16 +30,34 @@ const { success } = useToast();
 const isCreateOpen = ref(false);
 const isEditOpen = ref(false);
 const editingCategory = ref<TaskCategory | null>(null);
+const newQcItem = ref('');
 
 const form = useForm({
     name: '',
     color: '#000000',
     description: '',
+    qc_checklist: [] as string[],
 });
+
+const addQcItem = () => {
+    if (newQcItem.value.trim()) {
+        if (!form.qc_checklist) form.qc_checklist = [];
+        form.qc_checklist.push(newQcItem.value.trim());
+        newQcItem.value = '';
+    }
+};
+
+const removeQcItem = (index: number) => {
+    if (form.qc_checklist) {
+        form.qc_checklist.splice(index, 1);
+    }
+};
 
 const openCreate = () => {
     form.reset();
     form.color = '#3b82f6'; // Default blue
+    form.qc_checklist = [];
+    newQcItem.value = '';
     isCreateOpen.value = true;
 };
 
@@ -47,6 +66,8 @@ const openEdit = (category: TaskCategory) => {
     form.name = category.name;
     form.color = category.color || '#000000';
     form.description = category.description || '';
+    form.qc_checklist = category.qc_checklist ? [...category.qc_checklist] : [];
+    newQcItem.value = '';
     isEditOpen.value = true;
 };
 
@@ -119,6 +140,7 @@ const deleteCategory = (category: TaskCategory) => {
                                 <TableHead>Warna</TableHead>
                                 <TableHead>Nama</TableHead>
                                 <TableHead>Deskripsi</TableHead>
+                                <TableHead>Quality Control</TableHead>
                                 <TableHead>Jumlah Tugas</TableHead>
                                 <TableHead class="text-right">Aksi</TableHead>
                             </TableRow>
@@ -133,6 +155,14 @@ const deleteCategory = (category: TaskCategory) => {
                                 </TableCell>
                                 <TableCell class="font-medium">{{ category.name }}</TableCell>
                                 <TableCell>{{ category.description || '-' }}</TableCell>
+                                <TableCell>
+                                    <div v-if="category.qc_checklist && category.qc_checklist.length > 0" class="flex flex-wrap gap-1 max-w-xs">
+                                        <Badge v-for="(qc, index) in category.qc_checklist" :key="index" variant="outline" class="text-xs font-normal">
+                                            {{ qc }}
+                                        </Badge>
+                                    </div>
+                                    <span v-else class="text-muted-foreground">-</span>
+                                </TableCell>
                                 <TableCell>
                                     <Badge variant="secondary">
                                         {{ category.tasks_count }} Task
@@ -188,6 +218,27 @@ const deleteCategory = (category: TaskCategory) => {
                             <span v-if="form.errors.description" class="text-sm text-red-500">{{ form.errors.description }}</span>
                         </div>
 
+                        <div class="space-y-2">
+                            <Label>Daftar Quality Control</Label>
+                            <div class="flex gap-2">
+                                <Input v-model="newQcItem" placeholder="Tambah item QC (tekan Enter)" @keydown.enter.prevent="addQcItem" />
+                                <Button type="button" size="icon" @click="addQcItem">
+                                    <Plus class="h-4 w-4" />
+                                </Button>
+                            </div>
+                            <div class="space-y-2 mt-2">
+                                <div v-for="(item, index) in form.qc_checklist" :key="index" class="flex items-center justify-between p-2 border rounded bg-muted/50">
+                                    <span class="text-sm">{{ item }}</span>
+                                    <Button type="button" variant="ghost" size="icon" class="h-6 w-6 text-red-500 hover:text-red-600" @click="removeQcItem(index)">
+                                        <X class="h-3 w-3" />
+                                    </Button>
+                                </div>
+                                <p v-if="!form.qc_checklist?.length" class="text-sm text-muted-foreground text-center py-2">
+                                    Belum ada item QC.
+                                </p>
+                            </div>
+                        </div>
+
                         <div class="mt-4 flex justify-end gap-2">
                             <Button type="button" variant="outline" @click="isCreateOpen = false">Batal</Button>
                             <Button type="submit" :disabled="form.processing">Simpan</Button>
@@ -223,6 +274,27 @@ const deleteCategory = (category: TaskCategory) => {
                             <Label for="edit-description">Deskripsi</Label>
                             <Textarea id="edit-description" v-model="form.description" />
                             <span v-if="form.errors.description" class="text-sm text-red-500">{{ form.errors.description }}</span>
+                        </div>
+
+                        <div class="space-y-2">
+                            <Label>Daftar Quality Control</Label>
+                            <div class="flex gap-2">
+                                <Input v-model="newQcItem" placeholder="Tambah item QC (tekan Enter)" @keydown.enter.prevent="addQcItem" />
+                                <Button type="button" size="icon" @click="addQcItem">
+                                    <Plus class="h-4 w-4" />
+                                </Button>
+                            </div>
+                            <div class="space-y-2 mt-2">
+                                <div v-for="(item, index) in form.qc_checklist" :key="index" class="flex items-center justify-between p-2 border rounded bg-muted/50">
+                                    <span class="text-sm">{{ item }}</span>
+                                    <Button type="button" variant="ghost" size="icon" class="h-6 w-6 text-red-500 hover:text-red-600" @click="removeQcItem(index)">
+                                        <X class="h-3 w-3" />
+                                    </Button>
+                                </div>
+                                <p v-if="!form.qc_checklist?.length" class="text-sm text-muted-foreground text-center py-2">
+                                    Belum ada item QC.
+                                </p>
+                            </div>
                         </div>
 
                         <div class="mt-4 flex justify-end gap-2">

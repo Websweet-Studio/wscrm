@@ -39,6 +39,10 @@ interface Task {
     status: 'todo' | 'in_progress' | 'done' | 'cancelled';
     priority: 'low' | 'medium' | 'high';
     due_date?: string;
+    category?: {
+        name: string;
+        color: string;
+    };
 }
 
 interface Customer {
@@ -295,15 +299,15 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 px-4 pb-2 sm:px-6">
                         <div class="flex items-center gap-2">
                             <ListTodo class="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
-                             <CardTitle class="text-base sm:text-lg">My Pending Tasks</CardTitle>
+                             <CardTitle class="text-base sm:text-lg">Tugas Saya Pending</CardTitle>
                         </div>
                         <Button variant="ghost" size="sm" asChild class="text-xs">
-                             <Link href="/admin/tasks">View All</Link>
+                             <Link href="/admin/tasks">Lihat Semua</Link>
                         </Button>
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
                          <div v-if="props.myPendingTasks.length === 0" class="py-6 text-center text-sm text-muted-foreground">
-                             No pending tasks. Great job!
+                             Tidak ada tugas pending. Kerja bagus!
                          </div>
                          <div v-else class="space-y-2">
                              <div v-for="task in props.myPendingTasks" :key="task.id" class="flex items-center justify-between rounded-md border p-3 hover:bg-muted/50 transition-colors">
@@ -316,8 +320,16 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                                          <Clock class="h-4 w-4" />
                                      </div>
                                      <div class="min-w-0">
-                                         <div class="font-medium text-sm truncate">{{ task.title }}</div>
-                                         <div class="text-xs text-muted-foreground" v-if="task.due_date">Due: {{ formatDate(task.due_date) }}</div>
+                                         <div class="flex items-center gap-2">
+                                            <div class="font-medium text-sm truncate">{{ task.title }}</div>
+                                            <span v-if="task.category" 
+                                                  class="rounded px-1.5 py-0.5 text-[10px] whitespace-nowrap"
+                                                  :style="{ backgroundColor: task.category.color || '#e9d5ff', color: task.category.color ? '#fff' : '#6b21a8' }"
+                                            >
+                                              {{ task.category.name }}
+                                            </span>
+                                         </div>
+                                         <div class="text-xs text-muted-foreground" v-if="task.due_date">Jatuh Tempo: {{ formatDate(task.due_date) }}</div>
                                      </div>
                                  </div>
                                  <Link :href="`/admin/tasks?edit=${task.id}`" class="shrink-0">
