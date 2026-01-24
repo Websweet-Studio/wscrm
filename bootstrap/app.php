@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Use custom CSRF middleware that excludes API routes
         $middleware->validateCsrfTokens(except: [
             'api/*',
+            '_boost/browser-logs',
         ]);
 
         // Override default guest middleware with custom RedirectIfAuthenticated

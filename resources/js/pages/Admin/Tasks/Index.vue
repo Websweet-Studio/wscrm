@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
+import RichTextEditor from '@/components/RichTextEditor.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
@@ -76,6 +78,13 @@ const $page = usePage();
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Tugas', href: '/admin/tasks' },
+];
+
+const statusOptions = [
+    { value: 'todo', label: 'Todo', class: 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100', activeClass: 'bg-gray-200 border-gray-400 text-gray-900 ring-1 ring-gray-400' },
+    { value: 'in_progress', label: 'In Progress', class: 'bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100', activeClass: 'bg-blue-100 border-blue-400 text-blue-900 ring-1 ring-blue-400' },
+    { value: 'done', label: 'Done', class: 'bg-green-50 border-green-200 text-green-600 hover:bg-green-100', activeClass: 'bg-green-100 border-green-400 text-green-900 ring-1 ring-green-400' },
+    { value: 'cancelled', label: 'Cancelled', class: 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100', activeClass: 'bg-red-100 border-red-400 text-red-900 ring-1 ring-red-400' },
 ];
 
 const statusFilter = ref(props.filters?.status || '');
@@ -216,7 +225,7 @@ onMounted(() => {
 const submitEdit = () => {
     const payload: any = {
         title: editForm.title,
-        category: editForm.category || undefined,
+        task_category_id: editForm.task_category_id || undefined,
         description: editForm.description || undefined,
         status: editForm.status,
         priority: editForm.priority,
@@ -443,69 +452,87 @@ const getTaskIcon = (status: Task['status']) => {
                         <h3 class="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100">Belum ada tugas</h3>
                         <p class="mt-1 text-sm">Buat tugas baru untuk memulai.</p>
                     </div>
-                    <div v-else class="space-y-3">
-                        <div
-                            v-for="task in tasks.data"
-                            :key="task.id"
-                            class="rounded-lg border p-4 dark:border-gray-700"
-                            :class="[(task.status === 'todo' && task.assigned_user_id == null) ? 'ring-2 ring-amber-500 dark:ring-amber-400' : '']"
-                        >
-                            <div class="flex items-start justify-between">
-                                <div>
-                                    <h3 class="text-lg font-semibold">{{ task.title }}</h3>
-                                    <p v-if="task.description" class="mt-1 text-sm text-muted-foreground">
-                                        {{ task.description }}
-                                    </p>
-                                    <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                                        <span :class="['rounded px-2 py-1', statusBadgeClass(task.status)]">{{ task.status }}</span>
-                                        <span :class="['rounded px-2 py-1', priorityBadgeClass(task.priority)]">{{ task.priority }}</span>
+                    <div v-else>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Judul</TableHead>
+                                    <TableHead>Kategori</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Prioritas</TableHead>
+                                    <TableHead>Jatuh Tempo</TableHead>
+                                    <TableHead>Assigned To</TableHead>
+                                    <TableHead class="text-right">Aksi</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow v-for="task in tasks.data" :key="task.id">
+                                    <TableCell>
+                                        <div class="flex items-center gap-2">
+                                            <component :is="getTaskIcon(task.status)" class="h-4 w-4 shrink-0 text-muted-foreground" />
+                                            <div>
+                                                <div class="font-medium">{{ task.title }}</div>
+                                                <div v-if="task.description" class="text-xs text-muted-foreground truncate max-w-[200px]">{{ task.description.replace(/<[^>]*>?/gm, '') }}</div>
+                                            </div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
                                         <span v-if="task.category" 
-                                              class="rounded px-2 py-1 text-xs"
+                                              class="rounded px-2 py-1 text-xs whitespace-nowrap"
                                               :style="{ backgroundColor: task.category.color || '#e9d5ff', color: task.category.color ? '#fff' : '#6b21a8' }"
                                         >
                                             {{ task.category.name }}
                                         </span>
-                                        <span v-if="task.due_date" class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                        <span v-else class="text-muted-foreground text-xs">-</span>
+                                    </TableCell>
+                                    <TableCell>
+                                        <span :class="['rounded px-2 py-1 text-xs whitespace-nowrap', statusBadgeClass(task.status)]">{{ task.status }}</span>
+                                    </TableCell>
+                                    <TableCell>
+                                        <span :class="['rounded px-2 py-1 text-xs whitespace-nowrap', priorityBadgeClass(task.priority)]">{{ task.priority }}</span>
+                                    </TableCell>
+                                    <TableCell>
+                                        <span v-if="task.due_date" class="flex items-center gap-1 text-xs">
                                             <Calendar class="h-3 w-3" /> {{ formatDate(task.due_date) }}
                                         </span>
-                                        <span v-if="task.assigned_user" class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                        <span v-else class="text-muted-foreground text-xs">-</span>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div v-if="task.assigned_user" class="flex items-center gap-1 text-xs">
                                             <Clock class="h-3 w-3" /> {{ task.assigned_user.name }}
-                                        </span>
-                                        <span
-                                            v-if="task.assigned_user?.employee?.department"
-                                            class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
-                                        >
-                                            <Clock class="h-3 w-3" /> Departemen: {{ task.assigned_user.employee.department }}
-                                        </span>
-                                        <span v-else-if="task.assigned_department" class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                                            <Clock class="h-3 w-3" /> Departemen: {{ task.assigned_department }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="flex gap-2">
-                                    <template v-if="task.created_by_user_id === ($page.props as any).auth.user.id">
-                                        <Button size="sm" variant="outline" class="cursor-pointer" @click="openEditModal(task)">
-                                            <Edit class="h-3.5 w-3.5" />
-                                        </Button>
-                                    </template>
-                                    <template v-if="task.status === 'in_progress'">
-                                        <Button size="sm" variant="outline" class="cursor-pointer bg-green-600 text-white hover:bg-green-700" @click="router.patch(`/admin/tasks/${task.id}`, { status: 'done' })">
-                                            <CheckCircle2 class="h-3.5 w-3.5" />
-                                        </Button>
-                                    </template>
-                                    <template v-else-if="!task.status || task.status === 'todo'">
-                                        <Button size="sm" variant="outline" class="cursor-pointer bg-blue-600 text-white hover:bg-blue-700" @click="router.patch(`/admin/tasks/${task.id}`, { status: 'in_progress' })">
-                                            <ArrowRightCircle class="h-3.5 w-3.5" />
-                                        </Button>
-                                    </template>
-                                    <template v-if="task.created_by_user_id === ($page.props as any).auth.user.id">
-                                        <Button size="sm" variant="outline" class="cursor-pointer" @click="router.delete(`/admin/tasks/${task.id}`)">
-                                            <Trash2 class="h-3.5 w-3.5" />
-                                        </Button>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
+                                        </div>
+                                        <div v-else-if="task.assigned_department" class="flex items-center gap-1 text-xs">
+                                            <Clock class="h-3 w-3" /> Dept: {{ task.assigned_department }}
+                                        </div>
+                                        <span v-else class="text-muted-foreground text-xs">-</span>
+                                    </TableCell>
+                                    <TableCell class="text-right">
+                                        <div class="flex justify-end gap-2">
+                                            <template v-if="task.created_by_user_id === ($page.props as any).auth.user.id">
+                                                <Button size="icon" variant="ghost" class="h-8 w-8 cursor-pointer" @click="openEditModal(task)">
+                                                    <Edit class="h-3.5 w-3.5" />
+                                                </Button>
+                                            </template>
+                                            <template v-if="task.status === 'in_progress'">
+                                                <Button size="icon" variant="ghost" class="h-8 w-8 cursor-pointer text-green-600 hover:text-green-700 hover:bg-green-50" @click="router.patch(`/admin/tasks/${task.id}`, { status: 'done' })" title="Mark as Done">
+                                                    <CheckCircle2 class="h-3.5 w-3.5" />
+                                                </Button>
+                                            </template>
+                                            <template v-else-if="!task.status || task.status === 'todo'">
+                                                <Button size="icon" variant="ghost" class="h-8 w-8 cursor-pointer text-blue-600 hover:text-blue-700 hover:bg-blue-50" @click="router.patch(`/admin/tasks/${task.id}`, { status: 'in_progress' })" title="Start Task">
+                                                    <ArrowRightCircle class="h-3.5 w-3.5" />
+                                                </Button>
+                                            </template>
+                                            <template v-if="task.created_by_user_id === ($page.props as any).auth.user.id">
+                                                <Button size="icon" variant="ghost" class="h-8 w-8 cursor-pointer text-red-500 hover:text-red-600 hover:bg-red-50" @click="router.delete(`/admin/tasks/${task.id}`)">
+                                                    <Trash2 class="h-3.5 w-3.5" />
+                                                </Button>
+                                            </template>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
                     </div>
 
                     <!-- Pagination -->
@@ -538,11 +565,11 @@ const getTaskIcon = (status: Task['status']) => {
             <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div class="fixed inset-0 bg-black/50" @click="showCreateModal = false"></div>
                 <div class="relative w-full max-w-lg rounded-lg bg-white p-6 shadow-lg dark:bg-gray-900">
-                    <h3 class="mb-4 text-lg font-semibold">Buat Task</h3>
+                    <h3 class="mb-4 text-lg font-semibold">Buat Tugas</h3>
                     <div class="space-y-3">
                         <div>
                             <Label for="title">Judul</Label>
-                            <Input id="title" v-model="createForm.title" placeholder="Judul task" />
+                            <Input id="title" v-model="createForm.title" placeholder="Judul tugas" />
                         </div>
                         <div>
                             <Label for="category">Kategori</Label>
@@ -553,26 +580,32 @@ const getTaskIcon = (status: Task['status']) => {
                         </div>
                         <div>
                             <Label for="description">Deskripsi</Label>
-                            <textarea id="description" v-model="createForm.description" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white" rows="3" />
+                            <RichTextEditor v-model="createForm.description" placeholder="Deskripsi tugas..." :height="200" />
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <Label for="status">Status</Label>
-                                <select id="status" v-model="createForm.status" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
-                                    <option value="todo">Todo</option>
-                                    <option value="in_progress">In Progress</option>
-                                    <option value="done">Done</option>
-                                    <option value="cancelled">Cancelled</option>
-                                </select>
+                        <div>
+                            <Label for="status">Status</Label>
+                            <div class="flex flex-wrap gap-2 mt-1">
+                                <button
+                                    v-for="option in statusOptions"
+                                    :key="option.value"
+                                    type="button"
+                                    @click="createForm.status = option.value"
+                                    class="px-3 py-1.5 rounded-md text-sm border transition-all"
+                                    :class="[
+                                        createForm.status === option.value ? option.activeClass : option.class
+                                    ]"
+                                >
+                                    {{ option.label }}
+                                </button>
                             </div>
-                            <div>
-                                <Label for="priority">Prioritas</Label>
-                                <select id="priority" v-model="createForm.priority" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
-                                </select>
-                            </div>
+                        </div>
+                        <div>
+                            <Label for="priority">Prioritas</Label>
+                            <select id="priority" v-model="createForm.priority" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                            </select>
                         </div>
                         <div>
                             <Label for="due_date">Jatuh Tempo</Label>
@@ -628,17 +661,25 @@ const getTaskIcon = (status: Task['status']) => {
                         </div>
                         <div>
                             <Label for="edit_description">Deskripsi</Label>
-                            <textarea id="edit_description" v-model="editForm.description" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white" rows="3" />
+                            <RichTextEditor v-model="editForm.description" placeholder="Deskripsi tugas..." :height="200" />
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <Label for="edit_status">Status</Label>
-                                <select id="edit_status" v-model="editForm.status" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
-                                    <option value="todo">Todo</option>
-                                    <option value="in_progress">In Progress</option>
-                                    <option value="done">Done</option>
-                                    <option value="cancelled">Cancelled</option>
-                                </select>
+                                <div class="flex flex-wrap gap-2 mt-1">
+                                    <button
+                                        v-for="option in statusOptions"
+                                        :key="option.value"
+                                        type="button"
+                                        @click="editForm.status = option.value"
+                                        class="px-3 py-1.5 rounded-md text-sm border transition-all"
+                                        :class="[
+                                            editForm.status === option.value ? option.activeClass : option.class
+                                        ]"
+                                    >
+                                        {{ option.label }}
+                                    </button>
+                                </div>
                             </div>
                             <div>
                                 <Label for="edit_priority">Prioritas</Label>
