@@ -702,26 +702,29 @@ const getTaskIcon = (status: Task['status']) => {
             <!-- Create Modal -->
             <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div class="fixed inset-0 bg-black/50" @click="showCreateModal = false"></div>
-                <div class="relative w-full max-w-lg rounded-lg bg-white p-6 shadow-lg dark:bg-gray-900">
-                    <h3 class="mb-4 text-lg font-semibold">Buat Tugas</h3>
-                    <div class="space-y-3">
+                <div class="relative flex flex-col w-full max-w-lg max-h-[90vh] rounded-lg bg-white shadow-lg dark:bg-gray-900">
+                    <div class="p-6 border-b dark:border-gray-800">
+                        <h3 class="text-lg font-semibold">Buat Tugas</h3>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-6">
+                        <div class="space-y-3">
                         <div>
-                            <Label for="title">Judul</Label>
+                            <Label for="title" class="mb-2 block">Judul</Label>
                             <Input id="title" v-model="createForm.title" placeholder="Judul tugas" />
                         </div>
                         <div>
-                            <Label for="category">Kategori</Label>
+                            <Label for="category" class="mb-2 block">Kategori</Label>
                             <select id="category" v-model="createForm.task_category_id" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
                                 <option value="">— Pilih Kategori —</option>
                                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                             </select>
                         </div>
                         <div>
-                            <Label for="description">Deskripsi</Label>
+                            <Label for="description" class="mb-2 block">Deskripsi</Label>
                             <RichTextEditor v-model="createForm.description" placeholder="Deskripsi tugas..." :height="200" />
                         </div>
                         <div>
-                            <Label for="status">Status</Label>
+                            <Label for="status" class="mb-2 block">Status</Label>
                             <div class="flex flex-wrap gap-2 mt-1">
                                 <button
                                     v-for="option in statusOptions"
@@ -738,7 +741,7 @@ const getTaskIcon = (status: Task['status']) => {
                             </div>
                         </div>
                         <div>
-                            <Label for="priority">Prioritas</Label>
+                            <Label for="priority" class="mb-2 block">Prioritas</Label>
                             <select id="priority" v-model="createForm.priority" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
                                 <option value="low">Low</option>
                                 <option value="medium">Medium</option>
@@ -746,19 +749,19 @@ const getTaskIcon = (status: Task['status']) => {
                             </select>
                         </div>
                         <div>
-                            <Label for="due_date">Jatuh Tempo</Label>
+                            <Label for="due_date" class="mb-2 block">Jatuh Tempo</Label>
                             <DatePicker id="due_date" v-model="createForm.due_date" placeholder="Pilih tanggal jatuh tempo" />
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <Label for="assigned_user_id">Assign ke User</Label>
+                                <Label for="assigned_user_id" class="mb-2 block">Assign ke User</Label>
                                 <select id="assigned_user_id" v-model="createForm.assigned_user_id" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
                                     <option value="">— Pilih user —</option>
                                     <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
                                 </select>
                             </div>
                             <div>
-                                <Label for="assigned_department">Assign ke Departemen</Label>
+                                <Label for="assigned_department" class="mb-2 block">Assign ke Departemen</Label>
                                 <select id="assigned_department" v-model="createForm.assigned_department" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
                                     <option value="">— Pilih departemen —</option>
                                     <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
@@ -766,10 +769,11 @@ const getTaskIcon = (status: Task['status']) => {
                                 <p class="mt-1 text-xs text-muted-foreground">Jika keduanya kosong, otomatis assign ke diri sendiri.</p>
                             </div>
                         </div>
-                        <div class="mt-4 flex justify-end gap-2">
-                            <Button type="button" variant="outline" @click="showCreateModal = false" class="cursor-pointer">Batal</Button>
-                            <Button type="button" @click="submitCreate" class="cursor-pointer">Simpan</Button>
                         </div>
+                    </div>
+                    <div class="p-6 border-t dark:border-gray-800 flex justify-end gap-2">
+                        <Button type="button" variant="outline" @click="showCreateModal = false" class="cursor-pointer">Batal</Button>
+                        <Button type="button" @click="submitCreate" class="cursor-pointer">Simpan</Button>
                     </div>
                 </div>
             </div>
@@ -777,35 +781,36 @@ const getTaskIcon = (status: Task['status']) => {
             <!-- Edit Modal -->
             <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div class="fixed inset-0 bg-black/50" @click="showEditModal = false"></div>
-                <div class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-lg dark:bg-gray-900">
-                    <div class="flex items-center justify-between mb-4">
+                <div class="relative flex flex-col w-full max-w-2xl max-h-[90vh] rounded-lg bg-white shadow-lg dark:bg-gray-900">
+                    <div class="flex items-center justify-between p-6 border-b dark:border-gray-800">
                         <h3 class="text-lg font-semibold">Edit Tugas</h3>
                         <Button variant="ghost" size="icon" @click="handleDeleteTask" class="text-red-500 hover:text-red-600">
                             <Trash2 class="h-4 w-4" />
                         </Button>
                     </div>
                     
-                    <form @submit.prevent="submitEdit" class="space-y-4">
+                    <div class="flex-1 overflow-y-auto p-6">
+                        <form @submit.prevent="submitEdit" class="space-y-4">
                         <div>
-                            <Label for="edit_title">Judul</Label>
+                            <Label for="edit_title" class="mb-2 block">Judul</Label>
                             <Input id="edit_title" v-model="editForm.title" placeholder="Judul tugas" />
                         </div>
                         <div>
-                            <Label for="edit_category">Kategori</Label>
+                            <Label for="edit_category" class="mb-2 block">Kategori</Label>
                             <select id="edit_category" v-model="editForm.task_category_id" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
                                 <option value="">— Pilih Kategori —</option>
                                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                             </select>
                         </div>
                         <div>
-                            <Label for="edit_description">Deskripsi</Label>
+                            <Label for="edit_description" class="mb-2 block">Deskripsi</Label>
                             <RichTextEditor v-model="editForm.description" placeholder="Deskripsi tugas..." :height="200" />
                         </div>
 
                         <!-- QC Checklist Section -->
                         <div v-if="currentCategory && currentCategory.qc_checklist && currentCategory.qc_checklist.length > 0" class="space-y-3 border rounded-md p-4 bg-muted/20">
                             <div class="flex items-center justify-between">
-                                <Label>Quality Control ({{ Math.round(qcPercentage) }}%)</Label>
+                                <Label class="mb-2 block">Quality Control ({{ Math.round(qcPercentage) }}%)</Label>
                                 <span :class="qcPercentage >= 70 ? 'text-green-600' : 'text-red-500'" class="text-xs font-medium">
                                     {{ qcPercentage >= 70 ? 'Memenuhi Syarat' : 'Belum Memenuhi Syarat (>70%)' }}
                                 </span>
@@ -827,7 +832,7 @@ const getTaskIcon = (status: Task['status']) => {
 
                         <div class="space-y-4">
                             <div>
-                                <Label for="edit_status">Status</Label>
+                                <Label for="edit_status" class="mb-2 block">Status</Label>
                                 <div class="flex flex-wrap gap-2 mt-1">
                                     <button
                                         v-for="option in editStatusOptions"
@@ -844,7 +849,7 @@ const getTaskIcon = (status: Task['status']) => {
                                 </div>
                             </div>
                             <div>
-                                <Label for="edit_priority">Prioritas</Label>
+                                <Label for="edit_priority" class="mb-2 block">Prioritas</Label>
                                 <select id="edit_priority" v-model="editForm.priority" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
                                     <option value="low">Low</option>
                                     <option value="medium">Medium</option>
@@ -853,19 +858,19 @@ const getTaskIcon = (status: Task['status']) => {
                             </div>
                         </div>
                         <div>
-                            <Label for="edit_due_date">Jatuh Tempo</Label>
+                            <Label for="edit_due_date" class="mb-2 block">Jatuh Tempo</Label>
                             <DatePicker id="edit_due_date" v-model="editForm.due_date" placeholder="Pilih tanggal jatuh tempo" />
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <Label for="edit_assigned_user_id">Assign ke User</Label>
+                                <Label for="edit_assigned_user_id" class="mb-2 block">Assign ke User</Label>
                                 <select id="edit_assigned_user_id" v-model="editForm.assigned_user_id" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
                                     <option value="">— Pilih user —</option>
                                     <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
                                 </select>
                             </div>
                             <div>
-                                <Label for="edit_assigned_department">Assign ke Departemen</Label>
+                                <Label for="edit_assigned_department" class="mb-2 block">Assign ke Departemen</Label>
                                 <select id="edit_assigned_department" v-model="editForm.assigned_department" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
                                     <option value="">— Pilih departemen —</option>
                                     <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
@@ -873,18 +878,19 @@ const getTaskIcon = (status: Task['status']) => {
                             </div>
                         </div>
 
-                        <div class="mt-4 flex justify-end gap-2">
-                            <Button type="button" variant="outline" @click="showEditModal = false" class="cursor-pointer">Batal</Button>
-                            <Button 
-                                type="button" 
-                                @click="submitEdit" 
-                                class="cursor-pointer"
-                                :disabled="editForm.processing || (editForm.status === 'done' && qcPercentage < 70)"
-                            >
-                                Simpan
-                            </Button>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
+                    <div class="p-6 border-t dark:border-gray-800 flex justify-end gap-2">
+                        <Button type="button" variant="outline" @click="showEditModal = false" class="cursor-pointer">Batal</Button>
+                        <Button 
+                            type="button" 
+                            @click="submitEdit" 
+                            class="cursor-pointer"
+                            :disabled="editForm.processing || (editForm.status === 'done' && qcPercentage < 70)"
+                        >
+                            Simpan
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

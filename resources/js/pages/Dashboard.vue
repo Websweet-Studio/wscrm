@@ -114,9 +114,9 @@ const greeting = computed(() => {
     const user = page.props.auth.user;
     const name = user.name.split(' ')[0]; // First name
 
-    if (hour < 12) return `Good Morning, ${name}`;
-    if (hour < 18) return `Good Afternoon, ${name}`;
-    return `Good Evening, ${name}`;
+    if (hour < 12) return `Selamat Pagi, ${name}`;
+    if (hour < 18) return `Selamat Siang, ${name}`;
+    return `Selamat Malam, ${name}`;
 });
 
 const refreshDashboard = () => {
@@ -178,7 +178,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Dashboard</h1>
                     <p class="hidden text-sm text-muted-foreground sm:block sm:text-base">
-                        {{ greeting }}! Here's what's happening today.
+                        {{ greeting }}! Berikut apa yang terjadi hari ini.
                     </p>
                     <p class="text-sm text-muted-foreground sm:hidden">{{ greeting }}</p>
                 </div>
@@ -193,26 +193,26 @@ const getExpiryBadgeClass = (daysLeft: number) => {
             <!-- Quick Actions -->
             <Card>
                 <CardHeader class="px-4 sm:px-6">
-                    <CardTitle class="text-base sm:text-lg">Quick Actions</CardTitle>
+                    <CardTitle class="text-base sm:text-lg">Aksi Cepat</CardTitle>
                     <CardDescription class="text-xs sm:text-sm">Tugas admin umum</CardDescription>
                 </CardHeader>
                 <CardContent class="px-4 sm:px-6">
                     <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                         <Link href="/admin/customers/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
                             <UserPlus class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                            <span class="text-xs font-medium sm:text-sm">Add Customer</span>
+                            <span class="text-xs font-medium sm:text-sm">Tambah Pelanggan</span>
                         </Link>
                         <Link href="/admin/orders/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
                             <ShoppingCart class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                            <span class="text-xs font-medium sm:text-sm">New Order</span>
+                            <span class="text-xs font-medium sm:text-sm">Pesanan Baru</span>
                         </Link>
                         <Link href="/admin/tasks/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
                             <CheckSquare class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                            <span class="text-xs font-medium sm:text-sm">New Task</span>
+                            <span class="text-xs font-medium sm:text-sm">Tugas Baru</span>
                         </Link>
                         <Link href="/admin/invoices/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
                             <CreditCard class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                            <span class="text-xs font-medium sm:text-sm">New Invoice</span>
+                            <span class="text-xs font-medium sm:text-sm">Faktur Baru</span>
                         </Link>
                     </div>
                 </CardContent>
@@ -223,7 +223,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                 <!-- Customers Card -->
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 px-4 pb-2 sm:px-6">
-                        <CardTitle class="text-xs font-medium sm:text-sm">Total Customers</CardTitle>
+                        <CardTitle class="text-xs font-medium sm:text-sm">Total Pelanggan</CardTitle>
                         <Users class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
@@ -234,12 +234,12 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                                 :class="`h-3 w-3 ${formatGrowth(stats.customers.growth).color}`"
                             />
                             <span :class="formatGrowth(stats.customers.growth).color" class="truncate">
-                                {{ formatGrowth(stats.customers.growth).value }}%<span class="hidden sm:inline"> from last month</span>
+                                {{ formatGrowth(stats.customers.growth).value }}%<span class="hidden sm:inline"> dari bulan lalu</span>
                             </span>
                         </div>
                         <p class="mt-1 text-xs text-muted-foreground">
                             <span class="hidden sm:inline"
-                                >{{ stats.customers.active }} active • {{ stats.customers.newThisMonth }} new this month</span
+                                >{{ stats.customers.active }} aktif • {{ stats.customers.newThisMonth }} baru bulan ini</span
                             >
                             <span class="sm:hidden">{{ stats.customers.active }} aktif • {{ stats.customers.newThisMonth }} baru</span>
                         </p>
@@ -249,7 +249,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                 <!-- Orders Card -->
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 px-4 pb-2 sm:px-6">
-                        <CardTitle class="text-xs font-medium sm:text-sm">Total Orders</CardTitle>
+                        <CardTitle class="text-xs font-medium sm:text-sm">Total Pesanan</CardTitle>
                         <ShoppingCart class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
@@ -257,15 +257,15 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                         <div class="flex items-center space-x-2 text-xs">
                             <component :is="formatGrowth(stats.orders.growth).icon" :class="`h-3 w-3 ${formatGrowth(stats.orders.growth).color}`" />
                             <span :class="formatGrowth(stats.orders.growth).color" class="truncate">
-                                {{ formatGrowth(stats.orders.growth).value }}%<span class="hidden sm:inline"> from last month</span>
+                                {{ formatGrowth(stats.orders.growth).value }}%<span class="hidden sm:inline"> dari bulan lalu</span>
                             </span>
                         </div>
                         <div class="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                             <span class="inline-flex items-center gap-1 rounded bg-green-100 px-2 py-0.5 text-green-800 dark:bg-green-900/40 dark:text-green-300">
-                                <CheckCircle2 class="h-3 w-3" /> {{ stats.orders.completed }} completed
+                                <CheckCircle2 class="h-3 w-3" /> {{ stats.orders.completed }} selesai
                             </span>
                             <span class="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-0.5 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
-                                <Calendar class="h-3 w-3" /> {{ stats.orders.thisMonth }} this month
+                                <Calendar class="h-3 w-3" /> {{ stats.orders.thisMonth }} bulan ini
                             </span>
                         </div>
                     </CardContent>
@@ -274,7 +274,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                 <!-- Revenue Card -->
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 px-4 pb-2 sm:px-6">
-                        <CardTitle class="text-xs font-medium sm:text-sm">Total Revenue</CardTitle>
+                        <CardTitle class="text-xs font-medium sm:text-sm">Total Pendapatan</CardTitle>
                         <DollarSign class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
@@ -282,11 +282,11 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                         <div class="flex items-center space-x-2 text-xs">
                             <component :is="formatGrowth(stats.revenue.growth).icon" :class="`h-3 w-3 ${formatGrowth(stats.revenue.growth).color}`" />
                             <span :class="formatGrowth(stats.revenue.growth).color" class="truncate">
-                                {{ formatGrowth(stats.revenue.growth).value }}%<span class="hidden sm:inline"> from last month</span>
+                                {{ formatGrowth(stats.revenue.growth).value }}%<span class="hidden sm:inline"> dari bulan lalu</span>
                             </span>
                         </div>
                         <p class="mt-1 truncate text-xs text-muted-foreground">
-                            <span class="hidden sm:inline">{{ formatPrice(stats.revenue.thisMonth) }} this month</span>
+                            <span class="hidden sm:inline">{{ formatPrice(stats.revenue.thisMonth) }} bulan ini</span>
                             <span class="sm:hidden">{{ formatPrice(stats.revenue.thisMonth) }} bulan ini</span>
                         </p>
                     </CardContent>
@@ -370,12 +370,12 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                             <div>
                                 <CardTitle class="flex items-center gap-2 text-base sm:text-lg">
                                     <BarChart3 class="h-4 w-4 sm:h-5 sm:w-5" />
-                                    <span class="hidden sm:inline">Orders This Month</span>
-                                    <span class="sm:hidden">Orders Bulan Ini</span>
+                                    <span class="hidden sm:inline">Pesanan Bulan Ini</span>
+                                    <span class="sm:hidden">Pesanan Bulan Ini</span>
                                 </CardTitle>
                                 <CardDescription class="text-xs sm:text-sm">
-                                    <span class="hidden sm:inline">Daily order trends for current month</span>
-                                    <span class="sm:hidden">Trend harian order</span>
+                                    <span class="hidden sm:inline">Tren pesanan harian untuk bulan ini</span>
+                                    <span class="sm:hidden">Tren harian pesanan</span>
                                 </CardDescription>
                             </div>
                         </div>
@@ -390,11 +390,11 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                     <CardHeader class="px-4 sm:px-6">
                         <CardTitle class="flex items-center gap-2 text-base sm:text-lg">
                             <Calendar class="h-4 w-4 sm:h-5 sm:w-5" />
-                            <span class="hidden sm:inline">Monthly Overview</span>
-                            <span class="sm:hidden">Overview Bulanan</span>
+                            <span class="hidden sm:inline">Ringkasan Bulanan</span>
+                            <span class="sm:hidden">Ringkasan Bulanan</span>
                         </CardTitle>
                         <CardDescription class="text-xs sm:text-sm">
-                            <span class="hidden sm:inline">Statistics for the last 6 months</span>
+                            <span class="hidden sm:inline">Statistik 6 bulan terakhir</span>
                             <span class="sm:hidden">Statistik 6 bulan terakhir</span>
                         </CardDescription>
                     </CardHeader>
@@ -457,12 +457,12 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                 <!-- Recent Orders -->
                 <Card>
                     <CardHeader class="px-4 sm:px-6">
-                        <CardTitle class="text-base sm:text-lg">Recent Orders</CardTitle>
-                        <CardDescription class="text-xs sm:text-sm">Latest customer orders</CardDescription>
+                        <CardTitle class="text-base sm:text-lg">Pesanan Terbaru</CardTitle>
+                        <CardDescription class="text-xs sm:text-sm">Pesanan pelanggan terbaru</CardDescription>
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
                         <div v-if="recentActivities.orders.length === 0" class="py-4 text-center text-xs text-muted-foreground sm:text-sm">
-                            No recent orders
+                            Tidak ada pesanan terbaru
                         </div>
                         <div v-else class="space-y-3">
                             <div
@@ -471,7 +471,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                                 class="flex items-center justify-between rounded-md bg-muted/30 p-3"
                             >
                                 <div class="min-w-0 flex-1">
-                                    <div class="truncate text-xs font-medium sm:text-sm">Order #{{ order.id }}</div>
+                                    <div class="truncate text-xs font-medium sm:text-sm">Pesanan #{{ order.id }}</div>
                                     <div class="truncate text-xs text-muted-foreground">{{ order.customer.name }}</div>
                                     <div class="text-xs text-muted-foreground">{{ formatDate(order.created_at) }}</div>
                                 </div>
@@ -494,7 +494,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                         </div>
                         <div class="mt-4">
                             <Button variant="outline" size="sm" asChild class="w-full text-xs sm:text-sm">
-                                <Link href="/admin/orders">View All Orders</Link>
+                                <Link href="/admin/orders">Lihat Semua Pesanan</Link>
                             </Button>
                         </div>
                     </CardContent>
@@ -503,12 +503,12 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                 <!-- Recent Customers -->
                 <Card>
                     <CardHeader class="px-4 sm:px-6">
-                        <CardTitle class="text-base sm:text-lg">New Customers</CardTitle>
-                        <CardDescription class="text-xs sm:text-sm">Recently registered customers</CardDescription>
+                        <CardTitle class="text-base sm:text-lg">Pelanggan Baru</CardTitle>
+                        <CardDescription class="text-xs sm:text-sm">Pelanggan baru terdaftar</CardDescription>
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
                         <div v-if="recentActivities.customers.length === 0" class="py-4 text-center text-xs text-muted-foreground sm:text-sm">
-                            No new customers
+                            Tidak ada pelanggan baru
                         </div>
                         <div v-else class="space-y-3">
                             <div
@@ -527,7 +527,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                         </div>
                         <div class="mt-4">
                             <Button variant="outline" size="sm" asChild class="w-full text-xs sm:text-sm">
-                                <Link href="/admin/customers">View All Customers</Link>
+                                <Link href="/admin/customers">Lihat Semua Pelanggan</Link>
                             </Button>
                         </div>
                     </CardContent>
@@ -537,26 +537,26 @@ const getExpiryBadgeClass = (daysLeft: number) => {
             <!-- Quick Actions -->
             <Card>
                 <CardHeader class="px-4 sm:px-6">
-                    <CardTitle class="text-base sm:text-lg">Quick Actions</CardTitle>
+                    <CardTitle class="text-base sm:text-lg">Aksi Cepat</CardTitle>
                     <CardDescription class="text-xs sm:text-sm">Tugas admin umum</CardDescription>
                 </CardHeader>
                 <CardContent class="px-4 sm:px-6">
                     <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                         <Link href="/admin/customers/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
                             <UserPlus class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                            <span class="text-xs font-medium sm:text-sm">Add Customer</span>
+                            <span class="text-xs font-medium sm:text-sm">Tambah Pelanggan</span>
                         </Link>
                         <Link href="/admin/orders/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
                             <ShoppingCart class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                            <span class="text-xs font-medium sm:text-sm">New Order</span>
+                            <span class="text-xs font-medium sm:text-sm">Pesanan Baru</span>
                         </Link>
                         <Link href="/admin/tasks/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
                             <CheckSquare class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                            <span class="text-xs font-medium sm:text-sm">New Task</span>
+                            <span class="text-xs font-medium sm:text-sm">Tugas Baru</span>
                         </Link>
                         <Link href="/admin/invoices/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
                             <CreditCard class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                            <span class="text-xs font-medium sm:text-sm">New Invoice</span>
+                            <span class="text-xs font-medium sm:text-sm">Faktur Baru</span>
                         </Link>
                     </div>
                 </CardContent>
