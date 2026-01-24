@@ -20,12 +20,14 @@ class Task extends Model
         'assigned_user_id',
         'assigned_department',
         'created_by_user_id',
+        'qc_results',
     ];
 
     protected function casts(): array
     {
         return [
             'due_date' => 'date',
+            'qc_results' => 'array',
         ];
     }
 

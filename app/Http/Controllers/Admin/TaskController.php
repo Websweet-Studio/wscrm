@@ -95,6 +95,7 @@ class TaskController extends Controller
             'due_date' => 'nullable|date',
             'assigned_user_id' => 'nullable|exists:users,id',
             'assigned_department' => 'nullable|string|max:255',
+            'qc_results' => 'nullable|array',
         ]);
 
         $data = array_merge([
@@ -125,7 +126,34 @@ class TaskController extends Controller
             'due_date' => 'nullable|date',
             'assigned_user_id' => 'nullable|exists:users,id',
             'assigned_department' => 'nullable|string|max:255',
+            'qc_results' => 'nullable|array',
         ]);
+
+        // Check QC requirements if status is being set to done
+        if (isset($validated['status']) && $validated['status'] === 'done') {
+            $task->load('category');
+            if ($task->category && !empty($task->category->qc_checklist)) {
+                $totalQc = count($task->category->qc_checklist);
+                $checkedQc = isset($validated['qc_results']) ? count($validated['qc_results']) : 0;
+                
+                // If only partial update, merge with existing qc_results if not provided?
+                // Actually the form sends the full array, so validated['qc_results'] should be authoritative.
+                // However, if the request doesn't include qc_results but includes status=done, we should check existing qc_results?
+                // In a typical form submission, all fields are sent. But if it's a patch...
+                // Let's assume the form sends qc_results if it's being updated.
+                // If qc_results is not in validated (e.g. not sent), use existing.
+                
+                if (!array_key_exists('qc_results', $validated)) {
+                     $checkedQc = $task->qc_results ? count($task->qc_results) : 0;
+                }
+
+                $percentage = ($totalQc > 0) ? ($checkedQc / $totalQc) * 100 : 100;
+
+                if ($percentage < 70) {
+                    return redirect()->back()->withErrors(['status' => 'QC must be at least 70% complete to mark as done. Current: ' . round($percentage) . '%']);
+                }
+            }
+        }
 
         $task->update($validated);
 

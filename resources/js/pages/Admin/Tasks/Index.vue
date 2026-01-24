@@ -13,6 +13,7 @@ import { Calendar, CheckCircle2, Clock, Edit, Plus, Search, Trash2, LayoutList, 
 import { computed, ref, watch, onMounted } from 'vue';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isSameDay, addMonths, subMonths, parseISO } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface User {
     id: number;
@@ -27,6 +28,7 @@ interface TaskCategory {
     id: number;
     name: string;
     color: string | null;
+    qc_checklist: string[] | null;
 }
 
 interface Task {
@@ -45,6 +47,7 @@ interface Task {
     updated_at: string;
     assigned_user?: User | null;
     creator?: User | null;
+    qc_results?: string[] | null;
 }
 
 interface Props {
@@ -132,6 +135,7 @@ const editForm = useForm({
     assigned_user_id: '' as number | '' | null,
     assigned_department: '' as string | '',
     task_category_id: '' as number | '' | null,
+    qc_results: [] as string[],
 });
 
 const handleSearch = () => {
@@ -209,6 +213,7 @@ const openEditModal = (task: Task) => {
     editForm.assigned_user_id = task.assigned_user_id || '';
     editForm.assigned_department = task.assigned_department || '';
     editForm.task_category_id = task.task_category_id || '';
+    editForm.qc_results = task.qc_results ? [...task.qc_results] : [];
     if (typeof editForm.assigned_user_id === 'number' && props.userDepartments[editForm.assigned_user_id]) {
         editForm.assigned_department = props.userDepartments[editForm.assigned_user_id];
     }
@@ -222,6 +227,21 @@ onMounted(() => {
 });
 
 
+const currentCategory = computed(() => {
+    if (!editForm.task_category_id) return null;
+    return props.categories.find(c => c.id === editForm.task_category_id) || null;
+});
+
+const qcPercentage = computed(() => {
+    if (!currentCategory.value || !currentCategory.value.qc_checklist || currentCategory.value.qc_checklist.length === 0) {
+        return 100;
+    }
+    const total = currentCategory.value.qc_checklist.length;
+    // Count how many checked items are actually in the current category's checklist
+    const checked = editForm.qc_results.filter(r => currentCategory.value!.qc_checklist!.includes(r)).length;
+    return (checked / total) * 100;
+});
+
 const submitEdit = () => {
     const payload: any = {
         title: editForm.title,
@@ -232,6 +252,7 @@ const submitEdit = () => {
         due_date: editForm.due_date || undefined,
         assigned_user_id: editForm.assigned_user_id || undefined,
         assigned_department: editForm.assigned_department || undefined,
+        qc_results: editForm.qc_results || [],
     };
     editForm.patch(`/admin/tasks/${editForm.id}`, {
         data: payload,
@@ -710,9 +731,44 @@ const getTaskIcon = (status: Task['status']) => {
                                 </select>
                             </div>
                         </div>
+
+                        <!-- QC Checklist Section -->
+                        <div v-if="currentCategory && currentCategory.qc_checklist && currentCategory.qc_checklist.length > 0" class="space-y-3 border rounded-md p-4 bg-muted/20">
+                            <div class="flex items-center justify-between">
+                                <Label>Quality Control ({{ Math.round(qcPercentage) }}%)</Label>
+                                <span :class="qcPercentage >= 70 ? 'text-green-600' : 'text-red-500'" class="text-xs font-medium">
+                                    {{ qcPercentage >= 70 ? 'Memenuhi Syarat' : 'Belum Memenuhi Syarat (>70%)' }}
+                                </span>
+                            </div>
+                            <div v-for="(item, index) in currentCategory.qc_checklist" :key="index" class="flex items-center space-x-2">
+                                <Checkbox 
+                                    :id="'qc_' + index" 
+                                    :checked="editForm.qc_results.includes(item)"
+                                    @update:checked="(checked) => {
+                                        if (checked) {
+                                            editForm.qc_results.push(item);
+                                        } else {
+                                            editForm.qc_results = editForm.qc_results.filter(i => i !== item);
+                                        }
+                                    }"
+                                />
+                                <Label :for="'qc_' + index" class="font-normal cursor-pointer select-none">{{ item }}</Label>
+                            </div>
+                            <p v-if="editForm.status === 'done' && qcPercentage < 70" class="text-xs text-red-500 font-medium animate-pulse">
+                                Status tidak bisa 'Done' jika QC kurang dari 70%.
+                            </p>
+                        </div>
+
                         <div class="mt-4 flex justify-end gap-2">
                             <Button type="button" variant="outline" @click="showEditModal = false" class="cursor-pointer">Batal</Button>
-                            <Button type="button" @click="submitEdit" class="cursor-pointer">Simpan</Button>
+                            <Button 
+                                type="button" 
+                                @click="submitEdit" 
+                                class="cursor-pointer"
+                                :disabled="editForm.processing || (editForm.status === 'done' && qcPercentage < 70)"
+                            >
+                                Simpan
+                            </Button>
                         </div>
                     </form>
                 </div>
