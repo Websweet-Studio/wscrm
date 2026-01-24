@@ -75,7 +75,7 @@ const $page = usePage();
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Tasks', href: '/admin/tasks' },
+    { title: 'Tugas', href: '/admin/tasks' },
 ];
 
 const statusFilter = ref(props.filters?.status || '');
@@ -290,12 +290,12 @@ const getTaskIcon = (status: Task['status']) => {
 </script>
 
 <template>
-    <Head title="Admin - Tasks" />
+    <Head title="Admin - Tugas" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">Kelola Tasks</h1>
+                    <h1 class="text-3xl font-bold tracking-tight">Kelola Tugas</h1>
                     <p class="text-muted-foreground">Buat dan kelola tugas untuk user atau departemen</p>
                 </div>
                 <div class="flex items-center gap-2">
@@ -305,7 +305,7 @@ const getTaskIcon = (status: Task['status']) => {
                     </Button>
                     <Button @click="showCreateModal = true" class="cursor-pointer">
                         <Plus class="mr-2 h-4 w-4" />
-                        Buat Task
+                        Buat Tugas
                     </Button>
                 </div>
             </div>
@@ -434,14 +434,14 @@ const getTaskIcon = (status: Task['status']) => {
             <!-- Tasks List -->
             <Card v-else>
                 <CardHeader>
-                    <CardTitle class="text-base">Daftar Tasks</CardTitle>
+                    <CardTitle class="text-base">Daftar Tugas</CardTitle>
                     <CardDescription>Tugas yang ditugaskan ke Anda atau yang Anda buat</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div v-if="tasks.data.length === 0" class="py-12 text-center text-muted-foreground">
                         <Search class="mx-auto h-12 w-12 text-muted-foreground/40" />
-                        <h3 class="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100">Belum ada task</h3>
-                        <p class="mt-1 text-sm">Buat task baru untuk memulai.</p>
+                        <h3 class="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100">Belum ada tugas</h3>
+                        <p class="mt-1 text-sm">Buat tugas baru untuk memulai.</p>
                     </div>
                     <div v-else class="space-y-3">
                         <div
@@ -603,14 +603,21 @@ const getTaskIcon = (status: Task['status']) => {
                 </div>
             </div>
 
+            <!-- Edit Modal -->
             <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div class="fixed inset-0 bg-black/50" @click="showEditModal = false"></div>
-                <div class="relative w-full max-w-lg rounded-lg bg-white p-6 shadow-lg dark:bg-gray-900">
-                    <h3 class="mb-4 text-lg font-semibold">Edit Task</h3>
-                    <div class="space-y-3">
+                <div class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-lg dark:bg-gray-900">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">Edit Tugas</h3>
+                        <Button variant="ghost" size="icon" @click="deleteTask" class="text-red-500 hover:text-red-600">
+                            <Trash2 class="h-4 w-4" />
+                        </Button>
+                    </div>
+                    
+                    <form @submit.prevent="submitEdit" class="space-y-4">
                         <div>
                             <Label for="edit_title">Judul</Label>
-                            <Input id="edit_title" v-model="editForm.title" placeholder="Judul task" />
+                            <Input id="edit_title" v-model="editForm.title" placeholder="Judul tugas" />
                         </div>
                         <div>
                             <Label for="edit_category">Kategori</Label>
@@ -666,7 +673,7 @@ const getTaskIcon = (status: Task['status']) => {
                             <Button type="button" variant="outline" @click="showEditModal = false" class="cursor-pointer">Batal</Button>
                             <Button type="button" @click="submitEdit" class="cursor-pointer">Simpan</Button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>

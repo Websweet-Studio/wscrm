@@ -332,17 +332,17 @@ const getExpiryBadgeClass = (daysLeft: number) => {
 
                  <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 px-4 pb-2 sm:px-6">
-                        <CardTitle class="text-xs font-medium sm:text-sm">Pending Tasks</CardTitle>
+                        <CardTitle class="text-xs font-medium sm:text-sm">Tugas Pending</CardTitle>
                         <CheckSquare class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
                         <div class="truncate text-xl font-bold sm:text-2xl">{{ stats.tasks.pendingCount }}</div>
                         <p class="mt-1 text-xs text-muted-foreground">
-                            Tasks assigned to you that are not done.
+                            Tugas yang diberikan kepada Anda yang belum selesai.
                         </p>
                         <div class="mt-4">
                              <Button class="w-full" size="sm" asChild>
-                                 <Link href="/admin/tasks/create">Create New Task</Link>
+                                 <Link href="/admin/tasks/create">Buat Tugas Baru</Link>
                              </Button>
                         </div>
                     </CardContent>

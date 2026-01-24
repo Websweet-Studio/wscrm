@@ -120,18 +120,18 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Tasks',
+        title: 'Tugas',
         href: '#',
         icon: CheckSquare,
         badge: 0,
         children: [
             {
-                title: 'All Tasks',
+                title: 'Semua Tugas',
                 href: '/admin/tasks',
                 icon: CheckSquare,
             },
             {
-                title: 'Categories',
+                title: 'Kategori',
                 href: '/admin/task-categories',
                 icon: Tags,
             },
