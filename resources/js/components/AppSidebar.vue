@@ -23,6 +23,7 @@ import {
     PenTool,
     Server,
     ShoppingCart,
+    Tags,
     Users,
 } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
@@ -120,9 +121,21 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Tasks',
-        href: '/admin/tasks',
+        href: '#',
         icon: CheckSquare,
         badge: 0,
+        children: [
+            {
+                title: 'All Tasks',
+                href: '/admin/tasks',
+                icon: CheckSquare,
+            },
+            {
+                title: 'Categories',
+                href: '/admin/task-categories',
+                icon: Tags,
+            },
+        ],
     },
     {
         title: 'Customer',

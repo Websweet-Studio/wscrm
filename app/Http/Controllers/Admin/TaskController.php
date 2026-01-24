@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Task;
+use App\Models\TaskCategory;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -26,8 +27,9 @@ class TaskController extends Controller
 
         $scope = $request->get('scope'); // all | assigned | created
 
-        $query = Task::with(['assignedUser.employee', 'creator'])
+        $query = Task::with(['assignedUser.employee', 'creator', 'category'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
+            ->when($request->filled('category'), fn ($q) => $q->where('task_category_id', $request->category))
             ->when($request->filled('assigned_department'), fn ($q) => $q->where('assigned_department', $request->assigned_department))
             ->when($request->filled('assigned_user_id'), fn ($q) => $q->where('assigned_user_id', $request->assigned_user_id))
             ->orderBy('due_date', 'asc')
@@ -58,6 +60,7 @@ class TaskController extends Controller
         $tasks = $query->paginate($perPage);
 
         $departments = Employee::distinct()->pluck('department')->filter()->values();
+        $categories = TaskCategory::orderBy('name')->get();
         $users = User::orderBy('name')->get(['id', 'name', 'email']);
         $userDepartments = Employee::select('user_id', 'department')
             ->whereNotNull('department')
@@ -85,6 +88,7 @@ class TaskController extends Controller
         $this->checkAdmin();
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'task_category_id' => 'nullable|exists:task_categories,id',
             'description' => 'nullable|string|max:5000',
             'status' => 'nullable|in:todo,in_progress,done,cancelled',
             'priority' => 'nullable|in:low,medium,high',
@@ -96,16 +100,17 @@ class TaskController extends Controller
         $data = array_merge([
             'status' => 'todo',
             'priority' => 'medium',
-            'created_by_user_id' => auth()->id(),
         ], $validated);
+
+        $data['created_by_user_id'] = auth()->id();
 
         if (empty($data['assigned_user_id']) && empty($data['assigned_department'])) {
             $data['assigned_user_id'] = auth()->id();
         }
-
+        
         Task::create($data);
 
-        return redirect()->route('admin.tasks.index')->with('success', 'Task berhasil dibuat.');
+        return redirect()->back()->with('success', 'Task created successfully.');
     }
 
     public function update(Request $request, Task $task)
@@ -113,7 +118,7 @@ class TaskController extends Controller
         $this->checkAdmin();
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
-            'category' => 'nullable|string|max:255',
+            'task_category_id' => 'nullable|exists:task_categories,id',
             'description' => 'nullable|string|max:5000',
             'status' => 'nullable|in:todo,in_progress,done,cancelled',
             'priority' => 'nullable|in:low,medium,high',
@@ -124,7 +129,7 @@ class TaskController extends Controller
 
         $task->update($validated);
 
-        return redirect()->route('admin.tasks.index')->with('success', 'Task berhasil diperbarui.');
+        return redirect()->back()->with('success', 'Task updated successfully.');
     }
 
     public function destroy(Task $task)

@@ -21,6 +21,12 @@ interface User {
     };
 }
 
+interface TaskCategory {
+    id: number;
+    name: string;
+    color: string | null;
+}
+
 interface Task {
     id: number;
     title: string;
@@ -30,6 +36,8 @@ interface Task {
     due_date?: string;
     assigned_user_id?: number | null;
     assigned_department?: string | null;
+    task_category_id?: number | null;
+    category?: TaskCategory | null;
     created_by_user_id: number;
     created_at: string;
     updated_at: string;
@@ -48,9 +56,11 @@ interface Props {
     };
     departments: string[];
     users: User[];
+    categories: TaskCategory[];
     userDepartments: Record<number, string>;
     filters?: {
         status?: string;
+        category?: string; // id
         assigned_user_id?: number;
         assigned_department?: string;
         view_mode?: 'list' | 'calendar';
@@ -69,6 +79,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const statusFilter = ref(props.filters?.status || '');
+const categoryFilter = ref(props.filters?.category || '');
 const assignedUserId = ref(props.filters?.assigned_user_id || '');
 const assignedDepartment = ref(props.filters?.assigned_department || '');
 const viewMode = ref(props.filters?.view_mode || 'list');
@@ -99,18 +110,19 @@ const createForm = useForm({
     due_date: '',
     assigned_user_id: '' as number | '' | null,
     assigned_department: '' as string | '',
+    task_category_id: '' as number | '' | null,
 });
 
 const editForm = useForm({
     id: 0,
     title: '',
-    category: '',
     description: '',
     status: 'todo' as 'todo' | 'in_progress' | 'done' | 'cancelled',
     priority: 'medium' as 'low' | 'medium' | 'high',
     due_date: '',
     assigned_user_id: '' as number | '' | null,
     assigned_department: '' as string | '',
+    task_category_id: '' as number | '' | null,
 });
 
 const handleSearch = () => {
@@ -157,6 +169,7 @@ const submitCreate = () => {
         due_date: createForm.due_date || undefined,
         assigned_user_id: createForm.assigned_user_id || undefined,
         assigned_department: createForm.assigned_department || undefined,
+        task_category_id: createForm.task_category_id || undefined,
     };
     createForm.post('/admin/tasks', {
         data: payload,
@@ -186,6 +199,7 @@ const openEditModal = (task: Task) => {
     editForm.due_date = task.due_date || '';
     editForm.assigned_user_id = task.assigned_user_id || '';
     editForm.assigned_department = task.assigned_department || '';
+    editForm.task_category_id = task.task_category_id || '';
     if (typeof editForm.assigned_user_id === 'number' && props.userDepartments[editForm.assigned_user_id]) {
         editForm.assigned_department = props.userDepartments[editForm.assigned_user_id];
     }
@@ -332,7 +346,7 @@ const getTaskIcon = (status: Task['status']) => {
                         <div>
                             <select id="categoryFilter" v-model="categoryFilter" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
                                 <option value="">Semua Kategori</option>
-                                <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                                <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                             </select>
                         </div>
                         <div>
@@ -445,7 +459,12 @@ const getTaskIcon = (status: Task['status']) => {
                                     <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
                                         <span :class="['rounded px-2 py-1', statusBadgeClass(task.status)]">{{ task.status }}</span>
                                         <span :class="['rounded px-2 py-1', priorityBadgeClass(task.priority)]">{{ task.priority }}</span>
-                                        <span v-if="task.category" class="rounded bg-purple-100 px-2 py-1 text-purple-800 dark:bg-purple-900 dark:text-purple-300">{{ task.category }}</span>
+                                        <span v-if="task.category" 
+                                              class="rounded px-2 py-1 text-xs"
+                                              :style="{ backgroundColor: task.category.color || '#e9d5ff', color: task.category.color ? '#fff' : '#6b21a8' }"
+                                        >
+                                            {{ task.category.name }}
+                                        </span>
                                         <span v-if="task.due_date" class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                                             <Calendar class="h-3 w-3" /> {{ formatDate(task.due_date) }}
                                         </span>
@@ -527,7 +546,10 @@ const getTaskIcon = (status: Task['status']) => {
                         </div>
                         <div>
                             <Label for="category">Kategori</Label>
-                            <Input id="category" v-model="createForm.category" placeholder="Kategori task (opsional)" />
+                            <select id="category" v-model="createForm.task_category_id" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                                <option value="">— Pilih Kategori —</option>
+                                <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                            </select>
                         </div>
                         <div>
                             <Label for="description">Deskripsi</Label>
@@ -592,12 +614,10 @@ const getTaskIcon = (status: Task['status']) => {
                         </div>
                         <div>
                             <Label for="edit_category">Kategori</Label>
-                            <div class="relative">
-                                <Input id="edit_category" v-model="editForm.category" placeholder="Kategori task (opsional)" list="edit-category-list" />
-                                <datalist id="edit-category-list">
-                                    <option v-for="cat in categories" :key="cat" :value="cat" />
-                                </datalist>
-                            </div>
+                            <select id="edit_category" v-model="editForm.task_category_id" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                                <option value="">— Pilih Kategori —</option>
+                                <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                            </select>
                         </div>
                         <div>
                             <Label for="edit_description">Deskripsi</Label>

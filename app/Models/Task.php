@@ -39,6 +39,11 @@ class Task extends Model
         return $this->belongsTo(User::class, 'created_by_user_id');
     }
 
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(TaskCategory::class, 'task_category_id');
+    }
+
     public function scopeMy($query, int $userId)
     {
         return $query->where(function ($q) use ($userId) {
