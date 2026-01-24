@@ -236,11 +236,33 @@ const qcPercentage = computed(() => {
     if (!currentCategory.value || !currentCategory.value.qc_checklist || currentCategory.value.qc_checklist.length === 0) {
         return 100;
     }
-    const total = currentCategory.value.qc_checklist.length;
-    // Count how many checked items are actually in the current category's checklist
-    const checked = editForm.qc_results.filter(r => currentCategory.value!.qc_checklist!.includes(r)).length;
-    return (checked / total) * 100;
+    const checklist = currentCategory.value.qc_checklist;
+    const results = editForm.qc_results || [];
+    
+    // Calculate based on unique checklist items found in results
+    const completedCount = checklist.reduce((count, item) => {
+        return results.includes(item) ? count + 1 : count;
+    }, 0);
+    
+    return (completedCount / checklist.length) * 100;
 });
+
+const toggleQcItem = (item: string, checked: boolean) => {
+    const results = [...(editForm.qc_results || [])];
+    
+    if (checked) {
+        if (!results.includes(item)) {
+            results.push(item);
+        }
+    } else {
+        const index = results.indexOf(item);
+        if (index > -1) {
+            results.splice(index, 1);
+        }
+    }
+    
+    editForm.qc_results = results;
+};
 
 const submitEdit = () => {
     const payload: any = {
@@ -684,6 +706,28 @@ const getTaskIcon = (status: Task['status']) => {
                             <Label for="edit_description">Deskripsi</Label>
                             <RichTextEditor v-model="editForm.description" placeholder="Deskripsi tugas..." :height="200" />
                         </div>
+
+                        <!-- QC Checklist Section -->
+                        <div v-if="currentCategory && currentCategory.qc_checklist && currentCategory.qc_checklist.length > 0" class="space-y-3 border rounded-md p-4 bg-muted/20">
+                            <div class="flex items-center justify-between">
+                                <Label>Quality Control ({{ Math.round(qcPercentage) }}%)</Label>
+                                <span :class="qcPercentage >= 70 ? 'text-green-600' : 'text-red-500'" class="text-xs font-medium">
+                                    {{ qcPercentage >= 70 ? 'Memenuhi Syarat' : 'Belum Memenuhi Syarat (>70%)' }}
+                                </span>
+                            </div>
+                            <div v-for="(item, index) in currentCategory.qc_checklist" :key="index" class="flex items-center space-x-2">
+                                <Checkbox 
+                                    :id="'qc_' + index" 
+                                    :checked="editForm.qc_results.includes(item)"
+                                    @update:checked="(checked) => toggleQcItem(item, checked)"
+                                />
+                                <Label :for="'qc_' + index" class="font-normal cursor-pointer select-none">{{ item }}</Label>
+                            </div>
+                            <p v-if="editForm.status === 'done' && qcPercentage < 70" class="text-xs text-red-500 font-medium animate-pulse">
+                                Status tidak bisa 'Done' jika QC kurang dari 70%.
+                            </p>
+                        </div>
+
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <Label for="edit_status">Status</Label>
@@ -730,33 +774,6 @@ const getTaskIcon = (status: Task['status']) => {
                                     <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
                                 </select>
                             </div>
-                        </div>
-
-                        <!-- QC Checklist Section -->
-                        <div v-if="currentCategory && currentCategory.qc_checklist && currentCategory.qc_checklist.length > 0" class="space-y-3 border rounded-md p-4 bg-muted/20">
-                            <div class="flex items-center justify-between">
-                                <Label>Quality Control ({{ Math.round(qcPercentage) }}%)</Label>
-                                <span :class="qcPercentage >= 70 ? 'text-green-600' : 'text-red-500'" class="text-xs font-medium">
-                                    {{ qcPercentage >= 70 ? 'Memenuhi Syarat' : 'Belum Memenuhi Syarat (>70%)' }}
-                                </span>
-                            </div>
-                            <div v-for="(item, index) in currentCategory.qc_checklist" :key="index" class="flex items-center space-x-2">
-                                <Checkbox 
-                                    :id="'qc_' + index" 
-                                    :checked="editForm.qc_results.includes(item)"
-                                    @update:checked="(checked) => {
-                                        if (checked) {
-                                            editForm.qc_results.push(item);
-                                        } else {
-                                            editForm.qc_results = editForm.qc_results.filter(i => i !== item);
-                                        }
-                                    }"
-                                />
-                                <Label :for="'qc_' + index" class="font-normal cursor-pointer select-none">{{ item }}</Label>
-                            </div>
-                            <p v-if="editForm.status === 'done' && qcPercentage < 70" class="text-xs text-red-500 font-medium animate-pulse">
-                                Status tidak bisa 'Done' jika QC kurang dari 70%.
-                            </p>
                         </div>
 
                         <div class="mt-4 flex justify-end gap-2">

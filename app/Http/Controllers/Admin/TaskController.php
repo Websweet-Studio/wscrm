@@ -131,26 +131,29 @@ class TaskController extends Controller
 
         // Check QC requirements if status is being set to done
         if (isset($validated['status']) && $validated['status'] === 'done') {
-            $task->load('category');
-            if ($task->category && !empty($task->category->qc_checklist)) {
-                $totalQc = count($task->category->qc_checklist);
-                $checkedQc = isset($validated['qc_results']) ? count($validated['qc_results']) : 0;
+            // Determine the relevant category
+            $categoryId = $validated['task_category_id'] ?? $task->task_category_id;
+            
+            if ($categoryId) {
+                $category = \App\Models\TaskCategory::find($categoryId);
                 
-                // If only partial update, merge with existing qc_results if not provided?
-                // Actually the form sends the full array, so validated['qc_results'] should be authoritative.
-                // However, if the request doesn't include qc_results but includes status=done, we should check existing qc_results?
-                // In a typical form submission, all fields are sent. But if it's a patch...
-                // Let's assume the form sends qc_results if it's being updated.
-                // If qc_results is not in validated (e.g. not sent), use existing.
-                
-                if (!array_key_exists('qc_results', $validated)) {
-                     $checkedQc = $task->qc_results ? count($task->qc_results) : 0;
-                }
+                if ($category && !empty($category->qc_checklist)) {
+                    $totalQc = count($category->qc_checklist);
+                    $results = $validated['qc_results'] ?? $task->qc_results ?? [];
+                    
+                    // Count how many checklist items are present in results
+                    $checkedCount = 0;
+                    foreach ($category->qc_checklist as $item) {
+                        if (in_array($item, $results)) {
+                            $checkedCount++;
+                        }
+                    }
 
-                $percentage = ($totalQc > 0) ? ($checkedQc / $totalQc) * 100 : 100;
+                    $percentage = ($totalQc > 0) ? ($checkedCount / $totalQc) * 100 : 100;
 
-                if ($percentage < 70) {
-                    return redirect()->back()->withErrors(['status' => 'QC must be at least 70% complete to mark as done. Current: ' . round($percentage) . '%']);
+                    if ($percentage < 70) {
+                        return redirect()->back()->withErrors(['status' => 'QC must be at least 70% complete to mark as done. Current: ' . round($percentage) . '%']);
+                    }
                 }
             }
         }
