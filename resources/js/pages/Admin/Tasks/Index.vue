@@ -203,6 +203,8 @@ watch(() => createForm.assigned_user_id, (val) => {
     }
 });
 
+const localQcResults = ref<string[]>([]);
+
 const openEditModal = (task: Task) => {
     editForm.id = task.id;
     editForm.title = task.title;
@@ -214,6 +216,7 @@ const openEditModal = (task: Task) => {
     editForm.assigned_department = task.assigned_department || '';
     editForm.task_category_id = task.task_category_id || '';
     editForm.qc_results = task.qc_results ? [...task.qc_results] : [];
+    localQcResults.value = task.qc_results ? [...task.qc_results] : [];
     if (typeof editForm.assigned_user_id === 'number' && props.userDepartments[editForm.assigned_user_id]) {
         editForm.assigned_department = props.userDepartments[editForm.assigned_user_id];
     }
@@ -233,35 +236,108 @@ const currentCategory = computed(() => {
 });
 
 const qcPercentage = computed(() => {
-    if (!currentCategory.value || !currentCategory.value.qc_checklist || currentCategory.value.qc_checklist.length === 0) {
+    const category = currentCategory.value;
+    if (!category || !category.qc_checklist || category.qc_checklist.length === 0) {
         return 100;
     }
-    const checklist = currentCategory.value.qc_checklist;
-    const results = editForm.qc_results || [];
     
-    // Calculate based on unique checklist items found in results
-    const completedCount = checklist.reduce((count, item) => {
-        return results.includes(item) ? count + 1 : count;
-    }, 0);
+    const checklist = category.qc_checklist;
+    const currentResults = localQcResults.value || [];
     
-    return (completedCount / checklist.length) * 100;
-});
-
-const toggleQcItem = (item: string, checked: boolean) => {
-    const results = [...(editForm.qc_results || [])];
-    
-    if (checked) {
-        if (!results.includes(item)) {
-            results.push(item);
-        }
-    } else {
-        const index = results.indexOf(item);
-        if (index > -1) {
-            results.splice(index, 1);
+    let matchCount = 0;
+    for (const item of checklist) {
+        if (currentResults.includes(item)) {
+            matchCount++;
         }
     }
     
-    editForm.qc_results = results;
+    return (matchCount / checklist.length) * 100;
+});
+
+const editStatusOptions = computed(() => {
+    return statusOptions.filter(option => {
+        if (option.value === 'done') {
+            return qcPercentage.value >= 70;
+        }
+        return true;
+    });
+});
+
+const toggleQcItem = (item: string) => {
+    const index = localQcResults.value.indexOf(item);
+    if (index > -1) {
+        localQcResults.value.splice(index, 1);
+    } else {
+        localQcResults.value.push(item);
+    }
+};
+
+const handleMarkAsDone = (task: Task) => {
+    // Determine category
+    let category = task.category;
+    if (!category && task.task_category_id) {
+        category = props.categories.find(c => c.id === task.task_category_id) || null;
+    }
+
+    if (!category || !category.qc_checklist || category.qc_checklist.length === 0) {
+        // No QC needed, proceed
+        router.patch(`/admin/tasks/${task.id}`, { status: 'done' });
+        return;
+    }
+
+    const checklist = category.qc_checklist;
+    const currentResults = task.qc_results || [];
+    
+    let matchCount = 0;
+    for (const item of checklist) {
+        if (currentResults.includes(item)) {
+            matchCount++;
+        }
+    }
+    
+    const percentage = (matchCount / checklist.length) * 100;
+
+    if (percentage < 70) {
+        // Open edit modal to fill QC
+        openEditModal(task);
+        // Set status to done in the form so the user sees they need to fill QC to finish
+        editForm.status = 'done'; 
+    } else {
+        router.patch(`/admin/tasks/${task.id}`, { status: 'done' });
+    }
+};
+
+const handleDeleteTask = () => {
+    if (!confirm('Apakah Anda yakin ingin menghapus tugas ini?')) return;
+    
+    editForm.delete(`/admin/tasks/${editForm.id}`, {
+        onSuccess: () => {
+            showEditModal.value = false;
+        },
+    });
+};
+
+const calculateTaskQcPercentage = (task: Task) => {
+    let category = task.category;
+    if (!category && task.task_category_id) {
+        category = props.categories.find(c => c.id === task.task_category_id) || null;
+    }
+
+    if (!category || !category.qc_checklist || category.qc_checklist.length === 0) {
+        return 0;
+    }
+
+    const checklist = category.qc_checklist;
+    const currentResults = task.qc_results || [];
+    
+    let matchCount = 0;
+    for (const item of checklist) {
+        if (currentResults.includes(item)) {
+            matchCount++;
+        }
+    }
+    
+    return Math.round((matchCount / checklist.length) * 100);
 };
 
 const submitEdit = () => {
@@ -274,8 +350,10 @@ const submitEdit = () => {
         due_date: editForm.due_date || undefined,
         assigned_user_id: editForm.assigned_user_id || undefined,
         assigned_department: editForm.assigned_department || undefined,
-        qc_results: editForm.qc_results || [],
+        qc_results: localQcResults.value || [],
     };
+    editForm.qc_results = localQcResults.value || []; // Update editForm for any side effects
+    
     editForm.patch(`/admin/tasks/${editForm.id}`, {
         data: payload,
         onSuccess: () => {
@@ -502,6 +580,7 @@ const getTaskIcon = (status: Task['status']) => {
                                     <TableHead>Judul</TableHead>
                                     <TableHead>Kategori</TableHead>
                                     <TableHead>Status</TableHead>
+                                    <TableHead>Progress</TableHead>
                                     <TableHead>Prioritas</TableHead>
                                     <TableHead>Jatuh Tempo</TableHead>
                                     <TableHead>Assigned To</TableHead>
@@ -532,6 +611,22 @@ const getTaskIcon = (status: Task['status']) => {
                                         <span :class="['rounded px-2 py-1 text-xs whitespace-nowrap', statusBadgeClass(task.status)]">{{ task.status }}</span>
                                     </TableCell>
                                     <TableCell>
+                                        <div class="flex items-center gap-2" v-if="task.category?.qc_checklist?.length">
+                                            <div class="h-2 w-16 rounded-full bg-gray-100 dark:bg-gray-700">
+                                                <div 
+                                                    class="h-2 rounded-full transition-all duration-500"
+                                                    :class="[
+                                                        calculateTaskQcPercentage(task) >= 100 ? 'bg-green-500' : 
+                                                        calculateTaskQcPercentage(task) >= 70 ? 'bg-blue-500' : 'bg-yellow-500'
+                                                    ]"
+                                                    :style="{ width: `${calculateTaskQcPercentage(task)}%` }"
+                                                ></div>
+                                            </div>
+                                            <span class="text-xs text-muted-foreground">{{ calculateTaskQcPercentage(task) }}%</span>
+                                        </div>
+                                        <span v-else class="text-xs text-muted-foreground">-</span>
+                                    </TableCell>
+                                    <TableCell>
                                         <span :class="['rounded px-2 py-1 text-xs whitespace-nowrap', priorityBadgeClass(task.priority)]">{{ task.priority }}</span>
                                     </TableCell>
                                     <TableCell>
@@ -557,7 +652,7 @@ const getTaskIcon = (status: Task['status']) => {
                                                 </Button>
                                             </template>
                                             <template v-if="task.status === 'in_progress'">
-                                                <Button size="icon" variant="ghost" class="h-8 w-8 cursor-pointer text-green-600 hover:text-green-700 hover:bg-green-50" @click="router.patch(`/admin/tasks/${task.id}`, { status: 'done' })" title="Mark as Done">
+                                                <Button size="icon" variant="ghost" class="h-8 w-8 cursor-pointer text-green-600 hover:text-green-700 hover:bg-green-50" @click="handleMarkAsDone(task)" title="Mark as Done">
                                                     <CheckCircle2 class="h-3.5 w-3.5" />
                                                 </Button>
                                             </template>
@@ -685,7 +780,7 @@ const getTaskIcon = (status: Task['status']) => {
                 <div class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-lg dark:bg-gray-900">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold">Edit Tugas</h3>
-                        <Button variant="ghost" size="icon" @click="deleteTask" class="text-red-500 hover:text-red-600">
+                        <Button variant="ghost" size="icon" @click="handleDeleteTask" class="text-red-500 hover:text-red-600">
                             <Trash2 class="h-4 w-4" />
                         </Button>
                     </div>
@@ -716,10 +811,12 @@ const getTaskIcon = (status: Task['status']) => {
                                 </span>
                             </div>
                             <div v-for="(item, index) in currentCategory.qc_checklist" :key="index" class="flex items-center space-x-2">
-                                <Checkbox 
-                                    :id="'qc_' + index" 
-                                    :checked="editForm.qc_results.includes(item)"
-                                    @update:checked="(checked) => toggleQcItem(item, checked)"
+                                <input
+                                    type="checkbox"
+                                    :id="'qc_' + index"
+                                    :checked="localQcResults.includes(item)"
+                                    @change="toggleQcItem(item)"
+                                    class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                                 />
                                 <Label :for="'qc_' + index" class="font-normal cursor-pointer select-none">{{ item }}</Label>
                             </div>
@@ -728,12 +825,12 @@ const getTaskIcon = (status: Task['status']) => {
                             </p>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-4">
                             <div>
                                 <Label for="edit_status">Status</Label>
                                 <div class="flex flex-wrap gap-2 mt-1">
                                     <button
-                                        v-for="option in statusOptions"
+                                        v-for="option in editStatusOptions"
                                         :key="option.value"
                                         type="button"
                                         @click="editForm.status = option.value"
