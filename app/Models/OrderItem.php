@@ -18,6 +18,7 @@ class OrderItem extends Model
         'domain_name',
         'quantity',
         'price',
+        'billing_cycle',
     ];
 
     protected function casts(): array

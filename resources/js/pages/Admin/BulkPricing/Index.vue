@@ -442,7 +442,7 @@ const deleteConfig = (configId: number, configName: string) => {
                                     <Input v-model.number="tier.storage_gb" type="number" placeholder="Contoh: 100 GB" @input="runSimulation" />
                                 </div>
                                 <div class="flex-1">
-                                    <label class="mb-1 block text-sm font-medium text-gray-700"> Diskon (Max 30%) </label>
+                                    <label class="mb-1 block text-sm font-medium text-gray-700"> % Diskon</label>
                                     <Input
                                         v-model.number="tier.discount_percentage"
                                         type="number"

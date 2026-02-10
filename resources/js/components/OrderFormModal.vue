@@ -40,6 +40,7 @@ interface OrderItem {
     item_type: 'hosting' | 'domain' | 'service' | 'app' | 'web' | 'maintenance';
     item_id: string;
     price?: string;
+    billing_cycle?: 'onetime' | 'monthly' | 'quarterly' | 'semi_annually' | 'annually';
 }
 
 interface Order {
@@ -75,7 +76,7 @@ const emit = defineEmits<{
 const formData = ref({
     customer_id: '',
     domain_name: '',
-    billing_cycle: 'annual' as 'onetime' | 'monthly' | 'quarterly' | 'semi_annually' | 'annually',
+    billing_cycle: 'annually' as 'onetime' | 'monthly' | 'quarterly' | 'semi_annually' | 'annually',
     status: 'pending' as 'pending' | 'processing' | 'active' | 'suspended' | 'expired' | 'terminated' | 'cancelled',
     expires_at: '',
     auto_renew: false,
@@ -84,6 +85,7 @@ const formData = ref({
         {
             item_type: 'hosting' as 'hosting' | 'domain' | 'service' | 'app' | 'web' | 'maintenance',
             item_id: '',
+            billing_cycle: 'annually' as 'onetime' | 'monthly' | 'quarterly' | 'semi_annually' | 'annually',
         },
     ] as OrderItem[],
 });
@@ -111,15 +113,21 @@ const getItemPrice = (item: OrderItem): number => {
     return selectedPlan?.price || 0;
 };
 
-const getBillingCycleMultiplier = (): number => {
-    switch (formData.value.billing_cycle) {
+const getBillingCycleMultiplier = (cycle?: string): number => {
+    // If no cycle provided, use the order default (formData.billing_cycle)
+    // BUT we should mostly use the item's cycle now.
+    const targetCycle = cycle || formData.value.billing_cycle;
+
+    switch (targetCycle) {
         case 'monthly':
             return 1;
         case 'quarterly':
             return 3;
         case 'semi_annual':
+        case 'semi_annually':
             return 6;
         case 'annual':
+        case 'annually':
             return 12;
         case 'onetime':
         default:
@@ -131,7 +139,29 @@ const getBillingCycleMultiplier = (): number => {
 const itemsSubtotal = computed((): number => {
     return formData.value.items.reduce((total, item) => {
         const itemPrice = getItemPrice(item);
-        return total + itemPrice * getBillingCycleMultiplier();
+        
+        // Smart multiplier logic based on item type and cycle
+        let multiplier = 1;
+        const cycle = item.billing_cycle || formData.value.billing_cycle;
+
+        if (['domain'].includes(item.item_type)) {
+            // Domain always 1x (Annual price base)
+            multiplier = 1;
+        } else if (['service', 'app', 'web', 'maintenance'].includes(item.item_type)) {
+             // Services always 1x (One-time price base)
+             // Unless maintenance is monthly? Usually maintenance is monthly.
+             // If maintenance is monthly, we should respect cycle.
+             if (item.item_type === 'maintenance') {
+                 multiplier = getBillingCycleMultiplier(cycle);
+             } else {
+                 multiplier = 1;
+             }
+        } else {
+            // Hosting usually respects cycle (Monthly price base)
+            multiplier = getBillingCycleMultiplier(cycle);
+        }
+
+        return total + itemPrice * multiplier;
     }, 0);
 });
 
@@ -187,6 +217,7 @@ watch(
                     item_type: item.item_type,
                     item_id: item.item_id?.toString() || '1',
                     price: item.price?.toString() || '',
+                    billing_cycle: order.billing_cycle, // Default to order cycle if not stored in item
                 })),
             };
             errors.value = {};
@@ -203,7 +234,7 @@ watch(
             formData.value = {
                 customer_id: '',
                 domain_name: '',
-                billing_cycle: 'annual',
+                billing_cycle: 'annually',
                 status: 'pending',
                 expires_at: '',
                 auto_renew: false,
@@ -212,6 +243,7 @@ watch(
                     {
                         item_type: 'hosting',
                         item_id: '',
+                        billing_cycle: 'annually',
                     },
                 ],
             };
@@ -224,6 +256,7 @@ const addItem = () => {
     formData.value.items.push({
         item_type: 'hosting',
         item_id: '',
+        billing_cycle: 'annually',
     });
 };
 
@@ -276,6 +309,45 @@ const getPlansForType = (type: string) => {
             return [];
     }
 };
+
+const getBillingCyclesForType = (type: string) => {
+    const allCycles = [
+        { value: 'onetime', label: 'Sekali' },
+        { value: 'monthly', label: 'Bulanan' },
+        { value: 'quarterly', label: '3 Bln' },
+        { value: 'semi_annually', label: '6 Bln' },
+        { value: 'annually', label: 'Tahunan' },
+    ];
+
+    if (['domain'].includes(type)) {
+        return allCycles.filter((c) => ['annually'].includes(c.value));
+    }
+    if (['service', 'app', 'web'].includes(type)) {
+        return allCycles.filter((c) => ['onetime'].includes(c.value));
+    }
+    // Hosting, Maintenance
+    return allCycles.filter((c) => ['monthly', 'quarterly', 'semi_annually', 'annually'].includes(c.value));
+};
+
+// Watch for item type changes to ensure valid billing cycle
+watch(
+    () => formData.value.items,
+    (items) => {
+        items.forEach((item) => {
+            const validCycles = getBillingCyclesForType(item.item_type).map((c) => c.value);
+            // If current cycle is not valid for this type (or if it's undefined), set to default (usually the first one)
+            // Ideally we want 'annually' as preference if valid, otherwise first valid.
+            if (!validCycles.includes(item.billing_cycle)) {
+                if (validCycles.includes('annually')) {
+                    item.billing_cycle = 'annually';
+                } else {
+                    item.billing_cycle = validCycles[0] as any;
+                }
+            }
+        });
+    },
+    { deep: true },
+);
 
 const submit = () => {
     // Simply emit the form data, let parent handle submission
@@ -332,8 +404,8 @@ const close = () => {
                     </div>
                 </div>
 
-                <!-- Billing Cycle and Status for Edit Mode -->
-                <div class="grid" :class="isEditMode ? 'grid-cols-2 gap-4' : 'grid-cols-1'">
+                <!-- Billing Cycle and Status -->
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <Label :for="`${mode}-billing-cycle`">Siklus Pembayaran *</Label>
                         <select
@@ -351,8 +423,8 @@ const close = () => {
                         <p v-if="errors.billing_cycle" class="mt-1 text-xs text-red-500">{{ errors.billing_cycle }}</p>
                     </div>
 
-                    <!-- Status field only for edit mode -->
-                    <div v-if="isEditMode">
+                    <!-- Status field -->
+                    <div>
                         <Label :for="`${mode}-status`">Status *</Label>
                         <select
                             :id="`${mode}-status`"
@@ -387,8 +459,8 @@ const close = () => {
                     <p class="mt-1 text-xs text-muted-foreground">Masukkan nominal dalam Rupiah (contoh: 50000 untuk Rp 50.000)</p>
                 </div>
 
-                <!-- Additional fields for edit mode -->
-                <div v-if="isEditMode" class="grid grid-cols-2 gap-4">
+                <!-- Additional fields -->
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <Label :for="`${mode}-expires-at`">Tanggal Kedaluwarsa</Label>
                         <DatePicker
@@ -421,25 +493,22 @@ const close = () => {
                     </div>
 
                     <div class="space-y-4">
-                        <div v-for="(item, index) in formData.items" :key="index" class="grid grid-cols-12 items-end gap-4 rounded-lg border p-4">
+                        <div v-for="(item, index) in formData.items" :key="index" class="grid grid-cols-12 items-end gap-2 rounded-lg border p-4">
                             <!-- Item Type -->
-                            <div class="col-span-3">
-                                <Label :for="`item-type-${index}`">Tipe Item</Label>
+                            <div class="col-span-2">
+                                <Label :for="`item-type-${index}`">Tipe</Label>
                                 <select
                                     :id="`item-type-${index}`"
                                     v-model="item.item_type"
-                                    class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                                    class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
                                 >
                                     <option value="hosting">Hosting</option>
                                     <option value="domain">Domain</option>
                                     <option value="service">Layanan</option>
                                     <option value="app">Aplikasi</option>
                                     <option value="web">Website</option>
-                                    <option value="maintenance">Pemeliharaan</option>
+                                    <option value="maintenance">Maintenance</option>
                                 </select>
-                                <p v-if="errors[`items.${index}.item_type`]" class="mt-1 text-xs text-red-500">
-                                    {{ errors[`items.${index}.item_type`] }}
-                                </p>
                             </div>
 
                             <!-- Item Selection -->
@@ -449,7 +518,7 @@ const close = () => {
                                     v-if="['hosting', 'domain', 'service'].includes(item.item_type)"
                                     :id="`item-id-${index}`"
                                     v-model="item.item_id"
-                                    class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                                    class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
                                     required
                                 >
                                     <option value="">Pilih {{ getItemTypeText(item.item_type) }}</option>
@@ -461,41 +530,41 @@ const close = () => {
                                     v-else
                                     :id="`item-id-${index}`"
                                     v-model="item.item_id"
-                                    class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                                    class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
                                     required
                                 >
                                     <option value="1">Standard</option>
                                     <option value="2">Premium</option>
                                     <option value="3">Enterprise</option>
                                 </select>
-                                <p v-if="errors[`items.${index}.item_id`]" class="mt-1 text-xs text-red-500">
-                                    {{ errors[`items.${index}.item_id`] }}
-                                </p>
                             </div>
 
-                            <!-- Price Display (Create Mode) / Custom Price (Edit Mode) -->
-                            <div v-if="!isEditMode" class="col-span-4">
+                            <!-- Billing Cycle (Per Item) -->
+                            <div class="col-span-2">
+                                <Label :for="`item-cycle-${index}`">Siklus</Label>
+                                <select
+                                    :id="`item-cycle-${index}`"
+                                    v-model="item.billing_cycle"
+                                    class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                                >
+                                    <option v-for="cycle in getBillingCyclesForType(item.item_type)" :key="cycle.value" :value="cycle.value">
+                                        {{ cycle.label }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Price Display -->
+                            <div v-if="!isEditMode" class="col-span-2">
                                 <Label>Harga</Label>
-                                <div class="flex h-9 items-center rounded-md border border-input bg-muted px-3 py-1 text-sm">
-                                    <span v-if="item.item_id && item.item_type" class="font-medium text-primary">
-                                        {{ formatPrice(getItemPrice(item)) }}
-                                        <span v-if="formData.billing_cycle !== 'onetime'" class="ml-1 text-xs text-muted-foreground">
-                                            /{{
-                                                formData.billing_cycle === 'monthly'
-                                                    ? 'bulan'
-                                                    : formData.billing_cycle === 'quarterly'
-                                                      ? '3 bulan'
-                                                      : formData.billing_cycle === 'semi_annual'
-                                                        ? '6 bulan'
-                                                        : 'tahun'
-                                            }}
-                                        </span>
+                                <div class="flex h-9 items-center rounded-md border border-input bg-muted px-2 py-1 text-xs">
+                                    <span v-if="item.item_id && item.item_type" class="font-medium text-primary truncate">
+                                        {{ formatPrice(getItemPrice(item) * (['domain', 'service', 'app', 'web'].includes(item.item_type) ? 1 : getBillingCycleMultiplier(item.billing_cycle))) }}
                                     </span>
-                                    <span v-else class="text-muted-foreground"> Pilih item untuk melihat harga </span>
+                                    <span v-else class="text-muted-foreground">-</span>
                                 </div>
                             </div>
-                            <div v-else class="col-span-4">
-                                <Label :for="`item-price-${index}`">Harga Custom (Opsional)</Label>
+                            <div v-else class="col-span-2">
+                                <Label :for="`item-price-${index}`">Harga Custom</Label>
                                 <Input :id="`item-price-${index}`" v-model="item.price" type="number" placeholder="Kosongkan untuk harga default" />
                                 <p v-if="errors[`items.${index}.price`]" class="mt-1 text-xs text-red-500">
                                     {{ errors[`items.${index}.price`] }}

@@ -130,6 +130,7 @@ class OrderController extends Controller
             'items' => 'required|array|min:1',
             'items.*.item_type' => 'required|in:hosting,domain,service,app,web,maintenance',
             'items.*.item_id' => 'required|integer',
+            'items.*.billing_cycle' => 'nullable|in:onetime,monthly,quarterly,semi_annually,annually',
         ]);
 
         DB::transaction(function () use ($request) {
@@ -201,6 +202,7 @@ class OrderController extends Controller
                     'domain_name' => null,
                     'quantity' => 1,
                     'price' => $price,
+                    'billing_cycle' => $item['billing_cycle'] ?? $request->billing_cycle,
                 ]);
             }
         });
@@ -222,6 +224,7 @@ class OrderController extends Controller
             'items.*.item_type' => 'required|in:hosting,domain,service,app,web,maintenance',
             'items.*.item_id' => 'required|integer',
             'items.*.price' => 'nullable|numeric|min:0',
+            'items.*.billing_cycle' => 'nullable|in:onetime,monthly,quarterly,semi_annually,annually',
         ]);
 
         DB::transaction(function () use ($request, $order) {
@@ -254,6 +257,7 @@ class OrderController extends Controller
                     'domain_name' => null, // Domain name is at order level
                     'quantity' => 1,
                     'price' => $price,
+                    'billing_cycle' => $item['billing_cycle'] ?? $request->billing_cycle,
                 ]);
             }
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -50,5 +51,9 @@ const emit = defineEmits<{
         <template v-if="breadcrumbs && breadcrumbs.length > 0">
             <Breadcrumbs :breadcrumbs="breadcrumbs" />
         </template>
+
+        <div class="ml-auto flex items-center gap-2">
+            <AppearanceTabs />
+        </div>
     </header>
 </template>
