@@ -78,7 +78,7 @@ const submit = () => {
                             v-model:checked="form.remember"
                             class="data-[state=checked]:border-primary data-[state=checked]:bg-primary"
                         />
-                        <Label for="remember" class="cursor-pointer text-sm text-muted-foreground select-none"> Remember me for 30 days </Label>
+                        <Label for="remember" class="cursor-pointer text-sm text-muted-foreground"> Remember me for 30 days </Label>
                     </div>
                 </div>
 

@@ -823,7 +823,7 @@ const getTaskIcon = (status: Task['status']) => {
                                     @change="toggleQcItem(item)"
                                     class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                                 />
-                                <Label :for="'qc_' + index" class="font-normal cursor-pointer select-none">{{ item }}</Label>
+                                <Label :for="'qc_' + index" class="font-normal cursor-pointer">{{ item }}</Label>
                             </div>
                             <p v-if="editForm.status === 'done' && qcPercentage < 70" class="text-xs text-red-500 font-medium animate-pulse">
                                 Status tidak bisa 'Done' jika QC kurang dari 70%.

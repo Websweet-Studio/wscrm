@@ -468,7 +468,7 @@ const close = () => {
                             :id="`${mode}-auto-renew`"
                             v-model:checked="formData.auto_renew"
                         />
-                        <Label :for="`${mode}-auto-renew`">Aktifkan perpanjangan otomatis</Label>
+                        <Label :for="`${mode}-auto-renew`" class="mb-0">Aktifkan perpanjangan otomatis</Label>
                     </div>
                     </div> 
                 </div>
