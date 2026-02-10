@@ -20,6 +20,7 @@ interface HostingPlan {
     storage_gb: number;
     cpu_cores: number;
     ram_gb: number;
+    discount_percent: number;
 }
 
 interface DomainPrice {
@@ -111,12 +112,59 @@ const getItemPrice = (item: OrderItem): number => {
     const plans = getPlansForType(item.item_type);
     const selectedPlan = plans.find((plan) => plan.id.toString() === item.item_id.toString());
 
-    return selectedPlan?.price || 0;
+    // Ensure price is a number
+    const price = selectedPlan?.price;
+    return price !== undefined && price !== null ? Number(price) : 0;
+};
+
+// Calculate total price for an item based on its billing cycle
+const calculateItemTotal = (item: OrderItem): number => {
+    const basePrice = getItemPrice(item);
+    const cycle = item.billing_cycle || formData.value.billing_cycle;
+    
+    if (isNaN(basePrice)) return 0;
+    
+    if (item.item_type === 'hosting') {
+        // Hosting price is Annual (per year)
+        switch (cycle) {
+            case 'monthly':
+                return basePrice / 12;
+            case 'quarterly':
+                return basePrice / 4;
+            case 'semi_annually':
+            case 'semi_annual':
+                return basePrice / 2;
+            case 'annually':
+            case 'annual':
+                return basePrice;
+            default:
+                return basePrice;
+        }
+    } else if (item.item_type === 'domain') {
+        // Domain price is Annual
+        return basePrice;
+    } else if (['service', 'app', 'web'].includes(item.item_type)) {
+        // Services are One-time
+        return basePrice;
+    } else if (item.item_type === 'maintenance') {
+        // Maintenance is usually Monthly
+        // If base price is monthly:
+        switch (cycle) {
+            case 'monthly': return basePrice;
+            case 'quarterly': return basePrice * 3;
+            case 'semi_annually':
+            case 'semi_annual': return basePrice * 6;
+            case 'annually':
+            case 'annual': return basePrice * 12;
+            default: return basePrice;
+        }
+    }
+    
+    return basePrice;
 };
 
 const getBillingCycleMultiplier = (cycle?: string): number => {
-    // If no cycle provided, use the order default (formData.billing_cycle)
-    // BUT we should mostly use the item's cycle now.
+    // This function is now mainly used for displaying duration (months)
     const targetCycle = cycle || formData.value.billing_cycle;
 
     switch (targetCycle) {
@@ -139,48 +187,31 @@ const getBillingCycleMultiplier = (cycle?: string): number => {
 // Computed properties for price calculation
 const itemsSubtotal = computed((): number => {
     return formData.value.items.reduce((total, item) => {
-        const itemPrice = getItemPrice(item);
-        
-        // Smart multiplier logic based on item type and cycle
-        let multiplier = 1;
-        const cycle = item.billing_cycle || formData.value.billing_cycle;
-
-        if (['domain'].includes(item.item_type)) {
-            // Domain always 1x (Annual price base)
-            multiplier = 1;
-        } else if (['service', 'app', 'web', 'maintenance'].includes(item.item_type)) {
-             // Services always 1x (One-time price base)
-             // Unless maintenance is monthly? Usually maintenance is monthly.
-             // If maintenance is monthly, we should respect cycle.
-             if (item.item_type === 'maintenance') {
-                 multiplier = getBillingCycleMultiplier(cycle);
-             } else {
-                 multiplier = 1;
-             }
-        } else {
-            // Hosting usually respects cycle (Monthly price base)
-            multiplier = getBillingCycleMultiplier(cycle);
-        }
-
-        return total + itemPrice * multiplier;
+        const itemTotal = calculateItemTotal(item);
+        return total + (isNaN(itemTotal) ? 0 : itemTotal);
     }, 0);
 });
 
 const discountAmount = computed((): number => {
-    const discount = parseFloat(formData.value.discount_amount) || 0;
+    const discount = parseFloat(formData.value.discount_amount as any) || 0;
     return Math.max(0, discount);
 });
 
 const totalAmount = computed((): number => {
-    return Math.max(0, itemsSubtotal.value - discountAmount.value);
+    const subtotal = isNaN(itemsSubtotal.value) ? 0 : itemsSubtotal.value;
+    const discount = isNaN(discountAmount.value) ? 0 : discountAmount.value;
+    return Math.max(0, subtotal - discount);
 });
 
 const formatPrice = (amount: number): string => {
+    const num = Number(amount);
+    if (isNaN(num)) return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(0);
+    
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
         minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(num);
 };
 
 // Function to format date for input[type="date"]
@@ -289,11 +320,14 @@ const getItemTypeText = (type: string) => {
 const getPlansForType = (type: string) => {
     switch (type) {
         case 'hosting':
-            return props.hostingPlans.map((plan) => ({
-                id: plan.id,
-                name: `${plan.plan_name} (${plan.storage_gb}GB, ${plan.cpu_cores} CPU, ${plan.ram_gb}GB RAM) - ${formatPrice(plan.selling_price)}`,
-                price: plan.selling_price,
-            }));
+            return props.hostingPlans.map((plan) => {
+                const discountedPrice = plan.selling_price * (1 - plan.discount_percent / 100);
+                return {
+                    id: plan.id,
+                    name: `${plan.plan_name} (${plan.storage_gb}GB, ${plan.cpu_cores} CPU, ${plan.ram_gb}GB RAM) - ${formatPrice(discountedPrice)}`,
+                    price: discountedPrice,
+                };
+            });
         case 'domain':
             return props.domainPrices.map((domain) => ({
                 id: domain.id,
@@ -549,7 +583,7 @@ const close = () => {
                                 <Label>Harga</Label>
                                 <div class="flex h-9 items-center rounded-md border border-input bg-muted px-2 py-1 text-xs">
                                     <span v-if="item.item_id && item.item_type" class="font-medium text-primary truncate">
-                                        {{ formatPrice(getItemPrice(item) * (['domain', 'service', 'app', 'web'].includes(item.item_type) ? 1 : getBillingCycleMultiplier(item.billing_cycle))) }}
+                                        {{ formatPrice(calculateItemTotal(item)) }}
                                     </span>
                                     <span v-else class="text-muted-foreground">-</span>
                                 </div>
@@ -587,21 +621,20 @@ const close = () => {
                                         .find((p) => p.id.toString() === item.item_id.toString())
                                         ?.name?.split(' - ')[0] || 'Item'
                                 }}
-                                <span v-if="formData.billing_cycle !== 'onetime'" class="text-muted-foreground">
-                                    ({{ getBillingCycleMultiplier() }}
-                                    {{
-                                        formData.billing_cycle === 'monthly'
-                                            ? 'bulan'
-                                            : formData.billing_cycle === 'quarterly'
-                                              ? 'kuartal'
-                                              : formData.billing_cycle === 'semi_annual'
-                                                ? 'semester'
-                                                : 'tahun'
+                                <span v-if="item.billing_cycle && item.billing_cycle !== 'onetime'" class="text-muted-foreground">
+                                    ({{
+                                        item.billing_cycle === 'monthly'
+                                            ? '1 bulan'
+                                            : item.billing_cycle === 'quarterly'
+                                              ? '3 bulan'
+                                              : item.billing_cycle === 'semi_annually' || item.billing_cycle === 'semi_annual'
+                                                ? '6 bulan'
+                                                : '1 tahun'
                                     }})
                                 </span>
                             </span>
                             <span v-if="item.item_id && item.item_type" class="font-medium">
-                                {{ formatPrice(getItemPrice(item) * getBillingCycleMultiplier()) }}
+                                {{ formatPrice(calculateItemTotal(item)) }}
                             </span>
                         </div>
                     </div>
@@ -623,21 +656,6 @@ const close = () => {
                         <div class="flex justify-between border-t pt-2 text-lg font-bold">
                             <span>Total:</span>
                             <span class="text-primary">{{ formatPrice(totalAmount) }}</span>
-                        </div>
-
-                        <!-- Billing Cycle Info -->
-                        <div v-if="formData.billing_cycle !== 'onetime'" class="mt-2 text-xs text-muted-foreground">
-                            Total untuk
-                            {{
-                                formData.billing_cycle === 'monthly'
-                                    ? '1 bulan'
-                                    : formData.billing_cycle === 'quarterly'
-                                      ? '3 bulan'
-                                      : formData.billing_cycle === 'semi_annual'
-                                        ? '6 bulan'
-                                        : '12 bulan'
-                            }}
-                            periode
                         </div>
                     </div>
                 </div>

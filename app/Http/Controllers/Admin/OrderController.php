@@ -142,7 +142,7 @@ class OrderController extends Controller
                 switch ($item['item_type']) {
                     case 'hosting':
                         $plan = HostingPlan::findOrFail($item['item_id']);
-                        $totalAmount += $plan->selling_price;
+                        $totalAmount += $plan->selling_price * (1 - $plan->discount_percent / 100);
                         break;
                     case 'domain':
                         $domain = DomainPrice::findOrFail($item['item_id']);
@@ -175,7 +175,7 @@ class OrderController extends Controller
                 switch ($item['item_type']) {
                     case 'hosting':
                         $plan = HostingPlan::findOrFail($item['item_id']);
-                        $price = $plan->selling_price;
+                        $price = $plan->selling_price * (1 - $plan->discount_percent / 100);
                         break;
                     case 'domain':
                         $domain = DomainPrice::findOrFail($item['item_id']);
@@ -274,7 +274,7 @@ class OrderController extends Controller
             case 'hosting':
                 $plan = HostingPlan::find($itemId);
 
-                return $plan ? $plan->selling_price : 500000;
+                return $plan ? $plan->selling_price * (1 - $plan->discount_percent / 100) : 500000;
             case 'domain':
                 $domain = DomainPrice::find($itemId);
 
