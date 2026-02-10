@@ -1,13 +1,21 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ChevronDown, ChevronUp, Clock, Edit, LogIn, Plus, Search, Trash2, UserCheck, Users, UserX, X } from 'lucide-vue-next';
+import { ChevronDown, ChevronUp, Clock, Edit, Key, LogIn, Mail, MoreHorizontal, Plus, Search, Trash2, UserCheck, Users, UserX, X } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 
 interface Customer {
@@ -103,12 +111,41 @@ const handleSearch = () => {
         {
             search: search.value,
             status: status.value,
+            sort: props.sort,
+            direction: props.direction,
         },
-        {
-            preserveState: true,
-            replace: true,
-        },
+        { preserveState: true, preserveScroll: true, replace: true },
     );
+};
+
+const sendWelcomeEmail = (customer: Customer) => {
+    if (confirm(`Kirim welcome email ke ${customer.name}?`)) {
+        router.post(
+            `/admin/customers/${customer.id}/welcome-email`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    // Handled by flash message
+                },
+            },
+        );
+    }
+};
+
+const resendNewPassword = (customer: Customer) => {
+    if (confirm(`Reset password untuk ${customer.name} dan kirim via email?`)) {
+        router.post(
+            `/admin/customers/${customer.id}/resend-password`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    // Handled by flash message
+                },
+            },
+        );
+    }
 };
 
 const getStatusClass = (status: string) => {
@@ -516,32 +553,44 @@ const getSortIcon = (field: string) => {
                                     <td class="px-3 py-4 text-center text-sm font-medium text-foreground">{{ customer.services_count }}</td>
                                     <td class="px-3 py-4 text-sm text-muted-foreground">{{ formatDate(customer.created_at) }}</td>
                                     <td class="px-3 py-4">
-                                        <div class="flex items-center justify-center gap-1">
-                                            <Button size="sm" variant="outline" asChild class="cursor-pointer" title="Lihat Detail">
-                                                <Link :href="`/admin/customers/${customer.id}`">
-                                                    <Users class="h-3.5 w-3.5" />
-                                                </Link>
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                @click="impersonateCustomer(customer)"
-                                                class="cursor-pointer bg-blue-600 text-white hover:bg-blue-700"
-                                                :title="`Login sebagai ${customer.name}`"
-                                            >
-                                                <LogIn class="h-3.5 w-3.5" />
-                                            </Button>
-                                            <Button size="sm" variant="outline" @click="openEditModal(customer)" class="cursor-pointer" title="Edit">
-                                                <Edit class="h-3.5 w-3.5" />
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                @click="openDeleteModal(customer)"
-                                                class="cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700"
-                                                title="Hapus"
-                                            >
-                                                <Trash2 class="h-3.5 w-3.5" />
-                                            </Button>
+                                        <div class="flex items-center justify-end">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger as-child>
+                                                    <Button variant="ghost" class="h-8 w-8 p-0 cursor-pointer">
+                                                        <span class="sr-only">Open menu</span>
+                                                        <MoreHorizontal class="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+                                                    <DropdownMenuItem @click="router.visit(`/admin/customers/${customer.id}`)" class="cursor-pointer">
+                                                        <Users class="mr-2 h-4 w-4" />
+                                                        Lihat Detail
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem @click="openEditModal(customer)" class="cursor-pointer">
+                                                        <Edit class="mr-2 h-4 w-4" />
+                                                        Edit
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem @click="impersonateCustomer(customer)" class="cursor-pointer">
+                                                        <LogIn class="mr-2 h-4 w-4" />
+                                                        Login sebagai User
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem @click="sendWelcomeEmail(customer)" class="cursor-pointer">
+                                                        <Mail class="mr-2 h-4 w-4" />
+                                                        Kirim Welcome Email
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem @click="resendNewPassword(customer)" class="cursor-pointer">
+                                                        <Key class="mr-2 h-4 w-4" />
+                                                        Resend New Password
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem @click="openDeleteModal(customer)" class="cursor-pointer text-red-600 focus:text-red-600">
+                                                        <Trash2 class="mr-2 h-4 w-4" />
+                                                        Hapus
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </div>
                                     </td>
                                 </tr>
@@ -729,7 +778,7 @@ const getSortIcon = (field: string) => {
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <Label for="edit-username">Username (minimal 5 karakter)</Label>
+                            <Label for="edit-username">Username</Label>
                             <div class="relative">
                                 <Input
                                     id="edit-username"
@@ -785,7 +834,7 @@ const getSortIcon = (field: string) => {
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <Label for="edit-password">Kata Sandi Baru (opsional)</Label>
+                            <Label for="edit-password">Kata Sandi Baru</Label>
                             <Input
                                 id="edit-password"
                                 type="password"

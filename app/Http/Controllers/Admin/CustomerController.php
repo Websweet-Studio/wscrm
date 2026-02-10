@@ -200,4 +200,24 @@ class CustomerController extends Controller
             return redirect()->back()->with('error', 'Gagal menghapus pelanggan: '.$e->getMessage());
         }
     }
+
+    public function sendWelcomeEmail(Customer $customer)
+    {
+        \Illuminate\Support\Facades\Mail::to($customer->email)->send(new \App\Mail\CustomerWelcomeMail($customer));
+
+        return back()->with('success', 'Welcome email berhasil dikirim.');
+    }
+
+    public function resendPassword(Customer $customer)
+    {
+        $password = \Illuminate\Support\Str::random(10);
+        
+        $customer->update([
+            'password' => \Illuminate\Support\Facades\Hash::make($password),
+        ]);
+
+        \Illuminate\Support\Facades\Mail::to($customer->email)->send(new \App\Mail\CustomerNewPasswordMail($customer, $password));
+
+        return back()->with('success', 'Password baru berhasil dikirim ke email pelanggan.');
+    }
 }

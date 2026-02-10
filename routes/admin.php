@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verified'])->group(function () {
     Route::resource('customers', CustomerController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
+    Route::post('customers/{customer}/welcome-email', [CustomerController::class, 'sendWelcomeEmail'])->name('customers.welcome-email');
+    Route::post('customers/{customer}/resend-password', [CustomerController::class, 'resendPassword'])->name('customers.resend-password');
     Route::resource('employees', EmployeeController::class);
     Route::post('employees/{employee}/reset-password', [EmployeeController::class, 'resetPassword'])->name('employees.reset-password');
     Route::resource('orders', OrderController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
