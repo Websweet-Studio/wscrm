@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Plus, Trash2, X } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
@@ -345,6 +346,12 @@ watch(
                 }
             }
         });
+
+        // Sync global billing cycle with the first item's billing cycle
+        // This ensures backend validation passes even though we hid the global field
+        if (items.length > 0 && items[0].billing_cycle) {
+            formData.value.billing_cycle = items[0].billing_cycle;
+        }
     },
     { deep: true },
 );
@@ -406,25 +413,8 @@ const close = () => {
 
                 <!-- Billing Cycle and Status -->
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <Label :for="`${mode}-billing-cycle`">Siklus Pembayaran *</Label>
-                        <select
-                            :id="`${mode}-billing-cycle`"
-                            v-model="formData.billing_cycle"
-                            class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
-                            required
-                        >
-                            <option value="onetime">Sekali Bayar</option>
-                            <option value="monthly">Bulanan</option>
-                            <option value="quarterly">Triwulan</option>
-                            <option value="semi_annually">Semi Annual</option>
-                            <option value="annually">Tahunan</option>
-                        </select>
-                        <p v-if="errors.billing_cycle" class="mt-1 text-xs text-red-500">{{ errors.billing_cycle }}</p>
-                    </div>
-
                     <!-- Status field -->
-                    <div>
+                    <div class="col-span-2">
                         <Label :for="`${mode}-status`">Status *</Label>
                         <select
                             :id="`${mode}-status`"
@@ -471,15 +461,16 @@ const close = () => {
                         <p v-if="errors.expires_at" class="mt-1 text-xs text-red-500">{{ errors.expires_at }}</p>
                     </div>
 
-                    <div class="flex items-center space-x-2">
-                        <input
-                            :id="`${mode}-auto-renew`"
-                            v-model="formData.auto_renew"
-                            type="checkbox"
-                            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
+                    <div>
                         <Label :for="`${mode}-auto-renew`">Perpanjang Otomatis</Label>
+                    <div class="flex items-center space-x-2">
+                        <Switch
+                            :id="`${mode}-auto-renew`"
+                            v-model:checked="formData.auto_renew"
+                        />
+                        <Label :for="`${mode}-auto-renew`">Aktifkan perpanjangan otomatis</Label>
                     </div>
+                    </div> 
                 </div>
 
                 <!-- Items Section -->
