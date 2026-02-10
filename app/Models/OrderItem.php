@@ -19,12 +19,15 @@ class OrderItem extends Model
         'quantity',
         'price',
         'billing_cycle',
+        'expires_at',
+        'status',
     ];
 
     protected function casts(): array
     {
         return [
             'price' => 'decimal:2',
+            'expires_at' => 'date',
         ];
     }
 

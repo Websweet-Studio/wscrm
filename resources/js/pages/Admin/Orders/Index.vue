@@ -43,6 +43,9 @@ interface OrderItem {
     id: number;
     item_type: string;
     price: number;
+    billing_cycle?: string;
+    expires_at?: string;
+    status?: string;
 }
 
 interface Order {
@@ -658,27 +661,41 @@ const getSortIcon = (field: string) => {
                                         </span>
                                     </td>
                                     <td class="py-3 text-sm">
-                                        <span
-                                            class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
-                                            :class="getBillingCycleColor(order.billing_cycle)"
-                                        >
-                                            {{ getBillingCycleText(order.billing_cycle) }}
-                                        </span>
-                                    </td>
-                                    <td v-if="currentView === 'services'" class="py-3 text-sm">
-                                        <div v-if="order.expires_at" class="space-y-1">
-                                            <div class="text-muted-foreground">
-                                                {{ formatDate(order.expires_at) }}
-                                            </div>
-                                            <div
-                                                v-if="getExpiryBadge(order.expires_at)"
-                                                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                                                :class="getExpiryBadge(order.expires_at)?.class"
-                                            >
-                                                {{ getExpiryBadge(order.expires_at)?.text }}
+                                        <div class="flex flex-col gap-1">
+                                            <div v-for="item in order.order_items" :key="item.id" class="flex items-center gap-2">
+                                                <span class="w-4 text-xs text-muted-foreground" :title="getServiceTypeText(item.item_type)">
+                                                    {{ getServiceIcon(item.item_type) }}
+                                                </span>
+                                                <span
+                                                    class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+                                                    :class="getBillingCycleColor(item.billing_cycle || order.billing_cycle)"
+                                                >
+                                                    {{ getBillingCycleText(item.billing_cycle || order.billing_cycle) }}
+                                                </span>
                                             </div>
                                         </div>
-                                        <div v-else class="text-muted-foreground italic">Tidak terbatas</div>
+                                    </td>
+                                    <td v-if="currentView === 'services'" class="py-3 text-sm">
+                                        <div class="flex flex-col gap-2">
+                                            <div v-for="item in order.order_items" :key="item.id" class="flex items-start gap-2">
+                                                <span class="mt-0.5 w-4 text-xs text-muted-foreground" :title="getServiceTypeText(item.item_type)">
+                                                    {{ getServiceIcon(item.item_type) }}
+                                                </span>
+                                                <div v-if="item.expires_at || order.expires_at" class="space-y-0.5">
+                                                    <div class="text-xs text-muted-foreground">
+                                                        {{ formatDate(item.expires_at || order.expires_at) }}
+                                                    </div>
+                                                    <div
+                                                        v-if="getExpiryBadge(item.expires_at || order.expires_at)"
+                                                        class="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+                                                        :class="getExpiryBadge(item.expires_at || order.expires_at)?.class"
+                                                    >
+                                                        {{ getExpiryBadge(item.expires_at || order.expires_at)?.text }}
+                                                    </div>
+                                                </div>
+                                                <div v-else class="text-xs italic text-muted-foreground">Tidak terbatas</div>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="py-3 text-sm text-muted-foreground">{{ formatDate(order.created_at) }}</td>
                                     <td class="py-3">

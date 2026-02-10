@@ -13,6 +13,9 @@ interface OrderItem {
     domain_name: string | null;
     quantity: number;
     price: number;
+    billing_cycle?: string;
+    expires_at?: string;
+    status?: string;
 }
 
 interface Order {
@@ -153,7 +156,6 @@ const getStatusText = (status: string) => {
                                     <template v-else>
                                         <div class="text-lg font-bold">{{ formatPrice(order.total_amount) }}</div>
                                     </template>
-                                    <div class="text-sm text-muted-foreground capitalize">{{ order.billing_cycle.replace('_', ' ') }}</div>
                                 </div>
                             </div>
                         </div>
@@ -178,7 +180,12 @@ const getStatusText = (status: string) => {
                                         >
                                             {{ item.item_type }}
                                         </span>
-                                        <span>{{ item.domain_name || `${item.item_type} service` }}</span>
+                                        <div class="flex flex-col">
+                                            <span>{{ item.domain_name || `${item.item_type} service` }}</span>
+                                            <span class="text-xs text-muted-foreground capitalize">
+                                                {{ (item.billing_cycle || order.billing_cycle).replace('_', ' ') }}
+                                            </span>
+                                        </div>
                                         <span v-if="item.quantity > 1" class="text-muted-foreground">× {{ item.quantity }}</span>
                                     </div>
                                     <span class="font-medium">{{ formatPrice(item.price) }}</span>
