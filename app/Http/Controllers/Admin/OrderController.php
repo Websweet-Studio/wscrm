@@ -246,6 +246,18 @@ class OrderController extends Controller
             $totalAmount = 0;
             $items = collect($request->items);
 
+            // Determine item status based on order status
+            $itemStatus = match ($request->status) {
+                'processing' => 'pending',
+                'terminated' => 'cancelled',
+                default => $request->status,
+            };
+
+            // Validate item status against enum
+            if (! in_array($itemStatus, ['pending', 'active', 'suspended', 'cancelled', 'expired'])) {
+                $itemStatus = 'pending';
+            }
+
             foreach ($items as $item) {
                 $price = $item['price'] ?? $this->getDefaultPrice($item['item_type'], $item['item_id']);
                 $totalAmount += (float) $price;
@@ -258,6 +270,8 @@ class OrderController extends Controller
                     'quantity' => 1,
                     'price' => $price,
                     'billing_cycle' => $item['billing_cycle'] ?? $request->billing_cycle,
+                    'status' => $itemStatus,
+                    'expires_at' => $request->expires_at,
                 ]);
             }
 

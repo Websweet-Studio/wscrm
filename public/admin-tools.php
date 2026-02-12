@@ -518,8 +518,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 function handleStorageLink()
 {
     $laravelRoot = getLaravelRoot();
-    $currentDir = dirname($laravelRoot); // Parent of wscrm
-    $publicDir = $currentDir . '/public_html'; // Assuming standard structure
+    $publicDir = __DIR__; // Use current directory as public directory
 
     $storagePath = $publicDir . '/storage';
     $storageTarget = $laravelRoot . '/storage/app/public';
@@ -531,35 +530,27 @@ function handleStorageLink()
     $output .= 'Target exists: ' . (is_dir($storageTarget) ? 'Yes' : 'No') . "\n";
     $output .= 'Link exists: ' . (file_exists($storagePath) ? 'Yes' : 'No') . "\n\n";
 
-    if (file_exists($storagePath)) {
+    // Always remove existing link or directory to ensure fresh creation
+    if (file_exists($storagePath) || is_link($storagePath)) {
+        $output .= "Removing existing storage link/directory...\n";
         if (is_link($storagePath)) {
-            $target = readlink($storagePath);
-            $output .= "Current link target: {$target}\n";
-            if ($target !== $storageTarget) {
-                $output .= "Recreating link with correct target...\n";
-                unlink($storagePath);
-                if (symlink($storageTarget, $storagePath)) {
-                    $output .= "✅ Link recreated successfully!\n";
-                } else {
-                    $output .= "❌ Failed to recreate link\n";
-                }
-            } else {
-                $output .= "✅ Link is correct\n";
-            }
+            unlink($storagePath);
+        } elseif (is_dir($storagePath)) {
+            removeDirectory($storagePath);
         } else {
-            $output .= "⚠️ Storage exists but is not a symlink\n";
+            unlink($storagePath);
+        }
+    }
+
+    if (is_dir($storageTarget)) {
+        $output .= "Creating new storage link...\n";
+        if (symlink($storageTarget, $storagePath)) {
+            $output .= "✅ Storage link created successfully!\n";
+        } else {
+            $output .= "❌ Failed to create storage link\n";
         }
     } else {
-        if (is_dir($storageTarget)) {
-            $output .= "Creating new storage link...\n";
-            if (symlink($storageTarget, $storagePath)) {
-                $output .= "✅ Storage link created successfully!\n";
-            } else {
-                $output .= "❌ Failed to create storage link\n";
-            }
-        } else {
-            $output .= "❌ Target directory does not exist\n";
-        }
+        $output .= "❌ Target directory does not exist\n";
     }
 
     return $output;

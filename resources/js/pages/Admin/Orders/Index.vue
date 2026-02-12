@@ -606,6 +606,12 @@ const getSortIcon = (field: string) => {
                                             <component :is="getSortIcon('created_at')" v-if="getSortIcon('created_at')" class="h-4 w-4" />
                                         </button>
                                     </th>
+                                    <th class="pb-3 text-left font-medium">
+                                        <button @click="sortBy('expires_at')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
+                                            <span>Tgl. Kadaluarsa</span>
+                                            <component :is="getSortIcon('expires_at')" v-if="getSortIcon('expires_at')" class="h-4 w-4" />
+                                        </button>
+                                    </th>
                                     <th class="pb-3 text-center font-medium">Aksi</th>
                                 </tr>
                             </thead>
@@ -621,53 +627,18 @@ const getSortIcon = (field: string) => {
                                         </div>
                                     </td>
                                     <td class="py-3">
-                                        <div class="flex flex-col gap-2">
+                                        <div class="flex flex-col gap-1">
                                             <div
                                                 v-for="orderItem in order.order_items"
                                                 :key="orderItem.id"
-                                                class="flex flex-col items-start gap-2 rounded-md border p-3 text-sm bg-muted/20"
+                                                class="flex items-center gap-2"
                                             >
-                                                <div class="flex w-full items-start justify-between gap-2">
-                                                    <div class="flex items-center gap-2">
-                                                        <span
-                                                            :class="`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getServiceTypeColor(orderItem.item_type)}`"
-                                                        >
-                                                            <span class="mr-1">{{ getServiceIcon(orderItem.item_type) }}</span>
-                                                            {{ getServiceTypeText(orderItem.item_type) }}
-                                                        </span>
-                                                        <span class="font-medium text-xs">{{ getItemName(orderItem) }}</span>
-                                                    </div>
-                                                    <span
-                                                        v-if="orderItem.status"
-                                                        :class="[
-                                                            'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium',
-                                                            getStatusColor(orderItem.status)
-                                                        ]"
-                                                    >
-                                                        {{ getStatusText(orderItem.status) }}
-                                                    </span>
-                                                </div>
-                                                
-                                                <div class="flex w-full items-center justify-between gap-2 text-xs text-muted-foreground">
-                                                    <div class="flex items-center gap-2">
-                                                        <span>{{ formatPrice(orderItem.price) }}</span>
-                                                        <span>•</span>
-                                                        <span>{{ getBillingCycleLabel(orderItem.billing_cycle) }}</span>
-                                                    </div>
-                                                </div>
-
-                                                <div v-if="orderItem.expires_at" class="flex w-full items-center justify-between gap-2 border-t pt-2 mt-1">
-                                                    <div class="text-xs text-muted-foreground">
-                                                        Exp: {{ formatDate(orderItem.expires_at) }}
-                                                    </div>
-                                                    <div
-                                                        v-if="getExpiryBadge(orderItem.expires_at)"
-                                                        class="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium"
-                                                        :class="getExpiryBadge(orderItem.expires_at)?.class"
-                                                    >
-                                                        {{ getExpiryBadge(orderItem.expires_at)?.text }}
-                                                    </div>
-                                                </div>
+                                                <span
+                                                    :class="`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${getServiceTypeColor(orderItem.item_type)}`"
+                                                >
+                                                    {{ getServiceTypeText(orderItem.item_type) }}
+                                                </span>
+                                                <span class="text-sm font-medium">{{ getItemName(orderItem) }}</span>
                                             </div>
                                         </div>
                                     </td>
@@ -698,6 +669,23 @@ const getSortIcon = (field: string) => {
                                         </span>
                                     </td>
                                     <td class="py-3 text-sm text-muted-foreground">{{ formatDate(order.created_at) }}</td>
+                                    <td class="py-3 text-sm">
+                                        <div v-if="order.expires_at">
+                                            {{ formatDate(order.expires_at) }}
+                                            <div
+                                                v-if="getExpiryBadge(order.expires_at)"
+                                                class="mt-1 flex"
+                                            >
+                                                <span
+                                                    class="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+                                                    :class="getExpiryBadge(order.expires_at)?.class"
+                                                >
+                                                    {{ getExpiryBadge(order.expires_at)?.text }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <span v-else class="text-muted-foreground">-</span>
+                                    </td>
                                     <td class="py-3">
                                         <div class="flex items-center justify-center gap-1">
                                             <Button size="sm" variant="outline" asChild class="cursor-pointer" title="Lihat Detail">
