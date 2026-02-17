@@ -93,8 +93,14 @@ const csrfToken = computed(() => {
             </div>
 
             <div class="text-center text-sm text-muted-foreground">
-                Belum punya akun?
-                <TextLink :href="register()" :tabindex="5">Daftar</TextLink>
+                <div>
+                    Belum punya akun?
+                    <TextLink :href="register()" :tabindex="5">Daftar</TextLink>
+                </div>
+                <div v-if="canResetPassword" class="mt-2">
+                    Lupa password?
+                    <TextLink :href="request()" :tabindex="6">Reset di sini</TextLink>
+                </div>
             </div>
         </Form>
     </AuthBase>

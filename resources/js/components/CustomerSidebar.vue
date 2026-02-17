@@ -5,7 +5,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import customer from '@/routes/customer';
 import { type NavItem } from '@/types';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, Globe, Home, LayoutGrid, Receipt, Server, Settings, ShoppingCart } from 'lucide-vue-next';
+import { BookOpen, Folder, Globe, Home, LayoutGrid, Server, Settings, ShoppingCart } from 'lucide-vue-next';
 import AppSidebarLogo from './AppSidebarLogo.vue';
 
 const page = usePage();
@@ -45,12 +45,6 @@ const mainNavItems: NavItem[] = [
         href: customer.orders.index().url,
         icon: ShoppingCart,
         badge: customerBadges.pending_orders || 0,
-    },
-    {
-        title: 'Invoices',
-        href: customer.invoices.index().url,
-        icon: Receipt,
-        badge: customerBadges.unpaid_invoices || 0,
     },
     {
         title: 'Settings',

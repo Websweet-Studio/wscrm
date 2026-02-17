@@ -5,7 +5,7 @@ import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Trash2 } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 interface OrderItem {
     id: number;
@@ -41,6 +41,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const deletingOrders = ref<Set<number>>(new Set());
+
+const totalOrders = computed(() => props.orders.length);
+const pendingOrders = computed(() => props.orders.filter((order) => order.status === 'pending').length);
+const processingOrders = computed(() => props.orders.filter((order) => order.status === 'processing').length);
+const completedOrders = computed(() => props.orders.filter((order) => order.status === 'completed').length);
 
 const deleteOrder = (orderId: number) => {
     if (confirm('Apakah Anda yakin ingin menghapus order ini?')) {
@@ -92,13 +97,13 @@ const getStatusColor = (status: string) => {
 const getStatusText = (status: string) => {
     switch (status) {
         case 'completed':
-            return 'Completed';
+            return 'Selesai';
         case 'processing':
-            return 'Processing';
+            return 'Diproses';
         case 'pending':
-            return 'Pending';
+            return 'Menunggu';
         case 'cancelled':
-            return 'Cancelled';
+            return 'Dibatalkan';
         default:
             return status;
     }
@@ -106,25 +111,52 @@ const getStatusText = (status: string) => {
 </script>
 
 <template>
-    <Head title="My Orders" />
+    <Head title="Pesanan Saya" />
 
     <CustomerLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">My Orders</h1>
-                    <p class="text-muted-foreground">Track and manage your orders</p>
+                    <h1 class="text-3xl font-bold tracking-tight">Pesanan Saya</h1>
+                    <p class="text-muted-foreground">Lihat dan kelola pesanan layanan Anda</p>
                 </div>
                 <Button asChild>
-                    <Link href="/customer/hosting">Browse Products</Link>
+                    <Link href="/customer/hosting">Lihat Produk</Link>
                 </Button>
+            </div>
+
+            <div v-if="orders.length" class="grid gap-4 md:grid-cols-4">
+                <Card>
+                    <CardHeader class="pb-2">
+                        <CardDescription>Total Pesanan</CardDescription>
+                        <CardTitle class="text-2xl">{{ totalOrders }}</CardTitle>
+                    </CardHeader>
+                </Card>
+                <Card>
+                    <CardHeader class="pb-2">
+                        <CardDescription>Menunggu</CardDescription>
+                        <CardTitle class="text-2xl">{{ pendingOrders }}</CardTitle>
+                    </CardHeader>
+                </Card>
+                <Card>
+                    <CardHeader class="pb-2">
+                        <CardDescription>Diproses</CardDescription>
+                        <CardTitle class="text-2xl">{{ processingOrders }}</CardTitle>
+                    </CardHeader>
+                </Card>
+                <Card>
+                    <CardHeader class="pb-2">
+                        <CardDescription>Selesai</CardDescription>
+                        <CardTitle class="text-2xl">{{ completedOrders }}</CardTitle>
+                    </CardHeader>
+                </Card>
             </div>
 
             <div v-if="orders.length === 0" class="py-12 text-center">
                 <div class="text-muted-foreground">
-                    <p class="mb-4 text-lg">You haven't placed any orders yet.</p>
+                    <p class="mb-4 text-lg">Anda belum memiliki pesanan.</p>
                     <Button asChild>
-                        <Link href="/customer/hosting">Start Shopping</Link>
+                        <Link href="/customer/hosting">Mulai Berbelanja</Link>
                     </Button>
                 </div>
             </div>
@@ -163,7 +195,7 @@ const getStatusText = (status: string) => {
 
                     <CardContent>
                         <div class="space-y-3">
-                            <div class="text-sm font-medium">Order Items:</div>
+                            <div class="text-sm font-medium">Item Pesanan</div>
                             <div class="space-y-2">
                                 <div
                                     v-for="item in order.order_items"
@@ -181,9 +213,16 @@ const getStatusText = (status: string) => {
                                             {{ item.item_type }}
                                         </span>
                                         <div class="flex flex-col">
-                                            <span>{{ item.domain_name || `${item.item_type} service` }}</span>
-                                            <span class="text-xs text-muted-foreground capitalize">
-                                                {{ (item.billing_cycle || order.billing_cycle).replace('_', ' ') }}
+                                            <span class="text-sm font-medium">
+                                                {{ item.domain_name || `${item.item_type} service` }}
+                                            </span>
+                                            <span class="text-[11px] text-muted-foreground capitalize">
+                                                <span>
+                                                    {{ (item.billing_cycle || order.billing_cycle).replace('_', ' ') }}
+                                                </span>
+                                                <span v-if="item.expires_at">
+                                                    • Kadaluarsa {{ formatDate(item.expires_at) }}
+                                                </span>
                                             </span>
                                         </div>
                                         <span v-if="item.quantity > 1" class="text-muted-foreground">× {{ item.quantity }}</span>
@@ -194,7 +233,7 @@ const getStatusText = (status: string) => {
 
                             <div class="flex justify-end gap-2 pt-2">
                                 <Button variant="outline" size="sm" asChild>
-                                    <Link :href="`/customer/orders/${order.id}`">View Details</Link>
+                                    <Link :href="`/customer/orders/${order.id}`">Lihat Detail</Link>
                                 </Button>
                                 <Button
                                     v-if="order.status === 'pending'"
