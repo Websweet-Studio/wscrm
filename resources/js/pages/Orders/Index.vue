@@ -25,6 +25,8 @@ interface Order {
     discount_amount?: number;
     status: 'pending' | 'processing' | 'completed' | 'cancelled';
     billing_cycle: string;
+    domain_name?: string | null;
+    expires_at?: string | null;
     created_at: string;
     order_items: OrderItem[];
 }
@@ -214,14 +216,15 @@ const getStatusText = (status: string) => {
                                         </span>
                                         <div class="flex flex-col">
                                             <span class="text-sm font-medium">
-                                                {{ item.domain_name || `${item.item_type} service` }}
+                                                {{ item.domain_name || order.domain_name || `${item.item_type} service` }}
                                             </span>
                                             <span class="text-[11px] text-muted-foreground capitalize">
                                                 <span>
                                                     {{ (item.billing_cycle || order.billing_cycle).replace('_', ' ') }}
                                                 </span>
-                                                <span v-if="item.expires_at">
-                                                    • Kadaluarsa {{ formatDate(item.expires_at) }}
+                                                <span v-if="item.expires_at || order.expires_at">
+                                                    • Kadaluarsa
+                                                    {{ formatDate((item.expires_at || order.expires_at) as string) }}
                                                 </span>
                                             </span>
                                         </div>
