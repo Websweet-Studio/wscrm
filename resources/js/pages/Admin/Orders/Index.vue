@@ -638,7 +638,9 @@ const getSortIcon = (field: string) => {
                                                 >
                                                     {{ getServiceTypeText(orderItem.item_type) }}
                                                 </span>
-                                                <span class="text-sm font-medium">{{ getItemName(orderItem) }}</span>
+                                                <span class="text-sm font-medium">
+                                                    {{ orderItem.domain_name || order.domain_name || getItemName(orderItem) }}
+                                                </span>
                                             </div>
                                         </div>
                                     </td>
