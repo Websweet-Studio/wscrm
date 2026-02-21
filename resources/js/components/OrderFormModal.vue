@@ -94,6 +94,18 @@ const formData = ref({
 
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
+const customerSearch = ref('');
+
+const filteredCustomers = computed(() => {
+    const query = customerSearch.value.toLowerCase().trim();
+    if (!query) return props.customers;
+    return props.customers.filter((customer) => {
+        return (
+            customer.name.toLowerCase().includes(query) ||
+            customer.email.toLowerCase().includes(query)
+        );
+    });
+});
 
 const modalTitle = computed(() => {
     return props.mode === 'create' ? 'Buat Pesanan Baru' : `Edit Pesanan #${props.order?.id}`;
@@ -423,6 +435,12 @@ const close = () => {
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <Label :for="`${mode}-customer`">Pelanggan *</Label>
+                        <Input
+                            v-model="customerSearch"
+                            type="text"
+                            class="mb-2"
+                            placeholder="Cari nama atau email pelanggan..."
+                        />
                         <select
                             :id="`${mode}-customer`"
                             v-model="formData.customer_id"
@@ -430,7 +448,7 @@ const close = () => {
                             required
                         >
                             <option value="">Pilih Pelanggan</option>
-                            <option v-for="customer in customers" :key="customer.id" :value="customer.id">
+                            <option v-for="customer in filteredCustomers" :key="customer.id" :value="customer.id">
                                 {{ customer.name }} ({{ customer.email }})
                             </option>
                         </select>

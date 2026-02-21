@@ -127,6 +127,10 @@ class OrderController extends Controller
             'customer_id' => 'required|exists:customers,id',
             'domain_name' => 'nullable|string|max:255',
             'billing_cycle' => 'required|in:onetime,monthly,quarterly,semi_annually,annually',
+            'status' => 'required|in:pending,processing,active,suspended,expired,cancelled,terminated',
+            'expires_at' => 'nullable|date',
+            'auto_renew' => 'boolean',
+            'discount_amount' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.item_type' => 'required|in:hosting,domain,service,app,web,maintenance',
             'items.*.item_id' => 'required|integer',
@@ -136,6 +140,18 @@ class OrderController extends Controller
         DB::transaction(function () use ($request) {
             $totalAmount = 0;
             $items = collect($request->items);
+
+            // Determine item status based on order status
+            $itemStatus = match ($request->status) {
+                'processing' => 'pending',
+                'terminated' => 'cancelled',
+                default => $request->status,
+            };
+
+            // Validate item status against enum
+            if (! in_array($itemStatus, ['pending', 'active', 'suspended', 'cancelled', 'expired'])) {
+                $itemStatus = 'pending';
+            }
 
             // Calculate total amount
             foreach ($items as $item) {
@@ -166,8 +182,11 @@ class OrderController extends Controller
                 'order_type' => 'hosting',
                 'domain_name' => $request->domain_name,
                 'total_amount' => $totalAmount,
-                'status' => 'pending',
+                'status' => $request->status,
                 'billing_cycle' => $request->billing_cycle,
+                'expires_at' => $request->expires_at,
+                'auto_renew' => $request->auto_renew ?? false,
+                'discount_amount' => $request->discount_amount ?? 0,
             ]);
 
             // Create order items
@@ -203,6 +222,8 @@ class OrderController extends Controller
                     'quantity' => 1,
                     'price' => $price,
                     'billing_cycle' => $item['billing_cycle'] ?? $request->billing_cycle,
+                    'status' => $itemStatus,
+                    'expires_at' => $request->expires_at,
                 ]);
             }
         });
