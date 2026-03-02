@@ -100,7 +100,7 @@ const getExtensionRenewalPrice = (extension: string): number => {
 </script>
 
 <template>
-    <Head :title="`Search Results for ${requestedDomain}`" />
+    <Head :title="`Hasil Pencarian untuk ${requestedDomain}`" />
 
     <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <!-- Navigation -->
@@ -115,13 +115,13 @@ const getExtensionRenewalPrice = (extension: string): number => {
                         <Link href="/hosting">Hosting</Link>
                     </Button>
                     <Button variant="ghost" asChild>
-                        <Link href="/domains">Domains</Link>
+                        <Link href="/domains">Domain</Link>
                     </Button>
                     <Button variant="outline" asChild>
-                        <Link href="/customer/login">Login</Link>
+                        <Link href="/customer/login">Masuk</Link>
                     </Button>
                     <Button asChild>
-                        <Link href="/customer/register">Get Started</Link>
+                        <Link href="/customer/register">Mulai Sekarang</Link>
                     </Button>
                 </div>
             </div>
@@ -132,7 +132,7 @@ const getExtensionRenewalPrice = (extension: string): number => {
             <div class="mb-8 flex items-center justify-between">
                 <div class="flex items-center space-x-4">
                     <div>
-                        <h1 class="text-3xl font-bold tracking-tight">Domain Search Results</h1>
+                        <h1 class="text-3xl font-bold tracking-tight">Hasil Pencarian Domain</h1>
                     </div>
                 </div>
             </div>
@@ -143,11 +143,11 @@ const getExtensionRenewalPrice = (extension: string): number => {
                     <div class="flex items-center space-x-2">
                         <div class="relative max-w-md flex-1">
                             <Globe class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
-                            <Input v-model="newSearch" placeholder="Try another domain..." class="pl-10" @keyup.enter="searchAgain" />
+                            <Input v-model="newSearch" placeholder="Coba domain lain..." class="pl-10" @keyup.enter="searchAgain" />
                         </div>
                         <Button @click="searchAgain">
                             <Search class="mr-2 h-4 w-4" />
-                            Search Again
+                            Cari Lagi
                         </Button>
                     </div>
                 </CardContent>
@@ -155,9 +155,9 @@ const getExtensionRenewalPrice = (extension: string): number => {
 
             <!-- Requested Domain (if specific extension was searched) -->
             <div v-if="requestedExtension" class="mb-8">
-                <h2 class="mb-4 text-2xl font-bold">Your Search</h2>
+                <h2 class="mb-4 text-2xl font-bold">Pencarian Anda</h2>
                 <Card class="border-2 border-blue-200">
-                    <CardContent class="pt-6">
+                    <CardContent class="py-6">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
                                 <div class="text-2xl font-bold">{{ requestedDomain }}</div>
@@ -170,23 +170,17 @@ const getExtensionRenewalPrice = (extension: string): number => {
                             <div class="flex items-center space-x-4">
                                 <div v-if="getDomainStatus(requestedExtension).available" class="flex items-center space-x-2 text-green-600">
                                     <Check class="h-5 w-5" />
-                                    <span class="font-semibold">Available</span>
+                                    <span class="font-semibold">Tersedia</span>
                                 </div>
                                 <div v-else class="flex items-center space-x-2 text-red-600">
                                     <X class="h-5 w-5" />
-                                    <span class="font-semibold">Taken</span>
+                                    <span class="font-semibold">Sudah Terdaftar</span>
                                 </div>
 
                                 <div v-if="getDomainStatus(requestedExtension).available" class="text-right">
                                     <div class="text-2xl font-bold text-blue-600">
                                         {{ formatPrice(getExtensionPrice(requestedExtension)) }}
                                     </div>
-                                    <Button asChild size="lg">
-                                        <Link href="/customer/register">
-                                            <ShoppingCart class="mr-2 h-4 w-4" />
-                                            Register Now
-                                        </Link>
-                                    </Button>
                                 </div>
                             </div>
                         </div>
@@ -204,16 +198,16 @@ const getExtensionRenewalPrice = (extension: string): number => {
                             </div>
                         </div>
                         <div>
-                            <h3 class="mb-2 text-lg font-semibold">Need Help Choosing a Domain?</h3>
+                            <h3 class="mb-2 text-lg font-semibold">Butuh Bantuan Memilih Domain?</h3>
                             <p class="mb-4 text-muted-foreground">
-                                Consider alternatives like adding words, using synonyms, or trying different extensions.
+                                Pertimbangkan alternatif seperti menambahkan kata, menggunakan sinonim, atau mencoba ekstensi berbeda.
                             </p>
                             <div class="flex justify-center space-x-4">
                                 <Link href="/domains">
-                                    <Button variant="outline"> Browse All Extensions </Button>
+                                    <Button variant="outline"> Lihat Semua Ekstensi </Button>
                                 </Link>
                                 <Link href="/hosting">
-                                    <Button> View Hosting Plans </Button>
+                                    <Button> Lihat Paket Hosting </Button>
                                 </Link>
                             </div>
                         </div>
@@ -232,13 +226,13 @@ const getExtensionRenewalPrice = (extension: string): number => {
                     </Link>
                     <div class="flex space-x-6 text-sm">
                         <Link href="/hosting" class="hover:text-white">Hosting</Link>
-                        <Link href="/domains" class="hover:text-white">Domains</Link>
-                        <Link href="/customer/login" class="hover:text-white">Customer Login</Link>
-                        <Link href="/login" class="hover:text-white">Admin Login</Link>
+                        <Link href="/domains" class="hover:text-white">Domain</Link>
+                        <Link href="/customer/login" class="hover:text-white">Login Pelanggan</Link>
+                        <Link href="/login" class="hover:text-white">Login Admin</Link>
                     </div>
                 </div>
                 <div class="mt-6 border-t border-gray-700 pt-6 text-center text-sm">
-                    <p>&copy; 2024 WebSweetStudio. All rights reserved.</p>
+                    <p>&copy; 2024 WebSweetStudio. Hak cipta dilindungi undang-undang.</p>
                 </div>
             </div>
         </footer>

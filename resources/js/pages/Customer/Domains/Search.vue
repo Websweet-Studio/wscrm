@@ -55,9 +55,9 @@ const selectedHostingPlan = ref<HostingPlan | null>(null);
 const selectedDomainForHosting = ref('');
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: customer.dashboard().url },
-    { title: 'Domains', href: customer.domains.index().url },
-    { title: 'Search Results', href: '#' },
+    { title: 'Dasbor', href: customer.dashboard().url },
+    { title: 'Domain', href: customer.domains.index().url },
+    { title: 'Hasil Pencarian', href: '#' },
 ];
 
 const formatPrice = (price: number) => {
@@ -149,7 +149,7 @@ const otherDomains = computed(() => {
 </script>
 
 <template>
-    <Head :title="`Search Results for ${requestedDomain}`" />
+    <Head :title="`Hasil Pencarian untuk ${requestedDomain}`" />
 
     <CustomerLayout :breadcrumbs="breadcrumbs">
         <div class="mx-auto max-w-6xl space-y-6">
@@ -157,7 +157,7 @@ const otherDomains = computed(() => {
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
                     <div>
-                        <h1 class="text-3xl font-bold tracking-tight">Domain Search Results</h1>
+                        <h1 class="text-3xl font-bold tracking-tight">Hasil Pencarian Domain</h1>
                     </div>
                 </div>
             </div>
@@ -168,11 +168,11 @@ const otherDomains = computed(() => {
                     <div class="flex items-center space-x-2">
                         <div class="relative max-w-md flex-1">
                             <Globe class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
-                            <Input v-model="newSearch" placeholder="Try another domain..." class="pl-10" @keyup.enter="searchAgain" />
+                            <Input v-model="newSearch" placeholder="Coba domain lain..." class="pl-10" @keyup.enter="searchAgain" />
                         </div>
                         <Button @click="searchAgain">
                             <Search class="mr-2 h-4 w-4" />
-                            Search Again
+                            Cari Lagi
                         </Button>
                     </div>
                 </CardContent>
@@ -180,9 +180,9 @@ const otherDomains = computed(() => {
 
             <!-- Requested Domain (if specific extension was searched) -->
             <div v-if="requestedExtension">
-                <h2 class="mb-4 text-2xl font-bold">Your Search</h2>
+                <h2 class="mb-4 text-2xl font-bold">Pencarian Anda</h2>
                 <Card class="border-2 border-blue-200">
-                    <CardContent class="pt-6">
+                    <CardContent class="py-6">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
                                 <div class="text-2xl font-bold">{{ requestedDomain }}</div>
@@ -195,11 +195,11 @@ const otherDomains = computed(() => {
                             <div class="flex items-center space-x-4">
                                 <div v-if="getDomainStatus(requestedExtension).available" class="flex items-center space-x-2 text-green-600">
                                     <Check class="h-5 w-5" />
-                                    <span class="font-semibold">Available</span>
+                                    <span class="font-semibold">Tersedia</span>
                                 </div>
                                 <div v-else class="flex items-center space-x-2 text-red-600">
                                     <X class="h-5 w-5" />
-                                    <span class="font-semibold">Taken</span>
+                                    <span class="font-semibold">Sudah Terdaftar</span>
                                 </div>
 
                                 <div v-if="getDomainStatus(requestedExtension).available" class="text-right">
@@ -214,7 +214,7 @@ const otherDomains = computed(() => {
                                             size="lg"
                                         >
                                             <ShoppingCart class="mr-2 h-4 w-4" />
-                                            Register + Hosting
+                                            Daftar + Hosting
                                         </Button>
                                         <Button
                                             @click="
@@ -227,7 +227,7 @@ const otherDomains = computed(() => {
                                             size="sm"
                                             class="w-full"
                                         >
-                                            Domain Only
+                                            Hanya Domain
                                         </Button>
                                     </div>
                                 </div>
@@ -247,8 +247,8 @@ const otherDomains = computed(() => {
                                     <Server class="h-5 w-5 text-green-600" />
                                 </div>
                                 <div>
-                                    <h3 class="font-semibold text-green-900">Need hosting for your domain?</h3>
-                                    <p class="text-sm text-green-700">Get started with our hosting plans. Perfect for your new domain!</p>
+                                    <h3 class="font-semibold text-green-900">Butuh hosting untuk domain Anda?</h3>
+                                    <p class="text-sm text-green-700">Mulai dengan paket hosting kami. Sempurna untuk domain baru Anda!</p>
                                 </div>
                             </div>
                             <div class="flex gap-2">
@@ -270,7 +270,7 @@ const otherDomains = computed(() => {
 
             <!-- Popular Extensions -->
             <div>
-                <h2 class="mb-4 text-2xl font-bold">Popular Extensions</h2>
+                <h2 class="mb-4 text-2xl font-bold">Ekstensi Populer</h2>
                 <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <Card
                         v-for="domainPrice in popularDomains"
@@ -300,19 +300,19 @@ const otherDomains = computed(() => {
 
                             <div v-if="getDomainStatus(domainPrice.extension).available" class="space-y-3">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-sm text-muted-foreground">First year</span>
+                                    <span class="text-sm text-muted-foreground">Tahun pertama</span>
                                     <span class="text-lg font-bold text-blue-600">{{ formatPrice(domainPrice.selling_price) }}</span>
                                 </div>
 
                                 <div class="flex items-center justify-between text-sm">
-                                    <span class="text-muted-foreground">Renewal</span>
-                                    <span>{{ formatPrice(domainPrice.renewal_price_with_tax) }}/year</span>
+                                    <span class="text-muted-foreground">Perpanjangan</span>
+                                    <span>{{ formatPrice(domainPrice.renewal_price_with_tax) }}/tahun</span>
                                 </div>
 
                                 <div class="space-y-2">
                                     <Button @click="orderDomain(domainPrice.id, domainPrice.extension)" class="w-full">
                                         <ShoppingCart class="mr-2 h-4 w-4" />
-                                        Register + Hosting
+                                        Daftar + Hosting
                                     </Button>
                                     <Button
                                         @click="orderDomainOnly(domainPrice.id, domainPrice.extension)"
@@ -320,7 +320,7 @@ const otherDomains = computed(() => {
                                         size="sm"
                                         class="w-full"
                                     >
-                                        Domain Only
+                                        Hanya Domain
                                     </Button>
                                 </div>
                             </div>
@@ -328,9 +328,9 @@ const otherDomains = computed(() => {
                             <div v-else class="space-y-3">
                                 <div class="py-4 text-center text-muted-foreground">
                                     <AlertCircle class="mx-auto mb-2 h-6 w-6" />
-                                    <div class="text-sm">Domain not available</div>
+                                    <div class="text-sm">Domain tidak tersedia</div>
                                 </div>
-                                <Button variant="outline" class="w-full" disabled> Not Available </Button>
+                                <Button variant="outline" class="w-full" disabled> Tidak Tersedia </Button>
                             </div>
                         </CardContent>
                     </Card>
@@ -339,7 +339,7 @@ const otherDomains = computed(() => {
 
             <!-- Other Extensions -->
             <div>
-                <h2 class="mb-4 text-2xl font-bold">Other Extensions</h2>
+                <h2 class="mb-4 text-2xl font-bold">Ekstensi Lainnya</h2>
                 <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
                     <Card
                         v-for="domainPrice in otherDomains"
@@ -363,12 +363,12 @@ const otherDomains = computed(() => {
                             <div v-if="getDomainStatus(domainPrice.extension).available" class="space-y-2">
                                 <div class="text-center">
                                     <div class="font-bold text-blue-600">{{ formatPrice(domainPrice.selling_price) }}</div>
-                                    <div class="text-xs text-muted-foreground">first year</div>
+                                    <div class="text-xs text-muted-foreground">tahun pertama</div>
                                 </div>
 
                                 <div class="space-y-1">
                                     <Button @click="orderDomain(domainPrice.id, domainPrice.extension)" size="sm" class="w-full text-xs">
-                                        Register + Hosting
+                                        Daftar + Hosting
                                     </Button>
                                     <Button
                                         @click="orderDomainOnly(domainPrice.id, domainPrice.extension)"
@@ -376,14 +376,14 @@ const otherDomains = computed(() => {
                                         size="sm"
                                         class="w-full text-xs"
                                     >
-                                        Domain Only
+                                        Hanya Domain
                                     </Button>
                                 </div>
                             </div>
 
                             <div v-else class="text-center">
-                                <div class="mb-2 text-sm text-muted-foreground">Not Available</div>
-                                <Button variant="outline" size="sm" class="w-full" disabled> Taken </Button>
+                                <div class="mb-2 text-sm text-muted-foreground">Tidak Tersedia</div>
+                                <Button variant="outline" size="sm" class="w-full" disabled> Sudah Terdaftar </Button>
                             </div>
                         </CardContent>
                     </Card>
@@ -400,13 +400,13 @@ const otherDomains = computed(() => {
                             </div>
                         </div>
                         <div>
-                            <h3 class="mb-2 text-lg font-semibold">Need Help Choosing a Domain?</h3>
+                            <h3 class="mb-2 text-lg font-semibold">Butuh Bantuan Memilih Domain?</h3>
                             <p class="mb-4 text-muted-foreground">
-                                Consider alternatives like adding words, using synonyms, or trying different extensions.
+                                Pertimbangkan alternatif seperti menambahkan kata, menggunakan sinonim, atau mencoba ekstensi berbeda.
                             </p>
                             <div class="flex justify-center space-x-4">
                                 <Link :href="customer.domains.index().url">
-                                    <Button variant="outline"> Browse All Extensions </Button>
+                                    <Button variant="outline"> Lihat Semua Ekstensi </Button>
                                 </Link>
                             </div>
                         </div>
