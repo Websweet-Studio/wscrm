@@ -13,7 +13,7 @@ class DomainAvailabilityService
 
     public function __construct()
     {
-        $this->apiKey = config('services.rna.api_key');
+        $this->apiKey = config('services.rna.api_key') ?? '';
         $this->baseUrl = config('services.rna.base_url', 'https://api.rdash.id/v1');
     }
 

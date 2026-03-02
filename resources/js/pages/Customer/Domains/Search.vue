@@ -156,22 +156,15 @@ const otherDomains = computed(() => {
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
-                    <Link :href="customer.domains.index().url">
-                        <Button variant="outline" size="sm">
-                            <ArrowLeft class="mr-2 h-4 w-4" />
-                            Back to Domains
-                        </Button>
-                    </Link>
                     <div>
                         <h1 class="text-3xl font-bold tracking-tight">Domain Search Results</h1>
-                        <p class="text-muted-foreground">Results for "{{ requestedDomain }}"</p>
                     </div>
                 </div>
             </div>
 
             <!-- New Search -->
             <Card>
-                <CardContent class="pt-6">
+                <CardContent class="py-6">
                     <div class="flex items-center space-x-2">
                         <div class="relative max-w-md flex-1">
                             <Globe class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />

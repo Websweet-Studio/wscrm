@@ -95,10 +95,10 @@ const getDiscountedPrice = (price: number, discount: number) => {
                         <CardContent class="space-y-4">
                             <div class="text-center">
                                 <div v-if="plan.discount_percent > 0" class="text-sm text-muted-foreground line-through">
-                                    {{ formatPrice(plan.selling_price) }}
+                                    {{ formatPrice(getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
                                 </div>
                                 <div class="text-3xl font-bold">
-                                    {{ formatPrice(getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
+                                    {{ formatPrice(plan.selling_price) }}
                                 </div>
                                 <div class="text-sm text-muted-foreground">per year</div>
                             </div>

@@ -311,13 +311,13 @@ const filteredPlans = computed(() => {
                                         <!-- Pricing -->
                                         <td class="px-2 py-4 text-center sm:px-4 sm:py-6">
                                             <div class="space-y-1">
-                                                <div v-if="plan.discount_percent > 0" class="text-sm text-muted-foreground line-through">
+                                                <div class="text-lg font-bold text-blue-600 sm:text-2xl">
                                                     {{ formatPrice(plan.selling_price) }}
                                                 </div>
-                                                <div class="text-lg font-bold text-blue-600 sm:text-2xl">
+                                                <div v-if="plan.selling_price < getDiscountedPrice(plan.selling_price, plan.discount_percent)" class="text-sm text-muted-foreground line-through">
                                                     {{ formatPrice(getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
                                                 </div>
-                                                <div class="text-xs text-muted-foreground">per tahun</div>
+                                                <div class="text-xs text-muted-foreground">/tahun</div>
                                                 <div v-if="plan.discount_percent > 0" class="text-xs font-semibold text-green-600">
                                                     Hemat
                                                     {{
