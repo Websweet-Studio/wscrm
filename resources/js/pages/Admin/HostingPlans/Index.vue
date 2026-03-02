@@ -211,6 +211,7 @@ const confirmDelete = () => {
                                 <TableRow>
                                     <TableHead>Nama Paket</TableHead>
                                     <TableHead>Spesifikasi</TableHead>
+                                    <TableHead>Harga Jual</TableHead>
                                     <TableHead>Harga Final</TableHead>
                                     <TableHead>Detail Biaya</TableHead>
                                     <TableHead>Status</TableHead>
@@ -237,10 +238,12 @@ const confirmDelete = () => {
                                         </div>
                                     </TableCell>
                                     <TableCell>
+                                        <div class="font-medium">
+                                            {{ formatPrice(plan.selling_price) }}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
                                         <div class="space-y-1">
-                                            <div v-if="plan.discount_percent > 0" class="text-sm text-muted-foreground line-through">
-                                                {{ formatPrice(plan.selling_price) }}
-                                            </div>
                                             <div class="font-semibold text-green-600">
                                                 {{ formatPrice(getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
                                             </div>

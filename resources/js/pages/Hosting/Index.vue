@@ -49,6 +49,10 @@ const getBadgeColor = (planName: string) => {
             return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
     }
 };
+
+const getDiscountedPrice = (price: number, discount: number) => {
+    return price * (1 - discount / 100);
+};
 </script>
 
 <template>
@@ -90,7 +94,12 @@ const getBadgeColor = (planName: string) => {
 
                         <CardContent class="space-y-4">
                             <div class="text-center">
-                                <div class="text-3xl font-bold">{{ formatPrice(plan.selling_price) }}</div>
+                                <div v-if="plan.discount_percent > 0" class="text-sm text-muted-foreground line-through">
+                                    {{ formatPrice(plan.selling_price) }}
+                                </div>
+                                <div class="text-3xl font-bold">
+                                    {{ formatPrice(getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
+                                </div>
                                 <div class="text-sm text-muted-foreground">per year</div>
                             </div>
 
