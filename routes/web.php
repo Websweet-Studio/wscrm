@@ -5,7 +5,18 @@ use Inertia\Inertia;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {
-    return Inertia::render('CustomerWelcome');
+    $domainPrices = \App\Models\DomainPrice::active()->orderBy('selling_price')->get();
+    $hostingPlans = \App\Models\HostingPlan::active()->orderBy('selling_price')->get();
+    $servicePlans = \App\Models\ServicePlan::where('is_active', true)
+        ->where('category', 'addon')
+        ->orderBy('price')
+        ->get();
+
+    return Inertia::render('CustomerWelcome', [
+        'domainPrices' => $domainPrices,
+        'hostingPlans' => $hostingPlans,
+        'servicePlans' => $servicePlans,
+    ]);
 })->name('home');
 
 // Public hosting and domain pages (accessible without login)
@@ -46,8 +57,8 @@ Route::post('/_boost/browser-logs', function (Request $request) {
     return response()->noContent();
 });
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
-require __DIR__.'/whmcs.php';
-require __DIR__.'/customer.php';
-require __DIR__.'/admin.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';
+require __DIR__ . '/whmcs.php';
+require __DIR__ . '/customer.php';
+require __DIR__ . '/admin.php';

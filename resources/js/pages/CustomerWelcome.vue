@@ -1,9 +1,55 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
 import { Link } from '@inertiajs/vue3';
-import { Globe, Server, Shield, Users } from 'lucide-vue-next';
+import { Calculator, Globe, Server, Shield, Users } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
+
+interface DomainPrice {
+    id: number;
+    extension: string;
+    base_cost: number;
+    renewal_cost: number;
+    selling_price: number;
+    renewal_price_with_tax: number;
+    is_active: boolean;
+}
+
+interface HostingPlan {
+    id: number;
+    plan_name: string;
+    storage_gb: number;
+    cpu_cores: number;
+    ram_gb: number;
+    bandwidth: string;
+    selling_price: number;
+    discount_percent: number;
+    features: string[];
+    is_active: boolean;
+}
+
+interface ServicePlan {
+    id: number;
+    name: string;
+    category: string;
+    description: string;
+    price: number;
+    features: string[];
+    is_active: boolean;
+}
+
+interface Props {
+    domainPrices: DomainPrice[];
+    hostingPlans: HostingPlan[];
+    servicePlans: ServicePlan[];
+}
+
+const props = defineProps<Props>();
 
 const features = [
     {
@@ -28,14 +74,48 @@ const features = [
     },
 ];
 
-const benefits = [
-    'Control panel yang mudah digunakan',
-    'Sertifikat SSL gratis',
-    'Backup otomatis harian',
-    'Install aplikasi sekali klik',
-    'Email hosting termasuk',
-    'Garansi 30 hari uang kembali',
-];
+const selectedDomain = ref<number | null>(null);
+const selectedHosting = ref<number | null>(null);
+const selectedServices = ref<number[]>([]);
+const domainName = ref('contoh');
+
+const selectedDomainPrice = computed(() => {
+    return (props.domainPrices || []).find((d) => d.id === selectedDomain.value);
+});
+
+const selectedHostingPlan = computed(() => {
+    return (props.hostingPlans || []).find((h) => h.id === selectedHosting.value);
+});
+
+const calculateTotal = computed(() => {
+    let total = 0;
+
+    if (selectedDomainPrice.value) {
+        total += selectedDomainPrice.value.selling_price;
+    }
+
+    if (selectedHostingPlan.value) {
+        const hostingPrice = selectedHostingPlan.value.selling_price;
+        const discount = selectedHostingPlan.value.discount_percent || 0;
+        total += hostingPrice * (1 - discount / 100);
+    }
+
+    (props.servicePlans || []).forEach((service) => {
+        if (service && selectedServices.value && selectedServices.value.includes(service.id)) {
+            total += service.price;
+        }
+    });
+
+    return total;
+});
+
+const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+    }).format(price);
+};
 </script>
 
 <template>
@@ -58,6 +138,108 @@ const benefits = [
                         <Link href="/domains">Cari Domain</Link>
                     </Button>
                 </div>
+            </div>
+
+            <!-- Simulation Section -->
+            <div class="mb-12">
+                <Card class="border-2 border-blue-200 bg-blue-50/50">
+                    <CardHeader>
+                        <div class="flex items-center gap-3">
+                            <div class="rounded-full bg-blue-100 p-2">
+                                <Calculator class="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div>
+                                <CardTitle class="text-xl">Simulasi Harga</CardTitle>
+                                <CardDescription>Pilih domain, hosting, dan layanan tambahan untuk melihat estimasi biaya</CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div class="grid gap-8 md:grid-cols-2">
+                            <div class="space-y-6">
+                                <div class="space-y-3">
+                                    <Label>Nama Domain</Label>
+                                    <div class="flex gap-2">
+                                        <Input v-model="domainName" placeholder="nama-domain" class="flex-1" />
+                                        <select
+                                            v-model="selectedDomain"
+                                            class="w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                        >
+                                            <option :value="null" disabled>Pilih ekstensi</option>
+                                            <option v-for="domain in (domainPrices || [])" :key="domain.id" :value="domain.id">
+                                                .{{ domain.extension }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <Label>Paket Hosting</Label>
+                                    <select
+                                        v-model="selectedHosting"
+                                        class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                    >
+                                        <option :value="null" disabled>Pilih paket hosting</option>
+                                        <option v-for="plan in hostingPlans" :key="plan.id" :value="plan.id">
+                                            {{ plan.plan_name }} - {{ formatPrice(plan.selling_price * (1 - (plan.discount_percent || 0) / 100)) }}/tahun
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <Separator />
+
+                                <div class="space-y-4">
+                                    <Label class="text-base font-medium">Layanan Tambahan</Label>
+                                    <div v-for="service in (servicePlans || [])" :key="service?.id" class="flex items-center space-x-3">
+                                        <Checkbox v-if="service" :id="'service-' + service.id" v-model="selectedServices" :value="service.id" />
+                                        <Label v-if="service" :for="'service-' + service.id" class="font-normal">
+                                            {{ service.name }} ({{ formatPrice(service.price) }}/tahun)
+                                        </Label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <Card class="h-full bg-white dark:bg-gray-900">
+                                    <CardHeader>
+                                        <CardTitle class="text-lg">Ringkasan Biaya Tahunan</CardTitle>
+                                    </CardHeader>
+                                    <CardContent class="space-y-4">
+                                        <div v-if="selectedDomainPrice" class="flex justify-between">
+                                            <span class="text-gray-600 dark:text-gray-400">
+                                                Domain .{{ selectedDomainPrice.extension }}
+                                            </span>
+                                            <span class="font-medium">{{ formatPrice(selectedDomainPrice.selling_price) }}</span>
+                                        </div>
+                                        <div v-if="selectedHostingPlan" class="flex justify-between">
+                                            <span class="text-gray-600 dark:text-gray-400">
+                                                Hosting {{ selectedHostingPlan.plan_name }}
+                                            </span>
+                                            <span class="font-medium">
+                                                {{ formatPrice(selectedHostingPlan.selling_price * (1 - (selectedHostingPlan.discount_percent || 0) / 100)) }}
+                                            </span>
+                                        </div>
+                                        <div v-for="service in (servicePlans || [])" :key="service?.id" v-if="service && (selectedServices || []).includes(service.id)" class="flex justify-between">
+                                            <span class="text-gray-600 dark:text-gray-400">{{ service.name }}</span>
+                                            <span class="font-medium">{{ formatPrice(service.price) }}</span>
+                                        </div>
+                                        <Separator />
+                                        <div class="flex justify-between text-xl font-bold text-blue-600">
+                                            <span>Total Tahunan</span>
+                                            <span>{{ formatPrice(calculateTotal) }}</span>
+                                        </div>
+                                        <div class="pt-2">
+                                            <Button class="w-full" size="lg" :disabled="!selectedDomain || !selectedHosting">
+                                                <Calculator class="mr-2 h-4 w-4" />
+                                                Pesan Sekarang
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
 
             <!-- Features Grid -->
