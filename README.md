@@ -31,7 +31,7 @@ Aplikasi manajemen pelanggan dan layanan domain & hosting berbasis Laravel + Ine
 1. Clone repositori
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/Websweet-Studio/wscrm.git
 cd wscrm
 ```
 
