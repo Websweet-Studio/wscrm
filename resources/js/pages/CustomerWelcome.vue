@@ -142,15 +142,15 @@ const formatPrice = (price: number) => {
 
             <!-- Simulation Section -->
             <div class="mb-12">
-                <Card class="border-2 border-blue-200 bg-blue-50/50">
+                <Card class="border-2 border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/30">
                     <CardHeader>
                         <div class="flex items-center gap-3">
-                            <div class="rounded-full bg-blue-100 p-2">
-                                <Calculator class="h-6 w-6 text-blue-600" />
+                            <div class="rounded-full bg-blue-100 p-2 dark:bg-blue-900/50">
+                                <Calculator class="h-6 w-6 text-blue-600 dark:text-blue-400" />
                             </div>
                             <div>
-                                <CardTitle class="text-xl">Simulasi Harga</CardTitle>
-                                <CardDescription>Pilih domain, hosting, dan layanan tambahan untuk melihat estimasi biaya</CardDescription>
+                                <CardTitle class="text-xl dark:text-white">Simulasi Harga</CardTitle>
+                                <CardDescription class="dark:text-gray-400">Pilih domain, hosting, dan layanan tambahan untuk melihat estimasi biaya</CardDescription>
                             </div>
                         </div>
                     </CardHeader>
@@ -158,15 +158,15 @@ const formatPrice = (price: number) => {
                         <div class="grid gap-8 md:grid-cols-2">
                             <div class="space-y-6">
                                 <div class="space-y-3">
-                                    <Label>Nama Domain</Label>
+                                    <Label class="dark:text-gray-200">Nama Domain</Label>
                                     <div class="flex gap-2">
-                                        <Input v-model="domainName" placeholder="nama-domain" class="flex-1" />
+                                        <Input v-model="domainName" placeholder="nama-domain" class="flex-1 dark:bg-gray-900 dark:border-gray-700 dark:text-white" />
                                         <select
                                             v-model="selectedDomain"
-                                            class="w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                            class="w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
                                         >
                                             <option :value="null" disabled>Pilih ekstensi</option>
-                                            <option v-for="domain in (domainPrices || [])" :key="domain.id" :value="domain.id">
+                                            <option v-for="domain in (props.domainPrices || [])" :key="domain.id" :value="domain.id">
                                                 .{{ domain.extension }}
                                             </option>
                                         </select>
@@ -174,25 +174,25 @@ const formatPrice = (price: number) => {
                                 </div>
 
                                 <div class="space-y-3">
-                                    <Label>Paket Hosting</Label>
+                                    <Label class="dark:text-gray-200">Paket Hosting</Label>
                                     <select
                                         v-model="selectedHosting"
-                                        class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                        class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
                                     >
                                         <option :value="null" disabled>Pilih paket hosting</option>
-                                        <option v-for="plan in hostingPlans" :key="plan.id" :value="plan.id">
+                                        <option v-for="plan in (props.hostingPlans || [])" :key="plan.id" :value="plan.id">
                                             {{ plan.plan_name }} - {{ formatPrice(plan.selling_price * (1 - (plan.discount_percent || 0) / 100)) }}/tahun
                                         </option>
                                     </select>
                                 </div>
 
-                                <Separator />
+                                <Separator class="dark:bg-gray-700" />
 
                                 <div class="space-y-4">
-                                    <Label class="text-base font-medium">Layanan Tambahan</Label>
-                                    <div v-for="service in (servicePlans || [])" :key="service?.id" class="flex items-center space-x-3">
+                                    <Label class="text-base font-medium dark:text-gray-200">Layanan Tambahan</Label>
+                                    <div v-for="service in (props.servicePlans || [])" :key="service?.id" class="flex items-center space-x-3">
                                         <Checkbox v-if="service" :id="'service-' + service.id" v-model="selectedServices" :value="service.id" />
-                                        <Label v-if="service" :for="'service-' + service.id" class="font-normal">
+                                        <Label v-if="service" :for="'service-' + service.id" class="font-normal dark:text-gray-300">
                                             {{ service.name }} ({{ formatPrice(service.price) }}/tahun)
                                         </Label>
                                     </div>
@@ -200,31 +200,31 @@ const formatPrice = (price: number) => {
                             </div>
 
                             <div>
-                                <Card class="h-full bg-white dark:bg-gray-900">
+                                <Card class="h-full bg-white dark:bg-gray-900 dark:border-gray-700">
                                     <CardHeader>
-                                        <CardTitle class="text-lg">Ringkasan Biaya Tahunan</CardTitle>
+                                        <CardTitle class="text-lg dark:text-white">Ringkasan Biaya Tahunan</CardTitle>
                                     </CardHeader>
                                     <CardContent class="space-y-4">
                                         <div v-if="selectedDomainPrice" class="flex justify-between">
                                             <span class="text-gray-600 dark:text-gray-400">
                                                 Domain .{{ selectedDomainPrice.extension }}
                                             </span>
-                                            <span class="font-medium">{{ formatPrice(selectedDomainPrice.selling_price) }}</span>
+                                            <span class="font-medium dark:text-gray-200">{{ formatPrice(selectedDomainPrice.selling_price) }}</span>
                                         </div>
                                         <div v-if="selectedHostingPlan" class="flex justify-between">
                                             <span class="text-gray-600 dark:text-gray-400">
                                                 Hosting {{ selectedHostingPlan.plan_name }}
                                             </span>
-                                            <span class="font-medium">
+                                            <span class="font-medium dark:text-gray-200">
                                                 {{ formatPrice(selectedHostingPlan.selling_price * (1 - (selectedHostingPlan.discount_percent || 0) / 100)) }}
                                             </span>
                                         </div>
-                                        <div v-for="service in (servicePlans || [])" :key="service?.id" v-if="service && (selectedServices || []).includes(service.id)" class="flex justify-between">
+                                        <div v-for="service in (props.servicePlans || [])" :key="service?.id" v-if="service && (selectedServices || []).includes(service.id)" class="flex justify-between">
                                             <span class="text-gray-600 dark:text-gray-400">{{ service.name }}</span>
-                                            <span class="font-medium">{{ formatPrice(service.price) }}</span>
+                                            <span class="font-medium dark:text-gray-200">{{ formatPrice(service.price) }}</span>
                                         </div>
-                                        <Separator />
-                                        <div class="flex justify-between text-xl font-bold text-blue-600">
+                                        <Separator class="dark:bg-gray-700" />
+                                        <div class="flex justify-between text-xl font-bold text-blue-600 dark:text-blue-400">
                                             <span>Total Tahunan</span>
                                             <span>{{ formatPrice(calculateTotal) }}</span>
                                         </div>
@@ -244,15 +244,15 @@ const formatPrice = (price: number) => {
 
             <!-- Features Grid -->
             <div class="mb-12 grid gap-4 sm:grid-cols-2 sm:gap-6 lg:mb-16 lg:grid-cols-4">
-                <Card v-for="feature in features" :key="feature.title" class="text-center transition-all hover:shadow-lg">
+                <Card v-for="feature in features" :key="feature.title" class="text-center transition-all hover:shadow-lg dark:bg-gray-800 dark:border-gray-700">
                     <CardHeader class="pb-4">
                         <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
                             <component :is="feature.icon" class="h-6 w-6 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <CardTitle class="text-base sm:text-lg">{{ feature.title }}</CardTitle>
+                        <CardTitle class="text-base sm:text-lg dark:text-white">{{ feature.title }}</CardTitle>
                     </CardHeader>
                     <CardContent class="pt-0">
-                        <CardDescription class="text-sm sm:text-base">{{ feature.description }}</CardDescription>
+                        <CardDescription class="text-sm sm:text-base dark:text-gray-400">{{ feature.description }}</CardDescription>
                     </CardContent>
                 </Card>
             </div>
