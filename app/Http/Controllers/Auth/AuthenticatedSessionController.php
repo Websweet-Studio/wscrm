@@ -33,6 +33,7 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+        $request->session()->regenerateToken();
 
         return redirect()->route('dashboard');
     }

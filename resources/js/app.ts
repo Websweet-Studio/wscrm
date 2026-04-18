@@ -37,13 +37,26 @@ function initializeFavicon() {
     }
 }
 
-// Setup CSRF token for axios
-const token = document.head.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
-if (token) {
-    axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
-} else {
-    console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
+// Function to update the CSRF token
+function updateCsrfToken(csrfToken?: string) {
+    if (csrfToken) {
+        axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+        const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
+        if (meta) {
+            meta.content = csrfToken;
+        }
+    } else {
+        const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
+        if (meta) {
+            axios.defaults.headers.common['X-CSRF-TOKEN'] = meta.content;
+        } else {
+            console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
+        }
+    }
 }
+
+// Initialize CSRF token
+updateCsrfToken();
 
 // Setup axios interceptor for 419 errors
 axios.interceptors.response.use(
@@ -65,6 +78,14 @@ router.on('error', (event) => {
     }
 });
 
+// Update CSRF token on every successful Inertia navigation
+router.on('navigate', (event) => {
+    const props = event.detail.page.props as any;
+    if (props.csrf_token) {
+        updateCsrfToken(props.csrf_token);
+    }
+});
+
 createInertiaApp({
     title: (title) => {
         // Get app name from branding settings or use default
@@ -74,6 +95,12 @@ createInertiaApp({
     },
     resolve: (name) => resolvePageComponent(`./pages/${name}.vue`, import.meta.glob<DefineComponent>('./pages/**/*.vue')),
     setup({ el, App, props, plugin }) {
+        // Update CSRF token from initial props
+        const initialProps = props as any;
+        if (initialProps.csrf_token) {
+            updateCsrfToken(initialProps.csrf_token);
+        }
+        
         createApp({ render: () => h(App, props) })
             .use(plugin)
             .mount(el);

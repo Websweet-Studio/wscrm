@@ -48,6 +48,7 @@ class LoginController extends Controller
                 \Log::info('Admin login successful via customer portal', ['user_id' => $user->id, 'email' => $user->email]);
                 
                 $request->session()->regenerate();
+                $request->session()->regenerateToken();
                 
                 // Redirect to admin dashboard
                 return redirect('/dashboard');
@@ -87,6 +88,7 @@ class LoginController extends Controller
         \Log::info('Customer login successful', ['customer_id' => $customer->id, 'email' => $customer->email]);
 
         $request->session()->regenerate();
+        $request->session()->regenerateToken();
 
         // Debug info
         \Log::info('Customer login redirect debug', [

@@ -108,6 +108,7 @@ class HandleInertiaRequests extends Middleware
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'customerBadges' => $customerBadges,
             'adminBadges' => $adminBadges,
+            'csrf_token' => csrf_token(),
             'flash' => [
                 'toast' => $request->session()->get('toast'),
                 'error' => $request->session()->get('error'),
