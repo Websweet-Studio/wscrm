@@ -141,20 +141,20 @@ const getStatusColor = (status: string) => {
     switch (status) {
         case 'completed':
         case 'active':
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+            return 'bg-primary text-primary-foreground';
         case 'processing':
-            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+            return 'bg-secondary text-secondary-foreground';
         case 'pending':
-            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+            return 'bg-accent text-accent-foreground';
         case 'suspended':
-            return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
+            return 'bg-muted text-foreground';
         case 'expired':
-            return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+            return 'bg-muted text-muted-foreground';
         case 'cancelled':
         case 'terminated':
-            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+            return 'bg-destructive text-destructive-foreground';
         default:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+            return 'bg-muted text-muted-foreground';
     }
 };
 
@@ -201,17 +201,17 @@ const getBillingCycleText = (cycle: string) => {
 const getBillingCycleColor = (cycle: string) => {
     switch (cycle) {
         case 'onetime':
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+            return 'bg-muted text-muted-foreground';
         case 'monthly':
-            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+            return 'bg-secondary text-secondary-foreground';
         case 'quarterly':
-            return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+            return 'bg-accent text-accent-foreground';
         case 'semi_annually':
-            return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300';
+            return 'bg-muted text-foreground';
         case 'annually':
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+            return 'bg-primary text-primary-foreground';
         default:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+            return 'bg-muted text-muted-foreground';
     }
 };
 
@@ -237,19 +237,19 @@ const getExpiryBadge = (expiryDate: string) => {
         // Expired
         return {
             text: 'Kedaluwarsa',
-            class: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+            class: 'bg-destructive text-destructive-foreground',
         };
     } else if (daysLeft <= 15) {
         // Critical - less than 15 days
         return {
             text: `${daysLeft} hari lagi`,
-            class: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+            class: 'bg-destructive text-destructive-foreground',
         };
     } else if (daysLeft <= threeMonthsInDays) {
         // Warning - less than 3 months
         return {
             text: `${daysLeft} hari lagi`,
-            class: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+            class: 'bg-accent text-accent-foreground',
         };
     }
 
@@ -286,19 +286,19 @@ const getBillingCycleLabel = (cycle?: string) => {
 const getServiceTypeColor = (itemType: string) => {
     switch (itemType) {
         case 'hosting':
-            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+            return 'bg-primary text-primary-foreground';
         case 'domain':
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+            return 'bg-secondary text-secondary-foreground';
         case 'service':
-            return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+            return 'bg-accent text-accent-foreground';
         case 'app':
-            return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
+            return 'bg-muted text-foreground';
         case 'web':
-            return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300';
+            return 'bg-muted text-muted-foreground';
         case 'maintenance':
-            return 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300';
+            return 'bg-muted text-muted-foreground';
         default:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+            return 'bg-muted text-muted-foreground';
     }
 };
 
@@ -476,7 +476,7 @@ const getSortIcon = (field: string) => {
             <!-- Header -->
             <div class="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
                 <div>
-                    <h1 class="text-2xl font-bold">{{ currentView === 'services' ? 'Layanan' : 'Pesanan' }}</h1>
+                    <h1 class="text-2xl font-medium" style="font-family: Georgia, serif;">{{ currentView === 'services' ? 'Layanan' : 'Pesanan' }}</h1>
                     <p class="text-muted-foreground">
                         {{ currentView === 'services' ? 'Kelola layanan aktif pelanggan' : 'Kelola pesanan dan transaksi pelanggan' }}
                     </p>
@@ -492,7 +492,7 @@ const getSortIcon = (field: string) => {
             <!-- Filters -->
             <Card>
                 <CardHeader>
-                    <CardTitle class="flex items-center space-x-2">
+                    <CardTitle style="font-family: Georgia, serif;" class="flex items-center space-x-2">
                         <Search class="h-4 w-4" />
                         <span>Filter & Pencarian</span>
                     </CardTitle>
@@ -560,7 +560,7 @@ const getSortIcon = (field: string) => {
                 <CardHeader>
                     <div class="flex items-center justify-between">
                         <div>
-                            <CardTitle>{{ currentView === 'services' ? 'Daftar Layanan' : 'Daftar Pesanan' }}</CardTitle>
+                            <CardTitle style="font-family: Georgia, serif;">{{ currentView === 'services' ? 'Daftar Layanan' : 'Daftar Pesanan' }}</CardTitle>
                             <CardDescription>
                                 Total {{ orders.total }} {{ currentView === 'services' ? 'layanan' : 'pesanan' }} ditemukan
                             </CardDescription>
@@ -649,10 +649,10 @@ const getSortIcon = (field: string) => {
                                             <div class="text-xs text-muted-foreground line-through">
                                                 {{ formatPrice(order.total_amount) }}
                                             </div>
-                                            <div class="font-medium text-green-600 dark:text-green-400">
+                                            <div class="font-medium text-primary dark:text-green-400">
                                                 {{ formatPrice(Number(order.total_amount) - Number(order.discount_amount)) }}
                                             </div>
-                                            <div class="text-xs text-green-600 dark:text-green-400">
+                                            <div class="text-xs text-primary dark:text-green-400">
                                                 Hemat: {{ formatPrice(order.discount_amount) }}
                                             </div>
                                         </template>
@@ -702,7 +702,7 @@ const getSortIcon = (field: string) => {
                                                 size="sm"
                                                 variant="outline"
                                                 @click="confirmDelete(order)"
-                                                class="cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                class="cursor-pointer text-destructive hover:bg-muted hover:text-red-700"
                                                 title="Hapus"
                                             >
                                                 <Trash2 class="h-3.5 w-3.5" />

@@ -136,13 +136,13 @@ const handleSearch = () => {
 const getStatusClass = (status: string) => {
     switch (status) {
         case 'active':
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+            return 'bg-primary text-primary-foreground';
         case 'terminated':
-            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+            return 'bg-destructive text-destructive-foreground';
         case 'inactive':
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+            return 'bg-muted text-muted-foreground';
         default:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+            return 'bg-muted text-muted-foreground';
     }
 };
 
@@ -260,7 +260,7 @@ const resetPassword = (employee: Employee) => {
         <div class="w-full max-w-none space-y-4 sm:space-y-6">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Kelola Karyawan</h1>
+                    <h1 class="text-2xl font-medium tracking-tight sm:text-3xl" style="font-family: Georgia, serif;">Kelola Karyawan</h1>
                     <p class="text-sm text-muted-foreground sm:text-base">Kelola akun dan data karyawan internal</p>
                 </div>
                 <Button @click="showCreateModal = true" class="w-full cursor-pointer sm:w-auto">
@@ -274,7 +274,7 @@ const resetPassword = (employee: Employee) => {
             <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-xs font-medium sm:text-sm">Total Karyawan</CardTitle>
+                        <CardTitle style="font-family: Georgia, serif;" class="text-xs font-medium sm:text-sm">Total Karyawan</CardTitle>
                         <Users class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent>
@@ -284,11 +284,11 @@ const resetPassword = (employee: Employee) => {
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-xs font-medium sm:text-sm">Aktif</CardTitle>
-                        <UserCheck class="h-3 w-3 text-green-600 sm:h-4 sm:w-4" />
+                        <CardTitle style="font-family: Georgia, serif;" class="text-xs font-medium sm:text-sm">Aktif</CardTitle>
+                        <UserCheck class="h-3 w-3 text-primary sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent>
-                        <div class="text-xl font-bold text-green-600 sm:text-2xl">
+                        <div class="text-xl font-bold text-primary sm:text-2xl">
                             {{ employees?.data?.filter((e) => e.status === 'active').length || 0 }}
                         </div>
                     </CardContent>
@@ -296,11 +296,11 @@ const resetPassword = (employee: Employee) => {
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-xs font-medium sm:text-sm">Tidak Aktif</CardTitle>
-                        <UserX class="h-3 w-3 text-gray-600 sm:h-4 sm:w-4" />
+                        <CardTitle style="font-family: Georgia, serif;" class="text-xs font-medium sm:text-sm">Tidak Aktif</CardTitle>
+                        <UserX class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent>
-                        <div class="text-xl font-bold text-gray-600 sm:text-2xl">
+                        <div class="text-xl font-bold text-muted-foreground sm:text-2xl">
                             {{ employees?.data?.filter((e) => e.status === 'inactive').length || 0 }}
                         </div>
                     </CardContent>
@@ -308,11 +308,11 @@ const resetPassword = (employee: Employee) => {
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-xs font-medium sm:text-sm">Berhenti</CardTitle>
-                        <Clock class="h-3 w-3 text-red-600 sm:h-4 sm:w-4" />
+                        <CardTitle style="font-family: Georgia, serif;" class="text-xs font-medium sm:text-sm">Berhenti</CardTitle>
+                        <Clock class="h-3 w-3 text-destructive sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent>
-                        <div class="text-xl font-bold text-red-600 sm:text-2xl">
+                        <div class="text-xl font-bold text-destructive sm:text-2xl">
                             {{ employees?.data?.filter((e) => e.status === 'terminated').length || 0 }}
                         </div>
                     </CardContent>
@@ -322,7 +322,7 @@ const resetPassword = (employee: Employee) => {
             <!-- Employee List -->
             <Card>
                 <CardHeader class="pb-4">
-                    <CardTitle class="text-lg sm:text-xl">Data Karyawan</CardTitle>
+                    <CardTitle style="font-family: Georgia, serif;" class="text-lg sm:text-xl">Data Karyawan</CardTitle>
                     <CardDescription class="text-sm">Kelola informasi karyawan internal</CardDescription>
                 </CardHeader>
                 <CardContent class="px-3 sm:px-4 lg:px-6">
@@ -418,7 +418,7 @@ const resetPassword = (employee: Employee) => {
                                                 size="sm"
                                                 variant="outline"
                                                 @click="openDeleteModal(employee)"
-                                                class="cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                class="cursor-pointer text-destructive hover:bg-red-50 hover:text-red-700"
                                                 title="Hapus"
                                             >
                                                 <Trash2 class="h-3.5 w-3.5" />
@@ -826,7 +826,7 @@ const resetPassword = (employee: Employee) => {
             <div class="fixed inset-0 bg-black/50" @click="showDeleteModal = false"></div>
             <div class="relative mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
                 <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-red-600">Konfirmasi Penghapusan</h2>
+                    <h2 class="text-lg font-semibold text-destructive">Konfirmasi Penghapusan</h2>
                     <button @click="showDeleteModal = false" class="cursor-pointer text-gray-500 hover:text-gray-700">
                         <X class="h-4 w-4" />
                     </button>
@@ -865,7 +865,7 @@ const resetPassword = (employee: Employee) => {
                     </div>
 
                     <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
-                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                        <p class="text-sm text-muted-foreground dark:text-gray-400">
                             <strong>Karyawan:</strong> {{ employeeToDelete?.user.name }}<br />
                             <strong>NIK:</strong> {{ employeeToDelete?.nik }}<br />
                             <strong>Email:</strong> {{ employeeToDelete?.user.email }}
