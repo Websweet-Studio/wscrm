@@ -79,30 +79,55 @@ const selectedServices = ref<number[]>([]);
 const domainName = ref('contoh');
 
 const selectedDomainPrice = computed(() => {
-    return (props.domainPrices || []).find((d) => d.id === selectedDomain.value);
+    return filteredDomainPrices.value.find((d) => d.id === selectedDomain.value);
 });
 
 const selectedHostingPlan = computed(() => {
-    return (props.hostingPlans || []).find((h) => h.id === selectedHosting.value);
+    return filteredHostingPlans.value.find((h) => h.id === selectedHosting.value);
 });
+
+const selectedServicesList = computed(() => {
+    return filteredServicePlans.value.filter((s) => selectedServices.value.includes(s.id));
+});
+
+const toggleService = (serviceId: number) => {
+    const index = selectedServices.value.indexOf(serviceId);
+    if (index > -1) {
+        selectedServices.value.splice(index, 1);
+    } else {
+        selectedServices.value.push(serviceId);
+    }
+};
+
+const getDomainPrice = (domain: any) => {
+    if (!domain) return 0;
+    const price = Number(domain.selling_price);
+    return !isNaN(price) ? price : 0;
+};
+
+const getServicePrice = (service: any) => {
+    if (!service) return 0;
+    const price = Number(service.price);
+    return !isNaN(price) ? price : 0;
+};
 
 const calculateTotal = computed(() => {
     let total = 0;
 
-    if (selectedDomainPrice.value && typeof selectedDomainPrice.value.selling_price === 'number') {
-        total += selectedDomainPrice.value.selling_price;
+    if (selectedDomainPrice.value) {
+        total += getDomainPrice(selectedDomainPrice.value);
     }
 
-    if (selectedHostingPlan.value && typeof selectedHostingPlan.value.selling_price === 'number') {
-        const hostingPrice = selectedHostingPlan.value.selling_price;
-        const discount = selectedHostingPlan.value.discount_percent || 0;
-        total += hostingPrice * (1 - discount / 100);
-    }
-
-    filteredServicePlans.value.forEach((service) => {
-        if (service && selectedServices.value && selectedServices.value.includes(service.id) && typeof service.price === 'number') {
-            total += service.price;
+    if (selectedHostingPlan.value) {
+        const hostingPrice = Number(selectedHostingPlan.value.selling_price);
+        const discount = Number(selectedHostingPlan.value.discount_percent) || 0;
+        if (!isNaN(hostingPrice)) {
+            total += hostingPrice * (1 - discount / 100);
         }
+    }
+
+    selectedServicesList.value.forEach((service) => {
+        total += getServicePrice(service);
     });
 
     return total;
@@ -121,11 +146,12 @@ const filteredServicePlans = computed(() => {
 });
 
 const formatPrice = (price: number) => {
+    const validPrice = typeof price === 'number' && !isNaN(price) ? price : 0;
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
         minimumFractionDigits: 0,
-    }).format(price);
+    }).format(validPrice);
 };
 </script>
 
@@ -207,10 +233,10 @@ const formatPrice = (price: number) => {
                                             v-if="service"
                                             type="checkbox"
                                             :id="'service-' + service.id"
-                                            :value="service.id"
-                                            v-model="selectedServices"
+                                            :checked="selectedServices.includes(service.id)"
+                                            @change="toggleService(service.id)"
                                             class="h-4 w-4 rounded"
-                                            style="border-color: #e8e6dc; color: #c96442;"
+                                            style="border-color: #e8e6dc; accent-color: #c96442;"
                                         />
                                         <label v-if="service" :for="'service-' + service.id" class="font-normal cursor-pointer" style="color: #5e5d59;">
                                             {{ service.name }} ({{ formatPrice(service.price) }}/tahun)
@@ -229,7 +255,7 @@ const formatPrice = (price: number) => {
                                             <span style="color: #5e5d59;">
                                                 Domain .{{ selectedDomainPrice.extension }}
                                             </span>
-                                            <span class="font-medium" style="color: #4d4c48;">{{ formatPrice(selectedDomainPrice.selling_price) }}</span>
+                                            <span class="font-medium" style="color: #4d4c48;">{{ formatPrice(getDomainPrice(selectedDomainPrice)) }}</span>
                                         </div>
                                         <div v-if="selectedHostingPlan" class="flex justify-between">
                                             <span style="color: #5e5d59;">
@@ -239,9 +265,9 @@ const formatPrice = (price: number) => {
                                                 {{ formatPrice(selectedHostingPlan.selling_price * (1 - (selectedHostingPlan.discount_percent || 0) / 100)) }}
                                             </span>
                                         </div>
-                                        <div v-for="service in (props.servicePlans || [])" :key="service?.id" v-if="service && (selectedServices || []).includes(service.id)" class="flex justify-between">
+                                        <div v-for="service in selectedServicesList" :key="service?.id" class="flex justify-between">
                                             <span style="color: #5e5d59;">{{ service.name }}</span>
-                                            <span class="font-medium" style="color: #4d4c48;">{{ formatPrice(service.price) }}</span>
+                                            <span class="font-medium" style="color: #4d4c48;">{{ formatPrice(getServicePrice(service)) }}</span>
                                         </div>
                                         <Separator style="background-color: #f0eee6;" />
                                         <div class="flex justify-between text-xl font-bold" style="color: #c96442;">
