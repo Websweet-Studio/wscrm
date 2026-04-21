@@ -25,14 +25,14 @@ const handleLogout = () => {
 
 <template>
     <!-- Navigation -->
-    <nav class="sticky top-0 z-40 bg-white shadow-sm dark:bg-gray-900 dark:shadow-gray-800/20">
+    <nav class="sticky top-0 z-40" style="background-color: #faf9f5; border-bottom: 1px solid #f0eee6;">
         <div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-8">
             <div class="flex items-center justify-between">
                 <!-- Logo -->
                 <Link href="/" class="flex items-center space-x-2 transition-opacity hover:opacity-80">
                     <img v-if="appLogo" :src="appLogo" :alt="appName" class="h-8 w-8 object-contain dark:hidden" />
                     <img v-if="appLogoDark" :src="appLogoDark" :alt="appName" class="hidden h-8 w-8 object-contain dark:block" />
-                    <span class="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">{{ appName }}</span>
+                    <span class="text-lg font-medium sm:text-xl" style="color: #141413; font-family: Georgia, serif;">{{ appName }}</span>
                 </Link>
 
                 <!-- Desktop Navigation -->

@@ -123,18 +123,17 @@ const formatPrice = (price: number) => {
         <!-- Hero Section -->
         <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:py-20">
             <div class="mb-12 text-center sm:mb-16">
-                <h1 class="mb-4 text-3xl leading-tight font-bold text-gray-900 sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl dark:text-white">
+                <h1 class="mb-4 text-4xl leading-tight font-medium sm:text-5xl md:text-6xl" style="color: #141413; line-height: 1.1; font-family: Georgia, serif;">
                     Hosting Web Profesional
                 </h1>
-                <p class="mx-auto mb-6 max-w-2xl text-base text-gray-600 sm:mb-8 sm:max-w-3xl sm:text-lg lg:text-xl dark:text-gray-300">
-                    Dapatkan layanan hosting web terpercaya dan registrasi domain dengan dukungan ahli. Sempurna untuk bisnis, developer, dan website
-                    pribadi.
+                <p class="mx-auto mb-6 max-w-2xl text-base sm:text-lg lg:text-xl" style="color: #5e5d59; line-height: 1.6;">
+                    Dapatkan layanan hosting web terpercaya dan registrasi domain dengan dukungan ahli. Sempurna untuk bisnis, developer, dan website pribadi.
                 </p>
                 <div class="flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4">
-                    <Button size="lg" class="w-full sm:w-auto" asChild>
+                    <Button asChild class="text-lg px-6 py-4" style="background-color: #c96442; color: #faf9f5; border-radius: 12px;">
                         <Link href="/hosting">Lihat Paket Hosting</Link>
                     </Button>
-                    <Button size="lg" variant="outline" class="w-full sm:w-auto" asChild>
+                    <Button asChild variant="outline" class="text-lg px-6 py-4" style="background-color: #faf9f5; color: #4d4c48; border: 1px solid #e8e6dc; border-radius: 12px;">
                         <Link href="/domains">Cari Domain</Link>
                     </Button>
                 </div>
@@ -142,15 +141,15 @@ const formatPrice = (price: number) => {
 
             <!-- Simulation Section -->
             <div class="mb-12">
-                <Card class="border-2 border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/30">
+                <Card style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
                     <CardHeader>
                         <div class="flex items-center gap-3">
-                            <div class="rounded-full bg-blue-100 p-2 dark:bg-blue-900/50">
-                                <Calculator class="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                            <div class="rounded-full p-2" style="background-color: #e8e6dc;">
+                                <Calculator class="h-6 w-6" style="color: #c96442;" />
                             </div>
                             <div>
-                                <CardTitle class="text-xl dark:text-white">Simulasi Harga</CardTitle>
-                                <CardDescription class="dark:text-gray-400">Pilih domain, hosting, dan layanan tambahan untuk melihat estimasi biaya</CardDescription>
+                                <CardTitle class="text-xl font-medium" style="color: #141413; font-family: Georgia, serif;">Simulasi Harga</CardTitle>
+                                <CardDescription style="color: #5e5d59;">Pilih domain, hosting, dan layanan tambahan untuk melihat estimasi biaya</CardDescription>
                             </div>
                         </div>
                     </CardHeader>
@@ -158,12 +157,13 @@ const formatPrice = (price: number) => {
                         <div class="grid gap-8 md:grid-cols-2">
                             <div class="space-y-6">
                                 <div class="space-y-3">
-                                    <Label class="dark:text-gray-200">Nama Domain</Label>
+                                    <Label style="color: #4d4c48;">Nama Domain</Label>
                                     <div class="flex gap-2">
-                                        <Input v-model="domainName" placeholder="nama-domain" class="flex-1 dark:bg-gray-900 dark:border-gray-700 dark:text-white" />
+                                        <Input v-model="domainName" placeholder="nama-domain" class="flex-1" style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;" />
                                         <select
                                             v-model="selectedDomain"
-                                            class="w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
+                                            class="w-32 rounded-md px-3 py-2 text-sm"
+                                            style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
                                         >
                                             <option :value="null" disabled>Pilih ekstensi</option>
                                             <option v-for="domain in (props.domainPrices || [])" :key="domain.id" :value="domain.id">
@@ -174,10 +174,11 @@ const formatPrice = (price: number) => {
                                 </div>
 
                                 <div class="space-y-3">
-                                    <Label class="dark:text-gray-200">Paket Hosting</Label>
+                                    <Label style="color: #4d4c48;">Paket Hosting</Label>
                                     <select
                                         v-model="selectedHosting"
-                                        class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
+                                        class="w-full rounded-md px-3 py-2 text-sm"
+                                        style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
                                     >
                                         <option :value="null" disabled>Pilih paket hosting</option>
                                         <option v-for="plan in (props.hostingPlans || [])" :key="plan.id" :value="plan.id">
@@ -186,13 +187,13 @@ const formatPrice = (price: number) => {
                                     </select>
                                 </div>
 
-                                <Separator class="dark:bg-gray-700" />
+                                <Separator style="background-color: #f0eee6;" />
 
                                 <div class="space-y-4">
-                                    <Label class="text-base font-medium dark:text-gray-200">Layanan Tambahan</Label>
+                                    <Label class="text-base font-medium" style="color: #4d4c48;">Layanan Tambahan</Label>
                                     <div v-for="service in (props.servicePlans || [])" :key="service?.id" class="flex items-center space-x-3">
                                         <Checkbox v-if="service" :id="'service-' + service.id" v-model="selectedServices" :value="service.id" />
-                                        <Label v-if="service" :for="'service-' + service.id" class="font-normal dark:text-gray-300">
+                                        <Label v-if="service" :for="'service-' + service.id" class="font-normal" style="color: #5e5d59;">
                                             {{ service.name }} ({{ formatPrice(service.price) }}/tahun)
                                         </Label>
                                     </div>
@@ -200,36 +201,36 @@ const formatPrice = (price: number) => {
                             </div>
 
                             <div>
-                                <Card class="h-full bg-white dark:bg-gray-900 dark:border-gray-700">
+                                <Card class="h-full" style="background-color: #ffffff; border: 1px solid #f0eee6; border-radius: 16px;">
                                     <CardHeader>
-                                        <CardTitle class="text-lg dark:text-white">Ringkasan Biaya Tahunan</CardTitle>
+                                        <CardTitle class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif;">Ringkasan Biaya Tahunan</CardTitle>
                                     </CardHeader>
                                     <CardContent class="space-y-4">
                                         <div v-if="selectedDomainPrice" class="flex justify-between">
-                                            <span class="text-gray-600 dark:text-gray-400">
+                                            <span style="color: #5e5d59;">
                                                 Domain .{{ selectedDomainPrice.extension }}
                                             </span>
-                                            <span class="font-medium dark:text-gray-200">{{ formatPrice(selectedDomainPrice.selling_price) }}</span>
+                                            <span class="font-medium" style="color: #4d4c48;">{{ formatPrice(selectedDomainPrice.selling_price) }}</span>
                                         </div>
                                         <div v-if="selectedHostingPlan" class="flex justify-between">
-                                            <span class="text-gray-600 dark:text-gray-400">
+                                            <span style="color: #5e5d59;">
                                                 Hosting {{ selectedHostingPlan.plan_name }}
                                             </span>
-                                            <span class="font-medium dark:text-gray-200">
+                                            <span class="font-medium" style="color: #4d4c48;">
                                                 {{ formatPrice(selectedHostingPlan.selling_price * (1 - (selectedHostingPlan.discount_percent || 0) / 100)) }}
                                             </span>
                                         </div>
                                         <div v-for="service in (props.servicePlans || [])" :key="service?.id" v-if="service && (selectedServices || []).includes(service.id)" class="flex justify-between">
-                                            <span class="text-gray-600 dark:text-gray-400">{{ service.name }}</span>
-                                            <span class="font-medium dark:text-gray-200">{{ formatPrice(service.price) }}</span>
+                                            <span style="color: #5e5d59;">{{ service.name }}</span>
+                                            <span class="font-medium" style="color: #4d4c48;">{{ formatPrice(service.price) }}</span>
                                         </div>
-                                        <Separator class="dark:bg-gray-700" />
-                                        <div class="flex justify-between text-xl font-bold text-blue-600 dark:text-blue-400">
+                                        <Separator style="background-color: #f0eee6;" />
+                                        <div class="flex justify-between text-xl font-bold" style="color: #c96442;">
                                             <span>Total Tahunan</span>
                                             <span>{{ formatPrice(calculateTotal) }}</span>
                                         </div>
                                         <div class="pt-2">
-                                            <Button class="w-full" size="lg" :disabled="!selectedDomain || !selectedHosting">
+                                            <Button class="w-full" size="lg" :disabled="!selectedDomain || !selectedHosting" style="background-color: #c96442; color: #faf9f5; border-radius: 12px;">
                                                 <Calculator class="mr-2 h-4 w-4" />
                                                 Pesan Sekarang
                                             </Button>
@@ -244,15 +245,15 @@ const formatPrice = (price: number) => {
 
             <!-- Features Grid -->
             <div class="mb-12 grid gap-4 sm:grid-cols-2 sm:gap-6 lg:mb-16 lg:grid-cols-4">
-                <Card v-for="feature in features" :key="feature.title" class="text-center transition-all hover:shadow-lg dark:bg-gray-800 dark:border-gray-700">
+                <Card v-for="feature in features" :key="feature.title" class="text-center transition-all" style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 12px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
                     <CardHeader class="pb-4">
-                        <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
-                            <component :is="feature.icon" class="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                        <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg" style="background-color: #e8e6dc;">
+                            <component :is="feature.icon" class="h-6 w-6" style="color: #c96442;" />
                         </div>
-                        <CardTitle class="text-base sm:text-lg dark:text-white">{{ feature.title }}</CardTitle>
+                        <CardTitle class="text-base sm:text-lg font-medium" style="color: #141413; font-family: Georgia, serif;">{{ feature.title }}</CardTitle>
                     </CardHeader>
                     <CardContent class="pt-0">
-                        <CardDescription class="text-sm sm:text-base dark:text-gray-400">{{ feature.description }}</CardDescription>
+                        <CardDescription style="color: #5e5d59;">{{ feature.description }}</CardDescription>
                     </CardContent>
                 </Card>
             </div>

@@ -15,7 +15,7 @@ withDefaults(defineProps<Props>(), {
 <template>
     <Head :title="title" />
 
-    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div class="min-h-screen" style="background-color: #f5f4ed;">
         <CustomerHeader />
 
         <main class="flex-1">
