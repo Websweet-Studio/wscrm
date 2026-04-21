@@ -79,15 +79,15 @@ const formatPrice = (price: number): string => {
 const getCategoryColor = (category: string) => {
     switch (category) {
         case 'web_package':
-            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+            return 'bg-secondary text-secondary-foreground';
         case 'addon':
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+            return 'bg-accent text-accent-foreground';
         case 'license':
-            return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+            return 'bg-muted text-muted-foreground';
         case 'custom_system':
-            return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
+            return 'bg-primary text-primary-foreground';
         default:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+            return 'bg-muted text-muted-foreground';
     }
 };
 
@@ -178,7 +178,7 @@ const removeFeature = (form: any, featureName: string) => {
         <div class="space-y-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">Kelola Paket Layanan</h1>
+                    <h1 class="text-3xl font-medium tracking-tight" style="font-family: Georgia, serif;">Kelola Paket Layanan</h1>
                     <p class="text-muted-foreground">Kelola paket layanan dan harga</p>
                 </div>
                 <Button @click="showCreateModal = true" class="cursor-pointer">
@@ -191,7 +191,7 @@ const removeFeature = (form: any, featureName: string) => {
             <div class="grid gap-4 md:grid-cols-4">
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">Total Paket</CardTitle>
+                        <CardTitle style="font-family: Georgia, serif;" class="text-sm font-medium">Total Paket</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div class="text-2xl font-bold">{{ servicePlans.total }}</div>
@@ -200,10 +200,10 @@ const removeFeature = (form: any, featureName: string) => {
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">Aktif</CardTitle>
+                        <CardTitle style="font-family: Georgia, serif;" class="text-sm font-medium">Aktif</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div class="text-2xl font-bold text-green-600">
+                        <div class="text-2xl font-bold text-primary">
                             {{ servicePlans.data.filter((p) => p.is_active).length }}
                         </div>
                     </CardContent>
@@ -211,10 +211,10 @@ const removeFeature = (form: any, featureName: string) => {
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">Nonaktif</CardTitle>
+                        <CardTitle style="font-family: Georgia, serif;" class="text-sm font-medium">Nonaktif</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div class="text-2xl font-bold text-red-600">
+                        <div class="text-2xl font-bold text-destructive">
                             {{ servicePlans.data.filter((p) => !p.is_active).length }}
                         </div>
                     </CardContent>
@@ -222,7 +222,7 @@ const removeFeature = (form: any, featureName: string) => {
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">Kategori</CardTitle>
+                        <CardTitle style="font-family: Georgia, serif;" class="text-sm font-medium">Kategori</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div class="text-2xl font-bold">{{ Object.keys(categories).length }}</div>
@@ -232,7 +232,7 @@ const removeFeature = (form: any, featureName: string) => {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Semua Paket Layanan</CardTitle>
+                    <CardTitle style="font-family: Georgia, serif;">Semua Paket Layanan</CardTitle>
                     <CardDescription>Kelola penawaran layanan Anda</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -299,8 +299,8 @@ const removeFeature = (form: any, featureName: string) => {
                                     </td>
                                     <td class="px-3 py-4">
                                         <span class="flex items-center gap-1 text-xs">
-                                            <CheckCircle v-if="plan.is_active" class="h-3 w-3 text-green-500" />
-                                            <XCircle v-else class="h-3 w-3 text-red-500" />
+                                            <CheckCircle v-if="plan.is_active" class="h-3 w-3 text-primary" />
+                                            <XCircle v-else class="h-3 w-3 text-destructive" />
                                             {{ plan.is_active ? 'Aktif' : 'Nonaktif' }}
                                         </span>
                                     </td>

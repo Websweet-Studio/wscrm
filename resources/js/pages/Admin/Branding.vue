@@ -3,7 +3,7 @@
         <div class="space-y-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">Pengaturan Branding</h1>
+                    <h1 class="text-3xl font-medium tracking-tight" style="font-family: Georgia, serif;">Pengaturan Branding</h1>
                     <p class="text-muted-foreground">Kelola logo, warna, dan identitas visual aplikasi</p>
                 </div>
             </div>
@@ -14,17 +14,17 @@
                         <div class="space-y-8">
                         <!-- Identitas Aplikasi -->
                         <div v-if="settings.text?.length" class="space-y-6">
-                            <h2 class="text-lg font-medium text-gray-900 dark:text-white">Identitas Aplikasi</h2>
+                            <h2 class="text-lg font-medium" style="font-family: Georgia, serif;">Identitas Aplikasi</h2>
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div v-for="setting in settings.text" :key="setting.key" class="space-y-2">
-                                    <label :for="setting.key" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <label :for="setting.key" class="block text-sm font-medium text-muted-foreground">
                                         {{ getSettingLabel(setting.key) }}
                                     </label>
                                     <input
                                         :id="setting.key"
                                         v-model="form.settings[setting.key]"
                                         type="text"
-                                        class="block w-full rounded-md border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                        class="block w-full rounded-md border border-border bg-input px-4 py-2 text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                                         :placeholder="setting.description"
                                     />
                                 </div>
@@ -33,17 +33,17 @@
 
                         <!-- Textarea Settings -->
                         <div v-if="settings.textarea?.length" class="space-y-6">
-                            <h2 class="text-lg font-medium text-gray-900 dark:text-white">Informasi Perusahaan</h2>
+                            <h2 class="text-lg font-medium" style="font-family: Georgia, serif;">Informasi Perusahaan</h2>
                             <div class="space-y-6">
                                 <div v-for="setting in settings.textarea" :key="setting.key" class="space-y-2">
-                                    <label :for="setting.key" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <label :for="setting.key" class="block text-sm font-medium text-muted-foreground">
                                         {{ getSettingLabel(setting.key) }}
                                     </label>
                                     <textarea
                                         :id="setting.key"
                                         v-model="form.settings[setting.key]"
                                         rows="3"
-                                        class="block w-full rounded-md border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                        class="block w-full rounded-md border border-border bg-input px-4 py-2 text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                                         :placeholder="setting.description"
                                     ></textarea>
                                 </div>
@@ -52,18 +52,18 @@
 
                         <!-- Logo dan Gambar -->
                         <div v-if="settings.image?.length" class="space-y-6">
-                            <h2 class="text-lg font-medium text-gray-900 dark:text-white">Logo dan Gambar</h2>
+                            <h2 class="text-lg font-medium" style="font-family: Georgia, serif;">Logo dan Gambar</h2>
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div v-for="setting in settings.image" :key="setting.key" class="space-y-4">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <label class="block text-sm font-medium text-muted-foreground">
                                         {{ getSettingLabel(setting.key) }}
                                     </label>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ setting.description }}</p>
+                                    <p class="text-sm text-muted-foreground">{{ setting.description }}</p>
 
                                     <!-- Current Image Preview (dari database atau placeholder) -->
                                     <div v-if="!imagePreviews[setting.key]" class="space-y-3">
                                         <div
-                                            class="relative h-32 w-32 overflow-hidden rounded-lg border-2 border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-700"
+                                            class="relative h-32 w-32 overflow-hidden rounded-lg border-2 border-border bg-muted"
                                         >
                                             <!-- Image yang tersimpan di database -->
                                             <img
@@ -77,7 +77,7 @@
                                             <div v-else class="flex h-full w-full items-center justify-center">
                                                 <div class="text-center">
                                                     <svg
-                                                        class="mx-auto mb-2 h-8 w-8 text-gray-400 dark:text-gray-500"
+                                                        class="mx-auto mb-2 h-8 w-8 text-muted-foreground"
                                                         fill="none"
                                                         stroke="currentColor"
                                                         viewBox="0 0 24 24"
@@ -137,7 +137,7 @@
                                             :id="`upload_${setting.key}`"
                                             @change="(event) => handleImageUpload(event, setting.key)"
                                             accept="image/*"
-                                            class="block w-full px-4 py-2 text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100 dark:text-gray-400 dark:file:bg-blue-900 dark:file:text-blue-300 dark:hover:file:bg-blue-800"
+                                            class="block w-full px-4 py-2 text-sm text-muted-foreground file:mr-4 file:rounded-full file:border-0 file:bg-secondary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-secondary-foreground hover:file:bg-accent"
                                         />
                                     </div>
                                 </div>
@@ -146,10 +146,10 @@
 
                         <!-- Palet Warna -->
                         <div v-if="settings.color?.length" class="space-y-6">
-                            <h2 class="text-lg font-medium text-gray-900 dark:text-white">Palet Warna</h2>
+                            <h2 class="text-lg font-medium" style="font-family: Georgia, serif;">Palet Warna</h2>
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                                 <div v-for="setting in settings.color" :key="setting.key" class="space-y-2">
-                                    <label :for="setting.key" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <label :for="setting.key" class="block text-sm font-medium text-muted-foreground">
                                         {{ getSettingLabel(setting.key) }}
                                     </label>
                                     <div class="flex items-center space-x-3">
@@ -157,16 +157,16 @@
                                             :id="setting.key"
                                             v-model="form.settings[setting.key]"
                                             type="color"
-                                            class="h-10 w-20 cursor-pointer rounded border border-gray-300 bg-white px-2 py-1 dark:border-gray-600 dark:bg-gray-700"
+                                            class="h-10 w-20 cursor-pointer rounded border border-border bg-input px-2 py-1"
                                         />
                                         <input
                                             v-model="form.settings[setting.key]"
                                             type="text"
-                                            class="flex-1 rounded-md border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                            class="flex-1 rounded-md border border-border bg-input px-4 py-2 text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                                             placeholder="#000000"
                                         />
                                     </div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ setting.description }}</p>
+                                    <p class="text-xs text-muted-foreground">{{ setting.description }}</p>
                                 </div>
                             </div>
                         </div>
@@ -277,13 +277,13 @@ const handleImageError = (event: Event) => {
     const parent = img.parentElement;
     if (parent) {
         const placeholder = document.createElement('div');
-        placeholder.className = 'w-full h-full flex items-center justify-center bg-gray-100';
+        placeholder.className = 'w-full h-full flex items-center justify-center bg-muted';
         placeholder.innerHTML = `
       <div class="text-center">
-        <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-8 h-8 text-muted-foreground mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
         </svg>
-        <p class="text-xs text-gray-500">Gambar tidak dapat dimuat</p>
+        <p class="text-xs text-muted-foreground">Gambar tidak dapat dimuat</p>
       </div>
     `;
         parent.appendChild(placeholder);

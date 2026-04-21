@@ -144,7 +144,7 @@ const formatGrowth = (growth: number) => {
     return {
         value: Math.abs(growth),
         isPositive,
-        color: isPositive ? 'text-green-600' : 'text-red-600',
+        color: isPositive ? 'text-primary' : 'text-destructive',
         icon: isPositive ? TrendingUp : TrendingDown,
     };
 };
@@ -159,11 +159,11 @@ const getDaysUntilExpiry = (expiresAt: string) => {
 
 const getExpiryBadgeClass = (daysLeft: number) => {
     if (daysLeft <= 15) {
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+        return 'bg-muted text-destructive';
     } else if (daysLeft <= 30) {
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
+        return 'bg-muted text-foreground';
     } else {
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+        return 'bg-muted text-muted-foreground';
     }
 };
 </script>
@@ -176,7 +176,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
             <!-- Welcome Header -->
             <div class="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Dashboard</h1>
+                    <h1 class="text-2xl font-medium tracking-tight sm:text-3xl" style="font-family: Georgia, serif;">Dashboard</h1>
                     <p class="hidden text-sm text-muted-foreground sm:block sm:text-base">
                         {{ greeting }}! Berikut apa yang terjadi hari ini.
                     </p>
@@ -193,7 +193,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
             <!-- Quick Actions -->
             <Card>
                 <CardHeader class="px-4 sm:px-6">
-                    <CardTitle class="text-base sm:text-lg">Aksi Cepat</CardTitle>
+                    <CardTitle style="font-family: Georgia, serif;" class="text-base sm:text-lg">Aksi Cepat</CardTitle>
                     <CardDescription class="text-xs sm:text-sm">Tugas admin umum</CardDescription>
                 </CardHeader>
                 <CardContent class="px-4 sm:px-6">
@@ -223,7 +223,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                 <!-- Customers Card -->
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 px-4 pb-2 sm:px-6">
-                        <CardTitle class="text-xs font-medium sm:text-sm">Total Pelanggan</CardTitle>
+                        <CardTitle style="font-family: Georgia, serif;" class="text-xs font-medium sm:text-sm">Total Pelanggan</CardTitle>
                         <Users class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
@@ -249,7 +249,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                 <!-- Orders Card -->
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 px-4 pb-2 sm:px-6">
-                        <CardTitle class="text-xs font-medium sm:text-sm">Total Pesanan</CardTitle>
+                        <CardTitle style="font-family: Georgia, serif;" class="text-xs font-medium sm:text-sm">Total Pesanan</CardTitle>
                         <ShoppingCart class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
@@ -261,10 +261,10 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                             </span>
                         </div>
                         <div class="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                            <span class="inline-flex items-center gap-1 rounded bg-green-100 px-2 py-0.5 text-green-800 dark:bg-green-900/40 dark:text-green-300">
+                            <span class="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-foreground">
                                 <CheckCircle2 class="h-3 w-3" /> {{ stats.orders.completed }} selesai
                             </span>
-                            <span class="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-0.5 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                            <span class="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-muted-foreground">
                                 <Calendar class="h-3 w-3" /> {{ stats.orders.thisMonth }} bulan ini
                             </span>
                         </div>
@@ -274,7 +274,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                 <!-- Revenue Card -->
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 px-4 pb-2 sm:px-6">
-                        <CardTitle class="text-xs font-medium sm:text-sm">Total Pendapatan</CardTitle>
+                        <CardTitle style="font-family: Georgia, serif;" class="text-xs font-medium sm:text-sm">Total Pendapatan</CardTitle>
                         <DollarSign class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
@@ -299,7 +299,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 px-4 pb-2 sm:px-6">
                         <div class="flex items-center gap-2">
                             <ListTodo class="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
-                             <CardTitle class="text-base sm:text-lg">Tugas Saya Pending</CardTitle>
+                             <CardTitle style="font-family: Georgia, serif;" class="text-base sm:text-lg">Tugas Saya Pending</CardTitle>
                         </div>
                         <Button variant="ghost" size="sm" asChild class="text-xs">
                              <Link href="/admin/tasks">Lihat Semua</Link>
@@ -313,9 +313,9 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                              <div v-for="task in props.myPendingTasks" :key="task.id" class="flex items-center justify-between rounded-md border p-3 hover:bg-muted/50 transition-colors">
                                  <div class="flex items-center gap-3">
                                      <div :class="{
-                                         'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': task.priority === 'high',
-                                         'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400': task.priority === 'medium',
-                                         'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400': task.priority === 'low'
+                                         'bg-destructive text-destructive-foreground': task.priority === 'high',
+                                         'bg-muted text-foreground': task.priority === 'medium',
+                                         'bg-accent text-accent-foreground': task.priority === 'low'
                                      }" class="flex h-8 w-8 items-center justify-center rounded-full shrink-0">
                                          <Clock class="h-4 w-4" />
                                      </div>
@@ -344,7 +344,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
 
                  <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 px-4 pb-2 sm:px-6">
-                        <CardTitle class="text-xs font-medium sm:text-sm">Tugas Pending</CardTitle>
+                        <CardTitle style="font-family: Georgia, serif;" class="text-xs font-medium sm:text-sm">Tugas Pending</CardTitle>
                         <CheckSquare class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
@@ -368,7 +368,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                     <CardHeader class="px-4 sm:px-6">
                         <div class="flex items-center justify-between">
                             <div>
-                                <CardTitle class="flex items-center gap-2 text-base sm:text-lg">
+                                <CardTitle style="font-family: Georgia, serif;" class="flex items-center gap-2 text-base sm:text-lg">
                                     <BarChart3 class="h-4 w-4 sm:h-5 sm:w-5" />
                                     <span class="hidden sm:inline">Pesanan Bulan Ini</span>
                                     <span class="sm:hidden">Pesanan Bulan Ini</span>
@@ -388,7 +388,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                 <!-- Monthly Overview -->
                 <Card>
                     <CardHeader class="px-4 sm:px-6">
-                        <CardTitle class="flex items-center gap-2 text-base sm:text-lg">
+                        <CardTitle style="font-family: Georgia, serif;" class="flex items-center gap-2 text-base sm:text-lg">
                             <Calendar class="h-4 w-4 sm:h-5 sm:w-5" />
                             <span class="hidden sm:inline">Ringkasan Bulanan</span>
                             <span class="sm:hidden">Ringkasan Bulanan</span>
@@ -408,7 +408,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
             <div class="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
                 <Card>
                     <CardHeader class="px-4 sm:px-6">
-                        <CardTitle class="flex items-center gap-2 text-base sm:text-lg">
+                        <CardTitle style="font-family: Georgia, serif;" class="flex items-center gap-2 text-base sm:text-lg">
                             <CheckCircle2 class="h-4 w-4 sm:h-5 sm:w-5" />
                             Layanan Aktif
                         </CardTitle>
@@ -457,7 +457,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                 <!-- Recent Orders -->
                 <Card>
                     <CardHeader class="px-4 sm:px-6">
-                        <CardTitle class="text-base sm:text-lg">Pesanan Terbaru</CardTitle>
+                        <CardTitle style="font-family: Georgia, serif;" class="text-base sm:text-lg">Pesanan Terbaru</CardTitle>
                         <CardDescription class="text-xs sm:text-sm">Pesanan pelanggan terbaru</CardDescription>
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
@@ -480,10 +480,10 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                                         <div class="text-xs text-muted-foreground line-through">
                                             {{ formatPrice(order.total_amount) }}
                                         </div>
-                                        <div class="text-xs font-bold text-green-600 sm:text-sm dark:text-green-400">
+                                        <div class="text-xs font-bold text-primary sm:text-sm">
                                             {{ formatPrice(Number(order.total_amount) - Number(order.discount_amount)) }}
                                         </div>
-                                        <div class="text-xs text-green-600 dark:text-green-400">Hemat: {{ formatPrice(order.discount_amount) }}</div>
+                                        <div class="text-xs text-primary">Hemat: {{ formatPrice(order.discount_amount) }}</div>
                                     </template>
                                     <template v-else>
                                         <div class="text-xs font-bold sm:text-sm">{{ formatPrice(order.total_amount) }}</div>
@@ -503,7 +503,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                 <!-- Recent Customers -->
                 <Card>
                     <CardHeader class="px-4 sm:px-6">
-                        <CardTitle class="text-base sm:text-lg">Pelanggan Baru</CardTitle>
+                        <CardTitle style="font-family: Georgia, serif;" class="text-base sm:text-lg">Pelanggan Baru</CardTitle>
                         <CardDescription class="text-xs sm:text-sm">Pelanggan baru terdaftar</CardDescription>
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
@@ -537,7 +537,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
             <!-- Quick Actions -->
             <Card>
                 <CardHeader class="px-4 sm:px-6">
-                    <CardTitle class="text-base sm:text-lg">Aksi Cepat</CardTitle>
+                    <CardTitle style="font-family: Georgia, serif;" class="text-base sm:text-lg">Aksi Cepat</CardTitle>
                     <CardDescription class="text-xs sm:text-sm">Tugas admin umum</CardDescription>
                 </CardHeader>
                 <CardContent class="px-4 sm:px-6">

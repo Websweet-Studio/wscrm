@@ -372,13 +372,13 @@ watch(() => editForm.assigned_user_id, (val) => {
 const statusBadgeClass = (status: Task['status']) => {
     switch (status) {
         case 'todo':
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+            return 'bg-muted text-muted-foreground';
         case 'in_progress':
-            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+            return 'bg-secondary text-secondary-foreground';
         case 'done':
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+            return 'bg-accent text-accent-foreground';
         case 'cancelled':
-            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+            return 'bg-muted text-destructive';
         default:
             return '';
     }
@@ -387,11 +387,11 @@ const statusBadgeClass = (status: Task['status']) => {
 const priorityBadgeClass = (priority: Task['priority']) => {
     switch (priority) {
         case 'low':
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+            return 'bg-muted text-muted-foreground';
         case 'medium':
-            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+            return 'bg-secondary text-secondary-foreground';
         case 'high':
-            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+            return 'bg-destructive text-destructive-foreground';
         default:
             return '';
     }
@@ -425,7 +425,7 @@ const getTaskIcon = (status: Task['status']) => {
         <div class="space-y-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">Kelola Tugas</h1>
+                    <h1 class="text-3xl font-medium tracking-tight" style="font-family: Georgia, serif;">Kelola Tugas</h1>
                     <p class="text-muted-foreground">Buat dan kelola tugas untuk user atau departemen</p>
                 </div>
                 <div class="flex items-center gap-2">
@@ -465,7 +465,7 @@ const getTaskIcon = (status: Task['status']) => {
                     </div>
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-5">
                         <div>
-                            <select id="statusFilter" v-model="statusFilter" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                            <select id="statusFilter" v-model="statusFilter" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
                                 <option value="">Semua Status</option>
                                 <option value="todo">Todo</option>
                                 <option value="in_progress">In Progress</option>
@@ -474,19 +474,19 @@ const getTaskIcon = (status: Task['status']) => {
                             </select>
                         </div>
                         <div>
-                            <select id="categoryFilter" v-model="categoryFilter" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                            <select id="categoryFilter" v-model="categoryFilter" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
                                 <option value="">Semua Kategori</option>
                                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                             </select>
                         </div>
                         <div>
-                            <select id="assignedUserId" v-model="assignedUserId" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                            <select id="assignedUserId" v-model="assignedUserId" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
                                 <option value="">Semua User</option>
                                 <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
                             </select>
                         </div>
                         <div>
-                            <select id="assignedDepartment" v-model="assignedDepartment" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                            <select id="assignedDepartment" v-model="assignedDepartment" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
                                 <option value="">Semua Dept</option>
                                 <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
                             </select>
@@ -564,7 +564,7 @@ const getTaskIcon = (status: Task['status']) => {
             <!-- Tasks List -->
             <Card v-else>
                 <CardHeader>
-                    <CardTitle class="text-base">Daftar Tugas</CardTitle>
+                    <CardTitle style="font-family: Georgia, serif;" class="text-base">Daftar Tugas</CardTitle>
                     <CardDescription>Tugas yang ditugaskan ke Anda atau yang Anda buat</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -612,12 +612,12 @@ const getTaskIcon = (status: Task['status']) => {
                                     </TableCell>
                                     <TableCell>
                                         <div class="flex items-center gap-2" v-if="task.category?.qc_checklist?.length">
-                                            <div class="h-2 w-16 rounded-full bg-gray-100 dark:bg-gray-700">
+                                            <div class="h-2 w-16 rounded-full bg-muted">
                                                 <div 
                                                     class="h-2 rounded-full transition-all duration-500"
                                                     :class="[
-                                                        calculateTaskQcPercentage(task) >= 100 ? 'bg-green-500' : 
-                                                        calculateTaskQcPercentage(task) >= 70 ? 'bg-blue-500' : 'bg-yellow-500'
+                                                        calculateTaskQcPercentage(task) >= 100 ? 'bg-primary' : 
+                                                        calculateTaskQcPercentage(task) >= 70 ? 'bg-secondary' : 'bg-accent'
                                                     ]"
                                                     :style="{ width: `${calculateTaskQcPercentage(task)}%` }"
                                                 ></div>
@@ -652,17 +652,17 @@ const getTaskIcon = (status: Task['status']) => {
                                                 </Button>
                                             </template>
                                             <template v-if="task.status === 'in_progress'">
-                                                <Button size="icon" variant="ghost" class="h-8 w-8 cursor-pointer text-green-600 hover:text-green-700 hover:bg-green-50" @click="handleMarkAsDone(task)" title="Mark as Done">
+                                                <Button size="icon" variant="ghost" class="h-8 w-8 cursor-pointer text-primary hover:text-primary hover:bg-accent" @click="handleMarkAsDone(task)" title="Mark as Done">
                                                     <CheckCircle2 class="h-3.5 w-3.5" />
                                                 </Button>
                                             </template>
                                             <template v-else-if="!task.status || task.status === 'todo'">
-                                                <Button size="icon" variant="ghost" class="h-8 w-8 cursor-pointer text-blue-600 hover:text-blue-700 hover:bg-blue-50" @click="router.patch(`/admin/tasks/${task.id}`, { status: 'in_progress' })" title="Start Task">
+                                                <Button size="icon" variant="ghost" class="h-8 w-8 cursor-pointer text-primary hover:text-primary hover:bg-accent" @click="router.patch(`/admin/tasks/${task.id}`, { status: 'in_progress' })" title="Start Task">
                                                     <ArrowRightCircle class="h-3.5 w-3.5" />
                                                 </Button>
                                             </template>
                                             <template v-if="task.created_by_user_id === ($page.props as any).auth.user.id">
-                                                <Button size="icon" variant="ghost" class="h-8 w-8 cursor-pointer text-red-500 hover:text-red-600 hover:bg-red-50" @click="router.delete(`/admin/tasks/${task.id}`)">
+                                                <Button size="icon" variant="ghost" class="h-8 w-8 cursor-pointer text-destructive hover:text-destructive hover:bg-muted" @click="router.delete(`/admin/tasks/${task.id}`)">
                                                     <Trash2 class="h-3.5 w-3.5" />
                                                 </Button>
                                             </template>
@@ -702,9 +702,9 @@ const getTaskIcon = (status: Task['status']) => {
             <!-- Create Modal -->
             <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div class="fixed inset-0 bg-black/50" @click="showCreateModal = false"></div>
-                <div class="relative flex flex-col w-full max-w-lg max-h-[90vh] rounded-lg bg-white shadow-lg dark:bg-gray-900">
-                    <div class="p-6 border-b dark:border-gray-800">
-                        <h3 class="text-lg font-semibold">Buat Tugas</h3>
+                <div class="relative flex flex-col w-full max-w-lg max-h-[90vh] rounded-lg bg-card shadow-lg">
+                    <div class="p-6 border-b border-border">
+                        <h3 class="text-lg font-medium" style="font-family: Georgia, serif;">Buat Tugas</h3>
                     </div>
                     <div class="flex-1 overflow-y-auto p-6">
                         <div class="space-y-3">
@@ -714,7 +714,7 @@ const getTaskIcon = (status: Task['status']) => {
                         </div>
                         <div>
                             <Label for="category" class="mb-2 block">Kategori</Label>
-                            <select id="category" v-model="createForm.task_category_id" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                            <select id="category" v-model="createForm.task_category_id" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
                                 <option value="">— Pilih Kategori —</option>
                                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                             </select>
@@ -731,9 +731,9 @@ const getTaskIcon = (status: Task['status']) => {
                                     :key="option.value"
                                     type="button"
                                     @click="createForm.status = option.value"
-                                    class="px-3 py-1.5 rounded-md text-sm border transition-all"
+                                    class="px-3 py-1.5 rounded-md text-sm border border-border transition-all"
                                     :class="[
-                                        createForm.status === option.value ? option.activeClass : option.class
+                                        createForm.status === option.value ? 'bg-secondary text-secondary-foreground' : 'bg-muted text-muted-foreground'
                                     ]"
                                 >
                                     {{ option.label }}
@@ -742,7 +742,7 @@ const getTaskIcon = (status: Task['status']) => {
                         </div>
                         <div>
                             <Label for="priority" class="mb-2 block">Prioritas</Label>
-                            <select id="priority" v-model="createForm.priority" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                            <select id="priority" v-model="createForm.priority" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
                                 <option value="low">Low</option>
                                 <option value="medium">Medium</option>
                                 <option value="high">High</option>
@@ -755,14 +755,14 @@ const getTaskIcon = (status: Task['status']) => {
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <Label for="assigned_user_id" class="mb-2 block">Assign ke User</Label>
-                                <select id="assigned_user_id" v-model="createForm.assigned_user_id" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                                <select id="assigned_user_id" v-model="createForm.assigned_user_id" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
                                     <option value="">— Pilih user —</option>
                                     <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
                                 </select>
                             </div>
                             <div>
                                 <Label for="assigned_department" class="mb-2 block">Assign ke Departemen</Label>
-                                <select id="assigned_department" v-model="createForm.assigned_department" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                                <select id="assigned_department" v-model="createForm.assigned_department" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
                                     <option value="">— Pilih departemen —</option>
                                     <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
                                 </select>
@@ -781,10 +781,10 @@ const getTaskIcon = (status: Task['status']) => {
             <!-- Edit Modal -->
             <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div class="fixed inset-0 bg-black/50" @click="showEditModal = false"></div>
-                <div class="relative flex flex-col w-full max-w-2xl max-h-[90vh] rounded-lg bg-white shadow-lg dark:bg-gray-900">
-                    <div class="flex items-center justify-between p-6 border-b dark:border-gray-800">
-                        <h3 class="text-lg font-semibold">Edit Tugas</h3>
-                        <Button variant="ghost" size="icon" @click="handleDeleteTask" class="text-red-500 hover:text-red-600">
+                <div class="relative flex flex-col w-full max-w-2xl max-h-[90vh] rounded-lg bg-card shadow-lg">
+                    <div class="flex items-center justify-between p-6 border-b border-border">
+                        <h3 class="text-lg font-medium" style="font-family: Georgia, serif;">Edit Tugas</h3>
+                        <Button variant="ghost" size="icon" @click="handleDeleteTask" class="text-destructive hover:text-destructive">
                             <Trash2 class="h-4 w-4" />
                         </Button>
                     </div>
@@ -797,7 +797,7 @@ const getTaskIcon = (status: Task['status']) => {
                         </div>
                         <div>
                             <Label for="edit_category" class="mb-2 block">Kategori</Label>
-                            <select id="edit_category" v-model="editForm.task_category_id" class="mt-1 w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+                            <select id="edit_category" v-model="editForm.task_category_id" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
                                 <option value="">— Pilih Kategori —</option>
                                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                             </select>
@@ -808,10 +808,10 @@ const getTaskIcon = (status: Task['status']) => {
                         </div>
 
                         <!-- QC Checklist Section -->
-                        <div v-if="currentCategory && currentCategory.qc_checklist && currentCategory.qc_checklist.length > 0" class="space-y-3 border rounded-md p-4 bg-muted/20">
+                        <div v-if="currentCategory && currentCategory.qc_checklist && currentCategory.qc_checklist.length > 0" class="space-y-3 border border-border rounded-md p-4 bg-muted">
                             <div class="flex items-center justify-between">
                                 <Label class="mb-2 block">Quality Control ({{ Math.round(qcPercentage) }}%)</Label>
-                                <span :class="qcPercentage >= 70 ? 'text-green-600' : 'text-red-500'" class="text-xs font-medium">
+                                <span :class="qcPercentage >= 70 ? 'text-primary' : 'text-destructive'" class="text-xs font-medium">
                                     {{ qcPercentage >= 70 ? 'Memenuhi Syarat' : 'Belum Memenuhi Syarat (>70%)' }}
                                 </span>
                             </div>
@@ -821,11 +821,12 @@ const getTaskIcon = (status: Task['status']) => {
                                     :id="'qc_' + index"
                                     :checked="localQcResults.includes(item)"
                                     @change="toggleQcItem(item)"
-                                    class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                    class="h-4 w-4 rounded border-border text-primary focus:ring-ring"
+                                    style="accent-color: #c96442;"
                                 />
                                 <Label :for="'qc_' + index" class="font-normal cursor-pointer">{{ item }}</Label>
                             </div>
-                            <p v-if="editForm.status === 'done' && qcPercentage < 70" class="text-xs text-red-500 font-medium animate-pulse">
+                            <p v-if="editForm.status === 'done' && qcPercentage < 70" class="text-xs text-destructive font-medium animate-pulse">
                                 Status tidak bisa 'Done' jika QC kurang dari 70%.
                             </p>
                         </div>

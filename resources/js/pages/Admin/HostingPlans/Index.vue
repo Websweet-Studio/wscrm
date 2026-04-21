@@ -182,7 +182,7 @@ const confirmDelete = () => {
         <div class="space-y-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">Paket Hosting</h1>
+                    <h1 class="text-3xl font-medium tracking-tight" style="font-family: Georgia, serif;">Paket Hosting</h1>
                     <p class="text-muted-foreground">Kelola konfigurasi paket hosting</p>
                 </div>
                 <Button @click="showCreateModal = true" class="cursor-pointer">
@@ -193,7 +193,7 @@ const confirmDelete = () => {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Paket Hosting</CardTitle>
+                    <CardTitle style="font-family: Georgia, serif;">Paket Hosting</CardTitle>
                     <CardDescription> Kelola paket hosting dan spesifikasinya </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -244,10 +244,10 @@ const confirmDelete = () => {
                                     </TableCell>
                                     <TableCell>
                                         <div class="space-y-1">
-                                            <div class="font-semibold text-green-600">
+                                            <div class="font-semibold text-primary">
                                                 {{ formatPrice(getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
                                             </div>
-                                            <div v-if="plan.discount_percent > 0" class="text-xs text-green-600">
+                                            <div v-if="plan.discount_percent > 0" class="text-xs text-primary">
                                                 Hemat
                                                 {{ formatPrice(plan.selling_price - getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
                                             </div>
@@ -257,8 +257,8 @@ const confirmDelete = () => {
                                         <div class="space-y-1 text-xs">
                                             <div>Modal: {{ formatPrice(plan.modal_cost) }}</div>
                                             <div>Maintenance: {{ formatPrice(plan.maintenance_cost) }}</div>
-                                            <div v-if="plan.discount_percent > 0" class="text-green-600">{{ plan.discount_percent }}% diskon</div>
-                                            <div v-if="plan.use_bulk_pricing" class="text-blue-600">Bulk Pricing</div>
+                                            <div v-if="plan.discount_percent > 0" class="text-primary">{{ plan.discount_percent }}% diskon</div>
+                                            <div v-if="plan.use_bulk_pricing" class="text-primary">Bulk Pricing</div>
                                         </div>
                                     </TableCell>
                                     <TableCell>

@@ -175,7 +175,7 @@ const confirmDelete = () => {
         <div class="space-y-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">Harga Domain</h1>
+                    <h1 class="text-3xl font-medium tracking-tight" style="font-family: Georgia, serif;">Harga Domain</h1>
                     <p class="text-muted-foreground">Kelola harga ekstensi domain</p>
                 </div>
                 <Button @click="showCreateModal = true" class="cursor-pointer">
@@ -186,7 +186,7 @@ const confirmDelete = () => {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Harga Domain</CardTitle>
+                    <CardTitle style="font-family: Georgia, serif;">Harga Domain</CardTitle>
                     <CardDescription> Kelola harga untuk berbagai ekstensi domain </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -286,7 +286,7 @@ const confirmDelete = () => {
                                                 size="sm"
                                                 variant="outline"
                                                 @click="openDeleteModal(domain)"
-                                                class="cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                class="cursor-pointer text-destructive hover:bg-muted hover:text-destructive"
                                                 title="Hapus"
                                             >
                                                 <Trash2 class="h-3.5 w-3.5" />

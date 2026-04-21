@@ -151,13 +151,13 @@ const resendNewPassword = (customer: Customer) => {
 const getStatusClass = (status: string) => {
     switch (status) {
         case 'active':
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+            return 'bg-primary text-primary-foreground';
         case 'suspended':
-            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+            return 'bg-destructive text-destructive-foreground';
         case 'inactive':
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+            return 'bg-muted text-muted-foreground';
         default:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+            return 'bg-muted text-muted-foreground';
     }
 };
 
@@ -377,7 +377,7 @@ const getSortIcon = (field: string) => {
         <div class="w-full max-w-none space-y-4 sm:space-y-6">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Kelola Pelanggan</h1>
+                    <h1 class="text-2xl font-medium tracking-tight sm:text-3xl" style="font-family: Georgia, serif;">Kelola Pelanggan</h1>
                     <p class="text-sm text-muted-foreground sm:text-base">Kelola akun dan informasi pelanggan</p>
                 </div>
                 <Button @click="showCreateModal = true" class="w-full cursor-pointer sm:w-auto">
@@ -391,7 +391,7 @@ const getSortIcon = (field: string) => {
             <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-xs font-medium sm:text-sm">Total Pelanggan</CardTitle>
+                        <CardTitle style="font-family: Georgia, serif;" class="text-xs font-medium sm:text-sm">Total Pelanggan</CardTitle>
                         <Users class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent>
@@ -401,11 +401,11 @@ const getSortIcon = (field: string) => {
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-xs font-medium sm:text-sm">Aktif</CardTitle>
-                        <UserCheck class="h-3 w-3 text-green-600 sm:h-4 sm:w-4" />
+                        <CardTitle style="font-family: Georgia, serif;" class="text-xs font-medium sm:text-sm">Aktif</CardTitle>
+                        <UserCheck class="h-3 w-3 text-primary sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent>
-                        <div class="text-xl font-bold text-green-600 sm:text-2xl">
+                        <div class="text-xl font-bold text-primary sm:text-2xl">
                             {{ customers?.data?.filter((c) => c.status === 'active').length || 0 }}
                         </div>
                     </CardContent>
@@ -413,11 +413,11 @@ const getSortIcon = (field: string) => {
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-xs font-medium sm:text-sm">Ditangguhkan</CardTitle>
-                        <UserX class="h-3 w-3 text-red-600 sm:h-4 sm:w-4" />
+                        <CardTitle style="font-family: Georgia, serif;" class="text-xs font-medium sm:text-sm">Ditangguhkan</CardTitle>
+                        <UserX class="h-3 w-3 text-destructive sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent>
-                        <div class="text-xl font-bold text-red-600 sm:text-2xl">
+                        <div class="text-xl font-bold text-destructive sm:text-2xl">
                             {{ customers?.data?.filter((c) => c.status === 'suspended').length || 0 }}
                         </div>
                     </CardContent>
@@ -425,7 +425,7 @@ const getSortIcon = (field: string) => {
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-xs font-medium sm:text-sm">Tidak Aktif</CardTitle>
+                        <CardTitle style="font-family: Georgia, serif;" class="text-xs font-medium sm:text-sm">Tidak Aktif</CardTitle>
                         <Clock class="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
                     </CardHeader>
                     <CardContent>
@@ -439,7 +439,7 @@ const getSortIcon = (field: string) => {
             <!-- Customer List -->
             <Card>
                 <CardHeader class="pb-4">
-                    <CardTitle class="text-lg sm:text-xl">Pelanggan</CardTitle>
+                    <CardTitle style="font-family: Georgia, serif;" class="text-lg sm:text-xl">Pelanggan</CardTitle>
                     <CardDescription class="text-sm">Kelola akun dan informasi pelanggan</CardDescription>
                 </CardHeader>
                 <CardContent class="px-3 sm:px-4 lg:px-6">
@@ -585,7 +585,7 @@ const getSortIcon = (field: string) => {
                                                         Resend New Password
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem @click="openDeleteModal(customer)" class="cursor-pointer text-red-600 focus:text-red-600">
+                                                    <DropdownMenuItem @click="openDeleteModal(customer)" class="cursor-pointer text-destructive focus:text-destructive">
                                                         <Trash2 class="mr-2 h-4 w-4" />
                                                         Hapus
                                                     </DropdownMenuItem>
