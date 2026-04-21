@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -90,18 +89,18 @@ const selectedHostingPlan = computed(() => {
 const calculateTotal = computed(() => {
     let total = 0;
 
-    if (selectedDomainPrice.value) {
+    if (selectedDomainPrice.value && typeof selectedDomainPrice.value.selling_price === 'number') {
         total += selectedDomainPrice.value.selling_price;
     }
 
-    if (selectedHostingPlan.value) {
+    if (selectedHostingPlan.value && typeof selectedHostingPlan.value.selling_price === 'number') {
         const hostingPrice = selectedHostingPlan.value.selling_price;
         const discount = selectedHostingPlan.value.discount_percent || 0;
         total += hostingPrice * (1 - discount / 100);
     }
 
     filteredServicePlans.value.forEach((service) => {
-        if (service && selectedServices.value && selectedServices.value.includes(service.id)) {
+        if (service && selectedServices.value && selectedServices.value.includes(service.id) && typeof service.price === 'number') {
             total += service.price;
         }
     });
@@ -204,10 +203,18 @@ const formatPrice = (price: number) => {
                                 <div class="space-y-4">
                                     <Label class="text-base font-medium" style="color: #4d4c48;">Layanan Tambahan</Label>
                                     <div v-for="service in filteredServicePlans" :key="service?.id" class="flex items-center space-x-3">
-                                        <Checkbox v-if="service" :id="'service-' + service.id" v-model="selectedServices" :value="service.id" />
-                                        <Label v-if="service" :for="'service-' + service.id" class="font-normal" style="color: #5e5d59;">
+                                        <input
+                                            v-if="service"
+                                            type="checkbox"
+                                            :id="'service-' + service.id"
+                                            :value="service.id"
+                                            v-model="selectedServices"
+                                            class="h-4 w-4 rounded"
+                                            style="border-color: #e8e6dc; color: #c96442;"
+                                        />
+                                        <label v-if="service" :for="'service-' + service.id" class="font-normal cursor-pointer" style="color: #5e5d59;">
                                             {{ service.name }} ({{ formatPrice(service.price) }}/tahun)
-                                        </Label>
+                                        </label>
                                     </div>
                                 </div>
                             </div>

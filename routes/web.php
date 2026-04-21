@@ -8,7 +8,6 @@ Route::get('/', function () {
     $domainPrices = \App\Models\DomainPrice::active()->orderBy('selling_price')->get();
     $hostingPlans = \App\Models\HostingPlan::active()->orderBy('selling_price')->get();
     $servicePlans = \App\Models\ServicePlan::where('is_active', true)
-        ->where('category', 'addon')
         ->orderBy('price')
         ->get();
 
