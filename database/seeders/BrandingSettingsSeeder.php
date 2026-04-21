@@ -97,6 +97,13 @@ class BrandingSettingsSeeder extends Seeder
                 'description' => 'Email perusahaan untuk kontak',
                 'is_active' => true,
             ],
+            [
+                'key' => 'company_whatsapp',
+                'value' => null,
+                'type' => 'text',
+                'description' => 'Nomor WhatsApp perusahaan (contoh: 6281234567890)',
+                'is_active' => true,
+            ],
         ];
 
         foreach ($settings as $setting) {

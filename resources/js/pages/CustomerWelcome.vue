@@ -46,6 +46,7 @@ interface Props {
     domainPrices: DomainPrice[];
     hostingPlans: HostingPlan[];
     servicePlans: ServicePlan[];
+    companyWhatsapp: string | null;
 }
 
 const props = defineProps<Props>();
@@ -156,6 +157,33 @@ const formatPrice = (price: number) => {
         currency: 'IDR',
         minimumFractionDigits: 0,
     }).format(validPrice);
+};
+
+const getWhatsAppUrl = () => {
+    let message = "Halo WebSweetStudio! Saya ingin memesan paket berikut:\n";
+    
+    if (domainName.value && selectedDomainPrice.value) {
+        message += `\n• Domain: ${domainName.value}.${selectedDomainPrice.value.extension} (${formatPrice(getDomainPrice(selectedDomainPrice.value))})`;
+    }
+    
+    if (selectedHostingPlan.value) {
+        const hostingPrice = getHostingPrice(selectedHostingPlan.value) * (1 - (Number(selectedHostingPlan.value.discount_percent) || 0) / 100);
+        message += `\n• Hosting: ${selectedHostingPlan.value.plan_name} (${formatPrice(hostingPrice)})`;
+    }
+    
+    if (selectedServicesList.value.length > 0) {
+        message += "\n• Layanan Tambahan:";
+        selectedServicesList.value.forEach(service => {
+            message += `\n  - ${service.name} (${formatPrice(getServicePrice(service))})`;
+        });
+    }
+    
+    message += `\n\nTotal Biaya: ${formatPrice(calculateTotal.value)}`;
+    
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappNumber = props.companyWhatsapp || "6281234567890";
+    
+    return `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
 };
 </script>
 
@@ -279,9 +307,17 @@ const formatPrice = (price: number) => {
                                             <span>{{ formatPrice(calculateTotal) }}</span>
                                         </div>
                                         <div class="pt-2">
-                                            <Button class="w-full" size="lg" :disabled="!selectedDomain || !selectedHosting" style="background-color: #c96442; color: #faf9f5; border-radius: 12px;">
-                                                <Calculator class="mr-2 h-4 w-4" />
-                                                Pesan Sekarang
+                                            <Button
+                                                asChild
+                                                class="w-full"
+                                                size="lg"
+                                                :disabled="!selectedDomain || !selectedHosting"
+                                                style="background-color: #c96442; color: #faf9f5; border-radius: 12px;"
+                                            >
+                                                <a :href="getWhatsAppUrl()" target="_blank" rel="noopener noreferrer">
+                                                    <Calculator class="mr-2 h-4 w-4" />
+                                                    Pesan Sekarang
+                                                </a>
                                             </Button>
                                         </div>
                                     </CardContent>

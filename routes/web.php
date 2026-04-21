@@ -11,10 +11,13 @@ Route::get('/', function () {
         ->orderBy('price')
         ->get();
 
+    $companyWhatsapp = \App\Models\BrandingSetting::getValue('company_whatsapp');
+
     return Inertia::render('CustomerWelcome', [
         'domainPrices' => $domainPrices,
         'hostingPlans' => $hostingPlans,
         'servicePlans' => $servicePlans,
+        'companyWhatsapp' => $companyWhatsapp,
     ]);
 })->name('home');
 

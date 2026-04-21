@@ -263,6 +263,7 @@ const settingLabels: Record<string, string> = {
     company_address: 'Alamat Perusahaan',
     company_phone: 'Nomor Telepon',
     company_email: 'Email Perusahaan',
+    company_whatsapp: 'Nomor WhatsApp',
 };
 
 const getSettingLabel = (key: string): string => {
