@@ -39,7 +39,7 @@ interface ServicePlan {
     category: string;
     description: string;
     price: number;
-    features: string[];
+    features: Record<string, any>;
     is_active: boolean;
 }
 
@@ -100,13 +100,25 @@ const calculateTotal = computed(() => {
         total += hostingPrice * (1 - discount / 100);
     }
 
-    (props.servicePlans || []).forEach((service) => {
+    filteredServicePlans.value.forEach((service) => {
         if (service && selectedServices.value && selectedServices.value.includes(service.id)) {
             total += service.price;
         }
     });
 
     return total;
+});
+
+const filteredDomainPrices = computed(() => {
+    return (props.domainPrices || []).filter((d) => d.is_active);
+});
+
+const filteredHostingPlans = computed(() => {
+    return (props.hostingPlans || []).filter((h) => h.is_active && !h.plan_name.toLowerCase().includes('lite'));
+});
+
+const filteredServicePlans = computed(() => {
+    return (props.servicePlans || []).filter((s) => s.is_active);
 });
 
 const formatPrice = (price: number) => {
@@ -166,7 +178,7 @@ const formatPrice = (price: number) => {
                                             style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
                                         >
                                             <option :value="null" disabled>Pilih ekstensi</option>
-                                            <option v-for="domain in (props.domainPrices || [])" :key="domain.id" :value="domain.id">
+                                            <option v-for="domain in filteredDomainPrices" :key="domain.id" :value="domain.id">
                                                 .{{ domain.extension }}
                                             </option>
                                         </select>
@@ -181,7 +193,7 @@ const formatPrice = (price: number) => {
                                         style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
                                     >
                                         <option :value="null" disabled>Pilih paket hosting</option>
-                                        <option v-for="plan in (props.hostingPlans || [])" :key="plan.id" :value="plan.id">
+                                        <option v-for="plan in filteredHostingPlans" :key="plan.id" :value="plan.id">
                                             {{ plan.plan_name }} - {{ formatPrice(plan.selling_price * (1 - (plan.discount_percent || 0) / 100)) }}/tahun
                                         </option>
                                     </select>
@@ -191,7 +203,7 @@ const formatPrice = (price: number) => {
 
                                 <div class="space-y-4">
                                     <Label class="text-base font-medium" style="color: #4d4c48;">Layanan Tambahan</Label>
-                                    <div v-for="service in (props.servicePlans || [])" :key="service?.id" class="flex items-center space-x-3">
+                                    <div v-for="service in filteredServicePlans" :key="service?.id" class="flex items-center space-x-3">
                                         <Checkbox v-if="service" :id="'service-' + service.id" v-model="selectedServices" :value="service.id" />
                                         <Label v-if="service" :for="'service-' + service.id" class="font-normal" style="color: #5e5d59;">
                                             {{ service.name }} ({{ formatPrice(service.price) }}/tahun)
