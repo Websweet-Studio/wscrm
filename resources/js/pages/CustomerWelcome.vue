@@ -101,13 +101,19 @@ const toggleService = (serviceId: number) => {
 
 const getDomainPrice = (domain: any) => {
     if (!domain) return 0;
-    const price = Number(domain.selling_price);
+    const price = parseFloat(String(domain.selling_price).replace(/[^0-9.-]/g, ''));
+    return !isNaN(price) ? price : 0;
+};
+
+const getHostingPrice = (plan: any) => {
+    if (!plan) return 0;
+    const price = parseFloat(String(plan.selling_price).replace(/[^0-9.-]/g, ''));
     return !isNaN(price) ? price : 0;
 };
 
 const getServicePrice = (service: any) => {
     if (!service) return 0;
-    const price = Number(service.price);
+    const price = parseFloat(String(service.price).replace(/[^0-9.-]/g, ''));
     return !isNaN(price) ? price : 0;
 };
 
@@ -119,11 +125,9 @@ const calculateTotal = computed(() => {
     }
 
     if (selectedHostingPlan.value) {
-        const hostingPrice = Number(selectedHostingPlan.value.selling_price);
+        const hostingPrice = getHostingPrice(selectedHostingPlan.value);
         const discount = Number(selectedHostingPlan.value.discount_percent) || 0;
-        if (!isNaN(hostingPrice)) {
-            total += hostingPrice * (1 - discount / 100);
-        }
+        total += hostingPrice * (1 - discount / 100);
     }
 
     selectedServicesList.value.forEach((service) => {
@@ -199,12 +203,12 @@ const formatPrice = (price: number) => {
                                         <Input v-model="domainName" placeholder="nama-domain" class="flex-1" style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;" />
                                         <select
                                             v-model="selectedDomain"
-                                            class="w-32 rounded-md px-3 py-2 text-sm"
+                                            class="w-48 rounded-md px-3 py-2 text-sm"
                                             style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
                                         >
                                             <option :value="null" disabled>Pilih ekstensi</option>
                                             <option v-for="domain in filteredDomainPrices" :key="domain.id" :value="domain.id">
-                                                .{{ domain.extension }}
+                                                {{ domain.extension }} - {{ formatPrice(getDomainPrice(domain)) }}
                                             </option>
                                         </select>
                                     </div>
@@ -213,15 +217,15 @@ const formatPrice = (price: number) => {
                                 <div class="space-y-3">
                                     <Label style="color: #4d4c48;">Paket Hosting</Label>
                                     <select
-                                        v-model="selectedHosting"
-                                        class="w-full rounded-md px-3 py-2 text-sm"
-                                        style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
-                                    >
-                                        <option :value="null" disabled>Pilih paket hosting</option>
-                                        <option v-for="plan in filteredHostingPlans" :key="plan.id" :value="plan.id">
-                                            {{ plan.plan_name }} - {{ formatPrice(plan.selling_price * (1 - (plan.discount_percent || 0) / 100)) }}/tahun
-                                        </option>
-                                    </select>
+                                            v-model="selectedHosting"
+                                            class="w-full rounded-md px-3 py-2 text-sm"
+                                            style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
+                                        >
+                                            <option :value="null" disabled>Pilih paket hosting</option>
+                                            <option v-for="plan in filteredHostingPlans" :key="plan.id" :value="plan.id">
+                                                {{ plan.plan_name }} - {{ formatPrice(getHostingPrice(plan) * (1 - (plan.discount_percent || 0) / 100)) }}/tahun
+                                            </option>
+                                        </select>
                                 </div>
 
                                 <Separator style="background-color: #f0eee6;" />
@@ -239,7 +243,7 @@ const formatPrice = (price: number) => {
                                             style="border-color: #e8e6dc; accent-color: #c96442;"
                                         />
                                         <label v-if="service" :for="'service-' + service.id" class="font-normal cursor-pointer" style="color: #5e5d59;">
-                                            {{ service.name }} ({{ formatPrice(service.price) }}/tahun)
+                                            {{ service.name }} ({{ formatPrice(getServicePrice(service)) }}/tahun)
                                         </label>
                                     </div>
                                 </div>
@@ -253,7 +257,7 @@ const formatPrice = (price: number) => {
                                     <CardContent class="space-y-4">
                                         <div v-if="selectedDomainPrice" class="flex justify-between">
                                             <span style="color: #5e5d59;">
-                                                Domain .{{ selectedDomainPrice.extension }}
+                                                Domain {{ selectedDomainPrice.extension }}
                                             </span>
                                             <span class="font-medium" style="color: #4d4c48;">{{ formatPrice(getDomainPrice(selectedDomainPrice)) }}</span>
                                         </div>
@@ -262,7 +266,7 @@ const formatPrice = (price: number) => {
                                                 Hosting {{ selectedHostingPlan.plan_name }}
                                             </span>
                                             <span class="font-medium" style="color: #4d4c48;">
-                                                {{ formatPrice(selectedHostingPlan.selling_price * (1 - (selectedHostingPlan.discount_percent || 0) / 100)) }}
+                                                {{ formatPrice(getHostingPrice(selectedHostingPlan) * (1 - (selectedHostingPlan.discount_percent || 0) / 100)) }}
                                             </span>
                                         </div>
                                         <div v-for="service in selectedServicesList" :key="service?.id" class="flex justify-between">
