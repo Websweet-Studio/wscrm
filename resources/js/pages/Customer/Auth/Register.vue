@@ -4,6 +4,7 @@ import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import AuthCardLayout from '@/layouts/auth/AuthCardLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 
@@ -28,19 +29,16 @@ const submit = () => {
     <Head title="Customer Register" />
 
     <AuthCardLayout>
-        <div class="auth-card space-y-6">
-            <!-- Header Section -->
+        <div class="space-y-6">
             <div class="space-y-3 text-center">
-                <h2 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Create Account</h2>
-                <p class="text-muted-foreground">Join us today and get access to exclusive features</p>
+                <h2 class="text-2xl font-medium" style="color: #141413; line-height: 1.2; font-family: Georgia, serif;">Buat Akun</h2>
+                <p style="color: #5e5d59;">Bergabung hari ini dan dapatkan akses fitur eksklusif</p>
             </div>
 
-            <!-- Registration Form -->
-            <form @submit.prevent="submit" class="space-y-6">
-                <!-- Personal Information Section -->
+            <form @submit.prevent="submit" class="space-y-5">
                 <div class="space-y-4">
-                    <div class="form-section-divider flex items-center gap-2 border-b border-muted pb-2">
-                        <svg class="section-icon h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex items-center gap-2">
+                        <svg class="h-4 w-4" style="color: #c96442;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
@@ -48,60 +46,55 @@ const submit = () => {
                                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                             ></path>
                         </svg>
-                        <h3 class="text-sm font-semibold tracking-wide text-foreground uppercase">Personal Information</h3>
+                        <h3 class="text-sm font-medium" style="color: #4d4c48;">Informasi Pribadi</h3>
                     </div>
 
-                    <!-- Name Field -->
                     <div class="space-y-2">
-                        <Label for="name" class="text-sm font-medium text-foreground">Full Name</Label>
+                        <Label for="name" style="color: #4d4c48;">Nama Lengkap</Label>
                         <Input
                             id="name"
                             v-model="form.name"
                             type="text"
-                            placeholder="Enter your full name"
+                            placeholder="Masukkan nama lengkap Anda"
                             required
-                            class="auth-input enhanced-focus animate-delay-100 py-3 pr-4 pl-4 text-base"
-                            :class="form.errors.name ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''"
+                            style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
                         />
-                        <InputError class="text-xs" :message="form.errors.name" />
+                        <InputError :message="form.errors.name" />
                     </div>
 
-                    <!-- Email Field -->
                     <div class="space-y-2">
-                        <Label for="email" class="text-sm font-medium text-foreground">Email Address</Label>
+                        <Label for="email" style="color: #4d4c48;">Alamat Email</Label>
                         <Input
                             id="email"
                             v-model="form.email"
                             type="email"
-                            placeholder="Enter your email"
+                            placeholder="Masukkan email Anda"
                             required
-                            class="auth-input enhanced-focus py-3 pr-4 pl-4 text-base"
-                            :class="form.errors.email ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''"
+                            style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
                         />
-                        <InputError class="text-xs" :message="form.errors.email" />
+                        <InputError :message="form.errors.email" />
                     </div>
 
-                    <!-- Phone Field -->
                     <div class="space-y-2">
-                        <Label for="phone" class="text-sm font-medium text-foreground"
-                            >Phone Number <span class="text-xs text-muted-foreground">(Optional)</span></Label
-                        >
+                        <Label for="phone" style="color: #4d4c48;">
+                            Nomor Telepon <span style="color: #87867f;">(Opsional)</span>
+                        </Label>
                         <Input
                             id="phone"
                             v-model="form.phone"
                             type="tel"
-                            placeholder="e.g., +62812345678"
-                            class="auth-input enhanced-focus py-3 pr-4 pl-4 text-base"
-                            :class="form.errors.phone ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''"
+                            placeholder="contoh: +62812345678"
+                            style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
                         />
-                        <InputError class="text-xs" :message="form.errors.phone" />
+                        <InputError :message="form.errors.phone" />
                     </div>
                 </div>
 
-                <!-- Security Section -->
+                <Separator style="background-color: #f0eee6;" />
+
                 <div class="space-y-4">
-                    <div class="form-section-divider flex items-center gap-2 border-b border-muted pb-2">
-                        <svg class="section-icon h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex items-center gap-2">
+                        <svg class="h-4 w-4" style="color: #c96442;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
@@ -109,44 +102,42 @@ const submit = () => {
                                 d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                             ></path>
                         </svg>
-                        <h3 class="text-sm font-semibold tracking-wide text-foreground uppercase">Security</h3>
+                        <h3 class="text-sm font-medium" style="color: #4d4c48;">Keamanan</h3>
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2">
-                        <!-- Password Field -->
                         <div class="space-y-2">
-                            <Label for="password" class="text-sm font-medium text-foreground">Password</Label>
+                            <Label for="password" style="color: #4d4c48;">Password</Label>
                             <Input
                                 id="password"
                                 v-model="form.password"
                                 type="password"
-                                placeholder="Create a password"
+                                placeholder="Buat password"
                                 required
-                                class="auth-input enhanced-focus py-3 pr-4 pl-4 text-base"
-                                :class="form.errors.password ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''"
+                                style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
                             />
-                            <InputError class="text-xs" :message="form.errors.password" />
+                            <InputError :message="form.errors.password" />
                         </div>
 
-                        <!-- Confirm Password Field -->
                         <div class="space-y-2">
-                            <Label for="password_confirmation" class="text-sm font-medium text-foreground">Confirm Password</Label>
+                            <Label for="password_confirmation" style="color: #4d4c48;">Konfirmasi Password</Label>
                             <Input
                                 id="password_confirmation"
                                 v-model="form.password_confirmation"
                                 type="password"
-                                placeholder="Confirm your password"
+                                placeholder="Konfirmasi password Anda"
                                 required
-                                class="auth-input enhanced-focus py-3 pr-4 pl-4 text-base"
+                                style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
                             />
                         </div>
                     </div>
                 </div>
 
-                <!-- Address Section -->
+                <Separator style="background-color: #f0eee6;" />
+
                 <div class="space-y-4">
-                    <div class="form-section-divider flex items-center gap-2 border-b border-muted pb-2">
-                        <svg class="section-icon h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex items-center gap-2">
+                        <svg class="h-4 w-4" style="color: #c96442;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
@@ -155,62 +146,56 @@ const submit = () => {
                             ></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
-                        <h3 class="text-sm font-semibold tracking-wide text-foreground uppercase">Address Information</h3>
-                        <span class="text-xs text-muted-foreground">(Optional)</span>
+                        <h3 class="text-sm font-medium" style="color: #4d4c48;">Informasi Alamat <span style="color: #87867f;">(Opsional)</span></h3>
                     </div>
 
-                    <!-- Address Field -->
                     <div class="space-y-2">
-                        <Label for="address" class="text-sm font-medium text-foreground">Street Address</Label>
+                        <Label for="address" style="color: #4d4c48;">Alamat Jalan</Label>
                         <Input
                             id="address"
                             v-model="form.address"
                             type="text"
-                            placeholder="Enter your street address"
-                            class="auth-input enhanced-focus py-3 pr-4 pl-4 text-base"
-                            :class="form.errors.address ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''"
+                            placeholder="Masukkan alamat jalan Anda"
+                            style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
                         />
-                        <InputError class="text-xs" :message="form.errors.address" />
+                        <InputError :message="form.errors.address" />
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2">
-                        <!-- City Field -->
                         <div class="space-y-2">
-                            <Label for="city" class="text-sm font-medium text-foreground">City</Label>
+                            <Label for="city" style="color: #4d4c48;">Kota</Label>
                             <Input
                                 id="city"
                                 v-model="form.city"
                                 type="text"
-                                placeholder="e.g., Jakarta"
-                                class="auth-input enhanced-focus py-3 pr-4 pl-4 text-base"
-                                :class="form.errors.city ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''"
+                                placeholder="contoh: Jakarta"
+                                style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
                             />
-                            <InputError class="text-xs" :message="form.errors.city" />
+                            <InputError :message="form.errors.city" />
                         </div>
 
-                        <!-- Postal Code Field -->
                         <div class="space-y-2">
-                            <Label for="postal_code" class="text-sm font-medium text-foreground">Postal Code</Label>
+                            <Label for="postal_code" style="color: #4d4c48;">Kode Pos</Label>
                             <Input
                                 id="postal_code"
                                 v-model="form.postal_code"
                                 type="text"
-                                placeholder="e.g., 12345"
-                                class="auth-input enhanced-focus py-3 pr-4 pl-4 text-base"
-                                :class="form.errors.postal_code ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''"
+                                placeholder="contoh: 12345"
+                                style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
                             />
-                            <InputError class="text-xs" :message="form.errors.postal_code" />
+                            <InputError :message="form.errors.postal_code" />
                         </div>
                     </div>
                 </div>
 
-                <!-- Submit Button -->
                 <Button
                     type="submit"
-                    class="auth-button animate-delay-400 w-full bg-primary py-3 text-base font-semibold hover:bg-primary/90 focus:ring-2 focus:ring-primary/20"
+                    class="w-full"
+                    size="lg"
+                    style="background-color: #c96442; color: #faf9f5; border-radius: 12px;"
                     :disabled="form.processing"
                 >
-                    <span v-if="!form.processing">Create Account</span>
+                    <span v-if="!form.processing">Buat Akun</span>
                     <span v-else class="flex items-center justify-center gap-2">
                         <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -220,39 +205,31 @@ const submit = () => {
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             ></path>
                         </svg>
-                        Creating account...
+                        Membuat akun...
                     </span>
                 </Button>
             </form>
 
-            <!-- Divider -->
-            <div class="relative my-6">
-                <div class="absolute inset-0 flex items-center">
-                    <span class="w-full border-t border-muted" />
-                </div>
-                <div class="relative flex justify-center text-xs uppercase">
-                    <span class="bg-card px-4 font-medium text-muted-foreground">Already a member?</span>
-                </div>
-            </div>
+            <Separator style="background-color: #f0eee6;" />
 
-            <!-- Footer Links -->
             <div class="space-y-4 text-center">
                 <div class="text-sm">
-                    <span class="text-muted-foreground">Already have an account? </span>
-                    <TextLink href="/customer/login" class="font-semibold text-primary transition-colors duration-200 hover:text-primary/80">
-                        Sign in
+                    <span style="color: #5e5d59;">Sudah punya akun? </span>
+                    <TextLink href="/customer/login" class="font-medium" style="color: #c96442;">
+                        Masuk
                     </TextLink>
                 </div>
 
-                <div class="border-t border-muted pt-4">
+                <div class="border-t pt-4" style="border-color: #f0eee6;">
                     <TextLink
                         href="/hosting"
-                        class="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground"
+                        class="inline-flex items-center gap-2 text-sm"
+                        style="color: #5e5d59;"
                     >
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                         </svg>
-                        Back to Shop
+                        Kembali ke Toko
                     </TextLink>
                 </div>
             </div>

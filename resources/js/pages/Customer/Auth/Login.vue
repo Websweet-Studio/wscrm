@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import AuthCardLayout from '@/layouts/auth/AuthCardLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 
@@ -27,68 +28,54 @@ const submit = () => {
     <Head title="Customer Login" />
 
     <AuthCardLayout>
-        <div class="auth-card space-y-6">
-            <!-- Header Section -->
+        <div class="space-y-6">
             <div class="space-y-3 text-center">
-                <h2 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Sign In</h2>
-                <p class="text-muted-foreground">Enter your credentials to access your account</p>
+                <h2 class="text-2xl font-medium" style="color: #141413; line-height: 1.2; font-family: Georgia, serif;">Masuk</h2>
+                <p style="color: #5e5d59;">Masukkan kredensial Anda untuk mengakses akun</p>
             </div>
 
-            <!-- Login Form -->
             <form @submit.prevent="submit" class="space-y-5">
-                <!-- Email Field -->
                 <div class="space-y-2">
-                    <Label for="email" class="text-sm font-medium text-foreground">Email Address</Label>
-                    <div class="relative">
-                        <Input
-                            id="email"
-                            v-model="form.email"
-                            type="email"
-                            placeholder="Enter your email"
-                            required
-                            class="auth-input enhanced-focus animate-delay-100 py-3 pr-4 pl-4 text-base"
-                            :class="form.errors.email ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''"
-                        />
-                    </div>
-                    <InputError class="text-xs" :message="form.errors.email" />
+                    <Label for="email" style="color: #4d4c48;">Alamat Email</Label>
+                    <Input
+                        id="email"
+                        v-model="form.email"
+                        type="email"
+                        placeholder="Masukkan email Anda"
+                        required
+                        style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
+                    />
+                    <InputError :message="form.errors.email" />
                 </div>
 
-                <!-- Password Field -->
                 <div class="space-y-2">
-                    <Label for="password" class="text-sm font-medium text-foreground">Password</Label>
-                    <div class="relative">
-                        <Input
-                            id="password"
-                            v-model="form.password"
-                            type="password"
-                            placeholder="Enter your password"
-                            required
-                            class="auth-input enhanced-focus animate-delay-200 py-3 pr-4 pl-4 text-base"
-                            :class="form.errors.password ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''"
-                        />
-                    </div>
-                    <InputError class="text-xs" :message="form.errors.password" />
+                    <Label for="password" style="color: #4d4c48;">Password</Label>
+                    <Input
+                        id="password"
+                        v-model="form.password"
+                        type="password"
+                        placeholder="Masukkan password Anda"
+                        required
+                        style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
+                    />
+                    <InputError :message="form.errors.password" />
                 </div>
 
-                <!-- Remember Me -->
-                <div class="flex items-center justify-between">
+                <div class="flex items-center">
                     <div class="flex items-center space-x-3">
-                        <Checkbox
-                            id="remember"
-                            v-model:checked="form.remember"
-                            class="data-[state=checked]:border-primary data-[state=checked]:bg-primary"
-                        />
-                        <Label for="remember" class="cursor-pointer text-sm text-muted-foreground"> Remember me for 30 days </Label>
+                        <Checkbox id="remember" v-model:checked="form.remember" />
+                        <Label for="remember" class="cursor-pointer text-sm" style="color: #5e5d59;"> Ingat saya selama 30 hari </Label>
                     </div>
                 </div>
 
-                <!-- Submit Button -->
                 <Button
                     type="submit"
-                    class="auth-button animate-delay-300 w-full bg-primary py-3 text-base font-semibold hover:bg-primary/90 focus:ring-2 focus:ring-primary/20"
+                    class="w-full"
+                    size="lg"
+                    style="background-color: #c96442; color: #faf9f5; border-radius: 12px;"
                     :disabled="form.processing"
                 >
-                    <span v-if="!form.processing">Sign In</span>
+                    <span v-if="!form.processing">Masuk</span>
                     <span v-else class="flex items-center justify-center gap-2">
                         <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -98,45 +85,37 @@ const submit = () => {
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             ></path>
                         </svg>
-                        Signing in...
+                        Masuk...
                     </span>
                 </Button>
             </form>
 
-            <!-- Divider -->
-            <div class="relative my-6">
-                <div class="absolute inset-0 flex items-center">
-                    <span class="w-full border-t border-muted" />
-                </div>
-                <div class="relative flex justify-center text-xs uppercase">
-                    <span class="bg-card px-4 font-medium text-muted-foreground">New to our platform?</span>
-                </div>
-            </div>
+            <Separator style="background-color: #f0eee6;" />
 
-            <!-- Footer Links -->
             <div class="space-y-4 text-center">
                 <div class="text-sm">
-                    <span class="text-muted-foreground">Don't have an account? </span>
-                    <TextLink href="/customer/register" class="font-semibold text-primary transition-colors duration-200 hover:text-primary/80">
-                        Create account
+                    <span style="color: #5e5d59;">Tidak punya akun? </span>
+                    <TextLink href="/customer/register" class="font-medium" style="color: #c96442;">
+                        Buat akun
                     </TextLink>
                 </div>
 
                 <div class="text-sm">
-                    <TextLink href="/customer/terms" class="text-muted-foreground transition-colors duration-200 hover:text-foreground">
+                    <TextLink href="/customer/terms" style="color: #87867f;">
                         Syarat dan Ketentuan
                     </TextLink>
                 </div>
 
-                <div class="border-t border-muted pt-4">
+                <div class="border-t pt-4" style="border-color: #f0eee6;">
                     <TextLink
                         href="/hosting"
-                        class="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground"
+                        class="inline-flex items-center gap-2 text-sm"
+                        style="color: #5e5d59;"
                     >
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                         </svg>
-                        Back to Shop
+                        Kembali ke Toko
                     </TextLink>
                 </div>
             </div>
