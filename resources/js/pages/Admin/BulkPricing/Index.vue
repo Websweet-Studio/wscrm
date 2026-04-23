@@ -136,10 +136,10 @@ const saveForm = reactive({
 });
 
 const getStatusClass = (profitMargin: number) => {
-    if (profitMargin < 0) return 'text-red-600 bg-red-50';
-    if (profitMargin < 10) return 'text-orange-600 bg-orange-50';
-    if (profitMargin < 30) return 'text-yellow-600 bg-yellow-50';
-    return 'text-green-600 bg-green-50';
+    if (profitMargin < 0) return 'text-destructive border border-destructive/20';
+    if (profitMargin < 10) return 'text-muted-foreground border border-border';
+    if (profitMargin < 30) return 'text-foreground border border-border';
+    return 'text-primary border border-primary/20 font-medium';
 };
 
 const getProfitStatus = (profitMargin: number) => {
@@ -345,8 +345,8 @@ const deleteConfig = (configId: number, configName: string) => {
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">Bulk Pricing Simulator</h1>
-                    <p class="text-muted-foreground">Simulasi harga hosting dengan tier discount dan analisis keuntungan</p>
+                    <h1 class="text-4xl font-serif font-medium leading-[1.10]">Bulk Pricing Simulator</h1>
+                    <p class="text-lg text-muted-foreground leading-relaxed mt-2">Simulasi harga hosting dengan tier discount dan analisis keuntungan</p>
                 </div>
             </div>
 
@@ -356,8 +356,8 @@ const deleteConfig = (configId: number, configName: string) => {
                     <!-- Base Configuration -->
                     <Card>
                         <CardHeader>
-                            <CardTitle class="flex items-center gap-2">
-                                <Settings class="h-5 w-5" />
+                            <CardTitle class="flex items-center gap-2 font-serif font-medium text-2xl leading-[1.20]">
+                                <Settings class="h-5 w-5 text-primary" />
                                 Konfigurasi Dasar
                             </CardTitle>
                             <CardDescription>Pengaturan harga dasar dan modal</CardDescription>
@@ -377,8 +377,8 @@ const deleteConfig = (configId: number, configName: string) => {
                     <!-- Plan Selection & Multipliers -->
                     <Card>
                         <CardHeader>
-                            <CardTitle>Plan Selection & Multipliers</CardTitle>
-                            <CardDescription>Pilih plan yang aktif dan atur pengali harganya</CardDescription>
+                            <CardTitle class="font-serif font-medium text-2xl leading-[1.20]">Plan Selection & Multipliers</CardTitle>
+                            <CardDescription class="text-base">Pilih plan yang aktif dan atur pengali harganya</CardDescription>
                         </CardHeader>
                         <CardContent class="space-y-4">
                             <!-- Basic Plan -->
@@ -432,8 +432,8 @@ const deleteConfig = (configId: number, configName: string) => {
                     <!-- Tier Discounts -->
                     <Card>
                         <CardHeader>
-                            <CardTitle>Tier Discounts</CardTitle>
-                            <CardDescription>Persentase diskon berdasarkan ukuran storage (maksimal 30%, kenaikan bertahap)</CardDescription>
+                            <CardTitle class="font-serif font-medium text-2xl leading-[1.20]">Tier Discounts</CardTitle>
+                            <CardDescription class="text-base">Persentase diskon berdasarkan ukuran storage (maksimal 30%, kenaikan bertahap)</CardDescription>
                         </CardHeader>
                         <CardContent class="space-y-4">
                             <div v-for="(tier, index) in form.tier_discounts" :key="index" class="flex gap-2">
@@ -464,8 +464,8 @@ const deleteConfig = (configId: number, configName: string) => {
                     <!-- Saved Configurations -->
                     <Card>
                         <CardHeader>
-                            <CardTitle>Konfigurasi Tersimpan</CardTitle>
-                            <CardDescription>Load konfigurasi yang sudah disimpan</CardDescription>
+                            <CardTitle class="font-serif font-medium text-2xl leading-[1.20]">Konfigurasi Tersimpan</CardTitle>
+                            <CardDescription class="text-base">Load konfigurasi yang sudah disimpan</CardDescription>
                         </CardHeader>
                         <CardContent class="space-y-3">
                             <div v-if="savedConfigs.length === 0" class="py-4 text-center text-sm text-muted-foreground">
@@ -513,7 +513,7 @@ const deleteConfig = (configId: number, configName: string) => {
                                 <Button
                                     @click="applyPricing"
                                     :disabled="isApplying || !Object.keys(filteredSimulation).length"
-                                    class="w-full bg-red-600 text-white hover:bg-red-700"
+                                    class="w-full"
                                     variant="destructive"
                                 >
                                     <DollarSign class="mr-2 h-4 w-4" />
@@ -530,11 +530,11 @@ const deleteConfig = (configId: number, configName: string) => {
                         <CardHeader>
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <CardTitle class="flex items-center gap-2">
-                                        <TrendingUp class="h-5 w-5" />
+                                    <CardTitle class="flex items-center gap-2 font-serif font-medium text-[32px] leading-[1.10]">
+                                        <TrendingUp class="h-6 w-6 text-primary" />
                                         Simulasi Harga & Keuntungan
                                     </CardTitle>
-                                    <CardDescription>Analisis pricing dengan margin keuntungan</CardDescription>
+                                    <CardDescription class="text-base mt-2">Analisis pricing dengan margin keuntungan</CardDescription>
                                 </div>
                                 <div class="flex items-center gap-1 rounded-lg bg-muted p-1">
                                     <Button
@@ -572,7 +572,7 @@ const deleteConfig = (configId: number, configName: string) => {
                             </div>
                             <div v-else class="space-y-6">
                                 <div v-for="(planData, planType) in filteredSimulation" :key="planType">
-                                    <h3 class="mb-3 text-lg font-semibold capitalize">{{ planType }} Plan</h3>
+                                    <h3 class="mb-4 text-2xl font-serif font-medium capitalize leading-[1.20]">{{ planType }} Plan</h3>
                                     <div class="overflow-x-auto">
                                         <Table>
                                             <TableHeader>
@@ -608,19 +608,19 @@ const deleteConfig = (configId: number, configName: string) => {
                                                     <TableCell
                                                         v-if="viewMode === 'basic'"
                                                         :class="
-                                                            data.price_difference >= 0 ? 'font-medium text-green-600' : 'font-medium text-red-600'
+                                                            data.price_difference >= 0 ? 'font-medium text-foreground' : 'font-medium text-destructive'
                                                         "
                                                     >
                                                         {{ data.price_difference >= 0 ? '+' : '' }}{{ formatPrice(data.price_difference) }}
                                                     </TableCell>
                                                     <TableCell v-if="viewMode === 'lite'">{{ data.discount_percentage }}%</TableCell>
                                                     <TableCell v-if="viewMode === 'lite'">{{ formatPrice(data.total_cost) }}</TableCell>
-                                                    <TableCell :class="data.profit >= 0 ? 'font-medium text-green-600' : 'font-medium text-red-600'">
+                                                    <TableCell :class="data.profit >= 0 ? 'font-medium text-foreground' : 'font-medium text-destructive'">
                                                         {{ formatPrice(data.profit) }}
                                                     </TableCell>
                                                     <TableCell
                                                         v-if="viewMode === 'lite'"
-                                                        :class="data.profit_margin >= 0 ? 'font-medium text-green-600' : 'font-medium text-red-600'"
+                                                        :class="data.profit_margin >= 0 ? 'font-medium text-foreground' : 'font-medium text-destructive'"
                                                     >
                                                         {{ data.profit_margin.toFixed(1) }}%
                                                     </TableCell>

@@ -131,30 +131,30 @@ const formatDate = (dateString: string) => {
 const getStatusColor = (status: string) => {
     switch (status) {
         case 'paid':
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+            return 'bg-secondary text-secondary-foreground border border-border';
         case 'pending':
-            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+            return 'bg-muted text-foreground border border-border';
         case 'sent':
-            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+            return 'bg-muted text-muted-foreground border border-border';
         case 'overdue':
-            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+            return 'bg-destructive/10 text-destructive border border-destructive/20';
         case 'draft':
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+            return 'bg-muted text-muted-foreground border border-border opacity-70';
         case 'cancelled':
-            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+            return 'bg-destructive/10 text-destructive border border-destructive/20 opacity-70';
         default:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+            return 'bg-muted text-muted-foreground border border-border';
     }
 };
 
 const getTypeColor = (type: string) => {
     switch (type) {
         case 'setup':
-            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+            return 'bg-secondary text-secondary-foreground border border-border';
         case 'renewal':
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+            return 'bg-muted text-foreground border border-border';
         default:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+            return 'bg-muted text-muted-foreground border border-border';
     }
 };
 
@@ -281,8 +281,8 @@ const markAsPaid = (invoice: Invoice) => {
 
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">Invoice Management</h1>
-                    <p class="text-muted-foreground">Manage customer invoices and billing</p>
+                    <h1 class="text-4xl font-serif font-medium leading-[1.10]">Invoice Management</h1>
+                    <p class="text-lg text-muted-foreground leading-relaxed mt-2">Manage customer invoices and billing</p>
                 </div>
                 <Button
                     @click="
@@ -300,7 +300,7 @@ const markAsPaid = (invoice: Invoice) => {
             <div class="grid gap-4 md:grid-cols-4">
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">Total Invoices</CardTitle>
+                        <CardTitle class="font-serif font-medium text-lg leading-[1.20]">Total Invoices</CardTitle>
                         <FileText class="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
@@ -310,11 +310,11 @@ const markAsPaid = (invoice: Invoice) => {
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">Total Revenue</CardTitle>
-                        <DollarSign class="h-4 w-4 text-green-600" />
+                        <CardTitle class="font-serif font-medium text-lg leading-[1.20]">Total Revenue</CardTitle>
+                        <DollarSign class="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
-                        <div class="text-2xl font-bold text-green-600">
+                        <div class="text-2xl font-bold text-foreground">
                             {{ formatPrice(statistics.revenue) }}
                         </div>
                     </CardContent>
@@ -322,11 +322,11 @@ const markAsPaid = (invoice: Invoice) => {
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">Pending</CardTitle>
-                        <Clock class="h-4 w-4 text-yellow-600" />
+                        <CardTitle class="font-serif font-medium text-lg leading-[1.20]">Pending</CardTitle>
+                        <Clock class="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div class="text-2xl font-bold text-yellow-600">
+                        <div class="text-2xl font-bold text-foreground">
                             {{ formatPrice(statistics.pending) }}
                         </div>
                     </CardContent>
@@ -334,11 +334,11 @@ const markAsPaid = (invoice: Invoice) => {
 
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">Overdue</CardTitle>
-                        <AlertTriangle class="h-4 w-4 text-red-600" />
+                        <CardTitle class="font-serif font-medium text-lg leading-[1.20]">Overdue</CardTitle>
+                        <AlertTriangle class="h-4 w-4 text-destructive" />
                     </CardHeader>
                     <CardContent>
-                        <div class="text-2xl font-bold text-red-600">
+                        <div class="text-2xl font-bold text-destructive">
                             {{ formatPrice(statistics.overdue) }}
                         </div>
                     </CardContent>
@@ -347,8 +347,8 @@ const markAsPaid = (invoice: Invoice) => {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>All Invoices</CardTitle>
-                    <CardDescription>Complete list of customer invoices</CardDescription>
+                    <CardTitle class="font-serif font-medium text-2xl leading-[1.20]">All Invoices</CardTitle>
+                    <CardDescription class="text-base">Complete list of customer invoices</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <!-- Search and Filter -->
@@ -489,7 +489,7 @@ const markAsPaid = (invoice: Invoice) => {
                                         <div class="font-medium text-foreground">
                                             {{ formatPrice(invoice.amount - (invoice.discount || 0)) }}
                                         </div>
-                                        <div v-if="invoice.discount && invoice.discount > 0" class="text-xs text-red-500">
+                                        <div v-if="invoice.discount && invoice.discount > 0" class="text-xs text-destructive">
                                             Potongan: {{ formatPrice(invoice.discount) }}
                                         </div>
                                     </td>
@@ -514,7 +514,7 @@ const markAsPaid = (invoice: Invoice) => {
                                                 v-if="invoice.status !== 'paid'"
                                                 size="sm"
                                                 @click="markAsPaid(invoice)"
-                                                class="border-green-600 bg-green-600 text-white hover:bg-green-700"
+                                                class="bg-primary text-primary-foreground hover:bg-primary/90"
                                                 title="Tandai sebagai dibayar"
                                             >
                                                 <CheckCircle class="h-3 w-3" />
@@ -561,8 +561,8 @@ const markAsPaid = (invoice: Invoice) => {
                 <!-- Header -->
                 <div class="mb-4 flex items-center justify-between">
                     <div>
-                        <h2 class="text-lg font-semibold">Create New Invoice</h2>
-                        <p class="text-sm text-muted-foreground">Create a new invoice for customer billing</p>
+                        <h2 class="text-2xl font-serif font-medium leading-[1.20]">Create New Invoice</h2>
+                        <p class="text-base text-muted-foreground mt-2">Create a new invoice for customer billing</p>
                     </div>
                     <button @click="showCreateModal = false" class="text-gray-500 hover:text-gray-700">
                         <X class="h-4 w-4" />
@@ -688,8 +688,8 @@ const markAsPaid = (invoice: Invoice) => {
                 <!-- Header -->
                 <div class="mb-4 flex items-center justify-between">
                     <div>
-                        <h2 class="text-lg font-semibold">Edit Invoice</h2>
-                        <p class="text-sm text-muted-foreground">Update invoice status and payment details</p>
+                        <h2 class="text-2xl font-serif font-medium leading-[1.20]">Edit Invoice</h2>
+                        <p class="text-base text-muted-foreground mt-2">Update invoice status and payment details</p>
                     </div>
                     <button @click="showEditModal = false" class="text-gray-500 hover:text-gray-700">
                         <X class="h-4 w-4" />

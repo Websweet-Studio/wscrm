@@ -91,13 +91,13 @@ const formatDate = (dateString: string) => {
 const getStatusColor = (status: string) => {
     switch (status) {
         case 'published':
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+            return 'bg-secondary text-secondary-foreground border border-border';
         case 'draft':
-            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+            return 'bg-muted text-muted-foreground border border-border';
         case 'archived':
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+            return 'bg-background text-muted-foreground border border-border opacity-70';
         default:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+            return 'bg-muted text-muted-foreground border border-border';
     }
 };
 
@@ -117,13 +117,13 @@ const getStatusText = (status: string) => {
 const getTypeColor = (type: string) => {
     switch (type) {
         case 'article':
-            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+            return 'bg-secondary text-secondary-foreground border border-border';
         case 'announcement':
-            return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+            return 'bg-primary/10 text-primary border border-primary/20';
         case 'news':
-            return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
+            return 'bg-muted text-foreground border border-border';
         default:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+            return 'bg-muted text-muted-foreground border border-border';
     }
 };
 
@@ -238,8 +238,8 @@ const deletePost = () => {
             <!-- Header -->
             <div class="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
                 <div>
-                    <h1 class="text-2xl font-bold">Manajemen Blog</h1>
-                    <p class="text-muted-foreground">Kelola artikel, pengumuman, dan konten blog</p>
+                    <h1 class="text-4xl font-serif font-medium leading-[1.10]">Manajemen Blog</h1>
+                    <p class="text-lg text-muted-foreground leading-relaxed mt-2">Kelola artikel, pengumuman, dan konten blog</p>
                 </div>
                 <div class="flex space-x-2">
                     <Link href="/admin/blog/create">
@@ -254,8 +254,8 @@ const deletePost = () => {
             <!-- Filters -->
             <Card>
                 <CardHeader>
-                    <CardTitle class="flex items-center space-x-2">
-                        <Search class="h-4 w-4" />
+                    <CardTitle class="flex items-center space-x-2 font-serif font-medium text-2xl leading-[1.20]">
+                        <Search class="h-5 w-5 text-primary" />
                         <span>Filter & Pencarian</span>
                     </CardTitle>
                 </CardHeader>
@@ -319,8 +319,8 @@ const deletePost = () => {
                 <CardHeader>
                     <div class="flex items-center justify-between">
                         <div>
-                            <CardTitle>Daftar Artikel</CardTitle>
-                            <CardDescription> Total {{ posts.total }} artikel ditemukan </CardDescription>
+                            <CardTitle class="font-serif font-medium text-2xl leading-[1.20]">Daftar Artikel</CardTitle>
+                            <CardDescription class="text-base"> Total {{ posts.total }} artikel ditemukan </CardDescription>
                         </div>
                     </div>
                 </CardHeader>
@@ -377,8 +377,8 @@ const deletePost = () => {
                                             <div class="min-w-0 flex-1">
                                                 <div class="flex items-center space-x-2">
                                                     <h3 class="text-sm leading-tight font-medium">{{ post.title }}</h3>
-                                                    <Star v-if="post.is_featured" class="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                                                    <Pin v-if="post.is_pinned" class="h-4 w-4 text-blue-500" />
+                                                    <Star v-if="post.is_featured" class="h-4 w-4 fill-primary text-primary" />
+                                                    <Pin v-if="post.is_pinned" class="h-4 w-4 text-foreground" />
                                                 </div>
                                                 <p class="mt-1 line-clamp-2 text-xs text-muted-foreground">{{ post.excerpt }}</p>
                                                 <div class="mt-1 flex items-center space-x-2">
@@ -455,7 +455,7 @@ const deletePost = () => {
                                                 variant="ghost"
                                                 size="sm"
                                                 @click="toggleFeatured(post)"
-                                                :class="post.is_featured ? 'text-yellow-600' : ''"
+                                                :class="post.is_featured ? 'text-primary' : ''"
                                             >
                                                 <Star class="h-4 w-4" :class="post.is_featured ? 'fill-current' : ''" />
                                             </Button>
@@ -463,11 +463,11 @@ const deletePost = () => {
                                                 variant="ghost"
                                                 size="sm"
                                                 @click="togglePinned(post)"
-                                                :class="post.is_pinned ? 'text-blue-600' : ''"
+                                                :class="post.is_pinned ? 'text-foreground' : ''"
                                             >
                                                 <Pin class="h-4 w-4" />
                                             </Button>
-                                            <Button variant="ghost" size="sm" @click="confirmDelete(post)" class="text-red-600 hover:text-red-700">
+                                            <Button variant="ghost" size="sm" @click="confirmDelete(post)" class="text-destructive hover:text-destructive/90">
                                                 <Trash2 class="h-4 w-4" />
                                             </Button>
                                         </div>
@@ -502,8 +502,8 @@ const deletePost = () => {
             <!-- Modal Content -->
             <div class="relative mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
                 <div class="mb-4">
-                    <h3 class="text-lg font-semibold">Konfirmasi Hapus</h3>
-                    <p class="text-sm text-muted-foreground">
+                    <h3 class="text-2xl font-serif font-medium leading-[1.20]">Konfirmasi Hapus</h3>
+                    <p class="text-base text-muted-foreground mt-2">
                         Apakah Anda yakin ingin menghapus artikel "{{ postToDelete?.title }}"? Tindakan ini tidak dapat dibatalkan.
                     </p>
                 </div>
