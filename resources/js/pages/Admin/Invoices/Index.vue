@@ -281,8 +281,8 @@ const markAsPaid = (invoice: Invoice) => {
 
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-4xl font-serif font-medium leading-[1.10]">Invoice Management</h1>
-                    <p class="text-lg text-muted-foreground leading-relaxed mt-2">Manage customer invoices and billing</p>
+                    <h1 class="text-3xl font-serif font-medium leading-[1.10]">Invoice Management</h1>
+                    <p class="text-muted-foreground">Manage customer invoices and billing</p>
                 </div>
                 <Button
                     @click="

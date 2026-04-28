@@ -238,8 +238,8 @@ const deletePost = () => {
             <!-- Header -->
             <div class="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
                 <div>
-                    <h1 class="text-4xl font-serif font-medium leading-[1.10]">Manajemen Blog</h1>
-                    <p class="text-lg text-muted-foreground leading-relaxed mt-2">Kelola artikel, pengumuman, dan konten blog</p>
+                    <h1 class="text-3xl font-serif font-medium leading-[1.10]">Manajemen Blog</h1>
+                    <p class="text-muted-foreground">Kelola artikel, pengumuman, dan konten blog</p>
                 </div>
                 <div class="flex space-x-2">
                     <Link href="/admin/blog/create">
@@ -254,7 +254,7 @@ const deletePost = () => {
             <!-- Filters -->
             <Card>
                 <CardHeader>
-                    <CardTitle class="flex items-center space-x-2 font-serif font-medium text-2xl leading-[1.20]">
+                    <CardTitle class="flex items-center space-x-2 font-serif font-medium text-xl leading-[1.20]">
                         <Search class="h-5 w-5 text-primary" />
                         <span>Filter & Pencarian</span>
                     </CardTitle>
@@ -319,8 +319,8 @@ const deletePost = () => {
                 <CardHeader>
                     <div class="flex items-center justify-between">
                         <div>
-                            <CardTitle class="font-serif font-medium text-2xl leading-[1.20]">Daftar Artikel</CardTitle>
-                            <CardDescription class="text-base"> Total {{ posts.total }} artikel ditemukan </CardDescription>
+                            <CardTitle class="font-serif font-medium text-xl leading-[1.20]">Daftar Artikel</CardTitle>
+                            <CardDescription class="text-muted-foreground"> Total {{ posts.total }} artikel ditemukan </CardDescription>
                         </div>
                     </div>
                 </CardHeader>

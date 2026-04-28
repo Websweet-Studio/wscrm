@@ -192,12 +192,8 @@ const confirmDelete = () => {
             </div>
 
             <Card>
-                <CardHeader>
-                    <CardTitle style="font-family: Georgia, serif;">Paket Hosting</CardTitle>
-                    <CardDescription> Kelola paket hosting dan spesifikasinya </CardDescription>
-                </CardHeader>
                 <CardContent>
-                    <div class="mb-4 flex items-center space-x-2">
+                    <div class="mb-4 flex items-center space-x-2 pt-2">
                         <div class="relative max-w-sm flex-1">
                             <Search class="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
                             <Input v-model="search" placeholder="Cari paket hosting..." class="pl-8" @keyup.enter="handleSearch" />
