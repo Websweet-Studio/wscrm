@@ -85,13 +85,13 @@ const formatDate = (dateString: string) => {
 const getTypeColor = (type: string) => {
     switch (type) {
         case 'article':
-            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+            return 'bg-secondary text-secondary-foreground';
         case 'announcement':
-            return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+            return 'bg-muted text-muted-foreground';
         case 'news':
-            return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
+            return 'bg-primary/10 text-primary';
         default:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+            return 'bg-muted text-muted-foreground';
     }
 };
 
@@ -144,14 +144,26 @@ onMounted(() => {
 onUnmounted(() => {
     stopCarousel();
 });
+
+const formatPaginationLabel = (label: string) => {
+    const withoutTags = label.replace(/<[^>]*>/g, ' ').trim();
+    return withoutTags
+        .replace(/&laquo;/g, '«')
+        .replace(/&raquo;/g, '»')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/\s+/g, ' ')
+        .trim();
+};
 </script>
 
 <template>
     <CustomerPublicLayout title="Blog">
-        <div class="container mx-auto px-4 py-8">
+        <div class="container mx-auto px-4 py-12 md:py-16">
             <!-- Header -->
             <div class="mb-12 text-center">
-                <h1 class="mb-4 text-4xl font-bold text-gray-900 md:text-5xl dark:text-white">Blog</h1>
+                <h1 class="mb-3 text-4xl font-medium tracking-tight md:text-5xl" style="font-family: Georgia, serif;">Blog</h1>
+                <p class="text-muted-foreground">Artikel, pengumuman, dan berita terbaru.</p>
             </div>
 
             <!-- Featured Posts Carousel -->
@@ -169,20 +181,20 @@ onUnmounted(() => {
                                     class="absolute inset-0 bg-cover bg-center"
                                     :style="{ backgroundImage: `url(${post.featured_image_url})` }"
                                 >
-                                    <div class="bg-opacity-50 absolute inset-0 bg-black"></div>
+                                    <div class="absolute inset-0 bg-foreground/60"></div>
                                 </div>
-                                <div v-else class="absolute inset-0 bg-gradient-to-br from-blue-600 to-purple-700"></div>
+                                <div v-else class="absolute inset-0 bg-foreground"></div>
 
                                 <div class="relative flex h-full items-end p-8">
-                                    <div class="max-w-2xl py-8 text-white">
+                                    <div class="max-w-2xl py-8 text-primary-foreground">
                                         <div class="mb-4 flex items-center space-x-3">
-                                            <Star class="h-5 w-5 fill-current text-yellow-400" />
-                                            <span class="font-medium text-yellow-400">Artikel Unggulan</span>
+                                            <Star class="h-5 w-5 text-primary" />
+                                            <span class="font-medium text-primary">Artikel Unggulan</span>
                                             <Badge :class="getTypeColor(post.type)" class="text-xs">
                                                 {{ getTypeText(post.type) }}
                                             </Badge>
                                         </div>
-                                        <h2 class="mb-4 text-3xl leading-tight font-bold md:text-4xl">
+                                        <h2 class="mb-4 text-3xl leading-tight font-medium md:text-4xl" style="font-family: Georgia, serif;">
                                             {{ post.title }}
                                         </h2>
                                         <div class="mb-6 flex items-center space-x-6 text-sm">
@@ -200,7 +212,7 @@ onUnmounted(() => {
                                             </div>
                                         </div>
                                         <Link :href="`/blog/${post.slug}`">
-                                            <Button size="lg" class="bg-white text-gray-900 hover:bg-gray-100"> Baca Artikel </Button>
+                                            <Button size="lg" variant="secondary" class="cursor-pointer">Baca Artikel</Button>
                                         </Link>
                                     </div>
                                 </div>
@@ -210,14 +222,14 @@ onUnmounted(() => {
                         <button
                             v-if="featuredPosts.length > 1"
                             @click="prevSlide"
-                            class="bg-opacity-50 hover:bg-opacity-75 absolute top-1/2 left-4 -translate-y-1/2 rounded-full bg-black p-2 text-white transition-all"
+                            class="absolute top-1/2 left-4 -translate-y-1/2 rounded-full bg-foreground/40 p-2 text-primary-foreground backdrop-blur-sm transition-all hover:bg-foreground/60"
                         >
                             <ChevronLeft class="h-6 w-6" />
                         </button>
                         <button
                             v-if="featuredPosts.length > 1"
                             @click="nextSlide"
-                            class="bg-opacity-50 hover:bg-opacity-75 absolute top-1/2 right-4 -translate-y-1/2 rounded-full bg-black p-2 text-white transition-all"
+                            class="absolute top-1/2 right-4 -translate-y-1/2 rounded-full bg-foreground/40 p-2 text-primary-foreground backdrop-blur-sm transition-all hover:bg-foreground/60"
                         >
                             <ChevronRight class="h-6 w-6" />
                         </button>
@@ -240,18 +252,18 @@ onUnmounted(() => {
             <!-- Pinned Posts -->
             <div v-if="pinnedPosts.length > 0" class="mb-12">
                 <div class="mb-6 flex items-center space-x-2">
-                    <Pin class="h-5 w-5 text-blue-600" />
-                    <h2 class="text-2xl font-bold">Artikel Terpilih</h2>
+                    <Pin class="h-5 w-5 text-primary" />
+                    <h2 class="text-2xl font-medium" style="font-family: Georgia, serif;">Artikel Terpilih</h2>
                 </div>
                 <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                     <article v-for="post in pinnedPosts" :key="post.id" class="group cursor-pointer">
                         <Link :href="`/blog/${post.slug}`" class="block">
                             <div
-                                class="overflow-hidden rounded-2xl bg-white shadow-md transition-all duration-300 group-hover:-translate-y-2 hover:shadow-2xl dark:bg-gray-800"
+                                class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 group-hover:-translate-y-1 hover:shadow-md"
                             >
                                 <div class="relative h-48 overflow-hidden">
                                     <img
-                                        :src="post.featured_image_url || `https://via.placeholder.com/400x300/3B82F6/FFFFFF?text=${appName}`"
+                                        :src="post.featured_image_url || `https://via.placeholder.com/400x300/C96442/FAF9F5?text=${appName}`"
                                         :alt="post.title"
                                         class="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                                     />
@@ -264,7 +276,7 @@ onUnmounted(() => {
                                         </Badge>
                                     </div>
                                     <div class="absolute top-4 right-4">
-                                        <Pin class="h-4 w-4 fill-current text-yellow-400" />
+                                        <Pin class="h-4 w-4 text-primary" />
                                     </div>
                                 </div>
                                 <div class="p-6">
@@ -272,7 +284,7 @@ onUnmounted(() => {
                                         <Badge :class="getTypeColor(post.type)" class="text-xs">
                                             {{ getTypeText(post.type) }}
                                         </Badge>
-                                        <div class="flex items-center space-x-3 text-xs text-gray-500">
+                                        <div class="flex items-center space-x-3 text-xs text-muted-foreground">
                                             <div class="flex items-center space-x-1">
                                                 <Eye class="h-3 w-3" />
                                                 <span>{{ post.views_count }}</span>
@@ -284,14 +296,15 @@ onUnmounted(() => {
                                         </div>
                                     </div>
                                     <h3
-                                        class="mb-3 line-clamp-2 text-xl font-bold text-gray-900 transition-colors group-hover:text-blue-600 dark:text-white"
+                                        class="mb-3 line-clamp-2 text-xl font-medium text-foreground transition-colors group-hover:text-primary"
+                                        style="font-family: Georgia, serif;"
                                     >
                                         {{ post.title }}
                                     </h3>
-                                    <p class="mb-4 line-clamp-3 leading-relaxed text-gray-600 dark:text-gray-300">
+                                    <p class="mb-4 line-clamp-3 leading-relaxed text-muted-foreground">
                                         {{ post.excerpt }}
                                     </p>
-                                    <div class="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                                    <div class="flex items-center space-x-4 text-sm text-muted-foreground">
                                         <div class="flex items-center space-x-2">
                                             <User class="h-4 w-4" />
                                             <span>{{ post.author.name }}</span>
@@ -314,16 +327,16 @@ onUnmounted(() => {
 
             <!-- Articles Grid -->
             <div v-if="posts.data.length > 0">
-                <h2 class="mb-8 text-3xl font-bold">Artikel Terbaru</h2>
+                <h2 class="mb-8 text-3xl font-medium" style="font-family: Georgia, serif;">Artikel Terbaru</h2>
                 <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                     <article v-for="post in posts.data" :key="post.id" class="group cursor-pointer">
                         <Link :href="`/blog/${post.slug}`" class="block">
                             <div
-                                class="overflow-hidden rounded-2xl bg-white shadow-md transition-all duration-300 group-hover:-translate-y-2 hover:shadow-2xl dark:bg-gray-800"
+                                class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 group-hover:-translate-y-1 hover:shadow-md"
                             >
                                 <div class="relative h-48 overflow-hidden">
                                     <img
-                                        :src="post.featured_image_url || `https://via.placeholder.com/400x300/3B82F6/FFFFFF?text=${appName}`"
+                                        :src="post.featured_image_url || `https://via.placeholder.com/400x300/C96442/FAF9F5?text=${appName}`"
                                         :alt="post.title"
                                         class="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                                     />
@@ -341,7 +354,7 @@ onUnmounted(() => {
                                         <Badge :class="getTypeColor(post.type)" class="text-xs">
                                             {{ getTypeText(post.type) }}
                                         </Badge>
-                                        <div class="flex items-center space-x-3 text-xs text-gray-500">
+                                        <div class="flex items-center space-x-3 text-xs text-muted-foreground">
                                             <div class="flex items-center space-x-1">
                                                 <Eye class="h-3 w-3" />
                                                 <span>{{ post.views_count }}</span>
@@ -353,14 +366,15 @@ onUnmounted(() => {
                                         </div>
                                     </div>
                                     <h3
-                                        class="mb-3 line-clamp-2 text-xl font-bold text-gray-900 transition-colors group-hover:text-blue-600 dark:text-white"
+                                        class="mb-3 line-clamp-2 text-xl font-medium text-foreground transition-colors group-hover:text-primary"
+                                        style="font-family: Georgia, serif;"
                                     >
                                         {{ post.title }}
                                     </h3>
-                                    <p class="mb-4 line-clamp-3 leading-relaxed text-gray-600 dark:text-gray-300">
+                                    <p class="mb-4 line-clamp-3 leading-relaxed text-muted-foreground">
                                         {{ post.excerpt }}
                                     </p>
-                                    <div class="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                                    <div class="flex items-center space-x-4 text-sm text-muted-foreground">
                                         <div class="flex items-center space-x-2">
                                             <User class="h-4 w-4" />
                                             <span>{{ post.author.name }}</span>
@@ -382,24 +396,23 @@ onUnmounted(() => {
 
                 <!-- Modern Pagination -->
                 <div v-if="posts.links && posts.links.length > 3" class="mt-12 flex justify-center">
-                    <nav class="flex items-center space-x-2">
-                        <template v-for="link in posts.links" :key="link.label">
+                    <nav class="flex flex-wrap items-center justify-center gap-2">
+                        <template v-for="link in posts.links" :key="`${link.label}:${link.url ?? ''}`">
                             <Link
                                 v-if="link.url"
                                 :href="link.url"
                                 :class="[
                                     'rounded-xl px-4 py-2 text-sm font-medium transition-all',
                                     link.active
-                                        ? 'bg-blue-600 text-white shadow-lg'
-                                        : 'border border-gray-200 bg-white text-gray-700 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700',
+                                        ? 'bg-primary text-primary-foreground shadow-sm'
+                                        : 'border border-border bg-card text-foreground hover:bg-secondary',
                                 ]"
-                                v-html="link.label"
-                            />
-                            <span
-                                v-else
-                                :class="['cursor-not-allowed rounded-xl bg-gray-100 px-4 py-2 text-sm text-gray-500 opacity-50 dark:bg-gray-800']"
-                                v-html="link.label"
-                            />
+                            >
+                                {{ formatPaginationLabel(link.label) }}
+                            </Link>
+                            <span v-else class="cursor-not-allowed rounded-xl bg-muted px-4 py-2 text-sm text-muted-foreground opacity-50">
+                                {{ formatPaginationLabel(link.label) }}
+                            </span>
                         </template>
                     </nav>
                 </div>
@@ -407,11 +420,11 @@ onUnmounted(() => {
 
             <!-- Empty State -->
             <div v-else class="py-16 text-center">
-                <div class="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-                    <Search class="h-12 w-12 text-gray-400" />
+                <div class="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-secondary">
+                    <Search class="h-12 w-12 text-muted-foreground" />
                 </div>
-                <h3 class="mb-3 text-2xl font-bold text-gray-900 dark:text-white">Tidak ada artikel ditemukan</h3>
-                <p class="text-gray-600 dark:text-gray-400">Silakan kembali lagi nanti untuk artikel terbaru.</p>
+                <h3 class="mb-3 text-2xl font-medium text-foreground" style="font-family: Georgia, serif;">Tidak ada artikel ditemukan</h3>
+                <p class="text-muted-foreground">Silakan kembali lagi nanti untuk artikel terbaru.</p>
             </div>
         </div>
     </CustomerPublicLayout>
