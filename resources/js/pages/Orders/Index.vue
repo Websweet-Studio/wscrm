@@ -119,7 +119,7 @@ const getStatusText = (status: string) => {
         <div class="space-y-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">Pesanan Saya</h1>
+                    <h1 class="text-3xl font-bold">Pesanan Saya</h1>
                     <p class="text-muted-foreground">Lihat dan kelola pesanan layanan Anda</p>
                 </div>
                 <Button asChild>

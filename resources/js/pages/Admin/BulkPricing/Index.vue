@@ -345,8 +345,8 @@ const deleteConfig = (configId: number, configName: string) => {
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-4xl font-serif font-medium leading-[1.10]">Bulk Pricing Simulator</h1>
-                    <p class="text-lg text-muted-foreground leading-relaxed mt-2">Simulasi harga hosting dengan tier discount dan analisis keuntungan</p>
+                    <h1 class="text-3xl font-serif font-medium leading-[1.10]">Bulk Pricing Simulator</h1>
+                    <p class="text-muted-foreground">Simulasi harga hosting dengan tier discount dan analisis keuntungan</p>
                 </div>
             </div>
 
@@ -356,7 +356,7 @@ const deleteConfig = (configId: number, configName: string) => {
                     <!-- Base Configuration -->
                     <Card>
                         <CardHeader>
-                            <CardTitle class="flex items-center gap-2 font-serif font-medium text-2xl leading-[1.20]">
+                            <CardTitle class="flex items-center gap-2 font-serif font-medium text-xl">
                                 <Settings class="h-5 w-5 text-primary" />
                                 Konfigurasi Dasar
                             </CardTitle>
@@ -377,15 +377,15 @@ const deleteConfig = (configId: number, configName: string) => {
                     <!-- Plan Selection & Multipliers -->
                     <Card>
                         <CardHeader>
-                            <CardTitle class="font-serif font-medium text-2xl leading-[1.20]">Plan Selection & Multipliers</CardTitle>
-                            <CardDescription class="text-base">Pilih plan yang aktif dan atur pengali harganya</CardDescription>
+                            <CardTitle class="font-serif font-medium text-xl">Plan Selection & Multipliers</CardTitle>
+                            <CardDescription class="text-muted-foreground">Pilih plan yang aktif dan atur pengali harganya</CardDescription>
                         </CardHeader>
                         <CardContent class="space-y-4">
                             <!-- Basic Plan -->
                             <div class="flex items-start space-x-3 rounded-lg border p-3">
                                 <input id="enable-basic" type="checkbox" v-model="enabledPlans.basic" @change="updateActivePlans" class="mt-1" />
                                 <div class="flex-1">
-                                    <label for="enable-basic" class="cursor-pointer font-medium">Basic Plan</label>
+                                    <label for="enable-basic" class="cursor-pointer text-l">Basic Plan</label>
                                     <p class="text-sm text-muted-foreground">Plan hosting standar untuk kebutuhan umum</p>
                                     <div v-if="enabledPlans.basic" class="mt-2">
                                         <Label for="basic-multiplier">Multiplier</Label>
@@ -433,16 +433,14 @@ const deleteConfig = (configId: number, configName: string) => {
                     <Card>
                         <CardHeader>
                             <CardTitle class="font-serif font-medium text-2xl leading-[1.20]">Tier Discounts</CardTitle>
-                            <CardDescription class="text-base">Persentase diskon berdasarkan ukuran storage (maksimal 30%, kenaikan bertahap)</CardDescription>
+                            <CardDescription class="text-muted-foreground">Persentase diskon berdasarkan ukuran storage (maksimal 30%, kenaikan bertahap)</CardDescription>
                         </CardHeader>
                         <CardContent class="space-y-4">
                             <div v-for="(tier, index) in form.tier_discounts" :key="index" class="flex gap-2">
                                 <div class="flex-1">
-                                    <label class="mb-1 block text-sm font-medium text-gray-700"> Storage </label>
                                     <Input v-model.number="tier.storage_gb" type="number" placeholder="Contoh: 100 GB" @input="runSimulation" />
                                 </div>
                                 <div class="flex-1">
-                                    <label class="mb-1 block text-sm font-medium text-gray-700"> % Diskon</label>
                                     <Input
                                         v-model.number="tier.discount_percentage"
                                         type="number"
@@ -465,7 +463,7 @@ const deleteConfig = (configId: number, configName: string) => {
                     <Card>
                         <CardHeader>
                             <CardTitle class="font-serif font-medium text-2xl leading-[1.20]">Konfigurasi Tersimpan</CardTitle>
-                            <CardDescription class="text-base">Load konfigurasi yang sudah disimpan</CardDescription>
+                            <CardDescription class="text-muted-foreground">Load konfigurasi yang sudah disimpan</CardDescription>
                         </CardHeader>
                         <CardContent class="space-y-3">
                             <div v-if="savedConfigs.length === 0" class="py-4 text-center text-sm text-muted-foreground">
@@ -530,11 +528,11 @@ const deleteConfig = (configId: number, configName: string) => {
                         <CardHeader>
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <CardTitle class="flex items-center gap-2 font-serif font-medium text-[32px] leading-[1.10]">
+                                    <CardTitle class="flex items-center gap-2 font-serif font-medium text-2xl leading-[1.10]">
                                         <TrendingUp class="h-6 w-6 text-primary" />
                                         Simulasi Harga & Keuntungan
                                     </CardTitle>
-                                    <CardDescription class="text-base mt-2">Analisis pricing dengan margin keuntungan</CardDescription>
+                                    <CardDescription class="text-muted-foreground">Analisis pricing dengan margin keuntungan</CardDescription>
                                 </div>
                                 <div class="flex items-center gap-1 rounded-lg bg-muted p-1">
                                     <Button
@@ -572,7 +570,7 @@ const deleteConfig = (configId: number, configName: string) => {
                             </div>
                             <div v-else class="space-y-6">
                                 <div v-for="(planData, planType) in filteredSimulation" :key="planType">
-                                    <h3 class="mb-4 text-2xl font-serif font-medium capitalize leading-[1.20]">{{ planType }} Plan</h3>
+                                    <h3 class="mb-4 text-xl font-serif font-medium capitalize leading-[1.20]">{{ planType }} Plan</h3>
                                     <div class="overflow-x-auto">
                                         <Table>
                                             <TableHeader>

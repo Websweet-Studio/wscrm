@@ -476,7 +476,7 @@ const getSortIcon = (field: string) => {
             <!-- Header -->
             <div class="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
                 <div>
-                    <h1 class="text-2xl font-medium" style="font-family: Georgia, serif;">{{ currentView === 'services' ? 'Layanan' : 'Pesanan' }}</h1>
+                    <h1 class="text-3xl font-medium" style="font-family: Georgia, serif;">{{ currentView === 'services' ? 'Layanan' : 'Pesanan' }}</h1>
                     <p class="text-muted-foreground">
                         {{ currentView === 'services' ? 'Kelola layanan aktif pelanggan' : 'Kelola pesanan dan transaksi pelanggan' }}
                     </p>

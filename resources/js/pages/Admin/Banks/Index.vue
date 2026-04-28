@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatPrice } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
@@ -46,7 +47,7 @@ interface Props {
     banks: PaginatedBanks;
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
@@ -99,15 +100,22 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const getStatusClass = (isActive: boolean) => {
-    return isActive
-        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+    return isActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground';
 };
 
-const getBankTypeClass = (type: string) => {
-    return type === 'local'
-        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-        : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+const getBankTypeClass = (type: Bank['bank_type']) => {
+    return type === 'local' ? 'bg-secondary text-secondary-foreground' : 'bg-muted text-muted-foreground';
+};
+
+const formatPaginationLabel = (label: string) => {
+    const withoutTags = label.replace(/<[^>]*>/g, ' ').trim();
+    return withoutTags
+        .replace(/&laquo;/g, '«')
+        .replace(/&raquo;/g, '»')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/\s+/g, ' ')
+        .trim();
 };
 
 const toggleBankStatus = (bank: Bank) => {
@@ -179,26 +187,26 @@ const submitEdit = () => {
 </script>
 
 <template>
-    <Head title="Manajemen Bank" />
+    <Head title="Admin - Manajemen Bank" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="space-y-6">
-            <!-- Header -->
-            <div class="flex items-center justify-between">
+        <div class="w-full max-w-none space-y-4 sm:space-y-6">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight">Manajemen Bank</h1>
-                    <p class="text-muted-foreground">Kelola bank pembayaran untuk sistem invoice</p>
+                    <h1 class="text-2xl font-medium tracking-tight sm:text-3xl" style="font-family: Georgia, serif;">Manajemen Bank</h1>
+                    <p class="text-sm text-muted-foreground sm:text-base">Kelola bank pembayaran untuk sistem invoice</p>
                 </div>
-                <Button @click="showCreateModal = true" class="cursor-pointer">
+                <Button @click="showCreateModal = true" class="w-full cursor-pointer sm:w-auto">
                     <Plus class="mr-2 h-4 w-4" />
-                    Tambah Bank
+                    <span class="hidden sm:inline">Tambah Bank</span>
+                    <span class="sm:hidden">Tambah</span>
                 </Button>
             </div>
 
             <!-- Banks Table -->
             <Card>
                 <CardHeader>
-                    <CardTitle class="flex items-center gap-2">
+                    <CardTitle style="font-family: Georgia, serif;" class="flex items-center gap-2">
                         <Building2 class="h-5 w-5" />
                         Daftar Bank
                     </CardTitle>
@@ -206,7 +214,7 @@ const submitEdit = () => {
                 </CardHeader>
                 <CardContent>
                     <div v-if="banks.data.length > 0">
-                        <div class="overflow-x-auto rounded-md border">
+                        <div class="overflow-x-auto rounded-md border border-border">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -237,7 +245,7 @@ const submitEdit = () => {
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            <Badge :class="getBankTypeClass(bank.bank_type)">
+                                            <Badge :class="getBankTypeClass(bank.bank_type)" class="text-xs">
                                                 {{ bank.bank_type === 'local' ? 'Lokal' : 'Internasional' }}
                                             </Badge>
                                         </TableCell>
@@ -245,7 +253,7 @@ const submitEdit = () => {
                                             {{ formatPrice(bank.admin_fee) }}
                                         </TableCell>
                                         <TableCell>
-                                            <Badge :class="getStatusClass(bank.is_active)">
+                                            <Badge :class="getStatusClass(bank.is_active)" class="text-xs">
                                                 {{ bank.is_active ? 'Aktif' : 'Nonaktif' }}
                                             </Badge>
                                         </TableCell>
@@ -265,24 +273,20 @@ const submitEdit = () => {
                                                 </Button>
                                                 <Button
                                                     size="sm"
+                                                    variant="outline"
                                                     @click="toggleBankStatus(bank)"
                                                     :title="bank.is_active ? 'Nonaktifkan' : 'Aktifkan'"
-                                                    :class="
-                                                        bank.is_active
-                                                            ? 'bg-green-600 text-white hover:bg-green-700'
-                                                            : 'bg-gray-600 text-white hover:bg-gray-700'
-                                                    "
                                                     class="cursor-pointer"
                                                 >
-                                                    <ToggleRight v-if="bank.is_active" class="h-3.5 w-3.5" />
-                                                    <ToggleLeft v-else class="h-3.5 w-3.5" />
+                                                    <ToggleRight v-if="bank.is_active" class="h-3.5 w-3.5 text-primary" />
+                                                    <ToggleLeft v-else class="h-3.5 w-3.5 text-muted-foreground" />
                                                 </Button>
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
                                                     @click="openDeleteModal(bank)"
                                                     :title="'Hapus ' + bank.bank_name"
-                                                    class="cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                    class="cursor-pointer text-destructive hover:bg-muted hover:text-destructive"
                                                 >
                                                     <Trash2 class="h-3.5 w-3.5" />
                                                 </Button>
@@ -297,17 +301,18 @@ const submitEdit = () => {
                         <div v-if="banks.last_page > 1" class="mt-4 flex items-center justify-center space-x-2">
                             <Button
                                 v-for="link in banks.links"
-                                :key="link.label"
+                                :key="`${link.label}:${link.url ?? ''}`"
                                 variant="ghost"
                                 size="sm"
                                 :class="{
                                     'bg-primary text-primary-foreground': link.active,
-                                    'pointer-events-none opacity-50': !link.url,
                                     'cursor-pointer': link.url,
                                 }"
+                                :disabled="!link.url"
                                 @click="link.url && router.get(link.url)"
-                                v-html="link.label"
-                            />
+                            >
+                                {{ formatPaginationLabel(link.label) }}
+                            </Button>
                         </div>
                     </div>
 
@@ -328,24 +333,26 @@ const submitEdit = () => {
         </div>
 
         <!-- Create Bank Modal -->
-        <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center">
-            <!-- Overlay -->
-            <div class="fixed inset-0 bg-black/50" @click="showCreateModal = false"></div>
+        <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="showCreateModal = false"></div>
 
-            <!-- Modal Content -->
-            <div class="relative mx-4 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
-                <!-- Header -->
-                <div class="mb-4 flex items-center justify-between">
-                    <div>
-                        <h2 class="text-lg font-semibold">Tambah Bank</h2>
-                        <p class="text-sm text-muted-foreground">Tambahkan bank pembayaran baru ke sistem</p>
-                    </div>
-                    <button @click="showCreateModal = false" class="cursor-pointer text-gray-500 hover:text-gray-700">
+            <Card class="relative w-full max-w-2xl overflow-y-auto max-h-[90vh]">
+                <CardHeader class="relative">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        class="absolute top-3 right-3 h-8 w-8 cursor-pointer"
+                        @click="showCreateModal = false"
+                        title="Tutup"
+                    >
                         <X class="h-4 w-4" />
-                    </button>
-                </div>
-
-                <form @submit.prevent="submitCreate" class="space-y-4">
+                    </Button>
+                    <CardTitle style="font-family: Georgia, serif;">Tambah Bank</CardTitle>
+                    <CardDescription>Tambahkan bank pembayaran baru ke sistem</CardDescription>
+                </CardHeader>
+                <CardContent class="pb-6">
+                    <form @submit.prevent="submitCreate" class="space-y-4">
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <!-- Bank Name -->
                         <div>
@@ -354,10 +361,10 @@ const submitEdit = () => {
                                 id="create-bank-name"
                                 v-model="createForm.bank_name"
                                 placeholder="Contoh: Bank Central Asia"
-                                :class="{ 'border-red-500': createForm.errors.bank_name }"
+                                :aria-invalid="!!createForm.errors.bank_name"
                                 required
                             />
-                            <p v-if="createForm.errors.bank_name" class="mt-1 text-xs text-red-500">{{ createForm.errors.bank_name }}</p>
+                            <p v-if="createForm.errors.bank_name" class="mt-1 text-xs text-destructive">{{ createForm.errors.bank_name }}</p>
                         </div>
 
                         <!-- Bank Code -->
@@ -367,10 +374,10 @@ const submitEdit = () => {
                                 id="create-bank-code"
                                 v-model="createForm.bank_code"
                                 placeholder="Contoh: BCA"
-                                :class="{ 'border-red-500': createForm.errors.bank_code }"
+                                :aria-invalid="!!createForm.errors.bank_code"
                                 required
                             />
-                            <p v-if="createForm.errors.bank_code" class="mt-1 text-xs text-red-500">{{ createForm.errors.bank_code }}</p>
+                            <p v-if="createForm.errors.bank_code" class="mt-1 text-xs text-destructive">{{ createForm.errors.bank_code }}</p>
                         </div>
 
                         <!-- Account Number -->
@@ -380,10 +387,10 @@ const submitEdit = () => {
                                 id="create-account-number"
                                 v-model="createForm.account_number"
                                 placeholder="Contoh: 1234567890"
-                                :class="{ 'border-red-500': createForm.errors.account_number }"
+                                :aria-invalid="!!createForm.errors.account_number"
                                 required
                             />
-                            <p v-if="createForm.errors.account_number" class="mt-1 text-xs text-red-500">{{ createForm.errors.account_number }}</p>
+                            <p v-if="createForm.errors.account_number" class="mt-1 text-xs text-destructive">{{ createForm.errors.account_number }}</p>
                         </div>
 
                         <!-- Account Name -->
@@ -393,10 +400,10 @@ const submitEdit = () => {
                                 id="create-account-name"
                                 v-model="createForm.account_name"
                                 placeholder="Contoh: PT. Contoh Indonesia"
-                                :class="{ 'border-red-500': createForm.errors.account_name }"
+                                :aria-invalid="!!createForm.errors.account_name"
                                 required
                             />
-                            <p v-if="createForm.errors.account_name" class="mt-1 text-xs text-red-500">{{ createForm.errors.account_name }}</p>
+                            <p v-if="createForm.errors.account_name" class="mt-1 text-xs text-destructive">{{ createForm.errors.account_name }}</p>
                         </div>
 
                         <!-- Branch -->
@@ -406,9 +413,9 @@ const submitEdit = () => {
                                 id="create-branch"
                                 v-model="createForm.branch"
                                 placeholder="Contoh: Jakarta Pusat"
-                                :class="{ 'border-red-500': createForm.errors.branch }"
+                                :aria-invalid="!!createForm.errors.branch"
                             />
-                            <p v-if="createForm.errors.branch" class="mt-1 text-xs text-red-500">{{ createForm.errors.branch }}</p>
+                            <p v-if="createForm.errors.branch" class="mt-1 text-xs text-destructive">{{ createForm.errors.branch }}</p>
                         </div>
 
                         <!-- SWIFT Code -->
@@ -418,9 +425,9 @@ const submitEdit = () => {
                                 id="create-swift-code"
                                 v-model="createForm.swift_code"
                                 placeholder="Contoh: CENAIDJA"
-                                :class="{ 'border-red-500': createForm.errors.swift_code }"
+                                :aria-invalid="!!createForm.errors.swift_code"
                             />
-                            <p v-if="createForm.errors.swift_code" class="mt-1 text-xs text-red-500">{{ createForm.errors.swift_code }}</p>
+                            <p v-if="createForm.errors.swift_code" class="mt-1 text-xs text-destructive">{{ createForm.errors.swift_code }}</p>
                         </div>
 
                         <!-- Bank Type -->
@@ -429,17 +436,15 @@ const submitEdit = () => {
                             <select
                                 v-model="createForm.bank_type"
                                 id="create-bank-type"
-                                :class="[
-                                    'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white',
-                                    { 'border-red-500': createForm.errors.bank_type },
-                                ]"
+                                class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:bg-input/30"
+                                :aria-invalid="!!createForm.errors.bank_type"
                                 required
                             >
                                 <option value="" disabled>Pilih tipe bank</option>
                                 <option value="local">Lokal</option>
                                 <option value="international">Internasional</option>
                             </select>
-                            <p v-if="createForm.errors.bank_type" class="mt-1 text-xs text-red-500">{{ createForm.errors.bank_type }}</p>
+                            <p v-if="createForm.errors.bank_type" class="mt-1 text-xs text-destructive">{{ createForm.errors.bank_type }}</p>
                         </div>
 
                         <!-- Admin Fee -->
@@ -452,26 +457,23 @@ const submitEdit = () => {
                                 min="0"
                                 step="0.01"
                                 placeholder="0"
-                                :class="{ 'border-red-500': createForm.errors.admin_fee }"
+                                :aria-invalid="!!createForm.errors.admin_fee"
                             />
-                            <p v-if="createForm.errors.admin_fee" class="mt-1 text-xs text-red-500">{{ createForm.errors.admin_fee }}</p>
+                            <p v-if="createForm.errors.admin_fee" class="mt-1 text-xs text-destructive">{{ createForm.errors.admin_fee }}</p>
                         </div>
                     </div>
 
                     <!-- Description -->
                     <div>
                         <Label for="create-description">Deskripsi</Label>
-                        <textarea
+                        <Textarea
                             id="create-description"
                             v-model="createForm.description"
                             placeholder="Deskripsi tambahan tentang bank ini..."
-                            rows="3"
-                            :class="[
-                                'flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
-                                { 'border-red-500': createForm.errors.description },
-                            ]"
+                            :aria-invalid="!!createForm.errors.description"
+                            :rows="3"
                         />
-                        <p v-if="createForm.errors.description" class="mt-1 text-xs text-red-500">{{ createForm.errors.description }}</p>
+                        <p v-if="createForm.errors.description" class="mt-1 text-xs text-destructive">{{ createForm.errors.description }}</p>
                     </div>
 
                     <!-- Active Status -->
@@ -480,35 +482,38 @@ const submitEdit = () => {
                         <Label for="create-is-active">Bank Aktif</Label>
                     </div>
 
-                    <div class="flex justify-end space-x-2 pt-4">
-                        <Button type="button" variant="outline" @click="showCreateModal = false" class="cursor-pointer"> Batal </Button>
-                        <Button type="submit" :disabled="createForm.processing" class="cursor-pointer disabled:cursor-not-allowed">
+                    <div class="flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end">
+                        <Button type="button" variant="outline" @click="showCreateModal = false" class="w-full cursor-pointer sm:w-auto">Batal</Button>
+                        <Button type="submit" :disabled="createForm.processing" class="w-full cursor-pointer disabled:cursor-not-allowed sm:w-auto">
                             {{ createForm.processing ? 'Menyimpan...' : 'Simpan Bank' }}
                         </Button>
                     </div>
                 </form>
-            </div>
+                </CardContent>
+            </Card>
         </div>
 
         <!-- Edit Bank Modal -->
-        <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center">
-            <!-- Overlay -->
-            <div class="fixed inset-0 bg-black/50" @click="showEditModal = false"></div>
+        <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="showEditModal = false"></div>
 
-            <!-- Modal Content -->
-            <div class="relative mx-4 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
-                <!-- Header -->
-                <div class="mb-4 flex items-center justify-between">
-                    <div>
-                        <h2 class="text-lg font-semibold">Edit Bank</h2>
-                        <p class="text-sm text-muted-foreground">Update informasi bank pembayaran</p>
-                    </div>
-                    <button @click="showEditModal = false" class="cursor-pointer text-gray-500 hover:text-gray-700">
+            <Card class="relative w-full max-w-2xl overflow-y-auto max-h-[90vh]">
+                <CardHeader class="relative">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        class="absolute top-3 right-3 h-8 w-8 cursor-pointer"
+                        @click="showEditModal = false"
+                        title="Tutup"
+                    >
                         <X class="h-4 w-4" />
-                    </button>
-                </div>
-
-                <form @submit.prevent="submitEdit" class="space-y-4">
+                    </Button>
+                    <CardTitle style="font-family: Georgia, serif;">Edit Bank</CardTitle>
+                    <CardDescription>Update informasi bank pembayaran</CardDescription>
+                </CardHeader>
+                <CardContent class="pb-6">
+                    <form @submit.prevent="submitEdit" class="space-y-4">
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <!-- Bank Name -->
                         <div>
@@ -517,10 +522,10 @@ const submitEdit = () => {
                                 id="edit-bank-name"
                                 v-model="editForm.bank_name"
                                 placeholder="Contoh: Bank Central Asia"
-                                :class="{ 'border-red-500': editForm.errors.bank_name }"
+                                :aria-invalid="!!editForm.errors.bank_name"
                                 required
                             />
-                            <p v-if="editForm.errors.bank_name" class="mt-1 text-xs text-red-500">{{ editForm.errors.bank_name }}</p>
+                            <p v-if="editForm.errors.bank_name" class="mt-1 text-xs text-destructive">{{ editForm.errors.bank_name }}</p>
                         </div>
 
                         <!-- Bank Code -->
@@ -530,10 +535,10 @@ const submitEdit = () => {
                                 id="edit-bank-code"
                                 v-model="editForm.bank_code"
                                 placeholder="Contoh: BCA"
-                                :class="{ 'border-red-500': editForm.errors.bank_code }"
+                                :aria-invalid="!!editForm.errors.bank_code"
                                 required
                             />
-                            <p v-if="editForm.errors.bank_code" class="mt-1 text-xs text-red-500">{{ editForm.errors.bank_code }}</p>
+                            <p v-if="editForm.errors.bank_code" class="mt-1 text-xs text-destructive">{{ editForm.errors.bank_code }}</p>
                         </div>
 
                         <!-- Account Number -->
@@ -543,10 +548,10 @@ const submitEdit = () => {
                                 id="edit-account-number"
                                 v-model="editForm.account_number"
                                 placeholder="Contoh: 1234567890"
-                                :class="{ 'border-red-500': editForm.errors.account_number }"
+                                :aria-invalid="!!editForm.errors.account_number"
                                 required
                             />
-                            <p v-if="editForm.errors.account_number" class="mt-1 text-xs text-red-500">{{ editForm.errors.account_number }}</p>
+                            <p v-if="editForm.errors.account_number" class="mt-1 text-xs text-destructive">{{ editForm.errors.account_number }}</p>
                         </div>
 
                         <!-- Account Name -->
@@ -556,10 +561,10 @@ const submitEdit = () => {
                                 id="edit-account-name"
                                 v-model="editForm.account_name"
                                 placeholder="Contoh: PT. Contoh Indonesia"
-                                :class="{ 'border-red-500': editForm.errors.account_name }"
+                                :aria-invalid="!!editForm.errors.account_name"
                                 required
                             />
-                            <p v-if="editForm.errors.account_name" class="mt-1 text-xs text-red-500">{{ editForm.errors.account_name }}</p>
+                            <p v-if="editForm.errors.account_name" class="mt-1 text-xs text-destructive">{{ editForm.errors.account_name }}</p>
                         </div>
 
                         <!-- Branch -->
@@ -569,9 +574,9 @@ const submitEdit = () => {
                                 id="edit-branch"
                                 v-model="editForm.branch"
                                 placeholder="Contoh: Jakarta Pusat"
-                                :class="{ 'border-red-500': editForm.errors.branch }"
+                                :aria-invalid="!!editForm.errors.branch"
                             />
-                            <p v-if="editForm.errors.branch" class="mt-1 text-xs text-red-500">{{ editForm.errors.branch }}</p>
+                            <p v-if="editForm.errors.branch" class="mt-1 text-xs text-destructive">{{ editForm.errors.branch }}</p>
                         </div>
 
                         <!-- SWIFT Code -->
@@ -581,9 +586,9 @@ const submitEdit = () => {
                                 id="edit-swift-code"
                                 v-model="editForm.swift_code"
                                 placeholder="Contoh: CENAIDJA"
-                                :class="{ 'border-red-500': editForm.errors.swift_code }"
+                                :aria-invalid="!!editForm.errors.swift_code"
                             />
-                            <p v-if="editForm.errors.swift_code" class="mt-1 text-xs text-red-500">{{ editForm.errors.swift_code }}</p>
+                            <p v-if="editForm.errors.swift_code" class="mt-1 text-xs text-destructive">{{ editForm.errors.swift_code }}</p>
                         </div>
 
                         <!-- Bank Type -->
@@ -592,17 +597,15 @@ const submitEdit = () => {
                             <select
                                 v-model="editForm.bank_type"
                                 id="edit-bank-type"
-                                :class="[
-                                    'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white',
-                                    { 'border-red-500': editForm.errors.bank_type },
-                                ]"
+                                class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:bg-input/30"
+                                :aria-invalid="!!editForm.errors.bank_type"
                                 required
                             >
                                 <option value="" disabled>Pilih tipe bank</option>
                                 <option value="local">Lokal</option>
                                 <option value="international">Internasional</option>
                             </select>
-                            <p v-if="editForm.errors.bank_type" class="mt-1 text-xs text-red-500">{{ editForm.errors.bank_type }}</p>
+                            <p v-if="editForm.errors.bank_type" class="mt-1 text-xs text-destructive">{{ editForm.errors.bank_type }}</p>
                         </div>
 
                         <!-- Admin Fee -->
@@ -615,26 +618,23 @@ const submitEdit = () => {
                                 min="0"
                                 step="0.01"
                                 placeholder="0"
-                                :class="{ 'border-red-500': editForm.errors.admin_fee }"
+                                :aria-invalid="!!editForm.errors.admin_fee"
                             />
-                            <p v-if="editForm.errors.admin_fee" class="mt-1 text-xs text-red-500">{{ editForm.errors.admin_fee }}</p>
+                            <p v-if="editForm.errors.admin_fee" class="mt-1 text-xs text-destructive">{{ editForm.errors.admin_fee }}</p>
                         </div>
                     </div>
 
                     <!-- Description -->
                     <div>
                         <Label for="edit-description">Deskripsi</Label>
-                        <textarea
+                        <Textarea
                             id="edit-description"
                             v-model="editForm.description"
                             placeholder="Deskripsi tambahan tentang bank ini..."
-                            rows="3"
-                            :class="[
-                                'flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
-                                { 'border-red-500': editForm.errors.description },
-                            ]"
+                            :aria-invalid="!!editForm.errors.description"
+                            :rows="3"
                         />
-                        <p v-if="editForm.errors.description" class="mt-1 text-xs text-red-500">{{ editForm.errors.description }}</p>
+                        <p v-if="editForm.errors.description" class="mt-1 text-xs text-destructive">{{ editForm.errors.description }}</p>
                     </div>
 
                     <!-- Active Status -->
@@ -643,57 +643,54 @@ const submitEdit = () => {
                         <Label for="edit-is-active">Bank Aktif</Label>
                     </div>
 
-                    <div class="flex justify-end space-x-2 pt-4">
-                        <Button type="button" variant="outline" @click="showEditModal = false" class="cursor-pointer"> Batal </Button>
-                        <Button type="submit" :disabled="editForm.processing" class="cursor-pointer disabled:cursor-not-allowed">
+                    <div class="flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end">
+                        <Button type="button" variant="outline" @click="showEditModal = false" class="w-full cursor-pointer sm:w-auto">Batal</Button>
+                        <Button type="submit" :disabled="editForm.processing" class="w-full cursor-pointer disabled:cursor-not-allowed sm:w-auto">
                             {{ editForm.processing ? 'Memperbarui...' : 'Update Bank' }}
                         </Button>
                     </div>
                 </form>
-            </div>
+                </CardContent>
+            </Card>
         </div>
 
         <!-- Delete Confirmation Modal -->
-        <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center">
-            <!-- Overlay -->
-            <div class="fixed inset-0 bg-black/50" @click="showDeleteModal = false"></div>
+        <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="showDeleteModal = false"></div>
 
-            <!-- Modal Content -->
-            <div class="relative mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
-                <!-- Header -->
-                <div class="mb-4 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="mx-auto flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
-                            <Trash2 class="h-5 w-5 text-red-600 dark:text-red-400" />
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Hapus Bank</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Tindakan ini tidak dapat dibatalkan</p>
-                        </div>
-                    </div>
-                    <button @click="showDeleteModal = false" class="cursor-pointer text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+            <Card class="relative w-full max-w-md">
+                <CardHeader class="relative">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        class="absolute top-3 right-3 h-8 w-8 cursor-pointer"
+                        @click="showDeleteModal = false"
+                        title="Tutup"
+                    >
                         <X class="h-4 w-4" />
-                    </button>
-                </div>
+                    </Button>
+                    <CardTitle style="font-family: Georgia, serif;" class="flex items-center gap-2">
+                        <Trash2 class="h-4 w-4 text-destructive" />
+                        Hapus Bank
+                    </CardTitle>
+                    <CardDescription>Tindakan ini tidak dapat dibatalkan</CardDescription>
+                </CardHeader>
+                <CardContent class="pb-6">
+                    <div class="space-y-2 text-sm text-muted-foreground">
+                        <p>
+                            Apakah Anda yakin ingin menghapus bank
+                            <span class="font-medium text-foreground">{{ bankToDelete?.bank_name }}</span>?
+                        </p>
+                        <p>Data bank ini akan dihapus secara permanen dan tidak dapat dikembalikan.</p>
+                    </div>
 
-                <!-- Content -->
-                <div class="mb-6">
-                    <p class="text-sm text-gray-600 dark:text-gray-400">
-                        Apakah Anda yakin ingin menghapus bank
-                        <span class="font-semibold text-gray-900 dark:text-gray-100">{{ bankToDelete?.bank_name }}</span
-                        >?
-                    </p>
-                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                        Data bank ini akan dihapus secara permanen dan tidak dapat dikembalikan.
-                    </p>
-                </div>
-
-                <!-- Actions -->
-                <div class="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" @click="showDeleteModal = false" class="cursor-pointer"> Batal </Button>
-                    <Button type="button" class="cursor-pointer bg-red-600 text-white hover:bg-red-700" @click="confirmDelete"> Hapus Bank </Button>
-                </div>
-            </div>
+                    <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                        <Button type="button" variant="outline" @click="showDeleteModal = false" class="w-full cursor-pointer sm:w-auto">Batal</Button>
+                        <Button type="button" variant="destructive" class="w-full cursor-pointer sm:w-auto" @click="confirmDelete">Hapus Bank</Button>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     </AppLayout>
 </template>
