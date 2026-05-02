@@ -11,6 +11,16 @@ import AppSidebarLogo from './AppSidebarLogo.vue';
 const page = usePage();
 const customerBadges = page.props.customerBadges || {};
 
+const getCustomerUrl = (getter: () => string | undefined, fallback: string) => {
+    try {
+        return getter() || fallback;
+    } catch {
+        return fallback;
+    }
+};
+
+const customerRoutes = customer as any;
+
 const isImpersonating = () => {
     return page.props.session?.is_impersonating || false;
 };
@@ -27,28 +37,28 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Dashboard',
-        href: customer.dashboard().url,
+        href: getCustomerUrl(() => customerRoutes?.dashboard?.().url, '/customer/dashboard'),
         icon: LayoutGrid,
     },
     {
         title: 'Hosting',
-        href: customer.hosting.index().url,
+        href: '/hosting',
         icon: Server,
     },
     {
         title: 'Domain',
-        href: customer.domains.index().url,
+        href: '/domains',
         icon: Globe,
     },
     {
         title: 'My Orders',
-        href: customer.orders.index().url,
+        href: getCustomerUrl(() => customerRoutes?.orders?.index?.().url, '/customer/orders'),
         icon: ShoppingCart,
         badge: customerBadges.pending_orders || 0,
     },
     {
         title: 'Settings',
-        href: customer.settings.index().url,
+        href: getCustomerUrl(() => customerRoutes?.settings?.index?.().url, '/customer/settings'),
         icon: Settings,
     },
 ];
@@ -73,7 +83,7 @@ const footerNavItems: NavItem[] = [
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link :href="customer.dashboard().url">
+                        <Link :href="getCustomerUrl(() => customerRoutes?.dashboard?.().url, '/customer/dashboard')">
                             <AppSidebarLogo />
                         </Link>
                     </SidebarMenuButton>

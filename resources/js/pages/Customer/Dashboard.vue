@@ -173,7 +173,7 @@ const logout = () => {
                     <CardContent>
                         <div v-if="services.length === 0" class="py-4 text-center text-muted-foreground">
                             Belum ada layanan.
-                            <Link :href="customer.hosting.index().url" class="text-primary hover:underline">Jelajahi paket hosting</Link>
+                            <Link href="/hosting" class="text-primary hover:underline">Jelajahi paket hosting</Link>
                         </div>
                         <div v-else class="space-y-3">
                             <div
@@ -214,7 +214,7 @@ const logout = () => {
                     </CardHeader>
                     <CardContent>
                         <div v-if="recentOrders.length === 0" class="py-4 text-center text-muted-foreground">
-                            Belum ada pesanan. <Link :href="customer.hosting.index().url" class="text-primary hover:underline">Mulai berbelanja</Link>
+                            Belum ada pesanan. <Link href="/hosting" class="text-primary hover:underline">Mulai berbelanja</Link>
                         </div>
                         <div v-else class="space-y-3">
                             <div

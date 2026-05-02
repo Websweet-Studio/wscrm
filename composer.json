@@ -72,9 +72,6 @@
         "build:production": [
             "powershell -Command \"if (Test-Path 'dist') { Remove-Item -Recurse -Force 'dist' }\"",
             "npm run build:clean",
-            "@php artisan config:cache",
-            "@php artisan route:cache",
-            "@php artisan view:cache",
             "@php artisan build:production-structure"
         ],
         "build:package": [

@@ -15,7 +15,7 @@ class BuildProductionStructure extends Command
      *
      * @var string
      */
-    protected $signature = 'build:production-structure';
+    protected $signature = 'build:production-structure {--include-env : Include .env in dist and production.zip}';
 
     /**
      * The console command description.
@@ -24,12 +24,15 @@ class BuildProductionStructure extends Command
      */
     protected $description = 'Create production build structure with WSCRM and public_html folders';
 
+    private bool $includeEnv = false;
+
     /**
      * Execute the console command.
      */
     public function handle(): int
     {
         $this->info('Building production structure...');
+        $this->includeEnv = (bool) $this->option('include-env');
 
         $distPath = base_path('dist');
         $wscrmPath = $distPath.'/wscrm';
@@ -56,6 +59,10 @@ class BuildProductionStructure extends Command
         // Modify index.php for production structure
         $this->modifyIndexPhpForProduction($publicHtmlPath);
         $this->info('Modified index.php for production structure');
+
+        if (! $this->prepareAndBuildCaches($wscrmPath)) {
+            return self::FAILURE;
+        }
 
         // Create production.zip
         $this->createZip($distPath);
@@ -120,12 +127,6 @@ class BuildProductionStructure extends Command
             }
 
             File::copy($file->getPathname(), $destinationFile);
-        }
-
-        // Copy .env.production as .env if it exists
-        $envProduction = base_path('.env.production');
-        if (File::exists($envProduction)) {
-            File::copy($envProduction, $destination.'/.env');
         }
 
         // Create necessary storage directories
@@ -319,8 +320,101 @@ class BuildProductionStructure extends Command
                     $zip->addEmptyDir($zipPath);
                 }
             } elseif ($file->isFile()) {
+                if (! $this->includeEnv && basename($zipPath) === '.env') {
+                    continue;
+                }
                 $zip->addFile($filePath, $zipPath);
             }
         }
+    }
+
+    private function prepareAndBuildCaches(string $wscrmPath): bool
+    {
+        $envSource = null;
+        $envProduction = base_path('.env.production');
+        $envLocal = base_path('.env');
+
+        if (File::exists($envProduction)) {
+            $envSource = $envProduction;
+        } elseif (File::exists($envLocal)) {
+            $envSource = $envLocal;
+            $this->warn('⚠️  .env.production tidak ditemukan. Menggunakan .env untuk build cache.');
+        } else {
+            $this->warn('⚠️  .env.production dan .env tidak ditemukan. Melewati config/route/view/event cache.');
+
+            return true;
+        }
+
+        $distEnvPath = $wscrmPath.'/.env';
+        File::copy($envSource, $distEnvPath);
+
+        $this->clearBootstrapCache($wscrmPath);
+
+        $ok = true;
+        $ok = $ok && $this->runArtisanIn($wscrmPath, 'config:clear --ansi');
+        $ok = $ok && $this->runArtisanIn($wscrmPath, 'route:clear --ansi');
+        $ok = $ok && $this->runArtisanIn($wscrmPath, 'view:clear --ansi');
+        $ok = $ok && $this->runArtisanIn($wscrmPath, 'event:clear --ansi');
+
+        $ok = $ok && $this->runArtisanIn($wscrmPath, 'config:cache --ansi');
+        $ok = $ok && $this->runArtisanIn($wscrmPath, 'route:cache --ansi');
+        $ok = $ok && $this->runArtisanIn($wscrmPath, 'view:cache --ansi');
+        $ok = $ok && $this->runArtisanIn($wscrmPath, 'event:cache --ansi');
+
+        if (! $this->includeEnv && File::exists($distEnvPath)) {
+            File::delete($distEnvPath);
+        }
+
+        if (! $ok) {
+            $this->error('❌ Gagal build cache di dist/wscrm.');
+        }
+
+        return $ok;
+    }
+
+    private function clearBootstrapCache(string $wscrmPath): void
+    {
+        $cacheDir = $wscrmPath.'/bootstrap/cache';
+        if (! File::exists($cacheDir)) {
+            return;
+        }
+
+        foreach (File::glob($cacheDir.'/*.php') as $file) {
+            File::delete($file);
+        }
+    }
+
+    private function runArtisanIn(string $workingDir, string $arguments): bool
+    {
+        $php = escapeshellarg(PHP_BINARY);
+        $command = "{$php} artisan {$arguments}";
+
+        $process = proc_open(
+            $command,
+            [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes,
+            $workingDir
+        );
+
+        if (! is_resource($process)) {
+            $this->error("❌ Gagal menjalankan command: {$command}");
+
+            return false;
+        }
+
+        fclose($pipes[0]);
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+
+        $exitCode = proc_close($process);
+
+        $output = trim(($stdout ?? '').($stderr ? "\n".$stderr : ''));
+        if ($output !== '') {
+            $this->line($output);
+        }
+
+        return $exitCode === 0;
     }
 }
