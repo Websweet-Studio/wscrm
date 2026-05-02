@@ -28,7 +28,9 @@ class OrderController extends Controller
 
     public function show(Order $order): Response
     {
-        $this->authorize('view', $order);
+        if ($order->customer_id !== Auth::guard('customer')->id()) {
+            abort(403, 'Unauthorized');
+        }
 
         $order->load(['orderItems']);
 
