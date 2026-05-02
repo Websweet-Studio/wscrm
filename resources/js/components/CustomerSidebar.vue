@@ -5,7 +5,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import customer from '@/routes/customer';
 import { type NavItem } from '@/types';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, Globe, Home, LayoutGrid, Server, Settings, ShoppingCart } from 'lucide-vue-next';
+import { BookOpen, Folder, Home, LayoutGrid, Settings, ShoppingCart } from 'lucide-vue-next';
 import AppSidebarLogo from './AppSidebarLogo.vue';
 
 const page = usePage();
@@ -39,16 +39,6 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: getCustomerUrl(() => customerRoutes?.dashboard?.().url, '/customer/dashboard'),
         icon: LayoutGrid,
-    },
-    {
-        title: 'Hosting',
-        href: '/hosting',
-        icon: Server,
-    },
-    {
-        title: 'Domain',
-        href: '/domains',
-        icon: Globe,
     },
     {
         title: 'My Orders',

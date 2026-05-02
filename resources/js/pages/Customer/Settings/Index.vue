@@ -54,18 +54,18 @@ const submitPassword = () => {
     <Head title="Settings" />
 
     <CustomerLayout :breadcrumbs="breadcrumbs">
-        <div class="space-y-6">
+        <div class="space-y-4 p-4 sm:space-y-6 sm:p-6">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight">Settings</h1>
+                <h1 class="font-serif text-2xl font-medium leading-tight tracking-tight sm:text-3xl">Settings</h1>
                 <p class="text-muted-foreground">Kelola informasi akun dan keamanan Anda</p>
             </div>
 
             <div class="grid gap-6">
                 <!-- Profile Settings -->
-                <Card>
+                <Card class="rounded-lg shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
                     <CardHeader>
-                        <CardTitle>Informasi Profil</CardTitle>
-                        <CardDescription> Perbarui informasi profil dan alamat email Anda </CardDescription>
+                        <CardTitle class="font-serif font-medium tracking-tight">Informasi Profil</CardTitle>
+                        <CardDescription class="leading-relaxed"> Perbarui informasi profil dan alamat email Anda </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form @submit.prevent="submitProfile" class="space-y-4">
@@ -154,8 +154,8 @@ const submitPassword = () => {
                                 </div>
                             </div>
 
-                            <div class="flex justify-end">
-                                <Button type="submit" :disabled="profileForm.processing">
+                            <div class="flex">
+                                <Button type="submit" :disabled="profileForm.processing" class="w-full sm:ml-auto sm:w-auto">
                                     <span v-if="!profileForm.processing">Simpan Perubahan</span>
                                     <span v-else>Menyimpan...</span>
                                 </Button>
@@ -165,10 +165,10 @@ const submitPassword = () => {
                 </Card>
 
                 <!-- Password Settings -->
-                <Card>
+                <Card class="rounded-lg shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
                     <CardHeader>
-                        <CardTitle>Ubah Password</CardTitle>
-                        <CardDescription> Perbarui password akun Anda untuk menjaga keamanan </CardDescription>
+                        <CardTitle class="font-serif font-medium tracking-tight">Ubah Password</CardTitle>
+                        <CardDescription class="leading-relaxed"> Perbarui password akun Anda untuk menjaga keamanan </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form @submit.prevent="submitPassword" class="space-y-4">
@@ -208,8 +208,8 @@ const submitPassword = () => {
                                 <InputError :message="passwordForm.errors.password_confirmation" />
                             </div>
 
-                            <div class="flex justify-end">
-                                <Button type="submit" :disabled="passwordForm.processing">
+                            <div class="flex">
+                                <Button type="submit" :disabled="passwordForm.processing" class="w-full sm:ml-auto sm:w-auto">
                                     <span v-if="!passwordForm.processing">Ubah Password</span>
                                     <span v-else>Mengubah...</span>
                                 </Button>

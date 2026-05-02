@@ -1,15 +1,18 @@
 <script setup lang="ts">
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
+import { formatDate, formatPrice } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Trash2 } from 'lucide-vue-next';
+import { Eye, ShoppingCart, Trash2 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface OrderItem {
     id: number;
-    item_type: 'hosting' | 'domain';
+    item_type: 'hosting' | 'domain' | 'app' | 'web' | 'maintenance' | 'service';
     domain_name: string | null;
     quantity: number;
     price: number;
@@ -65,22 +68,6 @@ const deleteOrder = (orderId: number) => {
     }
 };
 
-const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-    }).format(price);
-};
-
-const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
-};
-
 const getStatusColor = (status: string) => {
     switch (status) {
         case 'completed':
@@ -93,6 +80,38 @@ const getStatusColor = (status: string) => {
             return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
         default:
             return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+    }
+};
+
+const getPayableAmount = (order: Order) => {
+    const discount = Number(order.discount_amount || 0);
+    const total = Number(order.total_amount || 0);
+    return discount > 0 ? total - discount : total;
+};
+
+const getOrderItemsSummary = (order: Order) => {
+    const items = order.order_items || [];
+    if (items.length === 0) {
+        return 'Tanpa item';
+    }
+
+    const first = items[0];
+    const firstLabel = first.domain_name || order.domain_name || first.item_type;
+    const extra = items.length > 1 ? ` +${items.length - 1} item` : '';
+    return `${firstLabel}${extra}`;
+};
+
+const getStatusVariant = (status: string) => {
+    switch (status) {
+        case 'completed':
+            return 'default';
+        case 'processing':
+        case 'pending':
+            return 'secondary';
+        case 'cancelled':
+            return 'destructive';
+        default:
+            return 'secondary';
     }
 };
 
@@ -116,144 +135,125 @@ const getStatusText = (status: string) => {
     <Head title="Pesanan Saya" />
 
     <CustomerLayout :breadcrumbs="breadcrumbs">
-        <div class="space-y-6">
-            <div class="flex items-center justify-between">
+        <div class="space-y-4 p-4 sm:space-y-6 sm:p-6">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold">Pesanan Saya</h1>
+                    <h1 class="font-serif text-2xl font-medium tracking-tight sm:text-3xl">Pesanan Saya</h1>
                     <p class="text-muted-foreground">Lihat dan kelola pesanan layanan Anda</p>
                 </div>
-                <Button asChild>
-                    <Link href="/customer/hosting">Lihat Produk</Link>
+                <Button asChild class="w-full sm:w-auto">
+                    <Link href="/hosting">Lihat Produk</Link>
                 </Button>
             </div>
 
-            <div v-if="orders.length" class="grid gap-4 md:grid-cols-4">
+            <div v-if="orders.length" class="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
                 <Card>
                     <CardHeader class="pb-2">
                         <CardDescription>Total Pesanan</CardDescription>
-                        <CardTitle class="text-2xl">{{ totalOrders }}</CardTitle>
+                        <CardTitle class="text-2xl font-semibold">{{ totalOrders }}</CardTitle>
                     </CardHeader>
                 </Card>
                 <Card>
                     <CardHeader class="pb-2">
                         <CardDescription>Menunggu</CardDescription>
-                        <CardTitle class="text-2xl">{{ pendingOrders }}</CardTitle>
+                        <CardTitle class="text-2xl font-semibold">{{ pendingOrders }}</CardTitle>
                     </CardHeader>
                 </Card>
                 <Card>
                     <CardHeader class="pb-2">
                         <CardDescription>Diproses</CardDescription>
-                        <CardTitle class="text-2xl">{{ processingOrders }}</CardTitle>
+                        <CardTitle class="text-2xl font-semibold">{{ processingOrders }}</CardTitle>
                     </CardHeader>
                 </Card>
                 <Card>
                     <CardHeader class="pb-2">
                         <CardDescription>Selesai</CardDescription>
-                        <CardTitle class="text-2xl">{{ completedOrders }}</CardTitle>
+                        <CardTitle class="text-2xl font-semibold">{{ completedOrders }}</CardTitle>
                     </CardHeader>
                 </Card>
             </div>
 
-            <div v-if="orders.length === 0" class="py-12 text-center">
-                <div class="text-muted-foreground">
-                    <p class="mb-4 text-lg">Anda belum memiliki pesanan.</p>
-                    <Button asChild>
-                        <Link href="/customer/hosting">Mulai Berbelanja</Link>
+            <Card v-if="orders.length === 0">
+                <CardContent class="flex flex-col items-center gap-4 py-10 text-center">
+                    <div class="space-y-1">
+                        <div class="font-serif text-xl font-medium">Belum ada pesanan</div>
+                        <div class="text-sm text-muted-foreground">Mulai berlangganan layanan hosting atau domain untuk melihat pesanan di sini.</div>
+                    </div>
+                    <Button asChild class="w-full sm:w-auto">
+                        <Link href="/hosting">Mulai Berbelanja</Link>
                     </Button>
-                </div>
-            </div>
+                </CardContent>
+            </Card>
 
-            <div v-else class="space-y-4">
-                <Card v-for="order in orders" :key="order.id">
-                    <CardHeader>
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <CardTitle>Order #{{ order.id }}</CardTitle>
-                                <CardDescription>{{ formatDate(order.created_at) }}</CardDescription>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span
-                                    :class="`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(order.status)}`"
-                                >
-                                    {{ getStatusText(order.status) }}
-                                </span>
-                                <div class="text-right">
+            <Card v-else>
+                <CardHeader>
+                    <CardTitle class="flex items-center gap-2">
+                        <ShoppingCart class="h-5 w-5" />
+                        Daftar Pesanan
+                    </CardTitle>
+                    <CardDescription>Semua pesanan yang terkait dengan akun Anda</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Pesanan</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead class="text-right">Total</TableHead>
+                                <TableHead class="text-right">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="order in orders" :key="order.id">
+                                <TableCell>
+                                    <div class="space-y-0.5">
+                                        <div class="font-medium">Order <span class="font-mono">#{{ order.id }}</span></div>
+                                        <div class="text-sm text-muted-foreground">
+                                            {{ formatDate(order.created_at) }} • {{ getOrderItemsSummary(order) }}
+                                        </div>
+                                        <div class="text-[11px] text-muted-foreground capitalize">
+                                            {{ order.billing_cycle.replace('_', ' ') }}
+                                            <span v-if="order.expires_at"> • Kadaluarsa {{ formatDate(order.expires_at) }}</span>
+                                        </div>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge :variant="getStatusVariant(order.status)" :class="getStatusColor(order.status)">
+                                        {{ getStatusText(order.status) }}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell class="text-right">
                                     <template v-if="order.discount_amount && order.discount_amount > 0">
-                                        <div class="text-sm text-muted-foreground line-through">
-                                            {{ formatPrice(order.total_amount) }}
-                                        </div>
-                                        <div class="text-lg font-bold text-green-600 dark:text-green-400">
-                                            {{ formatPrice(Number(order.total_amount) - Number(order.discount_amount)) }}
-                                        </div>
-                                        <div class="text-xs text-green-600 dark:text-green-400">Hemat: {{ formatPrice(order.discount_amount) }}</div>
+                                        <div class="text-xs text-muted-foreground line-through">{{ formatPrice(order.total_amount) }}</div>
+                                        <div class="font-medium">{{ formatPrice(getPayableAmount(order)) }}</div>
                                     </template>
                                     <template v-else>
-                                        <div class="text-lg font-bold">{{ formatPrice(order.total_amount) }}</div>
+                                        <div class="font-medium">{{ formatPrice(order.total_amount) }}</div>
                                     </template>
-                                </div>
-                            </div>
-                        </div>
-                    </CardHeader>
-
-                    <CardContent>
-                        <div class="space-y-3">
-                            <div class="text-sm font-medium">Item Pesanan</div>
-                            <div class="space-y-2">
-                                <div
-                                    v-for="item in order.order_items"
-                                    :key="item.id"
-                                    class="flex items-center justify-between rounded-md bg-muted/30 px-3 py-2"
-                                >
-                                    <div class="flex items-center gap-3">
-                                        <span
-                                            :class="`inline-flex items-center rounded px-2 py-1 text-xs font-medium ${
-                                                item.item_type === 'hosting'
-                                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-                                                    : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
-                                            }`"
+                                </TableCell>
+                                <TableCell class="text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <Button variant="outline" size="sm" asChild>
+                                            <Link :href="`/customer/orders/${order.id}`">
+                                                <Eye class="h-4 w-4" />
+                                            </Link>
+                                        </Button>
+                                        <Button
+                                            v-if="order.status === 'pending'"
+                                            variant="destructive"
+                                            size="sm"
+                                            :disabled="deletingOrders.has(order.id)"
+                                            @click="deleteOrder(order.id)"
                                         >
-                                            {{ item.item_type }}
-                                        </span>
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-medium">
-                                                {{ item.domain_name || order.domain_name || `${item.item_type} service` }}
-                                            </span>
-                                            <span class="text-[11px] text-muted-foreground capitalize">
-                                                <span>
-                                                    {{ (item.billing_cycle || order.billing_cycle).replace('_', ' ') }}
-                                                </span>
-                                                <span v-if="item.expires_at || order.expires_at">
-                                                    • Kadaluarsa
-                                                    {{ formatDate((item.expires_at || order.expires_at) as string) }}
-                                                </span>
-                                            </span>
-                                        </div>
-                                        <span v-if="item.quantity > 1" class="text-muted-foreground">× {{ item.quantity }}</span>
+                                            <Trash2 class="h-4 w-4" />
+                                        </Button>
                                     </div>
-                                    <span class="font-medium">{{ formatPrice(item.price) }}</span>
-                                </div>
-                            </div>
-
-                            <div class="flex justify-end gap-2 pt-2">
-                                <Button variant="outline" size="sm" asChild>
-                                    <Link :href="`/customer/orders/${order.id}`">Lihat Detail</Link>
-                                </Button>
-                                <Button
-                                    v-if="order.status === 'pending'"
-                                    variant="destructive"
-                                    size="sm"
-                                    :disabled="deletingOrders.has(order.id)"
-                                    @click="deleteOrder(order.id)"
-                                    class="cursor-pointer"
-                                >
-                                    <Trash2 class="mr-1 h-4 w-4" />
-                                    {{ deletingOrders.has(order.id) ? 'Menghapus...' : 'Hapus' }}
-                                </Button>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
         </div>
     </CustomerLayout>
 </template>

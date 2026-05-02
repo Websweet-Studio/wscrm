@@ -63,7 +63,17 @@ const props = defineProps<Props>();
 
 const logoutForm = useForm({});
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Customer Dashboard', href: customer.dashboard().url }];
+const customerRoutes = customer as any;
+
+const getCustomerUrl = (getter: () => string | undefined, fallback: string) => {
+    try {
+        return getter() || fallback;
+    } catch {
+        return fallback;
+    }
+};
+
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Customer Dashboard', href: getCustomerUrl(() => customerRoutes?.dashboard?.().url, '/customer/dashboard') }];
 
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -113,49 +123,51 @@ const logout = () => {
         <div class="space-y-4 p-4 sm:space-y-6 sm:p-6">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Selamat datang, {{ customer.name }}</h1>
+                    <h1 class="font-serif text-2xl font-medium leading-tight tracking-tight sm:text-3xl">
+                        Selamat datang, {{ customer.name }}
+                    </h1>
                     <p class="text-sm text-muted-foreground sm:text-base">{{ customer.email }}</p>
                 </div>
                 <Button variant="outline" @click="logout" class="w-full sm:w-auto"> Logout </Button>
             </div>
 
             <div class="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
-                <Card>
+                <Card class="rounded-lg shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">Layanan Aktif</CardTitle>
+                        <CardTitle class="text-xs font-medium tracking-wide">Layanan Aktif</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div class="text-2xl font-bold">{{ services.filter((s) => s.status === 'active').length }}</div>
+                        <div class="font-serif text-2xl font-medium">{{ services.filter((s) => s.status === 'active').length }}</div>
                         <p class="text-xs text-muted-foreground">{{ services.length }} total layanan</p>
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card class="rounded-lg shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">Pesanan Terbaru</CardTitle>
+                        <CardTitle class="text-xs font-medium tracking-wide">Pesanan Terbaru</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div class="text-2xl font-bold">{{ recentOrders.length }}</div>
+                        <div class="font-serif text-2xl font-medium">{{ recentOrders.length }}</div>
                         <p class="text-xs text-muted-foreground">5 pesanan terakhir</p>
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card class="rounded-lg shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">Tagihan Belum Bayar</CardTitle>
+                        <CardTitle class="text-xs font-medium tracking-wide">Tagihan Belum Bayar</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div class="text-2xl font-bold">{{ unpaidInvoices.length }}</div>
+                        <div class="font-serif text-2xl font-medium">{{ unpaidInvoices.length }}</div>
                         <p class="text-xs text-muted-foreground">Perlu perhatian</p>
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card class="rounded-lg shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">Status Akun</CardTitle>
+                        <CardTitle class="text-xs font-medium tracking-wide">Status Akun</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div class="text-2xl font-bold capitalize">{{ customer.status }}</div>
+                        <div class="font-serif text-2xl font-medium capitalize">{{ customer.status }}</div>
                         <span :class="`mt-1 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(customer.status)}`">
                             {{ customer.status }}
                         </span>
@@ -165,9 +177,9 @@ const logout = () => {
 
             <div class="grid gap-4 sm:gap-6 md:grid-cols-2">
                 <!-- Recent Services -->
-                <Card>
+                <Card class="rounded-lg shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
                     <CardHeader>
-                        <CardTitle>Layanan Terbaru</CardTitle>
+                        <CardTitle class="font-serif font-medium tracking-tight">Layanan Terbaru</CardTitle>
                         <CardDescription>Layanan hosting dan domain terbaru Anda</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -200,16 +212,16 @@ const logout = () => {
                         </div>
                         <div v-if="services.length > 0" class="mt-4">
                             <Button variant="outline" size="sm" asChild class="w-full sm:w-auto">
-                                <Link :href="customer.services.index().url">Lihat Semua Layanan</Link>
+                                <Link :href="getCustomerUrl(() => customerRoutes?.services?.index?.().url, '/customer/services')">Lihat Semua Layanan</Link>
                             </Button>
                         </div>
                     </CardContent>
                 </Card>
 
                 <!-- Recent Orders -->
-                <Card>
+                <Card class="rounded-lg shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
                     <CardHeader>
-                        <CardTitle>Pesanan Terbaru</CardTitle>
+                        <CardTitle class="font-serif font-medium tracking-tight">Pesanan Terbaru</CardTitle>
                         <CardDescription>Riwayat dan status pesanan Anda</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -253,7 +265,7 @@ const logout = () => {
                         </div>
                         <div v-if="recentOrders.length > 0" class="mt-4">
                             <Button variant="outline" size="sm" asChild class="w-full sm:w-auto">
-                                <Link :href="customer.orders.index().url">Lihat Semua Pesanan</Link>
+                                <Link :href="getCustomerUrl(() => customerRoutes?.orders?.index?.().url, '/customer/orders')">Lihat Semua Pesanan</Link>
                             </Button>
                         </div>
                     </CardContent>
@@ -261,10 +273,10 @@ const logout = () => {
             </div>
 
             <!-- Unpaid Invoices Alert -->
-            <Card v-if="unpaidInvoices.length > 0" class="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
+            <Card v-if="unpaidInvoices.length > 0" class="rounded-lg bg-secondary/40 shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
                 <CardHeader>
-                    <CardTitle class="text-orange-800 dark:text-orange-200">Tagihan Belum Bayar</CardTitle>
-                    <CardDescription class="text-orange-700 dark:text-orange-300">
+                    <CardTitle class="font-serif font-medium tracking-tight text-primary">Tagihan Belum Bayar</CardTitle>
+                    <CardDescription>
                         Anda memiliki {{ unpaidInvoices.length }} tagihan belum bayar yang perlu perhatian
                     </CardDescription>
                 </CardHeader>
@@ -273,19 +285,22 @@ const logout = () => {
                         <div
                             v-for="invoice in unpaidInvoices"
                             :key="invoice.id"
-                            class="flex flex-col gap-2 rounded-md bg-white/50 px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-0 dark:bg-black/20"
+                            class="flex flex-col gap-2 rounded-md bg-background/60 px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-0"
                         >
                             <div>
-                                <Link :href="customer.invoices.show(invoice.id).url" class="font-medium hover:underline">
+                                <Link
+                                    :href="getCustomerUrl(() => customerRoutes?.invoices?.show?.(invoice.id).url, `/customer/invoices/${invoice.id}`)"
+                                    class="font-medium hover:underline"
+                                >
                                     {{ invoice.invoice_number }}
                                 </Link>
                                 <div class="text-sm text-muted-foreground">Jatuh tempo {{ formatDate(invoice.due_date) }}</div>
                             </div>
                             <div class="flex items-center justify-between text-right sm:block sm:text-right">
-                                <div class="font-bold text-orange-800 dark:text-orange-200">{{ formatPrice(invoice.amount) }}</div>
+                                <div class="font-serif font-medium text-primary">{{ formatPrice(invoice.amount) }}</div>
                                 <Link
-                                    :href="customer.invoices.payment(invoice.id).url"
-                                    class="text-xs text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-200"
+                                    :href="getCustomerUrl(() => customerRoutes?.invoices?.payment?.(invoice.id).url, `/customer/invoices/${invoice.id}/payment`)"
+                                    class="text-xs text-primary hover:underline"
                                 >
                                     Bayar Sekarang
                                 </Link>
@@ -293,13 +308,24 @@ const logout = () => {
                         </div>
                     </div>
                     <div class="mt-4 flex flex-col gap-2 sm:flex-row">
-                        <Button :as="Link" :href="customer.invoices.index().url" variant="outline" size="sm" class="w-full sm:w-auto">
+                        <Button
+                            :as="Link"
+                            :href="getCustomerUrl(() => customerRoutes?.invoices?.index?.().url, '/customer/invoices')"
+                            variant="outline"
+                            size="sm"
+                            class="w-full sm:w-auto"
+                        >
                             Lihat Semua Tagihan
                         </Button>
                         <Button
                             v-if="unpaidInvoices.length > 0"
                             :as="Link"
-                            :href="customer.invoices.payment(unpaidInvoices[0].id).url"
+                            :href="
+                                getCustomerUrl(
+                                    () => customerRoutes?.invoices?.payment?.(unpaidInvoices[0].id).url,
+                                    `/customer/invoices/${unpaidInvoices[0].id}/payment`,
+                                )
+                            "
                             size="sm"
                             class="w-full sm:w-auto"
                         >
