@@ -11,7 +11,9 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ServicePlan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -137,7 +139,10 @@ class OrderController extends Controller
             'items.*.billing_cycle' => 'nullable|in:onetime,monthly,quarterly,semi_annually,annually',
         ]);
 
-        DB::transaction(function () use ($request) {
+        $this->assertOrderItemsSupportsItemTypes(collect($request->items)->pluck('item_type')->filter()->unique()->values()->all());
+        $orderItemsColumns = $this->getOrderItemsColumnsPresence();
+
+        DB::transaction(function () use ($request, $orderItemsColumns) {
             $totalAmount = 0;
             $items = collect($request->items);
 
@@ -214,17 +219,26 @@ class OrderController extends Controller
                         break;
                 }
 
-                OrderItem::create([
+                $attributes = [
                     'order_id' => $order->id,
                     'item_type' => $item['item_type'],
                     'item_id' => $item['item_id'],
                     'domain_name' => null,
                     'quantity' => 1,
                     'price' => $price,
-                    'billing_cycle' => $item['billing_cycle'] ?? $request->billing_cycle,
-                    'status' => $itemStatus,
-                    'expires_at' => $request->expires_at,
-                ]);
+                ];
+
+                if ($orderItemsColumns['billing_cycle']) {
+                    $attributes['billing_cycle'] = $item['billing_cycle'] ?? $request->billing_cycle;
+                }
+                if ($orderItemsColumns['status']) {
+                    $attributes['status'] = $itemStatus;
+                }
+                if ($orderItemsColumns['expires_at']) {
+                    $attributes['expires_at'] = $request->expires_at;
+                }
+
+                OrderItem::create($attributes);
             }
         });
 
@@ -248,7 +262,10 @@ class OrderController extends Controller
             'items.*.billing_cycle' => 'nullable|in:onetime,monthly,quarterly,semi_annually,annually',
         ]);
 
-        DB::transaction(function () use ($request, $order) {
+        $this->assertOrderItemsSupportsItemTypes(collect($request->items)->pluck('item_type')->filter()->unique()->values()->all());
+        $orderItemsColumns = $this->getOrderItemsColumnsPresence();
+
+        DB::transaction(function () use ($request, $order, $orderItemsColumns) {
             // Update order basic info
             $order->update([
                 'customer_id' => $request->customer_id,
@@ -283,17 +300,26 @@ class OrderController extends Controller
                 $price = $item['price'] ?? $this->getDefaultPrice($item['item_type'], $item['item_id']);
                 $totalAmount += (float) $price;
 
-                OrderItem::create([
+                $attributes = [
                     'order_id' => $order->id,
                     'item_type' => $item['item_type'],
                     'item_id' => $item['item_id'],
                     'domain_name' => null, // Domain name is at order level
                     'quantity' => 1,
                     'price' => $price,
-                    'billing_cycle' => $item['billing_cycle'] ?? $request->billing_cycle,
-                    'status' => $itemStatus,
-                    'expires_at' => $request->expires_at,
-                ]);
+                ];
+
+                if ($orderItemsColumns['billing_cycle']) {
+                    $attributes['billing_cycle'] = $item['billing_cycle'] ?? $request->billing_cycle;
+                }
+                if ($orderItemsColumns['status']) {
+                    $attributes['status'] = $itemStatus;
+                }
+                if ($orderItemsColumns['expires_at']) {
+                    $attributes['expires_at'] = $request->expires_at;
+                }
+
+                OrderItem::create($attributes);
             }
 
             // Update total amount
@@ -327,6 +353,53 @@ class OrderController extends Controller
             default:
                 return 100000; // Fallback price
         }
+    }
+
+    private function getOrderItemsColumnsPresence(): array
+    {
+        static $presence = null;
+
+        if ($presence !== null) {
+            return $presence;
+        }
+
+        $presence = [
+            'billing_cycle' => Schema::hasColumn('order_items', 'billing_cycle'),
+            'expires_at' => Schema::hasColumn('order_items', 'expires_at'),
+            'status' => Schema::hasColumn('order_items', 'status'),
+        ];
+
+        return $presence;
+    }
+
+    private function assertOrderItemsSupportsItemTypes(array $requestedTypes): void
+    {
+        $requestedTypes = array_values(array_unique(array_filter($requestedTypes)));
+        if ($requestedTypes === []) {
+            return;
+        }
+
+        $column = DB::selectOne("SHOW COLUMNS FROM `order_items` WHERE Field = 'item_type'");
+        if (! $column || ! isset($column->Type)) {
+            return;
+        }
+
+        $type = (string) $column->Type;
+        if (! preg_match('/^enum\\((.*)\\)$/i', $type, $m)) {
+            return;
+        }
+
+        $allowed = str_getcsv($m[1], ',', "'");
+        $allowed = array_map(fn ($v) => trim((string) $v), $allowed);
+
+        $unsupported = array_values(array_diff($requestedTypes, $allowed));
+        if ($unsupported === []) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'items' => 'Tabel order_items belum mendukung item_type: '.implode(', ', $unsupported).'. Jalankan php artisan migrate dulu.',
+        ]);
     }
 
     public function destroy(Order $order)
