@@ -490,12 +490,13 @@ const getSortIcon = (field: string) => {
             </div>
 
             <!-- Filters -->
-            <Card>
+            <Card class="rounded-2xl shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
                 <CardHeader>
-                    <CardTitle style="font-family: Georgia, serif;" class="flex items-center space-x-2">
+                    <CardTitle class="flex items-center space-x-2 font-serif font-medium tracking-tight">
                         <Search class="h-4 w-4" />
                         <span>Filter & Pencarian</span>
                     </CardTitle>
+                    <CardDescription class="leading-relaxed">Cari order atau persempit daftar berdasarkan status, tipe layanan, dan pelanggan.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
@@ -503,11 +504,12 @@ const getSortIcon = (field: string) => {
                             <Input id="search" v-model="search" placeholder="Cari nama, email, atau domain..." @input="applyFilters" />
                         </div>
                         <div>
+                            <Label for="status" class="sr-only">Status</Label>
                             <select
                                 id="status"
                                 v-model="statusFilter"
                                 @change="applyFilters"
-                                class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                                class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                             >
                                 <option value="">Semua Status</option>
                                 <option value="pending">Menunggu</option>
@@ -520,11 +522,12 @@ const getSortIcon = (field: string) => {
                             </select>
                         </div>
                         <div>
+                            <Label for="service_type" class="sr-only">Tipe</Label>
                             <select
                                 id="service_type"
                                 v-model="serviceTypeFilter"
                                 @change="applyFilters"
-                                class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                                class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                             >
                                 <option value="">Semua Tipe</option>
                                 <option value="hosting">Hosting</option>
@@ -536,11 +539,12 @@ const getSortIcon = (field: string) => {
                             </select>
                         </div>
                         <div>
+                            <Label for="customer" class="sr-only">Pelanggan</Label>
                             <select
                                 id="customer"
                                 v-model="customerFilter"
                                 @change="applyFilters"
-                                class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                                class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                             >
                                 <option value="">Semua Pelanggan</option>
                                 <option v-for="customer in customers" :key="customer.id" :value="customer.id">

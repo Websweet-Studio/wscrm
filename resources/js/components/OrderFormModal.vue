@@ -410,29 +410,54 @@ const submit = () => {
 const close = () => {
     emit('close');
 };
+
+const parseDateInput = (value: string) => {
+    const dateString = value.includes(' ') ? value.split(' ')[0] : value;
+    const parts = dateString.split('-').map((v) => Number(v));
+    if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) {
+        return null;
+    }
+    const [year, month, day] = parts;
+    return new Date(year, month - 1, day);
+};
+
+const formatDateInput = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+const extendExpiryOneYear = () => {
+    const base = formData.value.expires_at ? parseDateInput(formData.value.expires_at) : null;
+    const date = base || new Date();
+    const next = new Date(date);
+    next.setFullYear(next.getFullYear() + 1);
+    formData.value.expires_at = formatDateInput(next);
+};
 </script>
 
 <template>
     <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center">
         <!-- Overlay -->
-        <div class="fixed inset-0 bg-black/50" @click="close"></div>
+        <div class="fixed inset-0 bg-[#141413]/25 backdrop-blur-sm" @click="close"></div>
 
         <!-- Modal Content -->
-        <div class="relative mx-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
+        <div class="relative mx-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-border bg-card text-card-foreground shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
             <!-- Header -->
-            <div class="mb-6 flex items-center justify-between">
+            <div class="flex items-start justify-between gap-4 border-b border-border px-6 py-5">
                 <div>
-                    <h2 class="text-xl font-semibold">{{ modalTitle }}</h2>
-                    <p class="text-sm text-muted-foreground">{{ modalDescription }}</p>
+                    <h2 class="font-serif text-xl font-medium tracking-tight sm:text-2xl">{{ modalTitle }}</h2>
+                    <p class="mt-1 text-sm leading-relaxed text-muted-foreground">{{ modalDescription }}</p>
                 </div>
-                <button @click="close" class="cursor-pointer text-gray-500 hover:text-gray-700">
-                    <X class="h-4 w-4" />
-                </button>
+                <Button type="button" variant="ghost" size="icon" class="h-11 w-11" @click="close">
+                    <X class="h-5 w-5" />
+                </Button>
             </div>
 
-            <form @submit.prevent="submit" class="space-y-6">
+            <form @submit.prevent="submit" class="space-y-6 px-6 py-6">
                 <!-- Customer dan Domain -->
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <Label :for="`${mode}-customer`">Pelanggan *</Label>
                         <Input
@@ -444,7 +469,7 @@ const close = () => {
                         <select
                             :id="`${mode}-customer`"
                             v-model="formData.customer_id"
-                            class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                            class="flex h-9 w-full cursor-pointer rounded-md border border-border bg-input px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                             required
                         >
                             <option value="">Pilih Pelanggan</option>
@@ -464,14 +489,14 @@ const close = () => {
                 </div>
 
                 <!-- Billing Cycle and Status -->
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <!-- Status field -->
-                    <div class="col-span-2">
+                    <div class="md:col-span-2">
                         <Label :for="`${mode}-status`">Status *</Label>
                         <select
                             :id="`${mode}-status`"
                             v-model="formData.status"
-                            class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                            class="flex h-9 w-full cursor-pointer rounded-md border border-border bg-input px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                             required
                         >
                             <option value="pending">Menunggu</option>
@@ -502,7 +527,7 @@ const close = () => {
                 </div>
 
                 <!-- Additional fields -->
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <Label :for="`${mode}-expires-at`">Tanggal Kedaluwarsa</Label>
                         <DatePicker
@@ -513,16 +538,20 @@ const close = () => {
                         <p v-if="errors.expires_at" class="mt-1 text-xs text-red-500">{{ errors.expires_at }}</p>
                     </div>
 
-                    <div>
-                        <Label :for="`${mode}-auto-renew`">Perpanjang Otomatis</Label>
-                    <div class="flex items-center space-x-2">
-                        <Switch
-                            :id="`${mode}-auto-renew`"
-                            v-model:checked="formData.auto_renew"
-                        />
-                        <Label :for="`${mode}-auto-renew`" class="mb-0">Aktifkan perpanjangan otomatis</Label>
+                    <div v-if="isEditMode">
+                        <Label>Perpanjang Sekarang</Label>
+                        <Button type="button" variant="outline" class="w-full" @click="extendExpiryOneYear">Perpanjang +1 Tahun</Button>
+                        <p class="mt-1 text-xs text-muted-foreground">
+                            Menambah 1 tahun dari tanggal kedaluwarsa. Jika kosong, akan dihitung 1 tahun dari hari ini.
+                        </p>
                     </div>
-                    </div> 
+                    <div v-else>
+                        <Label :for="`${mode}-auto-renew`">Perpanjang Otomatis</Label>
+                        <div class="flex items-center space-x-2">
+                            <Switch :id="`${mode}-auto-renew`" v-model:checked="formData.auto_renew" />
+                            <Label :for="`${mode}-auto-renew`" class="mb-0">Aktifkan perpanjangan otomatis</Label>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Items Section -->
@@ -536,14 +565,18 @@ const close = () => {
                     </div>
 
                     <div class="space-y-4">
-                        <div v-for="(item, index) in formData.items" :key="index" class="grid grid-cols-12 items-end gap-2 rounded-lg border p-4">
+                        <div
+                            v-for="(item, index) in formData.items"
+                            :key="index"
+                            class="grid grid-cols-12 items-end gap-2 rounded-lg border border-border bg-background/60 p-4"
+                        >
                             <!-- Item Type -->
                             <div class="col-span-2">
                                 <Label :for="`item-type-${index}`">Tipe</Label>
                                 <select
                                     :id="`item-type-${index}`"
                                     v-model="item.item_type"
-                                    class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                                    class="flex h-9 w-full cursor-pointer rounded-md border border-border bg-input px-2 py-1 text-xs text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                                 >
                                     <option value="hosting">Hosting</option>
                                     <option value="domain">Domain</option>
@@ -561,7 +594,7 @@ const close = () => {
                                     v-if="['hosting', 'domain', 'service'].includes(item.item_type)"
                                     :id="`item-id-${index}`"
                                     v-model="item.item_id"
-                                    class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                                    class="flex h-9 w-full cursor-pointer rounded-md border border-border bg-input px-2 py-1 text-xs text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                                     required
                                 >
                                     <option value="">Pilih {{ getItemTypeText(item.item_type) }}</option>
@@ -573,7 +606,7 @@ const close = () => {
                                     v-else
                                     :id="`item-id-${index}`"
                                     v-model="item.item_id"
-                                    class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                                    class="flex h-9 w-full cursor-pointer rounded-md border border-border bg-input px-2 py-1 text-xs text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                                     required
                                 >
                                     <option value="1">Standard</option>
@@ -588,7 +621,7 @@ const close = () => {
                                 <select
                                     :id="`item-cycle-${index}`"
                                     v-model="item.billing_cycle"
-                                    class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:bg-gray-800 dark:text-white"
+                                    class="flex h-9 w-full cursor-pointer rounded-md border border-border bg-input px-2 py-1 text-xs text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                                 >
                                     <option v-for="cycle in getBillingCyclesForType(item.item_type)" :key="cycle.value" :value="cycle.value">
                                         {{ cycle.label }}
@@ -626,8 +659,8 @@ const close = () => {
                 </div>
 
                 <!-- Price Summary -->
-                <div v-if="!isEditMode" class="rounded-lg border bg-muted/30 p-4">
-                    <h3 class="mb-4 text-lg font-medium">Ringkasan Harga</h3>
+                <div v-if="!isEditMode" class="rounded-lg border border-border bg-secondary/40 p-4">
+                    <h3 class="mb-4 font-serif text-lg font-medium tracking-tight">Ringkasan Harga</h3>
 
                     <!-- Individual Item Prices -->
                     <div class="mb-4 space-y-2">
@@ -679,9 +712,9 @@ const close = () => {
                 </div>
 
                 <!-- Actions -->
-                <div class="flex justify-end space-x-3 pt-6">
-                    <Button type="button" variant="outline" @click="close"> Batal </Button>
-                    <Button type="submit" :disabled="processing">
+                <div class="flex flex-col-reverse gap-2 pt-6 sm:flex-row sm:justify-end sm:gap-3">
+                    <Button type="button" variant="outline" class="w-full sm:w-auto" @click="close"> Batal </Button>
+                    <Button type="submit" class="w-full sm:w-auto" :disabled="processing">
                         {{ processing ? 'Menyimpan...' : isEditMode ? 'Perbarui Pesanan' : 'Buat Pesanan' }}
                     </Button>
                 </div>
