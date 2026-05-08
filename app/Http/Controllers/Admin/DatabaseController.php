@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 
 class DatabaseController extends Controller
 {
@@ -47,49 +49,101 @@ class DatabaseController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => ['required', 'file'],
+            'file' => ['required', 'file', 'mimes:json'],
         ]);
 
         $file = $request->file('file');
         $content = File::get($file->getRealPath());
         $json = json_decode($content, true);
 
-        if (! is_array($json) || ! isset($json['tables'])) {
-            return response()->json(['error' => 'Format file tidak valid'], 422);
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json) || ! isset($json['tables']) || ! is_array($json['tables'])) {
+            throw ValidationException::withMessages([
+                'file' => 'Format file tidak valid. Pastikan file berasal dari fitur export (JSON).',
+            ]);
         }
 
         $driver = DB::getDriverName();
         $disableFk = $this->getDisableForeignKeyStatement($driver);
         $enableFk = $this->getEnableForeignKeyStatement($driver);
 
-        DB::beginTransaction();
+        $importedTables = 0;
+        $importedRows = 0;
+        $skippedTables = [];
+
         try {
-            if ($disableFk) {
-                DB::statement($disableFk);
-            }
-
-            foreach ($json['tables'] as $table => $rows) {
-                try {
-                    DB::table($table)->truncate();
-                } catch (\Throwable $e) {
+            DB::transaction(function () use ($json, $driver, $disableFk, &$enableFk, &$importedTables, &$importedRows, &$skippedTables) {
+                if ($disableFk) {
+                    DB::statement($disableFk);
                 }
 
-                if (is_array($rows) && count($rows) > 0) {
-                    foreach (array_chunk($rows, 500) as $chunk) {
-                        DB::table($table)->insert($chunk);
+                foreach ($json['tables'] as $table => $rows) {
+                    if (! is_string($table) || ! Schema::hasTable($table)) {
+                        $skippedTables[] = is_string($table) ? $table : '(invalid table name)';
+                        continue;
                     }
+
+                    $columns = Schema::getColumnListing($table);
+                    $columnSet = array_fill_keys($columns, true);
+
+                    DB::table($table)->delete();
+
+                    if ($driver === 'sqlite') {
+                        try {
+                            DB::statement('DELETE FROM sqlite_sequence WHERE name = ?', [$table]);
+                        } catch (\Throwable $e) {
+                        }
+                    }
+
+                    if (! is_array($rows) || count($rows) === 0) {
+                        $importedTables++;
+                        continue;
+                    }
+
+                    foreach (array_chunk($rows, 500) as $chunk) {
+                        $filteredChunk = [];
+                        foreach ($chunk as $row) {
+                            if (! is_array($row)) {
+                                continue;
+                            }
+
+                            $filtered = array_intersect_key($row, $columnSet);
+                            if ($filtered !== []) {
+                                $filteredChunk[] = $filtered;
+                            }
+                        }
+
+                        if ($filteredChunk === []) {
+                            continue;
+                        }
+
+                        DB::table($table)->insert($filteredChunk);
+                        $importedRows += count($filteredChunk);
+                    }
+
+                    $importedTables++;
+                }
+
+                if ($enableFk) {
+                    DB::statement($enableFk);
+                    $enableFk = null;
+                }
+            });
+
+            $message = "Import berhasil. Tabel: {$importedTables}, Baris: {$importedRows}.";
+            if (count($skippedTables) > 0) {
+                $message .= ' Dilewati (tidak ada di versi sekarang): '.implode(', ', array_slice($skippedTables, 0, 8)).(count($skippedTables) > 8 ? '…' : '').'.';
+            }
+
+            return redirect()->back()->with('success', $message);
+        } catch (\Throwable $e) {
+            if ($enableFk) {
+                try {
+                    DB::statement($enableFk);
+                } catch (\Throwable $inner) {
                 }
             }
 
-            if ($enableFk) {
-                DB::statement($enableFk);
-            }
-
-            DB::commit();
-            return response()->json(['success' => true]);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            return response()->json(['error' => 'Gagal import: '.$e->getMessage()], 500);
+            return redirect()->back()->with('error', 'Gagal import: '.$e->getMessage());
         }
     }
 
@@ -137,4 +191,3 @@ class DatabaseController extends Controller
         return null;
     }
 }
-
