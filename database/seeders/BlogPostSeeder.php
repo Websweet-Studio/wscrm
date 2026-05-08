@@ -18,6 +18,11 @@ class BlogPostSeeder extends Seeder
         $categories = BlogCategory::all();
         $users = User::all();
 
+        if ($categories->isEmpty() || $users->isEmpty()) {
+            $this->command?->warn('Blog categories atau users belum ada. Jalankan DatabaseSeeder terlebih dahulu.');
+            return;
+        }
+
         $articles = [
             [
                 'title' => 'Panduan Lengkap Memilih Hosting Terbaik untuk Website Anda',
@@ -1181,7 +1186,9 @@ class BlogPostSeeder extends Seeder
             $categoryImages = $featuredImages[$articleData['category']] ?? $featuredImages['teknologi'];
             $featuredImage = $categoryImages[rand(0, count($categoryImages) - 1)];
 
-            BlogPost::create([
+            BlogPost::updateOrCreate(
+                ['slug' => $articleData['slug']],
+                [
                 'title' => $articleData['title'],
                 'slug' => $articleData['slug'],
                 'excerpt' => $articleData['excerpt'],
@@ -1204,7 +1211,8 @@ class BlogPostSeeder extends Seeder
                     'tags' => $this->generateTags($articleData['category']),
                     'featured_image_alt' => $articleData['title'],
                 ],
-            ]);
+                ]
+            );
         }
     }
 

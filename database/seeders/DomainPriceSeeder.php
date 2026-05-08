@@ -40,14 +40,17 @@ class DomainPriceSeeder extends Seeder
         ];
 
         foreach ($domains as $domain) {
-            DomainPrice::create([
+            DomainPrice::updateOrCreate(
+                ['extension' => $domain[0]],
+                [
                 'extension' => $domain[0],
                 'base_cost' => $domain[1],
                 'renewal_cost' => $domain[2],
                 'selling_price' => $domain[3],
                 'renewal_price_with_tax' => $domain[4],
                 'is_active' => true,
-            ]);
+                ]
+            );
         }
     }
 }

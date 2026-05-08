@@ -64,7 +64,7 @@ class HostingPlanSeeder extends Seeder
 
         // Create Basic plans
         foreach ($basicPlans as $plan) {
-            HostingPlan::create(array_merge($plan, [
+            $values = array_merge($plan, [
                 'plan_name' => 'Basic',
                 'bandwidth' => 'Unlimited',
                 'features' => [
@@ -74,12 +74,22 @@ class HostingPlanSeeder extends Seeder
                     'backup' => 'daily',
                 ],
                 'is_active' => true,
-            ]));
+            ]);
+
+            HostingPlan::updateOrCreate(
+                [
+                    'plan_name' => $values['plan_name'],
+                    'storage_gb' => $values['storage_gb'],
+                    'cpu_cores' => $values['cpu_cores'],
+                    'ram_gb' => $values['ram_gb'],
+                ],
+                $values
+            );
         }
 
         // Create Lite plans
         foreach ($litePlans as $plan) {
-            HostingPlan::create(array_merge($plan, [
+            $values = array_merge($plan, [
                 'plan_name' => 'Lite',
                 'bandwidth' => 'Unlimited',
                 'features' => [
@@ -89,7 +99,17 @@ class HostingPlanSeeder extends Seeder
                     'backup' => 'weekly',
                 ],
                 'is_active' => true,
-            ]));
+            ]);
+
+            HostingPlan::updateOrCreate(
+                [
+                    'plan_name' => $values['plan_name'],
+                    'storage_gb' => $values['storage_gb'],
+                    'cpu_cores' => $values['cpu_cores'],
+                    'ram_gb' => $values['ram_gb'],
+                ],
+                $values
+            );
         }
     }
 }

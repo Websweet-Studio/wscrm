@@ -14,7 +14,9 @@ class CustomerSeeder extends Seeder
     public function run(): void
     {
         // Create specific test customers
-        Customer::factory()->create([
+        Customer::updateOrCreate(
+            ['email' => 'customer@example.com'],
+            [
             'name' => 'Test Customer',
             'email' => 'customer@example.com',
             'password' => Hash::make('password'),
@@ -24,9 +26,12 @@ class CustomerSeeder extends Seeder
             'country' => 'Indonesia',
             'postal_code' => '12345',
             'status' => 'active',
-        ]);
+            ]
+        );
 
-        Customer::factory()->create([
+        Customer::updateOrCreate(
+            ['email' => 'john@customer.com'],
+            [
             'name' => 'John Doe',
             'email' => 'john@customer.com',
             'password' => Hash::make('password'),
@@ -36,7 +41,8 @@ class CustomerSeeder extends Seeder
             'country' => 'Indonesia',
             'postal_code' => '54321',
             'status' => 'active',
-        ]);
+            ]
+        );
 
         // Create additional random customers using factory
         Customer::factory()->count(18)->create();

@@ -127,7 +127,10 @@ class ServicePlanSeeder extends Seeder
         ];
 
         foreach ($servicePlans as $plan) {
-            ServicePlan::create($plan);
+            ServicePlan::updateOrCreate(
+                ['name' => $plan['name']],
+                $plan
+            );
         }
     }
 }
