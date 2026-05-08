@@ -39,6 +39,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             SuperAdminSeeder::class,
             EmployeeSeeder::class,
+            BrandingSettingsSeeder::class,
             HostingPlanSeeder::class,
             DomainPriceSeeder::class,
             ServicePlanSeeder::class,

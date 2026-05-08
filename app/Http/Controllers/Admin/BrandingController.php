@@ -17,6 +17,7 @@ class BrandingController extends Controller
      */
     public function index()
     {
+        BrandingSetting::ensureDefaultsIfEmpty();
         $settings = BrandingSetting::getAllActive()->groupBy('type');
 
         return Inertia::render('Admin/Branding', [
