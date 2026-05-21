@@ -10,9 +10,10 @@ test('new users can register', function () {
     $response = $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
         ->post(route('register.store'), [
             'name' => 'Test User',
+            'username' => 'test_user',
             'email' => 'test@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
         ]);
 
     $this->assertAuthenticated();

@@ -27,10 +27,11 @@ it('can access orders page with view parameter', function () {
     $response = $this->actingAs($user)
         ->get('/admin/orders?view=services');
 
-    $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => $page->component('Admin/Orders/Index')
-        ->where('view', 'services')
-    );
+    $response->assertRedirect('/admin/services');
+
+    $followed = $this->actingAs($user)->get($response->headers->get('Location'));
+    $followed->assertSuccessful();
+    $followed->assertInertia(fn ($page) => $page->component('Admin/Orders/Index')->where('view', 'services'));
 });
 
 it('redirects unauthenticated users to login', function () {

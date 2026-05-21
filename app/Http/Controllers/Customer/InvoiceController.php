@@ -39,7 +39,7 @@ class InvoiceController extends Controller
 
         $invoice->load(['bank', 'order', 'customer']);
 
-        $activeBanks = Bank::where('active', true)
+        $activeBanks = Bank::where('is_active', true)
             ->orderBy('bank_name')
             ->get();
 
@@ -63,7 +63,7 @@ class InvoiceController extends Controller
 
         $invoice->load(['bank', 'order', 'customer']);
 
-        $activeBanks = Bank::where('active', true)
+        $activeBanks = Bank::where('is_active', true)
             ->orderBy('bank_name')
             ->get();
 
@@ -92,7 +92,7 @@ class InvoiceController extends Controller
 
         $bank = Bank::findOrFail($request->bank_id);
 
-        if (! $bank->active) {
+        if (! $bank->is_active) {
             return redirect()->back()
                 ->with('error', 'Bank yang dipilih tidak aktif.');
         }

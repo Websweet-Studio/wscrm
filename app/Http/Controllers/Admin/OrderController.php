@@ -27,11 +27,11 @@ class OrderController extends Controller
         $serviceStatuses = ['active', 'suspended', 'expired', 'terminated'];
 
         if ($viewParam === 'services') {
-            return redirect()->route('admin.services.index', request()->except('view'), absolute: false);
+            return redirect()->route('admin.services.index', request()->except('view'));
         }
 
         if (! $viewParam && $status && in_array($status, $serviceStatuses, true)) {
-            return redirect()->route('admin.services.index', request()->all(), absolute: false);
+            return redirect()->route('admin.services.index', request()->all());
         }
 
         $view = request('view', 'orders'); // orders or services
