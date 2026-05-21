@@ -11,7 +11,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Pencil, Trash2, Plus, X } from 'lucide-vue-next';
 import { useToast } from '@/composables/useToast';
-import { store, update, destroy } from '@/routes/admin/task-categories';
 import { type BreadcrumbItem } from '@/types';
 
 interface TaskCategory {
@@ -73,7 +72,7 @@ const openEdit = (category: TaskCategory) => {
 };
 
 const submitCreate = () => {
-    form.post(store().url, {
+    form.post('/admin/task-categories', {
         onSuccess: () => {
             isCreateOpen.value = false;
             form.reset();
@@ -88,7 +87,7 @@ const submitCreate = () => {
 const submitEdit = () => {
     if (!editingCategory.value) return;
 
-    form.put(update(editingCategory.value.id).url, {
+    form.put(`/admin/task-categories/${editingCategory.value.id}`, {
         onSuccess: () => {
             isEditOpen.value = false;
             editingCategory.value = null;
@@ -102,7 +101,7 @@ const submitEdit = () => {
 
 const deleteCategory = (category: TaskCategory) => {
     if (confirm('Apakah Anda yakin ingin menghapus kategori ini? Tugas yang menggunakan kategori ini tidak akan memiliki kategori.')) {
-        router.delete(destroy(category.id).url, {
+        router.delete(`/admin/task-categories/${category.id}`, {
             onSuccess: () => {
                 success('Berhasil', 'Kategori berhasil dihapus');
             },
