@@ -88,6 +88,8 @@ interface Props {
     hostingPlans: HostingPlan[];
     domainPrices: DomainPrice[];
     servicePlans: ServicePlan[];
+    indexUrl?: string;
+    includeViewParam?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -97,6 +99,7 @@ const statusFilter = ref(props.filters?.status || '');
 const serviceTypeFilter = ref(props.filters?.service_type || '');
 const customerFilter = ref(props.filters?.customer_id || '');
 const currentView = ref(props.view || 'orders');
+const indexUrl = props.indexUrl || '/admin/orders';
 const showOrderFormModal = ref(false);
 const orderFormMode = ref<'create' | 'edit'>('create');
 const showDeleteModal = ref(false);
@@ -117,7 +120,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     {
         title: currentView.value === 'services' ? 'Layanan' : 'Pesanan',
-        href: currentView.value === 'services' ? '/admin/orders?view=services' : '/admin/orders',
+        href: indexUrl,
     },
 ];
 
@@ -347,9 +350,9 @@ const applyFilters = () => {
     if (statusFilter.value) params.set('status', statusFilter.value);
     if (serviceTypeFilter.value) params.set('service_type', serviceTypeFilter.value);
     if (customerFilter.value) params.set('customer_id', customerFilter.value);
-    if (currentView.value) params.set('view', currentView.value);
+    if (props.includeViewParam !== false && currentView.value) params.set('view', currentView.value);
 
-    const url = `/admin/orders${params.toString() ? '?' + params.toString() : ''}`;
+    const url = `${indexUrl}${params.toString() ? '?' + params.toString() : ''}`;
     router.get(url, {}, { preserveState: true });
 };
 
@@ -443,7 +446,7 @@ const sortBy = (field: string) => {
     if (statusFilter.value) params.set('status', statusFilter.value);
     if (serviceTypeFilter.value) params.set('service_type', serviceTypeFilter.value);
     if (customerFilter.value) params.set('customer_id', customerFilter.value);
-    if (currentView.value) params.set('view', currentView.value);
+    if (props.includeViewParam !== false && currentView.value) params.set('view', currentView.value);
 
     // Handle sorting
     let direction = 'asc';
@@ -454,7 +457,7 @@ const sortBy = (field: string) => {
     params.set('sort', field);
     params.set('direction', direction);
 
-    const url = `/admin/orders${params.toString() ? '?' + params.toString() : ''}`;
+    const url = `${indexUrl}${params.toString() ? '?' + params.toString() : ''}`;
     router.get(url, {}, { preserveState: true });
 };
 

@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\HostingPlanController;
 use App\Http\Controllers\Admin\ImpersonateController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\TaskCategoryController;
 use App\Http\Controllers\Admin\ServicePlanController;
@@ -29,13 +30,8 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::post('orders/{order}/simulate-upgrade-downgrade', [OrderController::class, 'simulateUpgradeDowngrade'])->name('orders.simulate-upgrade-downgrade');
     Route::post('orders/{order}/process-upgrade-downgrade', [OrderController::class, 'processUpgradeDowngrade'])->name('orders.process-upgrade-downgrade');
 
-    // Legacy service routes redirect to orders with services view
-    Route::get('services', function () {
-        return redirect()->route('admin.orders.index', ['view' => 'services']);
-    })->name('services.index');
-    Route::get('services/{id}', function ($id) {
-        return redirect()->route('admin.orders.show', $id);
-    })->name('services.show');
+    Route::get('services', [ServiceController::class, 'index'])->name('services.index');
+    Route::get('services/{id}', [ServiceController::class, 'show'])->name('services.show');
     Route::resource('service-plans', ServicePlanController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
     Route::resource('invoices', InvoiceController::class)->only(['index', 'show', 'store', 'update']);
     Route::get('invoices/{invoice}/download', [InvoiceController::class, 'downloadPdf'])->name('invoices.download');

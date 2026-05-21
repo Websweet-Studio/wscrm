@@ -154,7 +154,7 @@ const mainNavItems: NavItem[] = [
             },
             {
                 title: 'Services',
-                href: '/admin/orders?view=services&status=active',
+                href: '/admin/services?status=active',
                 icon: Package,
             },
         ],

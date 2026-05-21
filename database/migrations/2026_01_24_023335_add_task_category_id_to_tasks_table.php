@@ -11,8 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (! Schema::hasTable('task_categories')) {
+            Schema::create('task_categories', function (Blueprint $table) {
+                $table->id();
+                $table->string('name')->unique();
+                $table->string('color')->nullable();
+                $table->text('description')->nullable();
+                $table->timestamps();
+            });
+        }
+
         Schema::table('tasks', function (Blueprint $table) {
-            if (!Schema::hasColumn('tasks', 'task_category_id')) {
+            if (! Schema::hasColumn('tasks', 'task_category_id')) {
                 $table->foreignId('task_category_id')->nullable()->after('title')->constrained('task_categories')->onDelete('set null');
             }
         });
@@ -52,12 +62,14 @@ return new class extends Migration
         // Restore data
         if (Schema::hasColumn('tasks', 'task_category_id')) {
             $tasks = \Illuminate\Support\Facades\DB::table('tasks')->whereNotNull('task_category_id')->get();
-            foreach ($tasks as $task) {
-                $category = \Illuminate\Support\Facades\DB::table('task_categories')->find($task->task_category_id);
-                if ($category) {
-                    \Illuminate\Support\Facades\DB::table('tasks')
-                        ->where('id', $task->id)
-                        ->update(['category' => $category->name]);
+            if (Schema::hasTable('task_categories')) {
+                foreach ($tasks as $task) {
+                    $category = \Illuminate\Support\Facades\DB::table('task_categories')->find($task->task_category_id);
+                    if ($category) {
+                        \Illuminate\Support\Facades\DB::table('tasks')
+                            ->where('id', $task->id)
+                            ->update(['category' => $category->name]);
+                    }
                 }
             }
 

@@ -444,7 +444,7 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                         </div>
                         <div class="mt-4">
                             <Button variant="outline" size="sm" asChild class="w-full text-xs sm:text-sm">
-                                <Link href="/admin/orders?view=services&status=active">Kelola Layanan</Link>
+                                <Link href="/admin/services?status=active">Kelola Layanan</Link>
                             </Button>
                         </div>
                     </CardContent>

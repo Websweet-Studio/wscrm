@@ -10,6 +10,7 @@ use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ServicePlan;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
@@ -19,8 +20,20 @@ use Inertia\Response;
 
 class OrderController extends Controller
 {
-    public function index(): Response
+    public function index(): Response|RedirectResponse
     {
+        $viewParam = request()->query('view');
+        $status = request()->query('status');
+        $serviceStatuses = ['active', 'suspended', 'expired', 'terminated'];
+
+        if ($viewParam === 'services') {
+            return redirect()->route('admin.services.index', request()->except('view'), absolute: false);
+        }
+
+        if (! $viewParam && $status && in_array($status, $serviceStatuses, true)) {
+            return redirect()->route('admin.services.index', request()->all(), absolute: false);
+        }
+
         $view = request('view', 'orders'); // orders or services
 
         $query = Order::with(['customer', 'orderItems', 'hostingPlan']);
