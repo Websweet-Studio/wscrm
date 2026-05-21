@@ -69,6 +69,19 @@ const getSecondaryActionUrl = () => {
     }
 };
 
+const companyWhatsapp = computed(() => {
+    return (page.props.brandingSettings as any)?.company_whatsapp || '';
+});
+
+const getWhatsappLink = (text: string) => {
+    const raw = companyWhatsapp.value;
+    if (!raw) return '';
+
+    const phone = String(raw).replace(/[^\d]/g, '');
+    const message = encodeURIComponent(text);
+    return `https://wa.me/${phone}?text=${message}`;
+};
+
 const handleSearch = () => {
     router.get(
         '/hosting',
@@ -315,13 +328,14 @@ const filteredPlans = computed(() => {
 
                                 <div class="px-6 pb-6">
                                     <Button asChild class="w-full" size="lg" style="background-color: #c96442; color: #faf9f5; border-radius: 12px;">
-                                        <Link :href="getActionUrl()">
+                                        <a
+                                            :href="getWhatsappLink(`Halo, saya ingin beli Hosting ${plan.plan_name}.`)"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
                                             <ShoppingCart class="mr-2 h-4 w-4" />
-                                            {{ isCustomer || isAdmin ? 'Kelola' : 'Mulai' }}
-                                        </Link>
-                                    </Button>
-                                    <Button v-if="!isCustomer && !isAdmin" variant="outline" asChild class="w-full mt-2" size="lg" style="background-color: #ffffff; color: #4d4c48; border: 1px solid #e8e6dc; border-radius: 12px;">
-                                        <Link :href="getSecondaryActionUrl()">Pesan Sekarang</Link>
+                                            Beli via WhatsApp
+                                        </a>
                                     </Button>
                                 </div>
                             </Card>

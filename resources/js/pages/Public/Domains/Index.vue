@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import { Crown, Globe, Search, ShoppingCart, Star, TrendingUp } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
@@ -28,6 +28,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const page = usePage();
 
 const search = ref(props.filters.search || '');
 const domainSearch = ref('');
@@ -84,6 +85,19 @@ const isPremium = (extension: string) => {
 const isPopular = (extension: string) => {
     const cleanExt = extension.replace('.', '');
     return ['com', 'id', 'my.id'].includes(cleanExt);
+};
+
+const companyWhatsapp = computed(() => {
+    return (page.props.brandingSettings as any)?.company_whatsapp || '';
+});
+
+const getWhatsappLink = (text: string) => {
+    const raw = companyWhatsapp.value;
+    if (!raw) return '';
+
+    const phone = String(raw).replace(/[^\d]/g, '');
+    const message = encodeURIComponent(text);
+    return `https://wa.me/${phone}?text=${message}`;
 };
 </script>
 
@@ -196,10 +210,14 @@ const isPopular = (extension: string) => {
                                         size="lg"
                                         style="background-color: #c96442; color: #faf9f5; border-radius: 12px;"
                                     >
-                                        <Link href="/customer/register">
+                                        <a
+                                            :href="getWhatsappLink(`Halo, saya ingin beli Domain .${domain.extension}.`)"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
                                             <ShoppingCart class="mr-2 h-4 w-4" />
-                                            Mulai Sekarang
-                                        </Link>
+                                            Beli via WhatsApp
+                                        </a>
                                     </Button>
                                 </CardContent>
                             </Card>
@@ -274,10 +292,14 @@ const isPopular = (extension: string) => {
                                         class="w-full"
                                         style="background-color: #c96442; color: #faf9f5; border-radius: 12px;"
                                     >
-                                        <Link href="/customer/register">
+                                        <a
+                                            :href="getWhatsappLink(`Halo, saya ingin beli Domain .${domain.extension}.`)"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
                                             <ShoppingCart class="mr-2 h-4 w-4" />
-                                            Daftar
-                                        </Link>
+                                            Beli via WhatsApp
+                                        </a>
                                     </Button>
                                 </CardContent>
                             </Card>
