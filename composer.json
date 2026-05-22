@@ -72,7 +72,7 @@
         "build:production": [
             "powershell -Command \"if (Test-Path 'dist') { Remove-Item -Recurse -Force 'dist' }\"",
             "npm run build:clean",
-            "@php artisan build:production-structure"
+            "@php artisan build:package --output=dist/production.zip --force --no-interaction"
         ],
         "build:package": [
             "powershell -Command \"if (Test-Path 'dist') { Remove-Item -Recurse -Force 'dist' }\"",

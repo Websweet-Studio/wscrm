@@ -30,6 +30,12 @@ class BuildPackage extends Command
         // SAFETY CHECKS - Mencegah penghapusan file yang tidak diinginkan
         $this->performSafetyChecks();
 
+        if (! File::exists(base_path('vendor/autoload.php'))) {
+            $this->error('❌ Folder vendor tidak ditemukan. Jalankan "composer install --no-dev" terlebih dahulu sebelum build package.');
+
+            return self::FAILURE;
+        }
+
         $outputPath = $this->option('output');
         $distDir = dirname($outputPath);
         $tempDir = $distDir.DIRECTORY_SEPARATOR.'temp-package';
@@ -79,7 +85,7 @@ class BuildPackage extends Command
 
         // Step 1: Run npm build
         $this->info('📦 Building frontend assets...');
-        $this->executeCommand('npm run build');
+        $this->executeCommand('npm run build:clean');
 
         // Step 2: Copy files untuk deployment
         $this->info('📁 Copying application files...');
@@ -602,7 +608,7 @@ Generated: '.date('Y-m-d H:i:s');
             $normalizedTempDir = str_replace('/', '\\', $tempDir);
             $normalizedOutputPath = str_replace('/', '\\', $outputPath);
 
-            $cmd = "powershell -Command \"Compress-Archive -Path '$normalizedTempDir\\*' -DestinationPath '$normalizedOutputPath' -Force\"";
+            $cmd = "powershell -NoProfile -Command \"\$ErrorActionPreference='Stop'; Compress-Archive -Path '$normalizedTempDir\\*' -DestinationPath '$normalizedOutputPath' -Force\" 2>nul";
             exec($cmd, $output, $returnCode);
 
             if ($returnCode === 0 && file_exists($outputPath)) {
