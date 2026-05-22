@@ -155,9 +155,19 @@ function moveWscrmFolder($wscrmPath, $targetPath)
     // Move the folder
     if (rename($wscrmPath, $targetPath)) {
         return ['success' => true, 'message' => 'Folder wscrm berhasil dipindahkan ke: ' . $targetPath];
-    } else {
+    }
+
+    $copied = copyDirectory($wscrmPath, $targetPath);
+    if (! $copied) {
         return ['success' => false, 'message' => 'Gagal memindahkan folder wscrm'];
     }
+
+    $deleted = deleteDirectoryRecursive($wscrmPath);
+    if (! $deleted) {
+        return ['success' => false, 'message' => 'Folder wscrm berhasil disalin, tapi gagal menghapus folder sumber. Silakan hapus manual: ' . $wscrmPath];
+    }
+
+    return ['success' => true, 'message' => 'Folder wscrm berhasil dipindahkan ke: ' . $targetPath];
 }
 
 function copyWscrmFolder($wscrmPath, $targetPath)
@@ -227,6 +237,26 @@ function copyDirectory($src, $dst)
     return true;
 }
 
+function deleteDirectoryRecursive($dir)
+{
+    if (! is_dir($dir)) {
+        return false;
+    }
+
+    $files = array_diff(scandir($dir), ['.', '..']);
+
+    foreach ($files as $file) {
+        $filePath = $dir . '/' . $file;
+        if (is_dir($filePath)) {
+            deleteDirectoryRecursive($filePath);
+        } else {
+            unlink($filePath);
+        }
+    }
+
+    return rmdir($dir);
+}
+
 // Handle AJAX requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
@@ -261,18 +291,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         case 'move_wscrm':
             // Debug: Log semua data POST yang diterima
-            error_log('🔍 POST data received: ' . print_r($_POST, true));
+            error_log('POST data received: ' . print_r($_POST, true));
 
             $wscrmPath = $_POST['wscrm_path'] ?? '';
-            $operation = $_POST['operation'] ?? 'move'; // 'move' or 'copy'
 
             // Debug: Log nilai yang diambil
-            error_log('📍 wscrm_path: ' . $wscrmPath);
-            error_log('⚙️ operation: ' . $operation);
+            error_log('wscrm_path: ' . $wscrmPath);
 
             if (empty($wscrmPath)) {
                 $errorMsg = 'Path wscrm tidak valid. Received: ' . var_export($wscrmPath, true);
-                error_log('❌ ' . $errorMsg);
+                error_log('ERROR ' . $errorMsg);
                 echo json_encode(['success' => false, 'message' => $errorMsg, 'debug_post' => $_POST]);
                 exit;
             }
@@ -284,19 +312,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $publicHtmlParent = str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT']));
             $targetPath = $publicHtmlParent . '/wscrm';
 
-            if ($operation === 'copy') {
-                $result = copyWscrmFolder($wscrmPath, $targetPath);
-            } else {
-                $result = moveWscrmFolder($wscrmPath, $targetPath);
-            }
+            $result = moveWscrmFolder($wscrmPath, $targetPath);
 
             echo json_encode($result);
             exit;
 
         case 'configure_env':
             // Log received data for debugging
-            error_log('📝 configure_env action started');
-            error_log('📋 POST data: ' . print_r($_POST, true));
+            error_log('configure_env action started');
+            error_log('POST data: ' . print_r($_POST, true));
 
             $appUrl = $_POST['app_url'] ?? '';
             $appName = $_POST['app_name'] ?? 'WSCRM';
@@ -312,11 +336,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $publicHtmlParent = str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT']));
             $targetWscrmPath = $publicHtmlParent . '/wscrm';
 
-            error_log('🎯 Target wscrm path: ' . $targetWscrmPath);
-            error_log('📁 Directory exists: ' . (is_dir($targetWscrmPath) ? 'YES' : 'NO'));
+            error_log('Target wscrm path: ' . $targetWscrmPath);
+            error_log('Directory exists: ' . (is_dir($targetWscrmPath) ? 'YES' : 'NO'));
 
             if (! is_dir($targetWscrmPath)) {
-                error_log('❌ Target wscrm directory not found: ' . $targetWscrmPath);
+                error_log('ERROR Target wscrm directory not found: ' . $targetWscrmPath);
                 echo json_encode(['success' => false, 'message' => 'Folder wscrm tidak ditemukan di lokasi target: ' . $targetWscrmPath]);
                 exit;
             }
@@ -325,12 +349,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $envPath = $targetWscrmPath . '/.env';
             $envTemplate = $targetWscrmPath . '/.env.example';
 
-            error_log('📄 Env template path: ' . $envTemplate);
-            error_log('📄 Template exists: ' . (file_exists($envTemplate) ? 'YES' : 'NO'));
-            error_log('📄 Target env path: ' . $envPath);
+            error_log('Env template path: ' . $envTemplate);
+            error_log('Template exists: ' . (file_exists($envTemplate) ? 'YES' : 'NO'));
+            error_log('Target env path: ' . $envPath);
 
             if (! file_exists($envTemplate)) {
-                error_log('❌ .env.example not found: ' . $envTemplate);
+                error_log('ERROR .env.example not found: ' . $envTemplate);
                 echo json_encode(['success' => false, 'message' => 'File .env.example tidak ditemukan: ' . $envTemplate]);
                 exit;
             }
@@ -364,9 +388,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbName}";
                     $pdo = new PDO($dsn, $dbUsername, $dbPassword);
                     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                    error_log('✅ Database connection test successful');
+                    error_log('Database connection test successful');
                 } catch (PDOException $e) {
-                    error_log('❌ Database connection test failed: ' . $e->getMessage());
+                    error_log('ERROR Database connection test failed: ' . $e->getMessage());
                     echo json_encode(['success' => false, 'message' => 'Koneksi database gagal: ' . $e->getMessage()]);
                     exit;
                 }
@@ -401,25 +425,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $envContent = str_replace(array_keys($replacements), array_values($replacements), $envContent);
 
             // Write .env file
-            error_log('💾 Writing .env file to: ' . $envPath);
-            error_log('📝 Content length: ' . strlen($envContent) . ' bytes');
+            error_log('Writing .env file to: ' . $envPath);
+            error_log('Content length: ' . strlen($envContent) . ' bytes');
 
             if (! file_put_contents($envPath, $envContent)) {
-                error_log('❌ Failed to write .env file to: ' . $envPath);
+                error_log('ERROR Failed to write .env file to: ' . $envPath);
                 $parentDir = dirname($envPath);
-                error_log('📁 Parent directory writable: ' . (is_writable($parentDir) ? 'YES' : 'NO'));
+                error_log('Parent directory writable: ' . (is_writable($parentDir) ? 'YES' : 'NO'));
                 echo json_encode(['success' => false, 'message' => 'Gagal menulis file .env ke: ' . $envPath]);
                 exit;
             }
 
-            error_log('✅ .env file written successfully');
+            error_log('.env file written successfully');
 
             // Generate APP_KEY manually (exec() disabled on hosting)
             $keyGenerated = false;
             $appKey = '';
 
             // Generate key manually since exec() is disabled
-            error_log('🔑 Generating APP_KEY manually (exec disabled)');
+            error_log('Generating APP_KEY manually (exec disabled)');
             $appKey = 'base64:' . base64_encode(random_bytes(32));
 
             // Update .env file with generated key
@@ -432,9 +456,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (file_put_contents($envPath, $envContent)) {
                 $keyGenerated = true;
-                error_log('✅ APP_KEY generated and saved: ' . substr($appKey, 0, 20) . '...');
+                error_log('APP_KEY generated and saved: ' . substr($appKey, 0, 20) . '...');
             } else {
-                error_log('❌ Failed to save APP_KEY to .env file');
+                error_log('ERROR Failed to save APP_KEY to .env file');
             }
 
             // Create installer lock file
@@ -454,12 +478,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $publicHtmlDir = $_SERVER['DOCUMENT_ROOT'];
                 $htaccessPath = $publicHtmlDir . '/.htaccess';
 
-                error_log('📄 Creating .htaccess at: ' . $htaccessPath);
+                error_log('Creating .htaccess at: ' . $htaccessPath);
 
                 if (file_put_contents($htaccessPath, $htaccessContent)) {
-                    error_log('✅ .htaccess created successfully in public_html');
+                    error_log('.htaccess created successfully in public_html');
                 } else {
-                    error_log('❌ Failed to create .htaccess in public_html');
+                    error_log('ERROR Failed to create .htaccess in public_html');
                 }
             }
 
@@ -508,10 +532,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             }
 
                             file_put_contents($envFile, $envContent);
-                            error_log("🔑 APP_KEY generated for: $path");
+                            error_log("APP_KEY generated for: $path");
 
                             // Note: Cache clearing skipped (exec() disabled on hosting)
-                            error_log('ℹ️ Cache clearing skipped (exec disabled on shared hosting)');
+                            error_log('Cache clearing skipped (exec disabled on shared hosting)');
                         }
                         break;
                     }
@@ -525,11 +549,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $storageDir = $path . '/storage';
 
                     // Log detailed check for debugging
-                    error_log("🔍 Checking path: $path");
-                    error_log('📁 Directory exists: ' . (is_dir($path) ? 'YES' : 'NO'));
-                    error_log('📄 .env exists: ' . (file_exists($envFile) ? 'YES' : 'NO') . " at $envFile");
-                    error_log('🔒 installer.lock exists: ' . (file_exists($lockFile) ? 'YES' : 'NO') . " at $lockFile");
-                    error_log('📂 storage dir exists: ' . (is_dir($storageDir) ? 'YES' : 'NO') . " at $storageDir");
+                    error_log("Checking path: $path");
+                    error_log('Directory exists: ' . (is_dir($path) ? 'YES' : 'NO'));
+                    error_log('.env exists: ' . (file_exists($envFile) ? 'YES' : 'NO') . " at $envFile");
+                    error_log('installer.lock exists: ' . (file_exists($lockFile) ? 'YES' : 'NO') . " at $lockFile");
+                    error_log('storage dir exists: ' . (is_dir($storageDir) ? 'YES' : 'NO') . " at $storageDir");
 
                     // Check if .env exists (primary requirement)
                     if (file_exists($envFile)) {
@@ -537,8 +561,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if (file_exists($lockFile) || is_dir($storageDir)) {
                             $isInstallComplete = true;
                             $actualWscrmPath = $path;
-                            error_log("✅ Installation complete found at: $path");
-                            error_log('📄 .env: YES, 🔒 installer.lock: ' . (file_exists($lockFile) ? 'YES' : 'NO') . ', 📂 storage: ' . (is_dir($storageDir) ? 'YES' : 'NO'));
+                            error_log("Installation complete found at: $path");
+                            error_log('.env: YES, installer.lock: ' . (file_exists($lockFile) ? 'YES' : 'NO') . ', storage: ' . (is_dir($storageDir) ? 'YES' : 'NO'));
                             break;
                         }
                     }
@@ -580,6 +604,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
+            $maintenanceDetail = null;
+            if ($actualWscrmPath && is_dir($actualWscrmPath)) {
+                $maintenancePath = $actualWscrmPath . '/storage/framework/maintenance.php';
+                if (file_exists($maintenancePath)) {
+                    if (@unlink($maintenancePath)) {
+                        $maintenanceDetail = 'Maintenance mode dinonaktifkan';
+                    } else {
+                        $maintenanceDetail = 'Maintenance mode terdeteksi, tapi gagal menghapus maintenance.php. Silakan hapus manual: ' . $maintenancePath;
+                    }
+                }
+            }
+
+            $upDetail = null;
+            if ($actualWscrmPath && is_dir($actualWscrmPath)) {
+                $currentDir = getcwd();
+                chdir($actualWscrmPath);
+                $upOutput = executeSimpleCommand('php artisan up');
+                chdir($currentDir);
+
+                if (is_string($upOutput) && str_starts_with($upOutput, 'Error:')) {
+                    $upDetail = 'Artisan up dilewati: ' . $upOutput;
+                } else {
+                    $upDetail = 'Artisan up dijalankan';
+                }
+            }
+
             $optimizeDetail = null;
             if ($actualWscrmPath && is_dir($actualWscrmPath)) {
                 $currentDir = getcwd();
@@ -588,9 +638,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 chdir($currentDir);
 
                 if (is_string($optimizeOutput) && str_starts_with($optimizeOutput, 'Error:')) {
-                    $optimizeDetail = 'ℹ️ Optimize dilewati: ' . $optimizeOutput;
+                    $optimizeDetail = 'Optimize dilewati: ' . $optimizeOutput;
                 } else {
-                    $optimizeDetail = '✅ Optimize berhasil dijalankan';
+                    $optimizeDetail = 'Optimize berhasil dijalankan';
                 }
             }
 
@@ -628,15 +678,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (file_exists($envFile)) {
                         $envContent = file_get_contents($envFile);
                         if (preg_match('/^APP_KEY=base64:/m', $envContent)) {
-                            $details[] = '✅ APP_KEY telah di-generate untuk keamanan';
+                            $details[] = 'APP_KEY sudah terpasang';
                         }
                     }
+                }
+
+                if ($maintenanceDetail) {
+                    $details[] = $maintenanceDetail;
+                }
+
+                if ($upDetail) {
+                    $details[] = $upDetail;
                 }
 
                 if ($optimizeDetail) {
                     $details[] = $optimizeDetail;
                 } else {
-                    $details[] = 'ℹ️ Optimize tidak dijalankan (path wscrm tidak terdeteksi atau tidak bisa diakses)';
+                    $details[] = 'Optimize tidak dijalankan (path wscrm tidak terdeteksi atau tidak bisa diakses)';
                 }
 
                 if (! empty($details)) {
@@ -1295,52 +1353,52 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
 
         <?php if ($isAlreadyInstalled) { ?>
             <div class="alert alert-success">
-                <strong>✅ Instalasi Sudah Selesai!</strong><br>
+                <strong>Instalasi sudah selesai</strong><br>
                 WSCRM sudah terinstall di: <code><?= htmlspecialchars($targetWscrmPath) ?></code><br><br>
 
                 <div class="alert alert-info">
-                    <strong>🛠️ Tools Tambahan:</strong> Sebelum menghapus installer, Anda dapat menjalankan tools di bawah untuk setup final:
+                    <strong>Tools tambahan:</strong> Sebelum menghapus installer, Anda dapat menjalankan tools di bawah untuk setup final:
                 </div>
 
                 <!-- Laravel Tools Section -->
                 <div class="tools">
-                    <h4 class="tools-title">🚀 Setup Tools Laravel</h4>
+                    <h4 class="tools-title">Setup tools Laravel</h4>
 
                     <div class="tools-grid">
-                        <button onclick="runLaravelCommand('migrate')" class="btn">📊 Run Migrations</button>
-                        <button onclick="runLaravelCommand('db_seed')" class="btn">🌱 Run DB Seeder</button>
-                        <button onclick="runLaravelCommand('storage_link')" class="btn">🔗 Create Storage Link</button>
-                        <button onclick="runLaravelCommand('key_generate')" class="btn">🔑 Generate App Key</button>
-                        <button onclick="runLaravelCommand('clear_cache')" class="btn">🧹 Clear All Cache</button>
-                        <button onclick="runLaravelCommand('optimize')" class="btn">⚡ Optimize App</button>
-                        <button onclick="runLaravelCommand('config_cache')" class="btn">⚙️ Cache Config</button>
-                        <button onclick="runLaravelCommand('check_env')" class="btn">📄 Check .env</button>
+                        <button onclick="runLaravelCommand('migrate')" class="btn">Run migrations</button>
+                        <button onclick="runLaravelCommand('db_seed')" class="btn">Run DB seeder</button>
+                        <button onclick="runLaravelCommand('storage_link')" class="btn">Create storage link</button>
+                        <button onclick="runLaravelCommand('key_generate')" class="btn">Generate app key</button>
+                        <button onclick="runLaravelCommand('clear_cache')" class="btn">Clear all cache</button>
+                        <button onclick="runLaravelCommand('optimize')" class="btn">Optimize app</button>
+                        <button onclick="runLaravelCommand('config_cache')" class="btn">Cache config</button>
+                        <button onclick="runLaravelCommand('check_env')" class="btn">Check .env</button>
                     </div>
 
                     <div id="laravel-tools-result" class="result"></div>
                 </div>
 
                 <div class="alert alert-info">
-                    <strong>⚠️ Penting:</strong> Aplikasi tidak dapat diakses selama folder install masih ada.<br>
+                    <strong>Penting:</strong> Aplikasi tidak dapat diakses selama folder install masih ada.<br>
                     Silakan hapus folder install terlebih dahulu untuk mengakses aplikasi.
                 </div>
 
                 <div class="actions">
-                    <button onclick="deleteInstallFolder()" class="btn btn-danger">🗑️ Hapus Folder Install & Buka Aplikasi</button>
-                    <a href="../" class="btn btn-outline">👀 Coba Buka Aplikasi (Akan Error)</a>
+                    <button onclick="deleteInstallFolder()" class="btn btn-danger">Hapus folder install dan buka aplikasi</button>
+                    <a href="../" class="btn btn-outline">Coba buka aplikasi (akan error)</a>
                 </div>
                 <div id="delete-result" class="result"></div>
             </div>
         <?php } else { ?>
             <div class="step <?= $step1Complete ? 'completed' : '' ?>" id="step1">
-                <div class="step-title">📁 Step 1: Deteksi Folder WSCRM</div>
+                <div class="step-title">Step 1: Deteksi folder WSCRM</div>
                 <div class="step-description">
                     Sistem akan mencari folder wscrm yang berisi file Laravel backend.
                 </div>
 
                 <?php if ($step1Complete) { ?>
                     <div class="alert alert-success">
-                        <strong>✅ Folder wscrm sudah ditemukan!</strong><br>
+                        <strong>Folder wscrm sudah ditemukan</strong><br>
                         Lokasi: <div class="path-info"><?= htmlspecialchars($wscrmPath) ?></div>
                     </div>
                 <?php } else { ?>
@@ -1350,9 +1408,9 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
             </div>
 
             <div class="step <?= $step2Complete ? 'completed' : '' ?><?= $step1Complete && ! $step2Complete ? ' active' : '' ?>" id="step2" style="display: <?= $step1Complete ? 'block' : 'none' ?>;">
-                <div class="step-title">🔄 Step 2: Pindahkan Folder WSCRM</div>
+                <div class="step-title">Step 2: Pindahkan folder WSCRM</div>
                 <div class="step-description">
-                    Pilih operasi untuk memindahkan folder wscrm ke lokasi yang tepat (sejajar dengan public_html).
+                    Folder wscrm akan dipindahkan ke lokasi yang tepat (sejajar dengan public_html).
                 </div>
 
                 <div class="alert alert-info">
@@ -1360,47 +1418,36 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                     <div class="path-info"><?= htmlspecialchars($targetWscrmPath) ?></div>
                 </div>
 
-                <div class="radio-group">
-                    <label>
-                        <input type="radio" name="operation" value="move" checked>
-                        <strong>Pindahkan (Move)</strong> - Memindahkan folder wscrm ke lokasi target
-                    </label>
-                    <label>
-                        <input type="radio" name="operation" value="copy">
-                        <strong>Salin (Copy)</strong> - Menyalin folder wscrm ke lokasi target (folder asli tetap ada)
-                    </label>
-                </div>
-
                 <button class="btn" onclick="moveWscrm()">Jalankan Operasi</button>
                 <div id="move-result"></div>
             </div>
 
             <div class="step <?= $step3Complete ? 'completed' : '' ?><?= $step2Complete && ! $step3Complete ? ' active' : '' ?>" id="step3" style="display: <?= $step2Complete ? 'block' : 'none' ?>;">
-                <div class="step-title"><?= $step3Complete ? '✅' : '⚙️' ?> Step 3: <?= $step3Complete ? 'Konfigurasi Selesai' : 'Setup Environment' ?></div>
+                <div class="step-title">Step 3: <?= $step3Complete ? 'Konfigurasi selesai' : 'Setup environment' ?></div>
                 <div class="step-description">
                     <?= $step3Complete ? 'Environment sudah dikonfigurasi. Aplikasi siap digunakan.' : 'Konfigurasikan environment untuk menyelesaikan instalasi.' ?>
                 </div>
 
                 <?php if ($step3Complete) { ?>
                     <div class="alert alert-success">
-                        <strong>✅ Instalasi berhasil diselesaikan!</strong><br>
+                        <strong>Instalasi berhasil diselesaikan</strong><br>
                         Environment sudah dikonfigurasi dan aplikasi siap digunakan.
                     </div>
                     <div class="actions">
-                        <a href="../" class="btn btn-primary">🚀 Buka Aplikasi</a>
-                        <button onclick="deleteInstallFolder()" class="btn btn-danger">🗑️ Hapus Folder Install</button>
+                        <a href="../" class="btn btn-primary">Buka aplikasi</a>
+                        <button onclick="deleteInstallFolder()" class="btn btn-danger">Hapus folder install</button>
                     </div>
                     <div id="delete-result" class="result"></div>
                 <?php } else { ?>
-                    <button class="btn btn-success" onclick="showEnvConfiguration()">🔧 Setup Environment</button>
+                    <button class="btn btn-success" onclick="showEnvConfiguration()">Setup environment</button>
                     <div id="env-config-form" class="config-form" style="display: none;">
                         <div class="config-header">
-                            <h3>🔧 Konfigurasi Environment</h3>
+                            <h3>Konfigurasi environment</h3>
                             <p class="config-subtitle">Konfigurasikan pengaturan dasar untuk aplikasi WSCRM Anda</p>
                         </div>
 
                         <div class="config-section">
-                            <h4>📱 Informasi Aplikasi</h4>
+                            <h4>Informasi aplikasi</h4>
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="app_name">
@@ -1421,7 +1468,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                         </div>
 
                         <div class="config-section">
-                            <h4>🗄️ Konfigurasi Database</h4>
+                            <h4>Konfigurasi database</h4>
                             <div class="database-options">
                                 <label class="radio-card">
                                     <input type="radio" name="db_type" value="sqlite" checked onclick="toggleDatabaseConfig()">
@@ -1478,11 +1525,11 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                                         <span class="label-text">Password</span>
                                     </label>
                                     <input type="password" id="db_password" class="form-control" placeholder="Masukkan password database (kosongkan jika tidak ada password)">
-                                    <small class="form-help">💡 Kosongkan field ini jika database tidak menggunakan password (seperti setup local XAMPP/WAMP)</small>
+                                    <small class="form-help">Kosongkan field ini jika database tidak menggunakan password (seperti setup local XAMPP/WAMP)</small>
                                 </div>
 
                                 <button type="button" class="btn btn-outline" onclick="testDatabaseConnection()">
-                                    🔌 Test Koneksi Database
+                                    Test koneksi database
                                 </button>
                                 <div id="db-test-result"></div>
                             </div>
@@ -1490,7 +1537,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
 
                         <div class="config-actions">
                             <button class="btn btn-primary" onclick="configureEnvironment()">
-                                💾 Simpan & Lanjutkan
+                                Simpan dan lanjutkan
                             </button>
                         </div>
                         <div id="env-config-result"></div>
@@ -1510,7 +1557,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
             if (pathInfo && pathInfo.textContent.trim()) {
                 detectedWscrmPath = pathInfo.textContent.trim();
                 window.detectedWscrmPath = detectedWscrmPath;
-                console.log('🔄 Initialized detectedWscrmPath from UI:', detectedWscrmPath);
+                console.log('Initialized detectedWscrmPath from UI:', detectedWscrmPath);
             }
         });
 
@@ -1532,7 +1579,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
 
                     // Log debug info to console for troubleshooting
                     if (data.debug) {
-                        console.log('🐛 WSCRM Detection Debug:', data.debug);
+                        console.log('WSCRM Detection Debug:', data.debug);
                     }
 
                     if (data.success) {
@@ -1540,14 +1587,14 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                         detectedWscrmPath = data.path.replace(/\/$/, '');
 
                         // Debug: Log detected path
-                        console.log('✅ WSCRM path detected:', detectedWscrmPath);
-                        console.log('📋 Full detection data:', data);
-                        console.log('🔧 detectedWscrmPath after assignment:', detectedWscrmPath);
-                        console.log('🔧 detectedWscrmPath type after assignment:', typeof detectedWscrmPath);
+                        console.log('WSCRM path detected:', detectedWscrmPath);
+                        console.log('Full detection data:', data);
+                        console.log('detectedWscrmPath after assignment:', detectedWscrmPath);
+                        console.log('detectedWscrmPath type after assignment:', typeof detectedWscrmPath);
 
                         // Test if variable is accessible
                         window.detectedWscrmPath = detectedWscrmPath;
-                        console.log('🌐 Global detectedWscrmPath set:', window.detectedWscrmPath);
+                        console.log('Global detectedWscrmPath set:', window.detectedWscrmPath);
 
                         // Check if wscrm is already in correct location (outside public_html)
                         const isAlreadyMoved = data.already_in_target_location || false;
@@ -1556,7 +1603,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                             // Skip Step 2 - already in correct location
                             resultDiv.innerHTML = `
                             <div class="alert alert-success">
-                                <strong>✅ Folder wscrm sudah di lokasi yang benar!</strong><br>
+                                <strong>Folder wscrm sudah di lokasi yang benar</strong><br>
                                 Lokasi: <div class="path-info">${data.path}</div>
                                 <br><small>Step 2 dilewati karena folder sudah berada di luar public_html.</small>
                             </div>
@@ -1571,7 +1618,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                             // Show Step 2 - needs to be moved
                             resultDiv.innerHTML = `
                             <div class="alert alert-success">
-                                <strong>✅ Folder wscrm ditemukan!</strong><br>
+                                <strong>Folder wscrm ditemukan</strong><br>
                                 Lokasi: <div class="path-info">${data.path}</div>
                                 <br><small>Perlu dipindahkan ke luar public_html untuk keamanan.</small>
                             </div>
@@ -1584,7 +1631,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                     } else {
                         resultDiv.innerHTML = `
                         <div class="alert alert-error">
-                            <strong>❌ ${data.message}</strong><br>
+                            <strong>${data.message}</strong><br>
                             Pastikan file package sudah diekstrak dengan benar.
                         </div>
                     `;
@@ -1597,7 +1644,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                     console.error('Error:', error);
                     document.getElementById('detection-result').innerHTML = `
                     <div class="alert alert-error">
-                        <strong>❌ Terjadi kesalahan saat mendeteksi folder wscrm</strong>
+                        <strong>Terjadi kesalahan saat mendeteksi folder wscrm</strong>
                     </div>
                 `;
                     btn.disabled = false;
@@ -1607,25 +1654,22 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
 
         function moveWscrm() {
             const btn = event.target;
-            const operation = document.querySelector('input[name="operation"]:checked').value;
-
-            // Debug: Log current state
-            console.log('🔍 Current detectedWscrmPath value:', detectedWscrmPath);
-            console.log('🔍 detectedWscrmPath type:', typeof detectedWscrmPath);
-            console.log('🔍 detectedWscrmPath length:', detectedWscrmPath ? detectedWscrmPath.length : 'undefined');
-            console.log('🌐 window.detectedWscrmPath:', window.detectedWscrmPath);
+            console.log('Current detectedWscrmPath value:', detectedWscrmPath);
+            console.log('detectedWscrmPath type:', typeof detectedWscrmPath);
+            console.log('detectedWscrmPath length:', detectedWscrmPath ? detectedWscrmPath.length : 'undefined');
+            console.log('window.detectedWscrmPath:', window.detectedWscrmPath);
 
             // Try to use global variable as fallback
             if (!detectedWscrmPath && window.detectedWscrmPath) {
                 detectedWscrmPath = window.detectedWscrmPath;
-                console.log('🔄 Using global detectedWscrmPath as fallback:', detectedWscrmPath);
+                console.log('Using global detectedWscrmPath as fallback:', detectedWscrmPath);
             }
 
             // Validasi detectedWscrmPath sebelum mengirim
             if (!detectedWscrmPath || detectedWscrmPath.trim() === '') {
                 document.getElementById('move-result').innerHTML = `
                     <div class="alert alert-error">
-                        <strong>❌ Path wscrm tidak terdeteksi. Silakan jalankan deteksi terlebih dahulu.</strong>
+                        <strong>Path wscrm tidak terdeteksi. Silakan jalankan deteksi terlebih dahulu.</strong>
                         <br><small>Debug: detectedWscrmPath = '${detectedWscrmPath}' (${typeof detectedWscrmPath})</small>
                         <br><small>window.detectedWscrmPath = '${window.detectedWscrmPath}'</small>
                     </div>
@@ -1633,13 +1677,13 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                 return;
             }
 
-            console.log('🔍 Sending wscrm_path:', detectedWscrmPath);
+            console.log('Sending wscrm_path:', detectedWscrmPath);
 
             btn.disabled = true;
-            btn.textContent = operation === 'move' ? 'Memindahkan...' : 'Menyalin...';
+            btn.textContent = 'Memindahkan...';
 
-            const payload = `action=move_wscrm&wscrm_path=${encodeURIComponent(detectedWscrmPath)}&operation=${operation}`;
-            console.log('📤 Request payload:', payload);
+            const payload = `action=move_wscrm&wscrm_path=${encodeURIComponent(detectedWscrmPath)}`;
+            console.log('Request payload:', payload);
 
             fetch('index.php', {
                     method: 'POST',
@@ -1655,7 +1699,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                     if (data.success) {
                         resultDiv.innerHTML = `
                         <div class="alert alert-success">
-                            <strong>✅ ${data.message}</strong>
+                            <strong>${data.message}</strong>
                         </div>
                     `;
 
@@ -1666,7 +1710,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                     } else {
                         resultDiv.innerHTML = `
                         <div class="alert alert-error">
-                            <strong>❌ ${data.message}</strong>
+                            <strong>${data.message}</strong>
                         </div>
                     `;
                     }
@@ -1678,7 +1722,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                     console.error('Error:', error);
                     document.getElementById('move-result').innerHTML = `
                     <div class="alert alert-error">
-                        <strong>❌ Terjadi kesalahan saat memindahkan folder wscrm</strong>
+                        <strong>Terjadi kesalahan saat memindahkan folder wscrm</strong>
                     </div>
                 `;
                     btn.disabled = false;
@@ -1706,7 +1750,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
             const btn = event.target;
             const originalText = btn.textContent;
             btn.disabled = true;
-            btn.textContent = '🔄 Testing...';
+            btn.textContent = 'Testing...';
 
             const dbHost = document.getElementById('db_host').value;
             const dbPort = document.getElementById('db_port').value;
@@ -1728,14 +1772,14 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                     if (data.success) {
                         resultDiv.innerHTML = `
                         <div class="alert alert-success">
-                            <strong>✅ Koneksi database berhasil!</strong><br>
+                            <strong>Koneksi database berhasil</strong><br>
                             ${data.message}
                         </div>
                     `;
                     } else {
                         resultDiv.innerHTML = `
                         <div class="alert alert-error">
-                            <strong>❌ Koneksi database gagal!</strong><br>
+                            <strong>Koneksi database gagal</strong><br>
                             ${data.message}
                         </div>
                     `;
@@ -1747,7 +1791,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                 .catch(error => {
                     document.getElementById('db-test-result').innerHTML = `
                     <div class="alert alert-error">
-                        <strong>❌ Error: ${error.message}</strong>
+                        <strong>Error: ${error.message}</strong>
                     </div>
                 `;
                     btn.disabled = false;
@@ -1763,7 +1807,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
             const btn = event.target;
             const originalText = btn.textContent;
             btn.disabled = true;
-            btn.textContent = '🗑️ Menghapus...';
+            btn.textContent = 'Menghapus...';
 
             fetch('index.php', {
                     method: 'POST',
@@ -1779,7 +1823,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                     if (data.success) {
                         resultDiv.innerHTML = `
                         <div class="alert alert-success">
-                            <strong>✅ ${data.message}</strong><br>
+                            <strong>${data.message}</strong><br>
                             Halaman akan dialihkan ke aplikasi dalam 3 detik...
                         </div>
                     `;
@@ -1790,7 +1834,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                     } else {
                         resultDiv.innerHTML = `
                         <div class="alert alert-error">
-                            <strong>❌ ${data.message}</strong>
+                            <strong>${data.message}</strong>
                         </div>
                     `;
 
@@ -1801,7 +1845,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                 .catch(error => {
                     document.getElementById('delete-result').innerHTML = `
                     <div class="alert alert-error">
-                        <strong>❌ Error: ${error.message}</strong>
+                        <strong>Error: ${error.message}</strong>
                     </div>
                 `;
                     btn.disabled = false;
@@ -1813,7 +1857,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
             const btn = event.target;
             const originalText = btn.textContent;
             btn.disabled = true;
-            btn.textContent = '⏳ Running...';
+            btn.textContent = 'Running...';
 
             fetch('index.php', {
                     method: 'POST',
@@ -1829,14 +1873,14 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                     if (data.success) {
                         resultDiv.innerHTML = `
                         <div class="alert alert-success">
-                            <strong>✅ ${data.message}</strong><br>
+                            <strong>${data.message}</strong><br>
                             <pre class="code-block">${data.output || 'No output'}</pre>
                         </div>
                     `;
                     } else {
                         resultDiv.innerHTML = `
                         <div class="alert alert-error">
-                            <strong>❌ ${data.message}</strong>
+                            <strong>${data.message}</strong>
                         </div>
                     `;
                     }
@@ -1847,7 +1891,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                 .catch(error => {
                     document.getElementById('laravel-tools-result').innerHTML = `
                     <div class="alert alert-error">
-                        <strong>❌ Error: ${error.message}</strong>
+                        <strong>Error: ${error.message}</strong>
                     </div>
                 `;
                     btn.disabled = false;
@@ -1858,7 +1902,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
         function configureEnvironment() {
             const btn = event.target;
             btn.disabled = true;
-            btn.textContent = '💾 Menyimpan...';
+            btn.textContent = 'Menyimpan...';
 
             const appUrl = document.getElementById('app_url').value;
             const appName = document.getElementById('app_name').value;
@@ -1891,7 +1935,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                     if (data.success) {
                         resultDiv.innerHTML = `
                         <div class="alert alert-success">
-                            <strong>✅ Environment berhasil dikonfigurasi!</strong><br>
+                            <strong>Environment berhasil dikonfigurasi</strong><br>
                             ${data.message}
                         </div>
                     `;
@@ -1903,7 +1947,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                     } else {
                         resultDiv.innerHTML = `
                         <div class="alert alert-error">
-                            <strong>❌ ${data.message}</strong>
+                            <strong>${data.message}</strong>
                         </div>
                     `;
 
@@ -1914,7 +1958,7 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                 .catch(error => {
                     document.getElementById('env-config-result').innerHTML = `
                     <div class="alert alert-error">
-                        <strong>❌ Error: ${error.message}</strong>
+                        <strong>Error: ${error.message}</strong>
                     </div>
                 `;
                     btn.disabled = false;
