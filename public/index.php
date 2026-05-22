@@ -13,28 +13,10 @@ if (file_exists(__DIR__.'/../.env')) {
 }
 
 if (is_dir(__DIR__.'/install') && ! $skipInstaller) {
-    // For flat deployment, check wscrm folder for installer.lock
-    $installerLockPaths = [
-        __DIR__.'/wscrm/storage/installer.lock',      // wscrm in same directory
-        __DIR__.'/../wscrm/storage/installer.lock',   // wscrm moved outside web root
-        __DIR__.'/../storage/installer.lock',          // standard Laravel structure
-    ];
-
-    $installCompleted = false;
-    foreach ($installerLockPaths as $lockPath) {
-        if (file_exists($lockPath)) {
-            $installCompleted = true;
-            break;
-        }
-    }
-
-    if (! $installCompleted) {
-        // Redirect to installer for non-install URLs
-        $requestUri = $_SERVER['REQUEST_URI'];
-        if (strpos($requestUri, '/install') !== 0) {
-            header('Location: /install/');
-            exit;
-        }
+    $requestUri = $_SERVER['REQUEST_URI'];
+    if (strpos($requestUri, '/install') !== 0) {
+        header('Location: /install/');
+        exit;
     }
 }
 

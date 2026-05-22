@@ -36,7 +36,7 @@ class BuildPackage extends Command
             return self::FAILURE;
         }
 
-        $outputPath = $this->option('output');
+        $outputPath = $this->resolveOutputPath((string) $this->option('output'));
         $distDir = dirname($outputPath);
         $tempDir = $distDir . DIRECTORY_SEPARATOR . 'temp-package';
 
@@ -114,6 +114,27 @@ class BuildPackage extends Command
         $this->line('3. Ikuti panduan instalasi');
 
         return self::SUCCESS;
+    }
+
+    private function resolveOutputPath(string $outputPath): string
+    {
+        if (strpos($outputPath, '{version}') === false) {
+            return $outputPath;
+        }
+
+        $version = 'dev';
+        $composerPath = base_path('composer.json');
+        if (File::exists($composerPath)) {
+            $composer = json_decode((string) File::get($composerPath), true);
+            if (is_array($composer) && isset($composer['version']) && is_string($composer['version']) && $composer['version'] !== '') {
+                $version = $composer['version'];
+            }
+        }
+
+        $version = ltrim(trim($version), "vV \t\n\r\0\x0B");
+        $version = preg_replace('/[^0-9A-Za-z._-]+/', '-', $version) ?: 'dev';
+
+        return str_replace('{version}', $version, $outputPath);
     }
 
     /**
