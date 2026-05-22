@@ -32,6 +32,52 @@ function parseEnvFile($envPath)
     return $env;
 }
 
+function formatEnvValue($value)
+{
+    if ($value === null) {
+        return '';
+    }
+
+    $value = (string) $value;
+    if ($value === '') {
+        return '';
+    }
+
+    if (preg_match('/[\\s#"\'\\\\]/', $value)) {
+        return '"' . str_replace('"', '\\"', $value) . '"';
+    }
+
+    return $value;
+}
+
+function setEnvValue($envContent, $key, $value)
+{
+    $formatted = formatEnvValue($value);
+    $pattern = '/^' . preg_quote($key, '/') . '=.*$/m';
+    $replacement = $key . '=' . $formatted;
+
+    if (preg_match($pattern, $envContent)) {
+        return preg_replace($pattern, $replacement, $envContent);
+    }
+
+    $envContent = rtrim((string) $envContent, "\r\n");
+
+    return $envContent . "\n" . $replacement . "\n";
+}
+
+function clearBootstrapCache($wscrmPath)
+{
+    $cacheDir = rtrim(str_replace('\\', '/', $wscrmPath), '/') . '/bootstrap/cache';
+    if (! is_dir($cacheDir)) {
+        return;
+    }
+
+    $files = glob($cacheDir . '/*.php') ?: [];
+    foreach ($files as $file) {
+        @unlink($file);
+    }
+}
+
 function executeSimpleCommand($command)
 {
     // Simple command execution without exec() complexity
@@ -333,8 +379,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // Get target wscrm path
+            $detectedWscrmPath = detectWscrmFolder();
             $publicHtmlParent = str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT']));
-            $targetWscrmPath = $publicHtmlParent . '/wscrm';
+            $targetWscrmPath = $detectedWscrmPath ?: ($publicHtmlParent . '/wscrm');
 
             error_log('Target wscrm path: ' . $targetWscrmPath);
             error_log('Directory exists: ' . (is_dir($targetWscrmPath) ? 'YES' : 'NO'));
@@ -362,15 +409,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Read .env.example and modify values
             $envContent = file_get_contents($envTemplate);
 
-            // Basic app configuration
-            $replacements = [
-                'APP_NAME=Laravel' => 'APP_NAME="' . $appName . '"',
-                'APP_URL=http://localhost' => 'APP_URL=' . $appUrl,
-                'APP_ENV=local' => 'APP_ENV=production',
-                'APP_DEBUG=true' => 'APP_DEBUG=false',
-            ];
-
-            // Database configuration
             if ($dbType === 'mysql') {
                 $dbHost = $_POST['db_host'] ?? 'localhost';
                 $dbPort = $_POST['db_port'] ?? '3306';
@@ -383,46 +421,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 }
 
-                // Test database connection before proceeding
                 try {
-                    $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbName}";
-                    $pdo = new PDO($dsn, $dbUsername, $dbPassword);
-                    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    $dsn = "mysql:host={$dbHost};port={$dbPort};charset=utf8mb4";
+                    $pdo = new PDO($dsn, $dbUsername, $dbPassword, [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                        PDO::ATTR_TIMEOUT => 5,
+                    ]);
+
+                    $stmt = $pdo->query("SHOW DATABASES LIKE '{$dbName}'");
+                    if ($stmt->rowCount() === 0) {
+                        $pdo->exec("CREATE DATABASE `{$dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+                    }
+                    $pdo->exec("USE `{$dbName}`");
                     error_log('Database connection test successful');
                 } catch (PDOException $e) {
                     error_log('ERROR Database connection test failed: ' . $e->getMessage());
                     echo json_encode(['success' => false, 'message' => 'Koneksi database gagal: ' . $e->getMessage()]);
                     exit;
                 }
-
-                // Handle password properly - empty password should remain empty, not quoted
-                $quotedPassword = $dbPassword;
-                if (! empty($dbPassword) && preg_match('/[\\s#"\'\\\\]/', $dbPassword)) {
-                    $quotedPassword = '"' . str_replace('"', '\\"', $dbPassword) . '"';
-                }
-
-                $replacements = array_merge($replacements, [
-                    'DB_CONNECTION=sqlite' => 'DB_CONNECTION=mysql',
-                    'DB_HOST=127.0.0.1' => 'DB_HOST=' . $dbHost,
-                    'DB_PORT=3306' => 'DB_PORT=' . $dbPort,
-                    'DB_DATABASE=database/database.sqlite' => 'DB_DATABASE=' . $dbName,
-                    'DB_USERNAME=null' => 'DB_USERNAME=' . $dbUsername,
-                    'DB_PASSWORD=null' => 'DB_PASSWORD=' . $quotedPassword,
-                    '# DB_HOST=127.0.0.1' => 'DB_HOST=' . $dbHost,
-                    '# DB_PORT=3306' => 'DB_PORT=' . $dbPort,
-                    '# DB_DATABASE=wscrm' => 'DB_DATABASE=' . $dbName,
-                    '# DB_USERNAME=root' => 'DB_USERNAME=' . $dbUsername,
-                    '# DB_PASSWORD=' => 'DB_PASSWORD=' . $quotedPassword,
-                ]);
             } else {
-                // Ensure SQLite configuration
-                $replacements = array_merge($replacements, [
-                    'DB_CONNECTION=mysql' => 'DB_CONNECTION=sqlite',
-                    'DB_DATABASE=' => 'DB_DATABASE=database/database.sqlite',
-                ]);
+                $dbHost = null;
+                $dbPort = null;
+                $dbName = null;
+                $dbUsername = null;
+                $dbPassword = null;
             }
 
-            $envContent = str_replace(array_keys($replacements), array_values($replacements), $envContent);
+            $envContent = setEnvValue($envContent, 'APP_NAME', $appName);
+            $envContent = setEnvValue($envContent, 'APP_URL', $appUrl);
+            $envContent = setEnvValue($envContent, 'APP_ENV', 'production');
+            $envContent = setEnvValue($envContent, 'APP_DEBUG', 'false');
+
+            if ($dbType === 'mysql') {
+                $envContent = setEnvValue($envContent, 'DB_CONNECTION', 'mysql');
+                $envContent = setEnvValue($envContent, 'DB_HOST', $dbHost);
+                $envContent = setEnvValue($envContent, 'DB_PORT', (string) $dbPort);
+                $envContent = setEnvValue($envContent, 'DB_DATABASE', $dbName);
+                $envContent = setEnvValue($envContent, 'DB_USERNAME', $dbUsername);
+                $envContent = setEnvValue($envContent, 'DB_PASSWORD', $dbPassword);
+            } else {
+                $envContent = setEnvValue($envContent, 'DB_CONNECTION', 'sqlite');
+                $envContent = setEnvValue($envContent, 'DB_DATABASE', 'database/database.sqlite');
+            }
+
+            $envContent = setEnvValue($envContent, 'CACHE_STORE', 'file');
+            $envContent = setEnvValue($envContent, 'SESSION_DRIVER', 'file');
+            $envContent = setEnvValue($envContent, 'QUEUE_CONNECTION', 'sync');
 
             // Write .env file
             error_log('Writing .env file to: ' . $envPath);
@@ -437,6 +482,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             error_log('.env file written successfully');
+
+            clearBootstrapCache($targetWscrmPath);
 
             // Generate APP_KEY manually (exec() disabled on hosting)
             $keyGenerated = false;
@@ -771,35 +818,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         case 'laravel_command':
             $command = $_POST['command'] ?? '';
-            $targetWscrmPath = str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT'])) . '/wscrm';
+            $detectedWscrmPath = detectWscrmFolder();
+            $targetWscrmPath = $detectedWscrmPath ?: (str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT'])) . '/wscrm');
 
             if (! is_dir($targetWscrmPath)) {
-                echo json_encode(['success' => false, 'message' => 'Laravel directory not found']);
+                echo json_encode(['success' => false, 'message' => 'Laravel directory not found', 'debug' => $GLOBALS['wscrm_debug'] ?? null]);
                 exit;
             }
+
+            clearBootstrapCache($targetWscrmPath);
 
             $currentDir = getcwd();
             chdir($targetWscrmPath);
 
             try {
+                $env = parseEnvFile('.env');
+                $cacheStore = $env['CACHE_STORE'] ?? ($env['CACHE_DRIVER'] ?? 'database');
+
                 switch ($command) {
                     case 'migrate':
-                        $output = executeSimpleCommand('php artisan migrate --force');
+                        $output = executeSimpleCommand('php artisan config:clear');
+                        $output .= "\n" . executeSimpleCommand('php artisan migrate --force');
                         break;
                     case 'db_seed':
-                        $output = executeSimpleCommand('php artisan db:seed --force');
+                        $output = executeSimpleCommand('php artisan config:clear');
+                        $output .= "\n" . executeSimpleCommand('php artisan db:seed --force');
                         break;
                     case 'storage_link':
-                        $output = executeSimpleCommand('php artisan storage:link');
+                        $output = executeSimpleCommand('php artisan config:clear');
+                        $output .= "\n" . executeSimpleCommand('php artisan storage:link');
                         break;
                     case 'key_generate':
-                        $output = executeSimpleCommand('php artisan key:generate --force');
+                        $output = executeSimpleCommand('php artisan config:clear');
+                        $output .= "\n" . executeSimpleCommand('php artisan key:generate --force');
                         break;
                     case 'clear_cache':
-                        $output = executeSimpleCommand('php artisan cache:clear');
-                        $output .= "\n" . executeSimpleCommand('php artisan config:clear');
+                        $output = executeSimpleCommand('php artisan config:clear');
                         $output .= "\n" . executeSimpleCommand('php artisan route:clear');
                         $output .= "\n" . executeSimpleCommand('php artisan view:clear');
+                        if ($cacheStore !== 'database') {
+                            $output .= "\n" . executeSimpleCommand('php artisan cache:clear');
+                        } else {
+                            $output .= "\n" . 'cache:clear dilewati (CACHE_STORE=database membutuhkan koneksi DB)';
+                        }
                         break;
                     case 'optimize':
                         $output = executeSimpleCommand('php artisan optimize');
@@ -814,6 +875,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $envModified = date('Y-m-d H:i:s', filemtime($envPath));
                             $envContent = file_get_contents($envPath);
                             $hasAppKey = strpos($envContent, 'APP_KEY=') !== false && strpos($envContent, 'APP_KEY=base64:') !== false;
+                            $envData = parseEnvFile($envPath);
 
                             $output = "Environment File Check:\n";
                             $output .= ".env exists: Yes\n";
@@ -822,9 +884,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $output .= 'APP_KEY set: ' . ($hasAppKey ? 'Yes' : 'No') . "\n";
 
                             // Check database connection
-                            preg_match('/DB_CONNECTION=(.*)/', $envContent, $dbMatch);
-                            $dbConnection = isset($dbMatch[1]) ? trim($dbMatch[1]) : 'not set';
+                            $dbConnection = $envData['DB_CONNECTION'] ?? 'not set';
                             $output .= "DB_CONNECTION: {$dbConnection}\n";
+
+                            $dbHost = $envData['DB_HOST'] ?? 'not set';
+                            $output .= "DB_HOST: {$dbHost}\n";
+
+                            $dbPort = $envData['DB_PORT'] ?? 'not set';
+                            $output .= "DB_PORT: {$dbPort}\n";
+
+                            $dbDatabase = $envData['DB_DATABASE'] ?? 'not set';
+                            $output .= "DB_DATABASE: {$dbDatabase}\n";
+
+                            $dbUsername = $envData['DB_USERNAME'] ?? 'not set';
+                            $output .= "DB_USERNAME: {$dbUsername}\n";
+
+                            $dbPasswordRaw = $envData['DB_PASSWORD'] ?? '';
+                            $output .= 'DB_PASSWORD set: ' . ($dbPasswordRaw !== '' ? 'Yes' : 'No') . "\n";
+
+                            $cacheStoreValue = $envData['CACHE_STORE'] ?? ($envData['CACHE_DRIVER'] ?? 'database');
+                            $output .= "CACHE_STORE: {$cacheStoreValue}\n";
+
+                            if ($dbConnection === 'mysql' && $dbHost !== 'not set' && $dbDatabase !== 'not set' && $dbUsername !== 'not set') {
+                                try {
+                                    $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbDatabase};charset=utf8mb4";
+                                    new PDO($dsn, $dbUsername, $dbPasswordRaw, [
+                                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                                        PDO::ATTR_TIMEOUT => 5,
+                                    ]);
+                                    $output .= "DB connect: OK\n";
+                                } catch (PDOException $e) {
+                                    $output .= "DB connect: FAIL (" . $e->getMessage() . ")\n";
+                                }
+                            }
                         } else {
                             $output = '.env file not found';
                         }
