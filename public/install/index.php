@@ -310,6 +310,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     switch ($action) {
+        case 'skip_installer':
+            $host = $_SERVER['HTTP_HOST'] ?? '';
+            $hostNoPort = explode(':', $host)[0];
+            $isLocalHost = in_array($hostNoPort, ['localhost', '127.0.0.1', '::1'], true);
+
+            if (! $isLocalHost) {
+                echo json_encode(['success' => false, 'message' => 'Skip installer hanya tersedia untuk local']);
+                exit;
+            }
+
+            $written = [];
+
+            $wscrmPath = detectWscrmFolder();
+            if ($wscrmPath && is_dir($wscrmPath)) {
+                $wscrmStorage = rtrim(str_replace('\\', '/', $wscrmPath), '/') . '/storage';
+                if (! is_dir($wscrmStorage)) {
+                    @mkdir($wscrmStorage, 0755, true);
+                }
+                if (is_dir($wscrmStorage) && @file_put_contents($wscrmStorage . '/installer.skip', date('Y-m-d H:i:s'))) {
+                    $written[] = $wscrmStorage . '/installer.skip';
+                }
+            }
+
+            $laravelRoot = realpath(__DIR__ . '/../..');
+            if ($laravelRoot) {
+                $laravelStorage = rtrim(str_replace('\\', '/', $laravelRoot), '/') . '/storage';
+                if (! is_dir($laravelStorage)) {
+                    @mkdir($laravelStorage, 0755, true);
+                }
+                if (is_dir($laravelStorage) && @file_put_contents($laravelStorage . '/installer.skip', date('Y-m-d H:i:s'))) {
+                    $written[] = $laravelStorage . '/installer.skip';
+                }
+            }
+
+            if (empty($written)) {
+                echo json_encode(['success' => false, 'message' => 'Gagal membuat marker skip. Pastikan folder storage writable.']);
+                exit;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Installer berhasil di-skip untuk local. Redirect installer akan dinonaktifkan.',
+            ]);
+            exit;
+
         case 'detect_wscrm':
             $wscrmPath = detectWscrmFolder();
             if ($wscrmPath) {
@@ -948,6 +993,10 @@ $step1Complete = (bool) $wscrmPath; // Folder detected
 $step2Complete = is_dir($targetWscrmPath); // Folder moved to target location
 $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configured
 
+$host = $_SERVER['HTTP_HOST'] ?? '';
+$hostNoPort = explode(':', $host)[0];
+$isLocalHost = in_array($hostNoPort, ['localhost', '127.0.0.1', '::1'], true);
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -1443,6 +1492,17 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
             <p>Installer untuk struktur package baru dengan folder wscrm terpisah</p>
         </div>
 
+        <?php if ($isLocalHost) { ?>
+            <div class="alert alert-info">
+                <strong>Local mode:</strong> Anda bisa skip installer untuk development tanpa menghapus folder install.
+            </div>
+            <div class="actions">
+                <button onclick="skipInstaller()" class="btn btn-outline">Skip installer (local)</button>
+                <a href="../" class="btn btn-outline">Buka aplikasi</a>
+            </div>
+            <div id="skip-result" class="result"></div>
+        <?php } ?>
+
         <?php if ($isAlreadyInstalled) { ?>
             <div class="alert alert-success">
                 <strong>Instalasi sudah selesai</strong><br>
@@ -1936,6 +1996,53 @@ $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configu
                 })
                 .catch(error => {
                     document.getElementById('delete-result').innerHTML = `
+                    <div class="alert alert-error">
+                        <strong>Error: ${error.message}</strong>
+                    </div>
+                `;
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                });
+        }
+
+        function skipInstaller() {
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Memproses...';
+
+            fetch('index.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'action=skip_installer'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('skip-result');
+                    if (data.success) {
+                        resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <strong>${data.message}</strong><br>
+                            Mengalihkan ke aplikasi...
+                        </div>
+                    `;
+                        setTimeout(() => {
+                            window.location.href = '../';
+                        }, 800);
+                    } else {
+                        resultDiv.innerHTML = `
+                        <div class="alert alert-error">
+                            <strong>${data.message}</strong>
+                        </div>
+                    `;
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('skip-result').innerHTML = `
                     <div class="alert alert-error">
                         <strong>Error: ${error.message}</strong>
                     </div>
