@@ -13,10 +13,23 @@ test('customer guest pages can be opened', function (string $url, string $compon
     $response->assertInertia(fn ($page) => $page->component($component));
 })->with(function () {
     return [
-        ['/customer/login', 'Customer/Auth/Login'],
         ['/customer/register', 'Customer/Auth/Register'],
         ['/customer/terms', 'Customer/Auth/Terms'],
     ];
+});
+
+test('customer login redirects to unified login page', function () {
+    $response = $this->get('/customer/login');
+    $response->assertRedirect('/login?type=customer');
+});
+
+test('unified login page shows customer tab when type=customer', function () {
+    $response = $this->get('/login?type=customer');
+    $response->assertStatus(200);
+    $response->assertInertia(fn ($page) => $page
+        ->component('auth/Login')
+        ->where('loginType', 'customer')
+    );
 });
 
 test('customer authenticated pages can be opened', function () {

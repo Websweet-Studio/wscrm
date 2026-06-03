@@ -17,7 +17,9 @@ Route::prefix('customer')->name('customer.')->group(function () {
     Route::get('domains/{any}', fn () => redirect('/domains'))->where('any', '.*');
 
     Route::middleware('guest:customer')->group(function () {
-        Route::get('login', [LoginController::class, 'create'])->name('login');
+        Route::get('login', function () {
+            return redirect('/login?type=customer');
+        })->name('login');
         Route::post('login', [LoginController::class, 'store']);
         Route::get('register', [RegisterController::class, 'create'])->name('register');
         Route::post('register', [RegisterController::class, 'store']);

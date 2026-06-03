@@ -22,6 +22,7 @@ class AuthenticatedSessionController extends Controller
             'canResetPassword' => Route::has('password.request'),
             'status' => $request->session()->get('status'),
             'csrf_token' => csrf_token(),
+            'loginType' => $request->query('type', 'admin'),
         ]);
     }
 
