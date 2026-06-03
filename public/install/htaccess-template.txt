@@ -2,10 +2,6 @@
 # Generated on: {{DATE}}
 
 <IfModule mod_rewrite.c>
-    <IfModule mod_negotiation.c>
-        Options -MultiViews -Indexes
-    </IfModule>
-
     RewriteEngine On
 
     # Handle Authorization Header
@@ -20,18 +16,18 @@
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ public/index.php [L]
+    RewriteRule ^ index.php [L]
 </IfModule>
 
-# Basic Security - Block sensitive files
-<FilesMatch "^(\.env|\.env\..*|\.git.*|composer\.(json|lock)|artisan)$">
-    Require all denied
-</FilesMatch>
-
-# Disable directory browsing
-Options -Indexes
-
-# Block access to Laravel core directories (minimal protection)
-<IfModule mod_rewrite.c>
-    RewriteRule ^(app|bootstrap|config|database|storage|vendor)(/.*)?$ - [F,L]
+# Basic Security (best-effort, compatible with Apache 2.2 and 2.4)
+<IfModule mod_authz_core.c>
+    <FilesMatch "^(\.env|\.env\..*|\.git.*|composer\.(json|lock)|artisan)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+<IfModule !mod_authz_core.c>
+    <FilesMatch "^(\.env|\.env\..*|\.git.*|composer\.(json|lock)|artisan)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
 </IfModule>

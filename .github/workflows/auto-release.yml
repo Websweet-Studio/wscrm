@@ -1,0 +1,138 @@
+name: Auto Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, bcmath, zip, pdo_mysql
+          tools: composer:v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Read version (composer.json)
+        id: version
+        run: |
+          VERSION="$(php -r '$c=json_decode(file_get_contents("composer.json"), true); echo $c["version"] ?? "";')"
+          if [ -z "$VERSION" ]; then
+            echo "composer.json version is missing"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Get latest release tag
+        id: latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          API_URL="https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest"
+          TAG="$(curl -sS -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" -H "User-Agent: wscrm-auto-release" "$API_URL" | python3 - << 'PY'
+import json, sys
+try:
+  data=json.load(sys.stdin)
+except Exception:
+  print("")
+  sys.exit(0)
+print((data.get("tag_name") or "").strip())
+PY
+)"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Decide release
+        id: decide
+        run: |
+          CURRENT="${{ steps.version.outputs.version }}"
+          LATEST_TAG="${{ steps.latest.outputs.tag }}"
+          LATEST="${LATEST_TAG#v}"
+          if [ -z "$LATEST" ]; then
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            echo "reason=no_latest_release" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          python3 - << 'PY'
+import os, re, sys
+def parse(v: str):
+  v = v.strip()
+  v = v.lstrip("vV")
+  core = v.split("-", 1)[0].split("+", 1)[0]
+  parts = core.split(".")
+  nums = []
+  for p in parts:
+    m = re.match(r"(\d+)", p)
+    nums.append(int(m.group(1)) if m else 0)
+  while len(nums) < 3:
+    nums.append(0)
+  return tuple(nums[:3])
+
+current = os.environ["CURRENT"]
+latest = os.environ["LATEST"]
+
+should = parse(current) > parse(latest)
+print("should_release=" + ("true" if should else "false"))
+print("reason=" + ("version_greater" if should else "version_not_greater"))
+PY >> "$GITHUB_OUTPUT"
+        env:
+          CURRENT: ${{ steps.version.outputs.version }}
+          LATEST: ${{ steps.latest.outputs.tag }}
+
+      - name: Install composer dependencies
+        if: steps.decide.outputs.should_release == 'true'
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install npm dependencies
+        if: steps.decide.outputs.should_release == 'true'
+        run: npm ci
+
+      - name: Build production zip (wscrm.{version}.zip)
+        if: steps.decide.outputs.should_release == 'true'
+        run: composer run build:production
+
+      - name: Verify artifact
+        if: steps.decide.outputs.should_release == 'true'
+        id: artifact
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          FILE="dist/wscrm.${VERSION}.zip"
+          if [ ! -f "$FILE" ]; then
+            echo "Expected artifact not found: $FILE"
+            ls -la dist || true
+            exit 1
+          fi
+          echo "file=$FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        if: steps.decide.outputs.should_release == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          files: ${{ steps.artifact.outputs.file }}
+

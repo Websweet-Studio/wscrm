@@ -30,9 +30,15 @@ class BuildPackage extends Command
         // SAFETY CHECKS - Mencegah penghapusan file yang tidak diinginkan
         $this->performSafetyChecks();
 
-        $outputPath = $this->option('output');
+        if (! File::exists(base_path('vendor/autoload.php'))) {
+            $this->error('❌ Folder vendor tidak ditemukan. Jalankan "composer install --no-dev" terlebih dahulu sebelum build package.');
+
+            return self::FAILURE;
+        }
+
+        $outputPath = $this->resolveOutputPath((string) $this->option('output'));
         $distDir = dirname($outputPath);
-        $tempDir = $distDir.DIRECTORY_SEPARATOR.'temp-package';
+        $tempDir = $distDir . DIRECTORY_SEPARATOR . 'temp-package';
 
         // Validasi path untuk mencegah penghapusan folder project
         if (! $this->validatePaths($distDir, $tempDir)) {
@@ -79,7 +85,7 @@ class BuildPackage extends Command
 
         // Step 1: Run npm build
         $this->info('📦 Building frontend assets...');
-        $this->executeCommand('npm run build');
+        $this->executeCommand('npm run build:clean');
 
         // Step 2: Copy files untuk deployment
         $this->info('📁 Copying application files...');
@@ -108,6 +114,27 @@ class BuildPackage extends Command
         $this->line('3. Ikuti panduan instalasi');
 
         return self::SUCCESS;
+    }
+
+    private function resolveOutputPath(string $outputPath): string
+    {
+        if (strpos($outputPath, '{version}') === false) {
+            return $outputPath;
+        }
+
+        $version = 'dev';
+        $composerPath = base_path('composer.json');
+        if (File::exists($composerPath)) {
+            $composer = json_decode((string) File::get($composerPath), true);
+            if (is_array($composer) && isset($composer['version']) && is_string($composer['version']) && $composer['version'] !== '') {
+                $version = $composer['version'];
+            }
+        }
+
+        $version = ltrim(trim($version), "vV \t\n\r\0\x0B");
+        $version = preg_replace('/[^0-9A-Za-z._-]+/', '-', $version) ?: 'dev';
+
+        return str_replace('{version}', $version, $outputPath);
     }
 
     /**
@@ -164,14 +191,14 @@ class BuildPackage extends Command
 
         // Normalize paths ke absolute dan normalize separators untuk Windows
         $distDir = realpath($distDir) ?: $distDir;
-        $tempDir = realpath(dirname($tempDir)) ? (realpath(dirname($tempDir)).'/'.basename($tempDir)) : $tempDir;
+        $tempDir = realpath(dirname($tempDir)) ? (realpath(dirname($tempDir)) . '/' . basename($tempDir)) : $tempDir;
 
         // Jika path relatif, convert ke absolute
         if (! str_starts_with($distDir, '/') && ! preg_match('/^[A-Z]:/', $distDir)) {
-            $distDir = $basePath.'/'.ltrim($distDir, '/');
+            $distDir = $basePath . '/' . ltrim($distDir, '/');
         }
         if (! str_starts_with($tempDir, '/') && ! preg_match('/^[A-Z]:/', $tempDir)) {
-            $tempDir = $basePath.'/'.ltrim($tempDir, '/');
+            $tempDir = $basePath . '/' . ltrim($tempDir, '/');
         }
 
         // Normalize path separators untuk Windows compatibility
@@ -208,7 +235,7 @@ class BuildPackage extends Command
         // Pastikan tidak menimpa folder project penting
         $protectedDirs = ['app', 'config', 'database', 'routes', 'resources', '.git', 'vendor'];
         foreach ($protectedDirs as $protected) {
-            $protectedPath = str_replace('\\', '/', $basePath.DIRECTORY_SEPARATOR.$protected);
+            $protectedPath = str_replace('\\', '/', $basePath . DIRECTORY_SEPARATOR . $protected);
             if (str_starts_with($normalizedDistDir, $protectedPath) || str_starts_with($normalizedTempDir, $protectedPath)) {
                 $this->error("❌ Tidak boleh menggunakan folder protected: {$protected}");
 
@@ -222,10 +249,21 @@ class BuildPackage extends Command
     private function copyApplicationFiles(string $tempDir): void
     {
         $excludes = [
-            '.git', 'node_modules', 'tests', 'storage/logs',
-            'dist', 'temp-package', '.env', 'package-lock.json',
-            'composer.lock', 'BUILD.md', 'README.md', '.claude',
-            'public/.htaccess', 'deployment-htaccess', 'install-htaccess-template.txt',
+            '.git',
+            'node_modules',
+            'tests',
+            'storage/logs',
+            'dist',
+            'temp-package',
+            '.env',
+            'package-lock.json',
+            'composer.lock',
+            'BUILD.md',
+            'README.md',
+            '.claude',
+            'public/.htaccess',
+            'deployment-htaccess',
+            'install-htaccess-template.txt',
         ];
 
         $this->copyDirectory(base_path(), $tempDir, $excludes);
@@ -241,7 +279,7 @@ class BuildPackage extends Command
         ];
 
         foreach ($criticalFiles as $target => $source) {
-            $targetPath = $tempDir.'/'.$target;
+            $targetPath = $tempDir . '/' . $target;
             if (File::exists($source)) {
                 // Ensure target directory exists
                 $targetDir = dirname($targetPath);
@@ -265,22 +303,22 @@ class BuildPackage extends Command
         ];
 
         foreach ($storageDirs as $dir) {
-            if (! File::exists($tempDir.'/'.$dir)) {
-                File::makeDirectory($tempDir.'/'.$dir, 0755, true);
+            if (! File::exists($tempDir . '/' . $dir)) {
+                File::makeDirectory($tempDir . '/' . $dir, 0755, true);
             }
-            File::put($tempDir.'/'.$dir.'/.gitkeep', '');
+            File::put($tempDir . '/' . $dir . '/.gitkeep', '');
         }
 
         // Create bootstrap/cache
-        if (! File::exists($tempDir.'/bootstrap/cache')) {
-            File::makeDirectory($tempDir.'/bootstrap/cache', 0755, true);
+        if (! File::exists($tempDir . '/bootstrap/cache')) {
+            File::makeDirectory($tempDir . '/bootstrap/cache', 0755, true);
         }
-        File::put($tempDir.'/bootstrap/cache/.gitkeep', '');
+        File::put($tempDir . '/bootstrap/cache/.gitkeep', '');
     }
 
     private function flattenPublicStructure(string $tempDir): void
     {
-        $publicDir = $tempDir.'/public';
+        $publicDir = $tempDir . '/public';
 
         if (! File::exists($publicDir)) {
             $this->warn('Public directory not found, skipping flatten');
@@ -295,10 +333,10 @@ class BuildPackage extends Command
         );
 
         foreach ($iterator as $item) {
-            $relativePath = str_replace($publicDir.DIRECTORY_SEPARATOR, '', $item->getPathname());
+            $relativePath = str_replace($publicDir . DIRECTORY_SEPARATOR, '', $item->getPathname());
             $relativePath = str_replace('\\', '/', $relativePath);
 
-            $targetPath = $tempDir.DIRECTORY_SEPARATOR.$relativePath;
+            $targetPath = $tempDir . DIRECTORY_SEPARATOR . $relativePath;
 
             if ($item->isDir()) {
                 if (! File::exists($targetPath)) {
@@ -328,7 +366,7 @@ class BuildPackage extends Command
         }
 
         // Create wscrm directory for backend files
-        $wscrmDir = $tempDir.'/wscrm';
+        $wscrmDir = $tempDir . '/wscrm';
         File::makeDirectory($wscrmDir, 0755, true);
 
         // Copy all backend files (except public) to wscrm directory
@@ -338,9 +376,15 @@ class BuildPackage extends Command
         $this->cleanupWscrmFilesFromRoot($tempDir);
 
         // Remove .htaccess from root - it will be generated by installer
-        if (File::exists($tempDir.'/.htaccess')) {
-            File::delete($tempDir.'/.htaccess');
+        if (File::exists($tempDir . '/.htaccess')) {
+            File::delete($tempDir . '/.htaccess');
             $this->line('🗑️ Removed .htaccess - will be generated by installer');
+        }
+
+        $maintenancePath = $wscrmDir . '/storage/framework/maintenance.php';
+        if (File::exists($maintenancePath)) {
+            File::delete($maintenancePath);
+            $this->line('🗑️ Removed maintenance.php from package');
         }
 
         $this->line('✅ Created wscrm backend folder and moved backend files');
@@ -359,8 +403,8 @@ class BuildPackage extends Command
 
         // Copy backend files
         foreach ($backendFiles as $file) {
-            $sourceFile = $tempDir.'/'.$file;
-            $targetFile = $wscrmDir.'/'.$file;
+            $sourceFile = $tempDir . '/' . $file;
+            $targetFile = $wscrmDir . '/' . $file;
 
             if (File::exists($sourceFile)) {
                 File::copy($sourceFile, $targetFile);
@@ -376,7 +420,7 @@ class BuildPackage extends Command
 
         // Remove backend directories from root (ONLY if they exist and we're in temp-package)
         foreach ($backendDirs as $dir) {
-            $dirPath = $tempDir.'/'.$dir;
+            $dirPath = $tempDir . '/' . $dir;
             if (File::exists($dirPath) && str_contains($dirPath, 'temp-package')) {
                 File::deleteDirectory($dirPath);
                 $this->line("🗑️ Removed backend dir from root: {$dir}");
@@ -385,7 +429,7 @@ class BuildPackage extends Command
 
         // Remove backend files from root (ONLY backend files, not public files)
         foreach ($backendFiles as $file) {
-            $filePath = $tempDir.'/'.$file;
+            $filePath = $tempDir . '/' . $file;
             if (File::exists($filePath)) {
                 File::delete($filePath);
                 $this->line("🗑️ Removed backend file from root: {$file}");
@@ -397,12 +441,12 @@ class BuildPackage extends Command
 
     private function createWscrmPublicDirectory(string $tempDir, string $wscrmDir): void
     {
-        $wscrmPublicDir = $wscrmDir.'/public';
+        $wscrmPublicDir = $wscrmDir . '/public';
         File::makeDirectory($wscrmPublicDir, 0755, true);
 
         // Copy build assets dari root ke wscrm/public/
-        if (File::exists($tempDir.'/build')) {
-            File::copyDirectory($tempDir.'/build', $wscrmPublicDir.'/build');
+        if (File::exists($tempDir . '/build')) {
+            File::copyDirectory($tempDir . '/build', $wscrmPublicDir . '/build');
             $this->line('✅ Copied build assets to wscrm/public/build/');
         }
 
@@ -426,7 +470,7 @@ require __DIR__.\'/../vendor/autoload.php\';
     ->handleRequest(Request::capture());
 ';
 
-        File::put($wscrmPublicDir.'/index.php', $publicIndexContent);
+        File::put($wscrmPublicDir . '/index.php', $publicIndexContent);
         $this->line('✅ Created wscrm/public/index.php');
 
         // Copy .htaccess ke wscrm/public/ (Laravel public standard)
@@ -453,15 +497,15 @@ require __DIR__.\'/../vendor/autoload.php\';
 </IfModule>
 ';
 
-        File::put($wscrmPublicDir.'/.htaccess', $publicHtaccessContent);
+        File::put($wscrmPublicDir . '/.htaccess', $publicHtaccessContent);
         $this->line('✅ Created wscrm/public/.htaccess');
     }
 
     private function copyDirectoriesFast(string $tempDir, string $wscrmDir, array $dirs): void
     {
         foreach ($dirs as $dir) {
-            $sourceDir = $tempDir.'/'.$dir;
-            $targetDir = $wscrmDir.'/'.$dir;
+            $sourceDir = $tempDir . '/' . $dir;
+            $targetDir = $wscrmDir . '/' . $dir;
 
             if (! File::exists($sourceDir)) {
                 continue;
@@ -485,7 +529,7 @@ require __DIR__.\'/../vendor/autoload.php\';
                 }
             } else {
                 // Unix/Linux - use cp with parallel processing
-                $cmd = "cp -r \"$sourceDir\" \"".dirname($targetDir).'/" 2>/dev/null';
+                $cmd = "cp -r \"$sourceDir\" \"" . dirname($targetDir) . '/" 2>/dev/null';
                 exec($cmd, $output, $returnCode);
 
                 if ($returnCode !== 0) {
@@ -501,12 +545,12 @@ require __DIR__.\'/../vendor/autoload.php\';
     private function setupInstaller(string $tempDir): void
     {
         // Pastikan installer sudah ada (seharusnya sudah di-copy dari flattening)
-        if (! File::exists($tempDir.'/install')) {
+        if (! File::exists($tempDir . '/install')) {
             // Fallback: copy dari source jika belum ada
             if (File::exists(base_path('public/install'))) {
                 File::copyDirectory(
                     base_path('public/install'),
-                    $tempDir.'/install'
+                    $tempDir . '/install'
                 );
             } else {
                 $this->warn('Install directory not found in source');
@@ -514,8 +558,8 @@ require __DIR__.\'/../vendor/autoload.php\';
         }
 
         // Create .env.example untuk installer
-        if (File::exists($tempDir.'/.env.example')) {
-            $envContent = File::get($tempDir.'/.env.example');
+        if (File::exists($tempDir . '/.env.example')) {
+            $envContent = File::get($tempDir . '/.env.example');
             $envContent = str_replace([
                 'APP_DEBUG=true',
                 'APP_ENV=local',
@@ -523,7 +567,7 @@ require __DIR__.\'/../vendor/autoload.php\';
                 'APP_DEBUG=false',
                 'APP_ENV=production',
             ], $envContent);
-            File::put($tempDir.'/.env.example', $envContent);
+            File::put($tempDir . '/.env.example', $envContent);
         }
 
         // Create README.txt untuk user
@@ -545,9 +589,9 @@ SUPPORT:
 Untuk bantuan lebih lanjut, silakan hubungi developer.
 
 ---
-Generated: '.date('Y-m-d H:i:s');
+Generated: ' . date('Y-m-d H:i:s');
 
-        File::put($tempDir.'/README.txt', $readmeContent);
+        File::put($tempDir . '/README.txt', $readmeContent);
     }
 
     private function copyDirectory(string $source, string $dest, array $excludes = []): void
@@ -563,7 +607,7 @@ Generated: '.date('Y-m-d H:i:s');
 
         foreach ($iterator as $item) {
             $itemPath = $item->getPathname();
-            $relativePath = str_replace($source.DIRECTORY_SEPARATOR, '', $itemPath);
+            $relativePath = str_replace($source . DIRECTORY_SEPARATOR, '', $itemPath);
             $relativePath = str_replace('\\', '/', $relativePath); // Normalize separators
 
             // Skip excluded paths
@@ -578,7 +622,7 @@ Generated: '.date('Y-m-d H:i:s');
                 continue;
             }
 
-            $target = $dest.DIRECTORY_SEPARATOR.$relativePath;
+            $target = $dest . DIRECTORY_SEPARATOR . $relativePath;
 
             if ($item->isDir()) {
                 if (! File::exists($target)) {
@@ -596,33 +640,8 @@ Generated: '.date('Y-m-d H:i:s');
 
     private function createZipPackage(string $tempDir, string $outputPath): void
     {
-        // Try system commands first for better performance
-        if (PHP_OS_FAMILY === 'Windows') {
-            // Use PowerShell Compress-Archive for Windows
-            $normalizedTempDir = str_replace('/', '\\', $tempDir);
-            $normalizedOutputPath = str_replace('/', '\\', $outputPath);
-
-            $cmd = "powershell -Command \"Compress-Archive -Path '$normalizedTempDir\\*' -DestinationPath '$normalizedOutputPath' -Force\"";
-            exec($cmd, $output, $returnCode);
-
-            if ($returnCode === 0 && file_exists($outputPath)) {
-                $this->line('✅ Created zip package using PowerShell (fast)');
-
-                return;
-            }
-        } else {
-            // Use zip command for Unix/Linux
-            $cmd = 'cd "'.dirname($tempDir)."\" && zip -r \"$outputPath\" \"".basename($tempDir).'" >/dev/null 2>&1';
-            exec($cmd, $output, $returnCode);
-
-            if ($returnCode === 0 && file_exists($outputPath)) {
-                $this->line('✅ Created zip package using system zip (fast)');
-
-                return;
-            }
-        }
-
-        // Fallback to PHP ZipArchive with batch processing
+        // Always use PHP ZipArchive to ensure ZIP entry paths use forward slashes (/).
+        // Some hosting extractors (DirectAdmin/cPanel) treat backslashes as literal characters, causing files like "vendor\monolog\..." instead of folders.
         $zip = new ZipArchive;
 
         if ($zip->open($outputPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
@@ -630,33 +649,42 @@ Generated: '.date('Y-m-d H:i:s');
 
             $files = new RecursiveIteratorIterator(
                 new RecursiveDirectoryIterator($tempDir, RecursiveDirectoryIterator::SKIP_DOTS),
-                RecursiveIteratorIterator::LEAVES_ONLY
+                RecursiveIteratorIterator::SELF_FIRST
             );
 
             $fileCount = 0;
             foreach ($files as $file) {
-                if (! $file->isDir()) {
-                    $filePath = $file->getRealPath();
-                    if ($filePath && file_exists($filePath)) {
-                        $relativePath = substr($filePath, strlen($tempDir) + 1);
-                        $relativePath = str_replace('\\', '/', $relativePath);
+                $filePath = $file->getRealPath();
+                if (! $filePath) {
+                    continue;
+                }
 
-                        if (! empty($relativePath)) {
-                            $zip->addFile($filePath, $relativePath);
-                            $fileCount++;
+                $relativePath = substr($filePath, strlen($tempDir) + 1);
+                $relativePath = str_replace('\\', '/', $relativePath);
+                $relativePath = ltrim($relativePath, '/');
 
-                            // Batch close/reopen every 1000 files to avoid memory issues
-                            if ($fileCount % 1000 === 0) {
-                                $zip->close();
-                                $zip->open($outputPath, ZipArchive::CREATE);
-                            }
-                        }
+                if ($relativePath === '') {
+                    continue;
+                }
+
+                if ($file->isDir()) {
+                    $zip->addEmptyDir(rtrim($relativePath, '/'));
+                    continue;
+                }
+
+                if ($file->isFile() && file_exists($filePath)) {
+                    $zip->addFile($filePath, $relativePath);
+                    $fileCount++;
+
+                    if ($fileCount % 1000 === 0) {
+                        $zip->close();
+                        $zip->open($outputPath, ZipArchive::CREATE);
                     }
                 }
             }
 
             $zip->close();
-            $this->line('✅ Created zip package using PHP ZipArchive (fallback)');
+            $this->line('✅ Created zip package using PHP ZipArchive');
         } else {
             $this->error('Failed to create zip package');
         }

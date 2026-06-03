@@ -1,7 +1,7 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
     "name": "laravel/vue-starter-kit",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "type": "project",
     "description": "The skeleton application for the Laravel framework.",
     "keywords": [
@@ -72,7 +72,7 @@
         "build:production": [
             "powershell -Command \"if (Test-Path 'dist') { Remove-Item -Recurse -Force 'dist' }\"",
             "npm run build:clean",
-            "@php artisan build:production-structure"
+            "@php artisan build:package --output=dist/wscrm.{version}.zip --force --no-interaction"
         ],
         "build:package": [
             "powershell -Command \"if (Test-Path 'dist') { Remove-Item -Recurse -Force 'dist' }\"",

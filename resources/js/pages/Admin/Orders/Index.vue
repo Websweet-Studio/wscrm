@@ -607,7 +607,7 @@ const getSortIcon = (field: string) => {
                                             <component :is="getSortIcon('status')" v-if="getSortIcon('status')" class="h-4 w-4" />
                                         </button>
                                     </th>
-                                    <th class="pb-3 text-left font-medium">
+                                    <th v-if="currentView !== 'services'" class="pb-3 text-left font-medium">
                                         <button @click="sortBy('created_at')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>{{ currentView === 'services' ? 'Dibuat' : 'Tanggal' }}</span>
                                             <component :is="getSortIcon('created_at')" v-if="getSortIcon('created_at')" class="h-4 w-4" />
@@ -677,7 +677,7 @@ const getSortIcon = (field: string) => {
                                             {{ getStatusText(order.status) }}
                                         </span>
                                     </td>
-                                    <td class="py-3 text-sm text-muted-foreground">{{ formatDate(order.created_at) }}</td>
+                                    <td v-if="currentView !== 'services'" class="py-3 text-sm text-muted-foreground">{{ formatDate(order.created_at) }}</td>
                                     <td class="py-3 text-sm">
                                         <div v-if="order.expires_at">
                                             {{ formatDate(order.expires_at) }}

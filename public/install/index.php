@@ -1,12 +1,13 @@
 <?php
 
-// Enable error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-// Disable error reporting for production (comment out for debugging)
-// error_reporting(0);
-// ini_set('display_errors', 0);
+$debugInstaller = isset($_GET['debug']) && $_GET['debug'] === '1';
+if ($debugInstaller) {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+} else {
+    error_reporting(0);
+    ini_set('display_errors', 0);
+}
 
 function parseEnvFile($envPath)
 {
@@ -31,6 +32,52 @@ function parseEnvFile($envPath)
     return $env;
 }
 
+function formatEnvValue($value)
+{
+    if ($value === null) {
+        return '';
+    }
+
+    $value = (string) $value;
+    if ($value === '') {
+        return '';
+    }
+
+    if (preg_match('/[\\s#"\'\\\\]/', $value)) {
+        return '"' . str_replace('"', '\\"', $value) . '"';
+    }
+
+    return $value;
+}
+
+function setEnvValue($envContent, $key, $value)
+{
+    $formatted = formatEnvValue($value);
+    $pattern = '/^' . preg_quote($key, '/') . '=.*$/m';
+    $replacement = $key . '=' . $formatted;
+
+    if (preg_match($pattern, $envContent)) {
+        return preg_replace($pattern, $replacement, $envContent);
+    }
+
+    $envContent = rtrim((string) $envContent, "\r\n");
+
+    return $envContent . "\n" . $replacement . "\n";
+}
+
+function clearBootstrapCache($wscrmPath)
+{
+    $cacheDir = rtrim(str_replace('\\', '/', $wscrmPath), '/') . '/bootstrap/cache';
+    if (! is_dir($cacheDir)) {
+        return;
+    }
+
+    $files = glob($cacheDir . '/*.php') ?: [];
+    foreach ($files as $file) {
+        @unlink($file);
+    }
+}
+
 function executeSimpleCommand($command)
 {
     // Simple command execution without exec() complexity
@@ -44,7 +91,7 @@ function executeSimpleCommand($command)
         $testPhp = @shell_exec('php --version 2>/dev/null');
         if ($testPhp && strpos($testPhp, 'PHP') !== false) {
             // php command works directly
-            $output = @shell_exec($command.' 2>&1');
+            $output = @shell_exec($command . ' 2>&1');
         } else {
             // Try common cPanel paths
             $phpPaths = [
@@ -58,8 +105,8 @@ function executeSimpleCommand($command)
             $phpFound = false;
             foreach ($phpPaths as $phpPath) {
                 if (is_executable($phpPath)) {
-                    $command = str_replace('php ', $phpPath.' ', $command);
-                    $output = @shell_exec($command.' 2>&1');
+                    $command = str_replace('php ', $phpPath . ' ', $command);
+                    $output = @shell_exec($command . ' 2>&1');
                     $phpFound = true;
                     break;
                 }
@@ -70,7 +117,7 @@ function executeSimpleCommand($command)
             }
         }
     } else {
-        $output = @shell_exec($command.' 2>&1');
+        $output = @shell_exec($command . ' 2>&1');
     }
 
     return $output ?: 'Command executed (no output)';
@@ -96,7 +143,7 @@ function detectWscrmFolder()
     ];
 
     // Priority 1: Check if wscrm is already moved to parent of public_html (already installed)
-    $path1 = $publicHtmlParent.'/wscrm';
+    $path1 = $publicHtmlParent . '/wscrm';
     $exists1 = is_dir($path1);
     $debugInfo['checks'][] = ['path' => $path1, 'exists' => $exists1, 'priority' => 1];
     if ($exists1) {
@@ -104,7 +151,7 @@ function detectWscrmFolder()
     }
 
     // Priority 2: Check if wscrm exists in public_html (fresh extract)
-    $path2 = $publicHtmlDir.'/wscrm';
+    $path2 = $publicHtmlDir . '/wscrm';
     $exists2 = is_dir($path2);
     $debugInfo['checks'][] = ['path' => $path2, 'exists' => $exists2, 'priority' => 2];
     if ($exists2) {
@@ -112,7 +159,7 @@ function detectWscrmFolder()
     }
 
     // Priority 3: Check relative to install directory
-    $path3 = $currentDir.'/../wscrm';
+    $path3 = $currentDir . '/../wscrm';
     $path3 = realpath($path3); // Resolve relative path
     if ($path3) {
         $path3 = str_replace('\\', '/', $path3); // Normalize
@@ -136,27 +183,37 @@ function moveWscrmFolder($wscrmPath, $targetPath)
     $targetPath = rtrim(str_replace('\\', '/', $targetPath), '/');
 
     if (! is_dir($wscrmPath)) {
-        return ['success' => false, 'message' => 'Folder wscrm tidak ditemukan di: '.$wscrmPath];
+        return ['success' => false, 'message' => 'Folder wscrm tidak ditemukan di: ' . $wscrmPath];
     }
 
     if (is_dir($targetPath)) {
-        return ['success' => false, 'message' => 'Folder target sudah ada di: '.$targetPath];
+        return ['success' => false, 'message' => 'Folder target sudah ada di: ' . $targetPath];
     }
 
     // Create target directory if parent doesn't exist
     $targetParent = dirname($targetPath);
     if (! is_dir($targetParent)) {
         if (! mkdir($targetParent, 0755, true)) {
-            return ['success' => false, 'message' => 'Gagal membuat direktori parent: '.$targetParent];
+            return ['success' => false, 'message' => 'Gagal membuat direktori parent: ' . $targetParent];
         }
     }
 
     // Move the folder
     if (rename($wscrmPath, $targetPath)) {
-        return ['success' => true, 'message' => 'Folder wscrm berhasil dipindahkan ke: '.$targetPath];
-    } else {
+        return ['success' => true, 'message' => 'Folder wscrm berhasil dipindahkan ke: ' . $targetPath];
+    }
+
+    $copied = copyDirectory($wscrmPath, $targetPath);
+    if (! $copied) {
         return ['success' => false, 'message' => 'Gagal memindahkan folder wscrm'];
     }
+
+    $deleted = deleteDirectoryRecursive($wscrmPath);
+    if (! $deleted) {
+        return ['success' => false, 'message' => 'Folder wscrm berhasil disalin, tapi gagal menghapus folder sumber. Silakan hapus manual: ' . $wscrmPath];
+    }
+
+    return ['success' => true, 'message' => 'Folder wscrm berhasil dipindahkan ke: ' . $targetPath];
 }
 
 function copyWscrmFolder($wscrmPath, $targetPath)
@@ -166,23 +223,23 @@ function copyWscrmFolder($wscrmPath, $targetPath)
     $targetPath = rtrim(str_replace('\\', '/', $targetPath), '/');
 
     if (! is_dir($wscrmPath)) {
-        return ['success' => false, 'message' => 'Folder wscrm tidak ditemukan di: '.$wscrmPath];
+        return ['success' => false, 'message' => 'Folder wscrm tidak ditemukan di: ' . $wscrmPath];
     }
 
     if (is_dir($targetPath)) {
-        return ['success' => false, 'message' => 'Folder target sudah ada di: '.$targetPath];
+        return ['success' => false, 'message' => 'Folder target sudah ada di: ' . $targetPath];
     }
 
     // Create target directory
     if (! mkdir($targetPath, 0755, true)) {
-        return ['success' => false, 'message' => 'Gagal membuat direktori target: '.$targetPath];
+        return ['success' => false, 'message' => 'Gagal membuat direktori target: ' . $targetPath];
     }
 
     // Copy directory recursively
     $result = copyDirectory($wscrmPath, $targetPath);
 
     if ($result) {
-        return ['success' => true, 'message' => 'Folder wscrm berhasil disalin ke: '.$targetPath];
+        return ['success' => true, 'message' => 'Folder wscrm berhasil disalin ke: ' . $targetPath];
     } else {
         return ['success' => false, 'message' => 'Gagal menyalin folder wscrm'];
     }
@@ -197,8 +254,8 @@ function copyDirectory($src, $dst)
 
     while (($file = readdir($dir)) !== false) {
         if ($file != '.' && $file != '..') {
-            $srcFile = $src.'/'.$file;
-            $dstFile = $dst.'/'.$file;
+            $srcFile = $src . '/' . $file;
+            $dstFile = $dst . '/' . $file;
 
             if (is_dir($srcFile)) {
                 if (! mkdir($dstFile, 0755, true)) {
@@ -226,6 +283,26 @@ function copyDirectory($src, $dst)
     return true;
 }
 
+function deleteDirectoryRecursive($dir)
+{
+    if (! is_dir($dir)) {
+        return false;
+    }
+
+    $files = array_diff(scandir($dir), ['.', '..']);
+
+    foreach ($files as $file) {
+        $filePath = $dir . '/' . $file;
+        if (is_dir($filePath)) {
+            deleteDirectoryRecursive($filePath);
+        } else {
+            unlink($filePath);
+        }
+    }
+
+    return rmdir($dir);
+}
+
 // Handle AJAX requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
@@ -233,18 +310,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     switch ($action) {
+        case 'skip_installer':
+            $host = $_SERVER['HTTP_HOST'] ?? '';
+            $hostNoPort = explode(':', $host)[0];
+            $isLocalHost = in_array($hostNoPort, ['localhost', '127.0.0.1', '::1'], true);
+
+            if (! $isLocalHost) {
+                echo json_encode(['success' => false, 'message' => 'Skip installer hanya tersedia untuk local']);
+                exit;
+            }
+
+            $written = [];
+
+            $wscrmPath = detectWscrmFolder();
+            if ($wscrmPath && is_dir($wscrmPath)) {
+                $wscrmStorage = rtrim(str_replace('\\', '/', $wscrmPath), '/') . '/storage';
+                if (! is_dir($wscrmStorage)) {
+                    @mkdir($wscrmStorage, 0755, true);
+                }
+                if (is_dir($wscrmStorage) && @file_put_contents($wscrmStorage . '/installer.skip', date('Y-m-d H:i:s'))) {
+                    $written[] = $wscrmStorage . '/installer.skip';
+                }
+            }
+
+            $laravelRoot = realpath(__DIR__ . '/../..');
+            if ($laravelRoot) {
+                $laravelStorage = rtrim(str_replace('\\', '/', $laravelRoot), '/') . '/storage';
+                if (! is_dir($laravelStorage)) {
+                    @mkdir($laravelStorage, 0755, true);
+                }
+                if (is_dir($laravelStorage) && @file_put_contents($laravelStorage . '/installer.skip', date('Y-m-d H:i:s'))) {
+                    $written[] = $laravelStorage . '/installer.skip';
+                }
+            }
+
+            if (empty($written)) {
+                echo json_encode(['success' => false, 'message' => 'Gagal membuat marker skip. Pastikan folder storage writable.']);
+                exit;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Installer berhasil di-skip untuk local. Redirect installer akan dinonaktifkan.',
+            ]);
+            exit;
+
         case 'detect_wscrm':
             $wscrmPath = detectWscrmFolder();
             if ($wscrmPath) {
                 // Check if wscrm is already in target location
                 $publicHtmlParent = dirname($_SERVER['DOCUMENT_ROOT']);
-                $targetPath = $publicHtmlParent.'/wscrm';
+                $targetPath = $publicHtmlParent . '/wscrm';
                 $isAlreadyInTargetLocation = (realpath($wscrmPath) === realpath($targetPath));
 
                 echo json_encode([
                     'success' => true,
                     'path' => $wscrmPath,
-                    'message' => 'Folder wscrm ditemukan di: '.$wscrmPath,
+                    'message' => 'Folder wscrm ditemukan di: ' . $wscrmPath,
                     'already_in_target_location' => $isAlreadyInTargetLocation,
                     'target_path' => $targetPath,
                     'debug' => $GLOBALS['wscrm_debug'] ?? null,
@@ -260,18 +382,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         case 'move_wscrm':
             // Debug: Log semua data POST yang diterima
-            error_log('🔍 POST data received: '.print_r($_POST, true));
+            error_log('POST data received: ' . print_r($_POST, true));
 
             $wscrmPath = $_POST['wscrm_path'] ?? '';
-            $operation = $_POST['operation'] ?? 'move'; // 'move' or 'copy'
 
             // Debug: Log nilai yang diambil
-            error_log('📍 wscrm_path: '.$wscrmPath);
-            error_log('⚙️ operation: '.$operation);
+            error_log('wscrm_path: ' . $wscrmPath);
 
             if (empty($wscrmPath)) {
-                $errorMsg = 'Path wscrm tidak valid. Received: '.var_export($wscrmPath, true);
-                error_log('❌ '.$errorMsg);
+                $errorMsg = 'Path wscrm tidak valid. Received: ' . var_export($wscrmPath, true);
+                error_log('ERROR ' . $errorMsg);
                 echo json_encode(['success' => false, 'message' => $errorMsg, 'debug_post' => $_POST]);
                 exit;
             }
@@ -281,21 +401,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Determine target path (sejajar dengan public_html)
             $publicHtmlParent = str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT']));
-            $targetPath = $publicHtmlParent.'/wscrm';
+            $targetPath = $publicHtmlParent . '/wscrm';
 
-            if ($operation === 'copy') {
-                $result = copyWscrmFolder($wscrmPath, $targetPath);
-            } else {
-                $result = moveWscrmFolder($wscrmPath, $targetPath);
-            }
+            $result = moveWscrmFolder($wscrmPath, $targetPath);
 
             echo json_encode($result);
             exit;
 
         case 'configure_env':
             // Log received data for debugging
-            error_log('📝 configure_env action started');
-            error_log('📋 POST data: '.print_r($_POST, true));
+            error_log('configure_env action started');
+            error_log('POST data: ' . print_r($_POST, true));
 
             $appUrl = $_POST['app_url'] ?? '';
             $appName = $_POST['app_name'] ?? 'WSCRM';
@@ -308,44 +424,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // Get target wscrm path
+            $detectedWscrmPath = detectWscrmFolder();
             $publicHtmlParent = str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT']));
-            $targetWscrmPath = $publicHtmlParent.'/wscrm';
+            $targetWscrmPath = $detectedWscrmPath ?: ($publicHtmlParent . '/wscrm');
 
-            error_log('🎯 Target wscrm path: '.$targetWscrmPath);
-            error_log('📁 Directory exists: '.(is_dir($targetWscrmPath) ? 'YES' : 'NO'));
+            error_log('Target wscrm path: ' . $targetWscrmPath);
+            error_log('Directory exists: ' . (is_dir($targetWscrmPath) ? 'YES' : 'NO'));
 
             if (! is_dir($targetWscrmPath)) {
-                error_log('❌ Target wscrm directory not found: '.$targetWscrmPath);
-                echo json_encode(['success' => false, 'message' => 'Folder wscrm tidak ditemukan di lokasi target: '.$targetWscrmPath]);
+                error_log('ERROR Target wscrm directory not found: ' . $targetWscrmPath);
+                echo json_encode(['success' => false, 'message' => 'Folder wscrm tidak ditemukan di lokasi target: ' . $targetWscrmPath]);
                 exit;
             }
 
             // Create .env file
-            $envPath = $targetWscrmPath.'/.env';
-            $envTemplate = $targetWscrmPath.'/.env.example';
+            $envPath = $targetWscrmPath . '/.env';
+            $envTemplate = $targetWscrmPath . '/.env.example';
 
-            error_log('📄 Env template path: '.$envTemplate);
-            error_log('📄 Template exists: '.(file_exists($envTemplate) ? 'YES' : 'NO'));
-            error_log('📄 Target env path: '.$envPath);
+            error_log('Env template path: ' . $envTemplate);
+            error_log('Template exists: ' . (file_exists($envTemplate) ? 'YES' : 'NO'));
+            error_log('Target env path: ' . $envPath);
 
             if (! file_exists($envTemplate)) {
-                error_log('❌ .env.example not found: '.$envTemplate);
-                echo json_encode(['success' => false, 'message' => 'File .env.example tidak ditemukan: '.$envTemplate]);
+                error_log('ERROR .env.example not found: ' . $envTemplate);
+                echo json_encode(['success' => false, 'message' => 'File .env.example tidak ditemukan: ' . $envTemplate]);
                 exit;
             }
 
             // Read .env.example and modify values
             $envContent = file_get_contents($envTemplate);
 
-            // Basic app configuration
-            $replacements = [
-                'APP_NAME=Laravel' => 'APP_NAME="'.$appName.'"',
-                'APP_URL=http://localhost' => 'APP_URL='.$appUrl,
-                'APP_ENV=local' => 'APP_ENV=production',
-                'APP_DEBUG=true' => 'APP_DEBUG=false',
-            ];
-
-            // Database configuration
             if ($dbType === 'mysql') {
                 $dbHost = $_POST['db_host'] ?? 'localhost';
                 $dbPort = $_POST['db_port'] ?? '3306';
@@ -358,107 +466,116 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 }
 
-                // Test database connection before proceeding
                 try {
-                    $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbName}";
-                    $pdo = new PDO($dsn, $dbUsername, $dbPassword);
-                    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                    error_log('✅ Database connection test successful');
+                    $dsn = "mysql:host={$dbHost};port={$dbPort};charset=utf8mb4";
+                    $pdo = new PDO($dsn, $dbUsername, $dbPassword, [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                        PDO::ATTR_TIMEOUT => 5,
+                    ]);
+
+                    $stmt = $pdo->query("SHOW DATABASES LIKE '{$dbName}'");
+                    if ($stmt->rowCount() === 0) {
+                        $pdo->exec("CREATE DATABASE `{$dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+                    }
+                    $pdo->exec("USE `{$dbName}`");
+                    error_log('Database connection test successful');
                 } catch (PDOException $e) {
-                    error_log('❌ Database connection test failed: '.$e->getMessage());
-                    echo json_encode(['success' => false, 'message' => 'Koneksi database gagal: '.$e->getMessage()]);
+                    error_log('ERROR Database connection test failed: ' . $e->getMessage());
+                    echo json_encode(['success' => false, 'message' => 'Koneksi database gagal: ' . $e->getMessage()]);
                     exit;
                 }
-
-                // Handle password properly - empty password should remain empty, not quoted
-                $quotedPassword = $dbPassword;
-                if (! empty($dbPassword) && preg_match('/[\\s#"\'\\\\]/', $dbPassword)) {
-                    $quotedPassword = '"'.str_replace('"', '\\"', $dbPassword).'"';
-                }
-
-                $replacements = array_merge($replacements, [
-                    'DB_CONNECTION=sqlite' => 'DB_CONNECTION=mysql',
-                    'DB_HOST=127.0.0.1' => 'DB_HOST='.$dbHost,
-                    'DB_PORT=3306' => 'DB_PORT='.$dbPort,
-                    'DB_DATABASE=database/database.sqlite' => 'DB_DATABASE='.$dbName,
-                    'DB_USERNAME=null' => 'DB_USERNAME='.$dbUsername,
-                    'DB_PASSWORD=null' => 'DB_PASSWORD='.$quotedPassword,
-                    '# DB_HOST=127.0.0.1' => 'DB_HOST='.$dbHost,
-                    '# DB_PORT=3306' => 'DB_PORT='.$dbPort,
-                    '# DB_DATABASE=wscrm' => 'DB_DATABASE='.$dbName,
-                    '# DB_USERNAME=root' => 'DB_USERNAME='.$dbUsername,
-                    '# DB_PASSWORD=' => 'DB_PASSWORD='.$quotedPassword,
-                ]);
             } else {
-                // Ensure SQLite configuration
-                $replacements = array_merge($replacements, [
-                    'DB_CONNECTION=mysql' => 'DB_CONNECTION=sqlite',
-                    'DB_DATABASE=' => 'DB_DATABASE=database/database.sqlite',
-                ]);
+                $dbHost = null;
+                $dbPort = null;
+                $dbName = null;
+                $dbUsername = null;
+                $dbPassword = null;
             }
 
-            $envContent = str_replace(array_keys($replacements), array_values($replacements), $envContent);
+            $envContent = setEnvValue($envContent, 'APP_NAME', $appName);
+            $envContent = setEnvValue($envContent, 'APP_URL', $appUrl);
+            $envContent = setEnvValue($envContent, 'APP_ENV', 'production');
+            $envContent = setEnvValue($envContent, 'APP_DEBUG', 'false');
+
+            if ($dbType === 'mysql') {
+                $envContent = setEnvValue($envContent, 'DB_CONNECTION', 'mysql');
+                $envContent = setEnvValue($envContent, 'DB_HOST', $dbHost);
+                $envContent = setEnvValue($envContent, 'DB_PORT', (string) $dbPort);
+                $envContent = setEnvValue($envContent, 'DB_DATABASE', $dbName);
+                $envContent = setEnvValue($envContent, 'DB_USERNAME', $dbUsername);
+                $envContent = setEnvValue($envContent, 'DB_PASSWORD', $dbPassword);
+            } else {
+                $envContent = setEnvValue($envContent, 'DB_CONNECTION', 'sqlite');
+                $envContent = setEnvValue($envContent, 'DB_DATABASE', 'database/database.sqlite');
+            }
+
+            $envContent = setEnvValue($envContent, 'CACHE_STORE', 'file');
+            $envContent = setEnvValue($envContent, 'SESSION_DRIVER', 'file');
+            $envContent = setEnvValue($envContent, 'QUEUE_CONNECTION', 'sync');
 
             // Write .env file
-            error_log('💾 Writing .env file to: '.$envPath);
-            error_log('📝 Content length: '.strlen($envContent).' bytes');
+            error_log('Writing .env file to: ' . $envPath);
+            error_log('Content length: ' . strlen($envContent) . ' bytes');
 
             if (! file_put_contents($envPath, $envContent)) {
-                error_log('❌ Failed to write .env file to: '.$envPath);
+                error_log('ERROR Failed to write .env file to: ' . $envPath);
                 $parentDir = dirname($envPath);
-                error_log('📁 Parent directory writable: '.(is_writable($parentDir) ? 'YES' : 'NO'));
-                echo json_encode(['success' => false, 'message' => 'Gagal menulis file .env ke: '.$envPath]);
+                error_log('Parent directory writable: ' . (is_writable($parentDir) ? 'YES' : 'NO'));
+                echo json_encode(['success' => false, 'message' => 'Gagal menulis file .env ke: ' . $envPath]);
                 exit;
             }
 
-            error_log('✅ .env file written successfully');
+            error_log('.env file written successfully');
+
+            clearBootstrapCache($targetWscrmPath);
 
             // Generate APP_KEY manually (exec() disabled on hosting)
             $keyGenerated = false;
             $appKey = '';
 
             // Generate key manually since exec() is disabled
-            error_log('🔑 Generating APP_KEY manually (exec disabled)');
-            $appKey = 'base64:'.base64_encode(random_bytes(32));
+            error_log('Generating APP_KEY manually (exec disabled)');
+            $appKey = 'base64:' . base64_encode(random_bytes(32));
 
             // Update .env file with generated key
             $envContent = file_get_contents($envPath);
             if (strpos($envContent, 'APP_KEY=') !== false) {
-                $envContent = preg_replace('/^APP_KEY=.*$/m', 'APP_KEY='.$appKey, $envContent);
+                $envContent = preg_replace('/^APP_KEY=.*$/m', 'APP_KEY=' . $appKey, $envContent);
             } else {
-                $envContent .= "\nAPP_KEY=".$appKey;
+                $envContent .= "\nAPP_KEY=" . $appKey;
             }
 
             if (file_put_contents($envPath, $envContent)) {
                 $keyGenerated = true;
-                error_log('✅ APP_KEY generated and saved: '.substr($appKey, 0, 20).'...');
+                error_log('APP_KEY generated and saved: ' . substr($appKey, 0, 20) . '...');
             } else {
-                error_log('❌ Failed to save APP_KEY to .env file');
+                error_log('ERROR Failed to save APP_KEY to .env file');
             }
 
             // Create installer lock file
-            $lockPath = $targetWscrmPath.'/storage/installer.lock';
+            $lockPath = $targetWscrmPath . '/storage/installer.lock';
             if (! file_put_contents($lockPath, date('Y-m-d H:i:s'))) {
                 echo json_encode(['success' => false, 'message' => 'Gagal membuat installer lock file']);
                 exit;
             }
 
             // Generate .htaccess from template if exists
-            $htaccessTemplatePath = __DIR__.'/htaccess-template.txt';
+            $htaccessTemplatePath = __DIR__ . '/htaccess-template.txt';
             if (file_exists($htaccessTemplatePath)) {
                 $htaccessContent = file_get_contents($htaccessTemplatePath);
                 $htaccessContent = str_replace('{{DATE}}', date('Y-m-d H:i:s'), $htaccessContent);
 
                 // Generate .htaccess in public_html directory (web root)
                 $publicHtmlDir = $_SERVER['DOCUMENT_ROOT'];
-                $htaccessPath = $publicHtmlDir.'/.htaccess';
+                $htaccessPath = $publicHtmlDir . '/.htaccess';
 
-                error_log('📄 Creating .htaccess at: '.$htaccessPath);
+                error_log('Creating .htaccess at: ' . $htaccessPath);
 
                 if (file_put_contents($htaccessPath, $htaccessContent)) {
-                    error_log('✅ .htaccess created successfully in public_html');
+                    error_log('.htaccess created successfully in public_html');
                 } else {
-                    error_log('❌ Failed to create .htaccess in public_html');
+                    error_log('ERROR Failed to create .htaccess in public_html');
                 }
             }
 
@@ -475,14 +592,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         case 'delete_install_folder':
             // Security check - only allow deletion if installation is complete
-            $targetWscrmPath = str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT'])).'/wscrm';
+            $targetWscrmPath = str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT'])) . '/wscrm';
 
             // Debug: Check multiple possible paths including the one from UI
             $detectedPath = detectWscrmFolder();
             $possiblePaths = [
                 $targetWscrmPath,
                 $detectedPath,
-                '/home/appws/domains/app.websweetstudio.com/wscrm', // Hardcoded path from UI
             ];
 
             // Remove duplicates and empty values
@@ -494,24 +610,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Generate APP_KEY if not exists to prevent errors
             foreach ($possiblePaths as $path) {
                 if ($path && is_dir($path)) {
-                    $envFile = $path.'/.env';
+                    $envFile = $path . '/.env';
                     if (file_exists($envFile)) {
                         $envContent = file_get_contents($envFile);
                         // Check if APP_KEY is empty or not set
                         if (preg_match('/^APP_KEY=\s*$/m', $envContent) || ! preg_match('/^APP_KEY=/m', $envContent)) {
-                            $appKey = 'base64:'.base64_encode(random_bytes(32));
+                            $appKey = 'base64:' . base64_encode(random_bytes(32));
 
                             if (preg_match('/^APP_KEY=/m', $envContent)) {
-                                $envContent = preg_replace('/^APP_KEY=.*$/m', 'APP_KEY='.$appKey, $envContent);
+                                $envContent = preg_replace('/^APP_KEY=.*$/m', 'APP_KEY=' . $appKey, $envContent);
                             } else {
-                                $envContent .= "\nAPP_KEY=".$appKey;
+                                $envContent .= "\nAPP_KEY=" . $appKey;
                             }
 
                             file_put_contents($envFile, $envContent);
-                            error_log("🔑 APP_KEY generated for: $path");
+                            error_log("APP_KEY generated for: $path");
 
                             // Note: Cache clearing skipped (exec() disabled on hosting)
-                            error_log('ℹ️ Cache clearing skipped (exec disabled on shared hosting)');
+                            error_log('Cache clearing skipped (exec disabled on shared hosting)');
                         }
                         break;
                     }
@@ -520,16 +636,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             foreach ($possiblePaths as $path) {
                 if ($path && is_dir($path)) {
-                    $envFile = $path.'/.env';
-                    $lockFile = $path.'/storage/installer.lock';
-                    $storageDir = $path.'/storage';
+                    $envFile = $path . '/.env';
+                    $lockFile = $path . '/storage/installer.lock';
+                    $storageDir = $path . '/storage';
 
                     // Log detailed check for debugging
-                    error_log("🔍 Checking path: $path");
-                    error_log('📁 Directory exists: '.(is_dir($path) ? 'YES' : 'NO'));
-                    error_log('📄 .env exists: '.(file_exists($envFile) ? 'YES' : 'NO')." at $envFile");
-                    error_log('🔒 installer.lock exists: '.(file_exists($lockFile) ? 'YES' : 'NO')." at $lockFile");
-                    error_log('📂 storage dir exists: '.(is_dir($storageDir) ? 'YES' : 'NO')." at $storageDir");
+                    error_log("Checking path: $path");
+                    error_log('Directory exists: ' . (is_dir($path) ? 'YES' : 'NO'));
+                    error_log('.env exists: ' . (file_exists($envFile) ? 'YES' : 'NO') . " at $envFile");
+                    error_log('installer.lock exists: ' . (file_exists($lockFile) ? 'YES' : 'NO') . " at $lockFile");
+                    error_log('storage dir exists: ' . (is_dir($storageDir) ? 'YES' : 'NO') . " at $storageDir");
 
                     // Check if .env exists (primary requirement)
                     if (file_exists($envFile)) {
@@ -537,8 +653,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if (file_exists($lockFile) || is_dir($storageDir)) {
                             $isInstallComplete = true;
                             $actualWscrmPath = $path;
-                            error_log("✅ Installation complete found at: $path");
-                            error_log('📄 .env: YES, 🔒 installer.lock: '.(file_exists($lockFile) ? 'YES' : 'NO').', 📂 storage: '.(is_dir($storageDir) ? 'YES' : 'NO'));
+                            error_log("Installation complete found at: $path");
+                            error_log('.env: YES, installer.lock: ' . (file_exists($lockFile) ? 'YES' : 'NO') . ', storage: ' . (is_dir($storageDir) ? 'YES' : 'NO'));
                             break;
                         }
                     }
@@ -558,8 +674,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 foreach ($possiblePaths as $path) {
                     if ($path) {
-                        $envPath = $path.'/.env';
-                        $lockPath = $path.'/storage/installer.lock';
+                        $envPath = $path . '/.env';
+                        $lockPath = $path . '/storage/installer.lock';
                         $debugInfo['checks'][] = [
                             'path' => $path,
                             'is_dir' => is_dir($path),
@@ -567,7 +683,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'env_path' => $envPath,
                             'has_lock' => file_exists($lockPath),
                             'lock_path' => $lockPath,
-                            'storage_dir_exists' => is_dir($path.'/storage'),
+                            'storage_dir_exists' => is_dir($path . '/storage'),
                         ];
                     }
                 }
@@ -578,6 +694,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'debug' => $debugInfo,
                 ]);
                 exit;
+            }
+
+            $maintenanceDetail = null;
+            if ($actualWscrmPath && is_dir($actualWscrmPath)) {
+                $maintenancePath = $actualWscrmPath . '/storage/framework/maintenance.php';
+                if (file_exists($maintenancePath)) {
+                    if (@unlink($maintenancePath)) {
+                        $maintenanceDetail = 'Maintenance mode dinonaktifkan';
+                    } else {
+                        $maintenanceDetail = 'Maintenance mode terdeteksi, tapi gagal menghapus maintenance.php. Silakan hapus manual: ' . $maintenancePath;
+                    }
+                }
+            }
+
+            $upDetail = null;
+            if ($actualWscrmPath && is_dir($actualWscrmPath)) {
+                $currentDir = getcwd();
+                chdir($actualWscrmPath);
+                $upOutput = executeSimpleCommand('php artisan up');
+                chdir($currentDir);
+
+                if (is_string($upOutput) && str_starts_with($upOutput, 'Error:')) {
+                    $upDetail = 'Artisan up dilewati: ' . $upOutput;
+                } else {
+                    $upDetail = 'Artisan up dijalankan';
+                }
+            }
+
+            $optimizeDetail = null;
+            if ($actualWscrmPath && is_dir($actualWscrmPath)) {
+                $currentDir = getcwd();
+                chdir($actualWscrmPath);
+                $optimizeOutput = executeSimpleCommand('php artisan optimize');
+                chdir($currentDir);
+
+                if (is_string($optimizeOutput) && str_starts_with($optimizeOutput, 'Error:')) {
+                    $optimizeDetail = 'Optimize dilewati: ' . $optimizeOutput;
+                } else {
+                    $optimizeDetail = 'Optimize berhasil dijalankan';
+                }
             }
 
             // Delete install folder recursively
@@ -592,7 +748,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $files = array_diff(scandir($dir), ['.', '..']);
 
                 foreach ($files as $file) {
-                    $filePath = $dir.'/'.$file;
+                    $filePath = $dir . '/' . $file;
                     if (is_dir($filePath)) {
                         deleteDirectory($filePath);
                     } else {
@@ -610,21 +766,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Check if APP_KEY was generated (look for log entries)
                 if ($actualWscrmPath) {
-                    $envFile = $actualWscrmPath.'/.env';
+                    $envFile = $actualWscrmPath . '/.env';
                     if (file_exists($envFile)) {
                         $envContent = file_get_contents($envFile);
                         if (preg_match('/^APP_KEY=base64:/m', $envContent)) {
-                            $details[] = '✅ APP_KEY telah di-generate untuk keamanan';
+                            $details[] = 'APP_KEY sudah terpasang';
                         }
                     }
                 }
 
-                // Add cache clearing info
-                $details[] = '✅ Cache konfigurasi telah dibersihkan';
-                $details[] = '✅ Cache aplikasi telah dioptimasi';
+                if ($maintenanceDetail) {
+                    $details[] = $maintenanceDetail;
+                }
+
+                if ($upDetail) {
+                    $details[] = $upDetail;
+                }
+
+                if ($optimizeDetail) {
+                    $details[] = $optimizeDetail;
+                } else {
+                    $details[] = 'Optimize tidak dijalankan (path wscrm tidak terdeteksi atau tidak bisa diakses)';
+                }
 
                 if (! empty($details)) {
-                    $successMessage .= '\n\n'.implode('\n', $details);
+                    $successMessage .= "\n\n" . implode("\n", $details);
                 }
 
                 echo json_encode([
@@ -674,7 +840,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'success' => true,
                     'message' => $message,
                 ]);
-
             } catch (PDOException $e) {
                 $errorMessage = $e->getMessage();
 
@@ -686,7 +851,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } elseif (strpos($errorMessage, 'Unknown database') !== false) {
                     $friendlyMessage = 'Database tidak ditemukan. Pastikan database sudah dibuat atau akan dibuat otomatis.';
                 } else {
-                    $friendlyMessage = 'Error: '.$errorMessage;
+                    $friendlyMessage = 'Error: ' . $errorMessage;
                 }
 
                 echo json_encode([
@@ -698,35 +863,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         case 'laravel_command':
             $command = $_POST['command'] ?? '';
-            $targetWscrmPath = str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT'])).'/wscrm';
+            $detectedWscrmPath = detectWscrmFolder();
+            $targetWscrmPath = $detectedWscrmPath ?: (str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT'])) . '/wscrm');
 
             if (! is_dir($targetWscrmPath)) {
-                echo json_encode(['success' => false, 'message' => 'Laravel directory not found']);
+                echo json_encode(['success' => false, 'message' => 'Laravel directory not found', 'debug' => $GLOBALS['wscrm_debug'] ?? null]);
                 exit;
             }
+
+            clearBootstrapCache($targetWscrmPath);
 
             $currentDir = getcwd();
             chdir($targetWscrmPath);
 
             try {
+                $env = parseEnvFile('.env');
+                $cacheStore = $env['CACHE_STORE'] ?? ($env['CACHE_DRIVER'] ?? 'database');
+
                 switch ($command) {
                     case 'migrate':
-                        $output = executeSimpleCommand('php artisan migrate --force');
+                        $output = executeSimpleCommand('php artisan config:clear');
+                        $output .= "\n" . executeSimpleCommand('php artisan migrate --force');
                         break;
                     case 'db_seed':
-                        $output = executeSimpleCommand('php artisan db:seed --force');
+                        $output = executeSimpleCommand('php artisan config:clear');
+                        $output .= "\n" . executeSimpleCommand('php artisan db:seed --force');
                         break;
                     case 'storage_link':
-                        $output = executeSimpleCommand('php artisan storage:link');
+                        $output = executeSimpleCommand('php artisan config:clear');
+                        $output .= "\n" . executeSimpleCommand('php artisan storage:link');
                         break;
                     case 'key_generate':
-                        $output = executeSimpleCommand('php artisan key:generate --force');
+                        $output = executeSimpleCommand('php artisan config:clear');
+                        $output .= "\n" . executeSimpleCommand('php artisan key:generate --force');
                         break;
                     case 'clear_cache':
-                        $output = executeSimpleCommand('php artisan cache:clear');
-                        $output .= "\n".executeSimpleCommand('php artisan config:clear');
-                        $output .= "\n".executeSimpleCommand('php artisan route:clear');
-                        $output .= "\n".executeSimpleCommand('php artisan view:clear');
+                        $output = executeSimpleCommand('php artisan config:clear');
+                        $output .= "\n" . executeSimpleCommand('php artisan route:clear');
+                        $output .= "\n" . executeSimpleCommand('php artisan view:clear');
+                        if ($cacheStore !== 'database') {
+                            $output .= "\n" . executeSimpleCommand('php artisan cache:clear');
+                        } else {
+                            $output .= "\n" . 'cache:clear dilewati (CACHE_STORE=database membutuhkan koneksi DB)';
+                        }
                         break;
                     case 'optimize':
                         $output = executeSimpleCommand('php artisan optimize');
@@ -741,17 +920,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $envModified = date('Y-m-d H:i:s', filemtime($envPath));
                             $envContent = file_get_contents($envPath);
                             $hasAppKey = strpos($envContent, 'APP_KEY=') !== false && strpos($envContent, 'APP_KEY=base64:') !== false;
+                            $envData = parseEnvFile($envPath);
 
                             $output = "Environment File Check:\n";
                             $output .= ".env exists: Yes\n";
                             $output .= ".env size: {$envSize} bytes\n";
                             $output .= ".env modified: {$envModified}\n";
-                            $output .= 'APP_KEY set: '.($hasAppKey ? 'Yes' : 'No')."\n";
+                            $output .= 'APP_KEY set: ' . ($hasAppKey ? 'Yes' : 'No') . "\n";
 
                             // Check database connection
-                            preg_match('/DB_CONNECTION=(.*)/', $envContent, $dbMatch);
-                            $dbConnection = isset($dbMatch[1]) ? trim($dbMatch[1]) : 'not set';
+                            $dbConnection = $envData['DB_CONNECTION'] ?? 'not set';
                             $output .= "DB_CONNECTION: {$dbConnection}\n";
+
+                            $dbHost = $envData['DB_HOST'] ?? 'not set';
+                            $output .= "DB_HOST: {$dbHost}\n";
+
+                            $dbPort = $envData['DB_PORT'] ?? 'not set';
+                            $output .= "DB_PORT: {$dbPort}\n";
+
+                            $dbDatabase = $envData['DB_DATABASE'] ?? 'not set';
+                            $output .= "DB_DATABASE: {$dbDatabase}\n";
+
+                            $dbUsername = $envData['DB_USERNAME'] ?? 'not set';
+                            $output .= "DB_USERNAME: {$dbUsername}\n";
+
+                            $dbPasswordRaw = $envData['DB_PASSWORD'] ?? '';
+                            $output .= 'DB_PASSWORD set: ' . ($dbPasswordRaw !== '' ? 'Yes' : 'No') . "\n";
+
+                            $cacheStoreValue = $envData['CACHE_STORE'] ?? ($envData['CACHE_DRIVER'] ?? 'database');
+                            $output .= "CACHE_STORE: {$cacheStoreValue}\n";
+
+                            if ($dbConnection === 'mysql' && $dbHost !== 'not set' && $dbDatabase !== 'not set' && $dbUsername !== 'not set') {
+                                try {
+                                    $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbDatabase};charset=utf8mb4";
+                                    new PDO($dsn, $dbUsername, $dbPasswordRaw, [
+                                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                                        PDO::ATTR_TIMEOUT => 5,
+                                    ]);
+                                    $output .= "DB connect: OK\n";
+                                } catch (PDOException $e) {
+                                    $output .= "DB connect: FAIL (" . $e->getMessage() . ")\n";
+                                }
+                            }
                         } else {
                             $output = '.env file not found';
                         }
@@ -762,10 +972,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 chdir($currentDir);
                 echo json_encode(['success' => true, 'message' => 'Command executed successfully', 'output' => $output]);
-
             } catch (Exception $e) {
                 chdir($currentDir);
-                echo json_encode(['success' => false, 'message' => 'Error: '.$e->getMessage()]);
+                echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
             }
             exit;
     }
@@ -774,423 +983,574 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Check installation progress
 $wscrmPath = detectWscrmFolder();
 $publicHtmlParent = str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT']));
-$targetWscrmPath = $publicHtmlParent.'/wscrm';
+$targetWscrmPath = $publicHtmlParent . '/wscrm';
 
 // Check if installation is completely finished
-$isAlreadyInstalled = is_dir($targetWscrmPath) && file_exists($targetWscrmPath.'/.env') && file_exists($targetWscrmPath.'/storage/installer.lock');
+$isAlreadyInstalled = is_dir($targetWscrmPath) && file_exists($targetWscrmPath . '/.env') && file_exists($targetWscrmPath . '/storage/installer.lock');
 
 // Check progress markers
 $step1Complete = (bool) $wscrmPath; // Folder detected
 $step2Complete = is_dir($targetWscrmPath); // Folder moved to target location
-$step3Complete = file_exists($targetWscrmPath.'/.env'); // Environment configured
+$step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configured
+
+$host = $_SERVER['HTTP_HOST'] ?? '';
+$hostNoPort = explode(':', $host)[0];
+$isLocalHost = in_array($hostNoPort, ['localhost', '127.0.0.1', '::1'], true);
 
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WSCRM Installer v2</title>
     <style>
+        :root {
+            --bg: #f5f4ed;
+            --surface: #faf9f5;
+            --surface-2: #ffffff;
+            --text: #141413;
+            --text-2: #5e5d59;
+            --text-3: #87867f;
+            --border: #f0eee6;
+            --border-2: #e8e6dc;
+            --ring: #d1cfc5;
+            --ring-deep: #c2c0b6;
+            --brand: #c96442;
+            --brand-2: #d97757;
+            --error: #b53333;
+            --focus: #3898ec;
+            --shadow-whisper: rgba(0, 0, 0, 0.05) 0px 4px 24px;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            padding: 20px;
+            padding: 32px 20px;
+            line-height: 1.6;
         }
-        
+
         .container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            padding: 40px;
-            max-width: 600px;
             width: 100%;
+            max-width: 860px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            box-shadow: var(--shadow-whisper);
+            padding: 28px;
         }
-        
+
         .header {
-            text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 22px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--border-2);
         }
-        
+
         .header h1 {
-            color: #333;
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+            font-size: 2.25rem;
+            color: var(--text);
         }
-        
+
         .header p {
-            color: #666;
-            font-size: 1.1em;
+            margin-top: 8px;
+            color: var(--text-2);
+            font-size: 1rem;
         }
-        
+
         .step {
-            margin-bottom: 30px;
-            padding: 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            transition: all 0.3s ease;
+            margin-top: 14px;
+            padding: 18px;
+            border: 1px solid var(--border-2);
+            background: var(--surface-2);
+            border-radius: 16px;
+            box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0);
+            transition: box-shadow 160ms ease, border-color 160ms ease, transform 160ms ease;
         }
-        
+
         .step.active {
-            border-color: #667eea;
-            background: #f8f9ff;
+            border-color: var(--brand);
+            box-shadow: 0px 0px 0px 1px var(--brand);
         }
-        
+
         .step.completed {
-            border-color: #4caf50;
-            background: #f1f8e9;
+            border-color: var(--border-2);
+            box-shadow: 0px 0px 0px 1px var(--ring);
         }
-        
+
         .step-title {
-            font-size: 1.3em;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #333;
-        }
-        
-        .step-description {
-            color: #666;
-            margin-bottom: 15px;
-        }
-        
-        .btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background 0.3s ease;
-        }
-        
-        .btn:hover {
-            background: #5a6fd8;
-        }
-        
-        .btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .btn-success {
-            background: #4caf50;
-        }
-        
-        .btn-success:hover {
-            background: #45a049;
-        }
-        
-        .alert {
-            padding: 15px;
-            border-radius: 6px;
-            margin: 15px 0;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-        }
-        
-        .alert-error {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-        }
-        
-        .alert-info {
-            background: #d1ecf1;
-            border: 1px solid #bee5eb;
-            color: #0c5460;
-        }
-        
-        .path-info {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            padding: 10px;
-            font-family: monospace;
-            word-break: break-all;
-        }
-        
-        .radio-group {
-            margin: 15px 0;
-        }
-        
-        .radio-group label {
-            display: block;
-            margin: 10px 0;
-            cursor: pointer;
-        }
-        
-        .radio-group input[type="radio"] {
-            margin-right: 8px;
-        }
-        
-        /* Configuration Form Styles */
-        .config-form {
-            margin-top: 20px;
-            padding: 20px;
-            background: #f8f9ff;
-            border-radius: 10px;
-            border: 2px solid #667eea;
-        }
-        
-        .config-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .config-header h3 {
-            color: #333;
-            font-size: 1.8em;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-weight: 500;
+            color: var(--text);
+            letter-spacing: -0.01em;
+            line-height: 1.25;
+            font-size: 1.35rem;
             margin-bottom: 8px;
         }
-        
+
+        .step-description {
+            color: var(--text-2);
+            margin-bottom: 14px;
+        }
+
+        .btn {
+            appearance: none;
+            border: 0;
+            border-radius: 12px;
+            padding: 9px 14px;
+            font-size: 0.98rem;
+            cursor: pointer;
+            transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, color 140ms ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: var(--border-2);
+            color: var(--text);
+            box-shadow: 0px 0px 0px 1px var(--ring);
+            text-decoration: none;
+            user-select: none;
+        }
+
+        .btn:hover {
+            background: var(--surface-2);
+            box-shadow: 0px 0px 0px 1px var(--ring-deep);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0px);
+        }
+
+        .btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-success {
+            background: var(--text);
+            color: var(--surface);
+            box-shadow: 0px 0px 0px 1px var(--text);
+        }
+
+        .btn-success:hover {
+            background: #30302e;
+            box-shadow: 0px 0px 0px 1px #30302e;
+        }
+
+        .btn-primary {
+            background: var(--brand);
+            color: var(--surface);
+            box-shadow: 0px 0px 0px 1px var(--brand);
+        }
+
+        .btn-primary:hover {
+            background: var(--brand-2);
+            box-shadow: 0px 0px 0px 1px var(--brand-2);
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: var(--surface);
+            box-shadow: 0px 0px 0px 1px var(--error);
+        }
+
+        .btn-danger:hover {
+            background: #a72d2d;
+            box-shadow: 0px 0px 0px 1px #a72d2d;
+        }
+
+        .btn-outline {
+            background: var(--surface-2);
+            color: var(--text);
+            box-shadow: 0px 0px 0px 1px var(--border-2);
+        }
+
+        .btn-outline:hover {
+            box-shadow: 0px 0px 0px 1px var(--ring-deep);
+        }
+
+        .alert {
+            margin-top: 14px;
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid var(--border-2);
+            background: var(--surface);
+            color: var(--text-2);
+            box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0);
+        }
+
+        .alert strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .alert-success {
+            border-color: var(--ring);
+            box-shadow: 0px 0px 0px 1px var(--ring);
+        }
+
+        .alert-info {
+            border-color: var(--border-2);
+        }
+
+        .alert-error {
+            border-color: rgba(181, 51, 51, 0.35);
+            box-shadow: 0px 0px 0px 1px rgba(181, 51, 51, 0.2);
+        }
+
+        code,
+        .path-info,
+        pre {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+        }
+
+        .path-info {
+            margin-top: 10px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-2);
+            border-radius: 12px;
+            padding: 12px;
+            color: var(--text);
+            word-break: break-word;
+        }
+
+        .radio-group {
+            margin-top: 12px;
+        }
+
+        .radio-group label {
+            display: block;
+            margin-top: 10px;
+            cursor: pointer;
+            color: var(--text-2);
+        }
+
+        .radio-group input[type="radio"] {
+            margin-right: 10px;
+            accent-color: var(--brand);
+        }
+
+        .config-form {
+            margin-top: 16px;
+            padding: 18px;
+            background: var(--surface);
+            border-radius: 16px;
+            border: 1px solid var(--border-2);
+            box-shadow: 0px 0px 0px 1px var(--ring);
+        }
+
+        .config-header {
+            margin-bottom: 18px;
+        }
+
+        .config-header h3 {
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-weight: 500;
+            line-height: 1.2;
+            letter-spacing: -0.01em;
+            color: var(--text);
+            font-size: 1.6rem;
+        }
+
         .config-subtitle {
-            color: #666;
-            font-size: 1.1em;
+            margin-top: 6px;
+            color: var(--text-2);
         }
-        
+
         .config-section {
-            margin-bottom: 30px;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 14px;
+            padding: 18px;
+            background: var(--surface-2);
+            border-radius: 16px;
+            border: 1px solid var(--border-2);
         }
-        
+
         .config-section h4 {
-            color: #333;
-            font-size: 1.3em;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #e0e0e0;
-            padding-bottom: 8px;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-weight: 500;
+            line-height: 1.25;
+            color: var(--text);
+            font-size: 1.25rem;
+            margin-bottom: 12px;
         }
-        
+
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: 16px;
         }
-        
+
         @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                border-radius: 20px;
+            }
+
             .form-row {
                 grid-template-columns: 1fr;
-                gap: 15px;
             }
         }
-        
+
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 14px;
         }
-        
+
         .form-group label {
             display: block;
             margin-bottom: 8px;
         }
-        
+
         .label-text {
-            font-weight: bold;
-            color: #333;
+            font-size: 0.82rem;
+            letter-spacing: 0.12px;
+            color: var(--text);
+            font-weight: 600;
             display: block;
         }
-        
+
         .label-desc {
-            font-size: 0.9em;
-            color: #666;
-            font-weight: normal;
+            margin-top: 3px;
+            font-size: 0.9rem;
+            color: var(--text-2);
+            font-weight: 400;
+            display: block;
         }
-        
+
         .form-control {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 1em;
-            transition: border-color 0.3s ease;
+            padding: 10px 12px;
+            border: 1px solid var(--border-2);
+            border-radius: 12px;
+            font-size: 1rem;
+            background: var(--surface-2);
+            color: var(--text);
+            transition: border-color 140ms ease, box-shadow 140ms ease;
         }
-        
+
         .form-control:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: var(--focus);
+            box-shadow: 0px 0px 0px 3px rgba(56, 152, 236, 0.18);
         }
 
         .form-help {
-            color: #666;
-            font-size: 0.85em;
-            margin-top: 5px;
+            color: var(--text-3);
+            font-size: 0.9rem;
+            margin-top: 6px;
             display: block;
         }
-        
-        /* Database Options */
+
         .database-options {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 14px;
         }
-        
+
         @media (max-width: 768px) {
             .database-options {
                 grid-template-columns: 1fr;
             }
         }
-        
+
         .radio-card {
             display: block;
-            padding: 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid var(--border-2);
+            border-radius: 16px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: box-shadow 140ms ease, border-color 140ms ease, background 140ms ease;
             position: relative;
+            background: var(--surface-2);
         }
-        
+
         .radio-card:hover {
-            border-color: #667eea;
-            background: #f8f9ff;
+            box-shadow: 0px 0px 0px 1px var(--ring);
         }
-        
+
         .radio-card input[type="radio"] {
             position: absolute;
-            top: 15px;
-            right: 15px;
-            scale: 1.2;
+            top: 14px;
+            right: 14px;
+            scale: 1.1;
+            accent-color: var(--brand);
         }
-        
-        .radio-card input[type="radio"]:checked + .radio-content {
-            color: #667eea;
-        }
-        
+
         .radio-card:has(input[type="radio"]:checked) {
-            border-color: #667eea;
-            background: #f8f9ff;
+            border-color: var(--brand);
+            box-shadow: 0px 0px 0px 1px var(--brand);
         }
-        
+
         .radio-content {
-            padding-right: 30px;
+            padding-right: 34px;
+            color: var(--text-2);
         }
-        
+
         .radio-title {
-            font-size: 1.1em;
-            font-weight: bold;
-            margin-bottom: 5px;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-weight: 500;
+            color: var(--text);
+            font-size: 1.05rem;
+            margin-bottom: 4px;
+            line-height: 1.25;
         }
-        
+
         .radio-desc {
-            font-size: 0.9em;
-            color: #666;
-            line-height: 1.4;
+            font-size: 0.95rem;
+            color: var(--text-2);
+            line-height: 1.5;
         }
-        
+
         .mysql-config {
-            margin-top: 20px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border: 1px solid #dee2e6;
+            margin-top: 14px;
+            padding: 16px;
+            background: var(--surface);
+            border-radius: 16px;
+            border: 1px solid var(--border-2);
         }
-        
+
         .config-actions {
-            text-align: center;
-            padding-top: 20px;
-            border-top: 2px solid #e0e0e0;
-            margin-top: 20px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-2);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
         }
-        
-        .btn-outline {
-            background: transparent;
-            color: #667eea;
-            border: 2px solid #667eea;
+
+        .tools {
+            margin-top: 14px;
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid var(--border-2);
+            background: var(--surface-2);
         }
-        
-        .btn-outline:hover {
-            background: #667eea;
-            color: white;
+
+        .tools-title {
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-weight: 500;
+            color: var(--text);
+            font-size: 1.15rem;
+            line-height: 1.2;
+            margin-bottom: 12px;
         }
-        
-        .btn-primary {
-            background: #4caf50;
-            font-size: 1.1em;
-            padding: 15px 30px;
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
         }
-        
-        .btn-primary:hover {
-            background: #45a049;
+
+        .result {
+            margin-top: 14px;
+        }
+
+        .code-block {
+            margin-top: 10px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-2);
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            max-height: 220px;
+            overflow: auto;
+            color: var(--text);
+            white-space: pre-wrap;
+        }
+
+        .actions {
+            margin-top: 14px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 WSCRM Installer v2</h1>
+            <h1>WSCRM Installer v2</h1>
             <p>Installer untuk struktur package baru dengan folder wscrm terpisah</p>
         </div>
-        
+
+        <?php if ($isLocalHost) { ?>
+            <div class="alert alert-info">
+                <strong>Local mode:</strong> Anda bisa skip installer untuk development tanpa menghapus folder install.
+            </div>
+            <div class="actions">
+                <button onclick="skipInstaller()" class="btn btn-outline">Skip installer (local)</button>
+                <a href="../" class="btn btn-outline">Buka aplikasi</a>
+            </div>
+            <div id="skip-result" class="result"></div>
+        <?php } ?>
+
         <?php if ($isAlreadyInstalled) { ?>
             <div class="alert alert-success">
-                <strong>✅ Instalasi Sudah Selesai!</strong><br>
+                <strong>Instalasi sudah selesai</strong><br>
                 WSCRM sudah terinstall di: <code><?= htmlspecialchars($targetWscrmPath) ?></code><br><br>
-                
-                <div class="alert alert-info" style="margin-top: 15px;">
-                    <strong>🛠️ Tools Tambahan:</strong> Sebelum menghapus installer, Anda dapat menjalankan tools di bawah untuk setup final:
+
+                <div class="alert alert-info">
+                    <strong>Tools tambahan:</strong> Sebelum menghapus installer, Anda dapat menjalankan tools di bawah untuk setup final:
                 </div>
-                
+
                 <!-- Laravel Tools Section -->
-                <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
-                    <h4 style="margin: 0 0 15px 0; color: #333; font-size: 1.2em;">🚀 Setup Tools Laravel</h4>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 20px;">
-                        <button onclick="runLaravelCommand('migrate')" class="btn" style="background: #28a745; color: white;">📊 Run Migrations</button>
-                        <button onclick="runLaravelCommand('db_seed')" class="btn" style="background: #17a2b8; color: white;">🌱 Run DB Seeder</button>
-                        <button onclick="runLaravelCommand('storage_link')" class="btn" style="background: #ffc107; color: black;">🔗 Create Storage Link</button>
-                        <button onclick="runLaravelCommand('key_generate')" class="btn" style="background: #dc3545; color: white;">🔑 Generate App Key</button>
+                <div class="tools">
+                    <h4 class="tools-title">Setup tools Laravel</h4>
+
+                    <div class="tools-grid">
+                        <button onclick="runLaravelCommand('migrate')" class="btn">Run migrations</button>
+                        <button onclick="runLaravelCommand('db_seed')" class="btn">Run DB seeder</button>
+                        <button onclick="runLaravelCommand('storage_link')" class="btn">Create storage link</button>
+                        <button onclick="runLaravelCommand('key_generate')" class="btn">Generate app key</button>
+                        <button onclick="runLaravelCommand('clear_cache')" class="btn">Clear all cache</button>
+                        <button onclick="runLaravelCommand('optimize')" class="btn">Optimize app</button>
+                        <button onclick="runLaravelCommand('config_cache')" class="btn">Cache config</button>
+                        <button onclick="runLaravelCommand('check_env')" class="btn">Check .env</button>
                     </div>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 20px;">
-                        <button onclick="runLaravelCommand('clear_cache')" class="btn" style="background: #6f42c1; color: white;">🧹 Clear All Cache</button>
-                        <button onclick="runLaravelCommand('optimize')" class="btn" style="background: #fd7e14; color: white;">⚡ Optimize App</button>
-                        <button onclick="runLaravelCommand('config_cache')" class="btn" style="background: #20c997; color: white;">⚙️ Cache Config</button>
-                        <button onclick="runLaravelCommand('check_env')" class="btn" style="background: #6c757d; color: white;">📄 Check .env</button>
-                    </div>
-                    
-                    <div id="laravel-tools-result" style="margin-top: 15px;"></div>
+
+                    <div id="laravel-tools-result" class="result"></div>
                 </div>
-                
-                <div class="alert alert-info" style="margin-top: 15px;">
-                    <strong>⚠️ Penting:</strong> Aplikasi tidak dapat diakses selama folder install masih ada.<br>
+
+                <div class="alert alert-info">
+                    <strong>Penting:</strong> Aplikasi tidak dapat diakses selama folder install masih ada.<br>
                     Silakan hapus folder install terlebih dahulu untuk mengakses aplikasi.
                 </div>
-                
-                <div style="margin-top: 15px;">
-                    <button onclick="deleteInstallFolder()" class="btn btn-success" style="margin-right: 10px; font-size: 1.1em; padding: 12px 20px;">🗑️ Hapus Folder Install & Buka Aplikasi</button>
-                    <a href="../" class="btn" style="background: #6c757d; color: white; text-decoration: none; display: inline-block;">👀 Coba Buka Aplikasi (Akan Error)</a>
+
+                <div class="actions">
+                    <button onclick="deleteInstallFolder()" class="btn btn-danger">Hapus folder install dan buka aplikasi</button>
+                    <a href="../" class="btn btn-outline">Coba buka aplikasi (akan error)</a>
                 </div>
-                <div id="delete-result" style="margin-top: 15px;"></div>
+                <div id="delete-result" class="result"></div>
             </div>
         <?php } else { ?>
             <div class="step <?= $step1Complete ? 'completed' : '' ?>" id="step1">
-                <div class="step-title">📁 Step 1: Deteksi Folder WSCRM</div>
+                <div class="step-title">Step 1: Deteksi folder WSCRM</div>
                 <div class="step-description">
                     Sistem akan mencari folder wscrm yang berisi file Laravel backend.
                 </div>
-                
+
                 <?php if ($step1Complete) { ?>
                     <div class="alert alert-success">
-                        <strong>✅ Folder wscrm sudah ditemukan!</strong><br>
+                        <strong>Folder wscrm sudah ditemukan</strong><br>
                         Lokasi: <div class="path-info"><?= htmlspecialchars($wscrmPath) ?></div>
                     </div>
                 <?php } else { ?>
@@ -1198,59 +1558,48 @@ $step3Complete = file_exists($targetWscrmPath.'/.env'); // Environment configure
                     <div id="detection-result"></div>
                 <?php } ?>
             </div>
-            
+
             <div class="step <?= $step2Complete ? 'completed' : '' ?><?= $step1Complete && ! $step2Complete ? ' active' : '' ?>" id="step2" style="display: <?= $step1Complete ? 'block' : 'none' ?>;">
-                <div class="step-title">🔄 Step 2: Pindahkan Folder WSCRM</div>
+                <div class="step-title">Step 2: Pindahkan folder WSCRM</div>
                 <div class="step-description">
-                    Pilih operasi untuk memindahkan folder wscrm ke lokasi yang tepat (sejajar dengan public_html).
+                    Folder wscrm akan dipindahkan ke lokasi yang tepat (sejajar dengan public_html).
                 </div>
-                
+
                 <div class="alert alert-info">
                     <strong>Target lokasi:</strong><br>
                     <div class="path-info"><?= htmlspecialchars($targetWscrmPath) ?></div>
                 </div>
-                
-                <div class="radio-group">
-                    <label>
-                        <input type="radio" name="operation" value="move" checked>
-                        <strong>Pindahkan (Move)</strong> - Memindahkan folder wscrm ke lokasi target
-                    </label>
-                    <label>
-                        <input type="radio" name="operation" value="copy">
-                        <strong>Salin (Copy)</strong> - Menyalin folder wscrm ke lokasi target (folder asli tetap ada)
-                    </label>
-                </div>
-                
+
                 <button class="btn" onclick="moveWscrm()">Jalankan Operasi</button>
                 <div id="move-result"></div>
             </div>
-            
+
             <div class="step <?= $step3Complete ? 'completed' : '' ?><?= $step2Complete && ! $step3Complete ? ' active' : '' ?>" id="step3" style="display: <?= $step2Complete ? 'block' : 'none' ?>;">
-                <div class="step-title"><?= $step3Complete ? '✅' : '⚙️' ?> Step 3: <?= $step3Complete ? 'Konfigurasi Selesai' : 'Setup Environment' ?></div>
+                <div class="step-title">Step 3: <?= $step3Complete ? 'Konfigurasi selesai' : 'Setup environment' ?></div>
                 <div class="step-description">
                     <?= $step3Complete ? 'Environment sudah dikonfigurasi. Aplikasi siap digunakan.' : 'Konfigurasikan environment untuk menyelesaikan instalasi.' ?>
                 </div>
-                
+
                 <?php if ($step3Complete) { ?>
                     <div class="alert alert-success">
-                        <strong>✅ Instalasi berhasil diselesaikan!</strong><br>
+                        <strong>Instalasi berhasil diselesaikan</strong><br>
                         Environment sudah dikonfigurasi dan aplikasi siap digunakan.
                     </div>
-                    <div class="success-actions" style="margin-top: 15px;">
-                        <a href="../" class="btn btn-success">🚀 Buka Aplikasi</a>
-                        <button onclick="deleteInstallFolder()" class="btn btn-danger" style="margin-left: 10px; background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer;">🗑️ Hapus Folder Install</button>
+                    <div class="actions">
+                        <a href="../" class="btn btn-primary">Buka aplikasi</a>
+                        <button onclick="deleteInstallFolder()" class="btn btn-danger">Hapus folder install</button>
                     </div>
-                    <div id="delete-result" style="margin-top: 15px;"></div>
+                    <div id="delete-result" class="result"></div>
                 <?php } else { ?>
-                    <button class="btn btn-success" onclick="showEnvConfiguration()">🔧 Setup Environment</button>
+                    <button class="btn btn-success" onclick="showEnvConfiguration()">Setup environment</button>
                     <div id="env-config-form" class="config-form" style="display: none;">
                         <div class="config-header">
-                            <h3>🔧 Konfigurasi Environment</h3>
+                            <h3>Konfigurasi environment</h3>
                             <p class="config-subtitle">Konfigurasikan pengaturan dasar untuk aplikasi WSCRM Anda</p>
                         </div>
-                        
+
                         <div class="config-section">
-                            <h4>📱 Informasi Aplikasi</h4>
+                            <h4>Informasi aplikasi</h4>
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="app_name">
@@ -1259,19 +1608,19 @@ $step3Complete = file_exists($targetWscrmPath.'/.env'); // Environment configure
                                     </label>
                                     <input type="text" id="app_name" class="form-control" value="WSCRM" required>
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="app_url">
                                         <span class="label-text">URL Aplikasi</span>
                                         <span class="label-desc">URL lengkap dimana aplikasi dapat diakses</span>
                                     </label>
-                                    <input type="url" id="app_url" class="form-control" value="<?= htmlspecialchars((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http').'://'.$_SERVER['HTTP_HOST']) ?>" required>
+                                    <input type="url" id="app_url" class="form-control" value="<?= htmlspecialchars((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']) ?>" required>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="config-section">
-                            <h4>🗄️ Konfigurasi Database</h4>
+                            <h4>Konfigurasi database</h4>
                             <div class="database-options">
                                 <label class="radio-card">
                                     <input type="radio" name="db_type" value="sqlite" checked onclick="toggleDatabaseConfig()">
@@ -1280,7 +1629,7 @@ $step3Complete = file_exists($targetWscrmPath.'/.env'); // Environment configure
                                         <div class="radio-desc">Database file lokal, cocok untuk instalasi cepat dan development</div>
                                     </div>
                                 </label>
-                                
+
                                 <label class="radio-card">
                                     <input type="radio" name="db_type" value="mysql" onclick="toggleDatabaseConfig()">
                                     <div class="radio-content">
@@ -1289,7 +1638,7 @@ $step3Complete = file_exists($targetWscrmPath.'/.env'); // Environment configure
                                     </div>
                                 </label>
                             </div>
-                            
+
                             <div id="mysql-config" class="mysql-config" style="display: none;">
                                 <div class="form-row">
                                     <div class="form-group">
@@ -1298,7 +1647,7 @@ $step3Complete = file_exists($targetWscrmPath.'/.env'); // Environment configure
                                         </label>
                                         <input type="text" id="db_host" class="form-control" value="localhost" placeholder="localhost">
                                     </div>
-                                    
+
                                     <div class="form-group">
                                         <label for="db_port">
                                             <span class="label-text">Port</span>
@@ -1306,7 +1655,7 @@ $step3Complete = file_exists($targetWscrmPath.'/.env'); // Environment configure
                                         <input type="number" id="db_port" class="form-control" value="3306" placeholder="3306">
                                     </div>
                                 </div>
-                                
+
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="db_name">
@@ -1314,7 +1663,7 @@ $step3Complete = file_exists($targetWscrmPath.'/.env'); // Environment configure
                                         </label>
                                         <input type="text" id="db_name" class="form-control" placeholder="wscrm" required>
                                     </div>
-                                    
+
                                     <div class="form-group">
                                         <label for="db_username">
                                             <span class="label-text">Username</span>
@@ -1322,25 +1671,25 @@ $step3Complete = file_exists($targetWscrmPath.'/.env'); // Environment configure
                                         <input type="text" id="db_username" class="form-control" placeholder="root" required>
                                     </div>
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="db_password">
                                         <span class="label-text">Password</span>
                                     </label>
                                     <input type="password" id="db_password" class="form-control" placeholder="Masukkan password database (kosongkan jika tidak ada password)">
-                                    <small class="form-help">💡 Kosongkan field ini jika database tidak menggunakan password (seperti setup local XAMPP/WAMP)</small>
+                                    <small class="form-help">Kosongkan field ini jika database tidak menggunakan password (seperti setup local XAMPP/WAMP)</small>
                                 </div>
-                                
+
                                 <button type="button" class="btn btn-outline" onclick="testDatabaseConnection()">
-                                    🔌 Test Koneksi Database
+                                    Test koneksi database
                                 </button>
                                 <div id="db-test-result"></div>
                             </div>
                         </div>
-                        
+
                         <div class="config-actions">
                             <button class="btn btn-primary" onclick="configureEnvironment()">
-                                💾 Simpan & Lanjutkan
+                                Simpan dan lanjutkan
                             </button>
                         </div>
                         <div id="env-config-result"></div>
@@ -1349,10 +1698,10 @@ $step3Complete = file_exists($targetWscrmPath.'/.env'); // Environment configure
             </div>
         <?php } ?>
     </div>
-    
+
     <script>
         let detectedWscrmPath = '';
-        
+
         // Initialize on page load if wscrm is already detected
         document.addEventListener('DOMContentLoaded', function() {
             // Check if wscrm path is already shown in the UI
@@ -1360,362 +1709,406 @@ $step3Complete = file_exists($targetWscrmPath.'/.env'); // Environment configure
             if (pathInfo && pathInfo.textContent.trim()) {
                 detectedWscrmPath = pathInfo.textContent.trim();
                 window.detectedWscrmPath = detectedWscrmPath;
-                console.log('🔄 Initialized detectedWscrmPath from UI:', detectedWscrmPath);
+                console.log('Initialized detectedWscrmPath from UI:', detectedWscrmPath);
             }
         });
-        
+
         function detectWscrm() {
             const btn = event.target;
             btn.disabled = true;
             btn.textContent = 'Mendeteksi...';
-            
+
             fetch('index.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'action=detect_wscrm'
-            })
-            .then(response => response.json())
-            .then(data => {
-                const resultDiv = document.getElementById('detection-result');
-                
-                // Log debug info to console for troubleshooting
-                if (data.debug) {
-                    console.log('🐛 WSCRM Detection Debug:', data.debug);
-                }
-                
-                if (data.success) {
-                    // Normalize path - remove trailing slash
-                    detectedWscrmPath = data.path.replace(/\/$/, '');
-                    
-                    // Debug: Log detected path
-                    console.log('✅ WSCRM path detected:', detectedWscrmPath);
-                    console.log('📋 Full detection data:', data);
-                    console.log('🔧 detectedWscrmPath after assignment:', detectedWscrmPath);
-                    console.log('🔧 detectedWscrmPath type after assignment:', typeof detectedWscrmPath);
-                    
-                    // Test if variable is accessible
-                    window.detectedWscrmPath = detectedWscrmPath;
-                    console.log('🌐 Global detectedWscrmPath set:', window.detectedWscrmPath);
-                    
-                    // Check if wscrm is already in correct location (outside public_html)
-                    const isAlreadyMoved = data.already_in_target_location || false;
-                    
-                    if (isAlreadyMoved) {
-                        // Skip Step 2 - already in correct location
-                        resultDiv.innerHTML = `
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'action=detect_wscrm'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('detection-result');
+
+                    // Log debug info to console for troubleshooting
+                    if (data.debug) {
+                        console.log('WSCRM Detection Debug:', data.debug);
+                    }
+
+                    if (data.success) {
+                        // Normalize path - remove trailing slash
+                        detectedWscrmPath = data.path.replace(/\/$/, '');
+
+                        // Debug: Log detected path
+                        console.log('WSCRM path detected:', detectedWscrmPath);
+                        console.log('Full detection data:', data);
+                        console.log('detectedWscrmPath after assignment:', detectedWscrmPath);
+                        console.log('detectedWscrmPath type after assignment:', typeof detectedWscrmPath);
+
+                        // Test if variable is accessible
+                        window.detectedWscrmPath = detectedWscrmPath;
+                        console.log('Global detectedWscrmPath set:', window.detectedWscrmPath);
+
+                        // Check if wscrm is already in correct location (outside public_html)
+                        const isAlreadyMoved = data.already_in_target_location || false;
+
+                        if (isAlreadyMoved) {
+                            // Skip Step 2 - already in correct location
+                            resultDiv.innerHTML = `
                             <div class="alert alert-success">
-                                <strong>✅ Folder wscrm sudah di lokasi yang benar!</strong><br>
+                                <strong>Folder wscrm sudah di lokasi yang benar</strong><br>
                                 Lokasi: <div class="path-info">${data.path}</div>
                                 <br><small>Step 2 dilewati karena folder sudah berada di luar public_html.</small>
                             </div>
                         `;
-                        
-                        document.getElementById('step1').classList.add('completed');
-                        document.getElementById('step2').classList.add('completed');
-                        document.getElementById('step2').style.display = 'none';
-                        document.getElementById('step3').style.display = 'block';
-                        document.getElementById('step3').classList.add('active');
-                    } else {
-                        // Show Step 2 - needs to be moved
-                        resultDiv.innerHTML = `
+
+                            document.getElementById('step1').classList.add('completed');
+                            document.getElementById('step2').classList.add('completed');
+                            document.getElementById('step2').style.display = 'none';
+                            document.getElementById('step3').style.display = 'block';
+                            document.getElementById('step3').classList.add('active');
+                        } else {
+                            // Show Step 2 - needs to be moved
+                            resultDiv.innerHTML = `
                             <div class="alert alert-success">
-                                <strong>✅ Folder wscrm ditemukan!</strong><br>
+                                <strong>Folder wscrm ditemukan</strong><br>
                                 Lokasi: <div class="path-info">${data.path}</div>
                                 <br><small>Perlu dipindahkan ke luar public_html untuk keamanan.</small>
                             </div>
                         `;
-                        
-                        document.getElementById('step1').classList.add('completed');
-                        document.getElementById('step2').style.display = 'block';
-                        document.getElementById('step2').classList.add('active');
-                    }
-                } else {
-                    resultDiv.innerHTML = `
+
+                            document.getElementById('step1').classList.add('completed');
+                            document.getElementById('step2').style.display = 'block';
+                            document.getElementById('step2').classList.add('active');
+                        }
+                    } else {
+                        resultDiv.innerHTML = `
                         <div class="alert alert-error">
-                            <strong>❌ ${data.message}</strong><br>
+                            <strong>${data.message}</strong><br>
                             Pastikan file package sudah diekstrak dengan benar.
                         </div>
                     `;
-                }
-                
-                btn.disabled = false;
-                btn.textContent = 'Deteksi Folder WSCRM';
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('detection-result').innerHTML = `
+                    }
+
+                    btn.disabled = false;
+                    btn.textContent = 'Deteksi Folder WSCRM';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('detection-result').innerHTML = `
                     <div class="alert alert-error">
-                        <strong>❌ Terjadi kesalahan saat mendeteksi folder wscrm</strong>
+                        <strong>Terjadi kesalahan saat mendeteksi folder wscrm</strong>
                     </div>
                 `;
-                btn.disabled = false;
-                btn.textContent = 'Deteksi Folder WSCRM';
-            });
+                    btn.disabled = false;
+                    btn.textContent = 'Deteksi Folder WSCRM';
+                });
         }
-        
+
         function moveWscrm() {
             const btn = event.target;
-            const operation = document.querySelector('input[name="operation"]:checked').value;
-            
-            // Debug: Log current state
-            console.log('🔍 Current detectedWscrmPath value:', detectedWscrmPath);
-            console.log('🔍 detectedWscrmPath type:', typeof detectedWscrmPath);
-            console.log('🔍 detectedWscrmPath length:', detectedWscrmPath ? detectedWscrmPath.length : 'undefined');
-            console.log('🌐 window.detectedWscrmPath:', window.detectedWscrmPath);
-            
+            console.log('Current detectedWscrmPath value:', detectedWscrmPath);
+            console.log('detectedWscrmPath type:', typeof detectedWscrmPath);
+            console.log('detectedWscrmPath length:', detectedWscrmPath ? detectedWscrmPath.length : 'undefined');
+            console.log('window.detectedWscrmPath:', window.detectedWscrmPath);
+
             // Try to use global variable as fallback
             if (!detectedWscrmPath && window.detectedWscrmPath) {
                 detectedWscrmPath = window.detectedWscrmPath;
-                console.log('🔄 Using global detectedWscrmPath as fallback:', detectedWscrmPath);
+                console.log('Using global detectedWscrmPath as fallback:', detectedWscrmPath);
             }
-            
+
             // Validasi detectedWscrmPath sebelum mengirim
             if (!detectedWscrmPath || detectedWscrmPath.trim() === '') {
                 document.getElementById('move-result').innerHTML = `
                     <div class="alert alert-error">
-                        <strong>❌ Path wscrm tidak terdeteksi. Silakan jalankan deteksi terlebih dahulu.</strong>
+                        <strong>Path wscrm tidak terdeteksi. Silakan jalankan deteksi terlebih dahulu.</strong>
                         <br><small>Debug: detectedWscrmPath = '${detectedWscrmPath}' (${typeof detectedWscrmPath})</small>
                         <br><small>window.detectedWscrmPath = '${window.detectedWscrmPath}'</small>
                     </div>
                 `;
                 return;
             }
-            
-            console.log('🔍 Sending wscrm_path:', detectedWscrmPath);
-            
+
+            console.log('Sending wscrm_path:', detectedWscrmPath);
+
             btn.disabled = true;
-            btn.textContent = operation === 'move' ? 'Memindahkan...' : 'Menyalin...';
-            
-            const payload = `action=move_wscrm&wscrm_path=${encodeURIComponent(detectedWscrmPath)}&operation=${operation}`;
-            console.log('📤 Request payload:', payload);
-            
+            btn.textContent = 'Memindahkan...';
+
+            const payload = `action=move_wscrm&wscrm_path=${encodeURIComponent(detectedWscrmPath)}`;
+            console.log('Request payload:', payload);
+
             fetch('index.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: payload
-            })
-            .then(response => response.json())
-            .then(data => {
-                const resultDiv = document.getElementById('move-result');
-                
-                if (data.success) {
-                    resultDiv.innerHTML = `
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: payload
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('move-result');
+
+                    if (data.success) {
+                        resultDiv.innerHTML = `
                         <div class="alert alert-success">
-                            <strong>✅ ${data.message}</strong>
+                            <strong>${data.message}</strong>
                         </div>
                     `;
-                    
-                    document.getElementById('step2').classList.add('completed');
-                    document.getElementById('step2').classList.remove('active');
-                    document.getElementById('step3').style.display = 'block';
-                    document.getElementById('step3').classList.add('active');
-                } else {
-                    resultDiv.innerHTML = `
+
+                        document.getElementById('step2').classList.add('completed');
+                        document.getElementById('step2').classList.remove('active');
+                        document.getElementById('step3').style.display = 'block';
+                        document.getElementById('step3').classList.add('active');
+                    } else {
+                        resultDiv.innerHTML = `
                         <div class="alert alert-error">
-                            <strong>❌ ${data.message}</strong>
+                            <strong>${data.message}</strong>
                         </div>
                     `;
-                }
-                
-                btn.disabled = false;
-                btn.textContent = 'Jalankan Operasi';
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('move-result').innerHTML = `
+                    }
+
+                    btn.disabled = false;
+                    btn.textContent = 'Jalankan Operasi';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('move-result').innerHTML = `
                     <div class="alert alert-error">
-                        <strong>❌ Terjadi kesalahan saat memindahkan folder wscrm</strong>
+                        <strong>Terjadi kesalahan saat memindahkan folder wscrm</strong>
                     </div>
                 `;
-                btn.disabled = false;
-                btn.textContent = 'Jalankan Operasi';
-            });
+                    btn.disabled = false;
+                    btn.textContent = 'Jalankan Operasi';
+                });
         }
-        
+
         function showEnvConfiguration() {
             document.getElementById('env-config-form').style.display = 'block';
             event.target.style.display = 'none';
         }
-        
+
         function toggleDatabaseConfig() {
             const mysqlConfig = document.getElementById('mysql-config');
             const dbType = document.querySelector('input[name="db_type"]:checked').value;
-            
+
             if (dbType === 'mysql') {
                 mysqlConfig.style.display = 'block';
             } else {
                 mysqlConfig.style.display = 'none';
             }
         }
-        
+
         function testDatabaseConnection() {
             const btn = event.target;
             const originalText = btn.textContent;
             btn.disabled = true;
-            btn.textContent = '🔄 Testing...';
-            
+            btn.textContent = 'Testing...';
+
             const dbHost = document.getElementById('db_host').value;
             const dbPort = document.getElementById('db_port').value;
             const dbName = document.getElementById('db_name').value;
             const dbUsername = document.getElementById('db_username').value;
             const dbPassword = document.getElementById('db_password').value;
-            
+
             fetch('index.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `action=test_database&db_host=${encodeURIComponent(dbHost)}&db_port=${encodeURIComponent(dbPort)}&db_name=${encodeURIComponent(dbName)}&db_username=${encodeURIComponent(dbUsername)}&db_password=${encodeURIComponent(dbPassword)}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                const resultDiv = document.getElementById('db-test-result');
-                
-                if (data.success) {
-                    resultDiv.innerHTML = `
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `action=test_database&db_host=${encodeURIComponent(dbHost)}&db_port=${encodeURIComponent(dbPort)}&db_name=${encodeURIComponent(dbName)}&db_username=${encodeURIComponent(dbUsername)}&db_password=${encodeURIComponent(dbPassword)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('db-test-result');
+
+                    if (data.success) {
+                        resultDiv.innerHTML = `
                         <div class="alert alert-success">
-                            <strong>✅ Koneksi database berhasil!</strong><br>
+                            <strong>Koneksi database berhasil</strong><br>
                             ${data.message}
                         </div>
                     `;
-                } else {
-                    resultDiv.innerHTML = `
+                    } else {
+                        resultDiv.innerHTML = `
                         <div class="alert alert-error">
-                            <strong>❌ Koneksi database gagal!</strong><br>
+                            <strong>Koneksi database gagal</strong><br>
                             ${data.message}
                         </div>
                     `;
-                }
-                
-                btn.disabled = false;
-                btn.textContent = originalText;
-            })
-            .catch(error => {
-                document.getElementById('db-test-result').innerHTML = `
+                    }
+
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                })
+                .catch(error => {
+                    document.getElementById('db-test-result').innerHTML = `
                     <div class="alert alert-error">
-                        <strong>❌ Error: ${error.message}</strong>
+                        <strong>Error: ${error.message}</strong>
                     </div>
                 `;
-                btn.disabled = false;
-                btn.textContent = originalText;
-            });
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                });
         }
-        
+
         function deleteInstallFolder() {
             if (!confirm('Apakah Anda yakin ingin menghapus folder install? Tindakan ini tidak dapat dibatalkan.')) {
                 return;
             }
-            
+
             const btn = event.target;
             const originalText = btn.textContent;
             btn.disabled = true;
-            btn.textContent = '🗑️ Menghapus...';
-            
+            btn.textContent = 'Menghapus...';
+
             fetch('index.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'action=delete_install_folder'
-            })
-            .then(response => response.json())
-            .then(data => {
-                const resultDiv = document.getElementById('delete-result');
-                
-                if (data.success) {
-                    resultDiv.innerHTML = `
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'action=delete_install_folder'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('delete-result');
+
+                    if (data.success) {
+                        resultDiv.innerHTML = `
                         <div class="alert alert-success">
-                            <strong>✅ ${data.message}</strong><br>
+                            <strong>${data.message}</strong><br>
                             Halaman akan dialihkan ke aplikasi dalam 3 detik...
                         </div>
                     `;
-                    
-                    setTimeout(() => {
-                        window.location.href = '../';
-                    }, 3000);
-                } else {
-                    resultDiv.innerHTML = `
+
+                        setTimeout(() => {
+                            window.location.href = '../';
+                        }, 3000);
+                    } else {
+                        resultDiv.innerHTML = `
                         <div class="alert alert-error">
-                            <strong>❌ ${data.message}</strong>
+                            <strong>${data.message}</strong>
                         </div>
                     `;
-                    
-                    btn.disabled = false;
-                    btn.textContent = originalText;
-                }
-            })
-            .catch(error => {
-                document.getElementById('delete-result').innerHTML = `
+
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('delete-result').innerHTML = `
                     <div class="alert alert-error">
-                        <strong>❌ Error: ${error.message}</strong>
+                        <strong>Error: ${error.message}</strong>
                     </div>
                 `;
-                btn.disabled = false;
-                btn.textContent = originalText;
-            });
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                });
         }
-        
+
+        function skipInstaller() {
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Memproses...';
+
+            fetch('index.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'action=skip_installer'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('skip-result');
+                    if (data.success) {
+                        resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <strong>${data.message}</strong><br>
+                            Mengalihkan ke aplikasi...
+                        </div>
+                    `;
+                        setTimeout(() => {
+                            window.location.href = '../';
+                        }, 800);
+                    } else {
+                        resultDiv.innerHTML = `
+                        <div class="alert alert-error">
+                            <strong>${data.message}</strong>
+                        </div>
+                    `;
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('skip-result').innerHTML = `
+                    <div class="alert alert-error">
+                        <strong>Error: ${error.message}</strong>
+                    </div>
+                `;
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                });
+        }
+
         function runLaravelCommand(command) {
             const btn = event.target;
             const originalText = btn.textContent;
             btn.disabled = true;
-            btn.textContent = '⏳ Running...';
-            
+            btn.textContent = 'Running...';
+
             fetch('index.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `action=laravel_command&command=${encodeURIComponent(command)}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                const resultDiv = document.getElementById('laravel-tools-result');
-                
-                if (data.success) {
-                    resultDiv.innerHTML = `
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `action=laravel_command&command=${encodeURIComponent(command)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('laravel-tools-result');
+
+                    if (data.success) {
+                        resultDiv.innerHTML = `
                         <div class="alert alert-success">
-                            <strong>✅ ${data.message}</strong><br>
-                            <pre style="margin-top: 10px; background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 12px; max-height: 200px; overflow-y: auto;">${data.output || 'No output'}</pre>
+                            <strong>${data.message}</strong><br>
+                            <pre class="code-block">${data.output || 'No output'}</pre>
                         </div>
                     `;
-                } else {
-                    resultDiv.innerHTML = `
+                    } else {
+                        resultDiv.innerHTML = `
                         <div class="alert alert-error">
-                            <strong>❌ ${data.message}</strong>
+                            <strong>${data.message}</strong>
                         </div>
                     `;
-                }
-                
-                btn.disabled = false;
-                btn.textContent = originalText;
-            })
-            .catch(error => {
-                document.getElementById('laravel-tools-result').innerHTML = `
+                    }
+
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                })
+                .catch(error => {
+                    document.getElementById('laravel-tools-result').innerHTML = `
                     <div class="alert alert-error">
-                        <strong>❌ Error: ${error.message}</strong>
+                        <strong>Error: ${error.message}</strong>
                     </div>
                 `;
-                btn.disabled = false;
-                btn.textContent = originalText;
-            });
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                });
         }
-        
+
         function configureEnvironment() {
             const btn = event.target;
             btn.disabled = true;
-            btn.textContent = '💾 Menyimpan...';
-            
+            btn.textContent = 'Menyimpan...';
+
             const appUrl = document.getElementById('app_url').value;
             const appName = document.getElementById('app_name').value;
             const dbType = document.querySelector('input[name="db_type"]:checked').value;
-            
+
             let postData = `action=configure_env&app_url=${encodeURIComponent(appUrl)}&app_name=${encodeURIComponent(appName)}&db_type=${encodeURIComponent(dbType)}`;
-            
+
             // Add MySQL config if selected
             if (dbType === 'mysql') {
                 const dbHost = document.getElementById('db_host').value;
@@ -1723,54 +2116,55 @@ $step3Complete = file_exists($targetWscrmPath.'/.env'); // Environment configure
                 const dbName = document.getElementById('db_name').value;
                 const dbUsername = document.getElementById('db_username').value;
                 const dbPassword = document.getElementById('db_password').value;
-                
+
                 postData += `&db_host=${encodeURIComponent(dbHost)}&db_port=${encodeURIComponent(dbPort)}&db_name=${encodeURIComponent(dbName)}&db_username=${encodeURIComponent(dbUsername)}&db_password=${encodeURIComponent(dbPassword)}`;
             }
-            
+
             fetch('index.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: postData
-            })
-            .then(response => response.json())
-            .then(data => {
-                const resultDiv = document.getElementById('env-config-result');
-                
-                if (data.success) {
-                    resultDiv.innerHTML = `
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: postData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('env-config-result');
+
+                    if (data.success) {
+                        resultDiv.innerHTML = `
                         <div class="alert alert-success">
-                            <strong>✅ Environment berhasil dikonfigurasi!</strong><br>
+                            <strong>Environment berhasil dikonfigurasi</strong><br>
                             ${data.message}
                         </div>
                     `;
-                    
-                    // Reload page to show completed state
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
-                } else {
-                    resultDiv.innerHTML = `
+
+                        // Reload page to show completed state
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        resultDiv.innerHTML = `
                         <div class="alert alert-error">
-                            <strong>❌ ${data.message}</strong>
+                            <strong>${data.message}</strong>
                         </div>
                     `;
-                    
-                    btn.disabled = false;
-                    btn.textContent = 'Simpan Konfigurasi';
-                }
-            })
-            .catch(error => {
-                document.getElementById('env-config-result').innerHTML = `
+
+                        btn.disabled = false;
+                        btn.textContent = 'Simpan Konfigurasi';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('env-config-result').innerHTML = `
                     <div class="alert alert-error">
-                        <strong>❌ Error: ${error.message}</strong>
+                        <strong>Error: ${error.message}</strong>
                     </div>
                 `;
-                btn.disabled = false;
-                btn.textContent = 'Simpan Konfigurasi';
-            });
+                    btn.disabled = false;
+                    btn.textContent = 'Simpan Konfigurasi';
+                });
         }
     </script>
 </body>
+
 </html>

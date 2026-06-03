@@ -12,29 +12,25 @@ if (file_exists(__DIR__.'/../.env')) {
     $skipInstaller = strpos($envContent, 'APP_ENV=local') !== false;
 }
 
-if (is_dir(__DIR__.'/install') && ! $skipInstaller) {
-    // For flat deployment, check wscrm folder for installer.lock
-    $installerLockPaths = [
-        __DIR__.'/wscrm/storage/installer.lock',      // wscrm in same directory
-        __DIR__.'/../wscrm/storage/installer.lock',   // wscrm moved outside web root
-        __DIR__.'/../storage/installer.lock',          // standard Laravel structure
-    ];
-
-    $installCompleted = false;
-    foreach ($installerLockPaths as $lockPath) {
-        if (file_exists($lockPath)) {
-            $installCompleted = true;
-            break;
-        }
+// Allow a local-only "skip installer" marker file
+$skipMarkerPaths = [
+    __DIR__.'/../storage/installer.skip',        // standard Laravel structure
+    __DIR__.'/../wscrm/storage/installer.skip',  // wscrm moved outside web root
+    __DIR__.'/wscrm/storage/installer.skip',     // wscrm in same directory
+];
+$hasSkipMarker = false;
+foreach ($skipMarkerPaths as $path) {
+    if (file_exists($path)) {
+        $hasSkipMarker = true;
+        break;
     }
+}
 
-    if (! $installCompleted) {
-        // Redirect to installer for non-install URLs
-        $requestUri = $_SERVER['REQUEST_URI'];
-        if (strpos($requestUri, '/install') !== 0) {
-            header('Location: /install/');
-            exit;
-        }
+if (is_dir(__DIR__.'/install') && ! $skipInstaller && ! $hasSkipMarker) {
+    $requestUri = $_SERVER['REQUEST_URI'];
+    if (strpos($requestUri, '/install') !== 0) {
+        header('Location: /install/');
+        exit;
     }
 }
 
