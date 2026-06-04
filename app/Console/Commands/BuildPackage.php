@@ -444,10 +444,21 @@ class BuildPackage extends Command
         $wscrmPublicDir = $wscrmDir . '/public';
         File::makeDirectory($wscrmPublicDir, 0755, true);
 
-        // Copy build assets dari root ke wscrm/public/
-        if (File::exists($tempDir . '/build')) {
-            File::copyDirectory($tempDir . '/build', $wscrmPublicDir . '/build');
-            $this->line('✅ Copied build assets to wscrm/public/build/');
+        // Copy manifest only to wscrm/public/build/ (for @vite manifest lookup).
+        // Actual assets remain in root /build for flat deployment serving.
+        $manifestFiles = [
+            'manifest.json',
+            'ssr-manifest.json',
+        ];
+        foreach ($manifestFiles as $filename) {
+            $sourceManifest = $tempDir . '/build/' . $filename;
+            if (! File::exists($sourceManifest)) {
+                continue;
+            }
+
+            File::makeDirectory($wscrmPublicDir . '/build', 0755, true);
+            File::copy($sourceManifest, $wscrmPublicDir . '/build/' . $filename);
+            $this->line("✅ Copied {$filename} to wscrm/public/build/");
         }
 
         // Buat index.php di wscrm/public/ (Laravel standard)

@@ -286,7 +286,9 @@ class UpdateController extends Controller
         $publicRoot = $this->normalizePath($publicRoot);
 
         $contentDir = $this->findPackageContentDirectory($extractDir);
-        $sourcePublicRoot = $this->normalizePath($contentDir);
+        $sourcePublicRoot = File::exists($contentDir.'/public_html')
+            ? $this->normalizePath($contentDir.'/public_html')
+            : $this->normalizePath($contentDir);
         $sourceWscrmRoot = $this->normalizePath($contentDir.'/wscrm');
 
         if (! File::exists($sourceWscrmRoot.'/artisan') || ! File::exists($sourceWscrmRoot.'/vendor/autoload.php')) {
