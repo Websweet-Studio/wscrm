@@ -50,4 +50,9 @@ class OrderItem extends Model
     {
         return $this->belongsTo(DomainPrice::class, 'item_id');
     }
+
+    public function servicePlan(): BelongsTo
+    {
+        return $this->belongsTo(ServicePlan::class, 'item_id');
+    }
 }

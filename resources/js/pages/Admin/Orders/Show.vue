@@ -20,12 +20,29 @@ interface Customer {
     country?: string;
 }
 
+interface DomainPrice {
+    id: number;
+    extension: string;
+    selling_price: number;
+}
+
+interface ServicePlan {
+    id: number;
+    name: string;
+    category: string;
+    price: number;
+}
+
 interface OrderItem {
     id: number;
     item_type: string;
+    item_id: number;
     domain_name?: string;
     quantity: number;
     price: number;
+    hosting_plan?: HostingPlan;
+    domain_price?: DomainPrice;
+    service_plan?: ServicePlan;
 }
 
 interface Invoice {
@@ -346,6 +363,13 @@ const processUpgradeDowngrade = () => {
                                 <span class="text-sm font-medium">{{ order.domain_name }}</span>
                             </div>
 
+                            <div v-if="currentHostingPlan" class="flex items-center justify-between">
+                                <span class="text-sm text-muted-foreground">Kapasitas Hosting</span>
+                                <span class="text-sm font-medium">
+                                    {{ currentHostingPlan.storage_gb }}GB Storage · {{ currentHostingPlan.cpu_cores }} Core · {{ currentHostingPlan.ram_gb }}GB RAM
+                                </span>
+                            </div>
+
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-muted-foreground">Siklus Tagihan</span>
                                 <span class="text-sm font-medium">{{ getBillingCycleText(order.billing_cycle) }}</span>
@@ -456,8 +480,26 @@ const processUpgradeDowngrade = () => {
                             <TableRow v-for="item in order.order_items" :key="item.id">
                                 <TableCell class="font-medium capitalize">{{ item.item_type }}</TableCell>
                                 <TableCell>
-                                    <div v-if="item.domain_name" class="font-medium">{{ item.domain_name }}</div>
-                                    <div class="text-sm text-muted-foreground">Item ID: #{{ item.item_id }}</div>
+                                    <template v-if="item.item_type === 'hosting' && item.hosting_plan">
+                                        <div class="font-medium">{{ item.hosting_plan.plan_name }}</div>
+                                        <div class="text-sm text-muted-foreground">
+                                            {{ item.hosting_plan.storage_gb }}GB · {{ item.hosting_plan.cpu_cores }} Core · {{ item.hosting_plan.ram_gb }}GB RAM
+                                        </div>
+                                    </template>
+                                    <template v-else-if="item.item_type === 'domain'">
+                                        <div class="font-medium">{{ item.domain_name || order.domain_name || '-' }}</div>
+                                        <div class="text-sm text-muted-foreground">
+                                            Ekstensi: {{ item.domain_price?.extension ? `.${item.domain_price.extension}` : '-' }}
+                                        </div>
+                                    </template>
+                                    <template v-else-if="item.service_plan">
+                                        <div class="font-medium">{{ item.service_plan.name }}</div>
+                                        <div class="text-sm text-muted-foreground capitalize">{{ item.item_type.replace('_', ' ') }}</div>
+                                    </template>
+                                    <template v-else>
+                                        <div v-if="item.domain_name" class="font-medium">{{ item.domain_name }}</div>
+                                        <div class="text-sm text-muted-foreground">Item ID: #{{ item.item_id }}</div>
+                                    </template>
                                 </TableCell>
                                 <TableCell>{{ item.quantity }}</TableCell>
                                 <TableCell>{{ formatPrice(item.price) }}</TableCell>

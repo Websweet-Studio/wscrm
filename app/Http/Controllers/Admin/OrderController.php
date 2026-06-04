@@ -113,7 +113,7 @@ class OrderController extends Controller
         $order->load([
             'customer',
             'orderItems' => function ($query) {
-                $query->with('hostingPlan');
+                $query->with(['hostingPlan', 'domainPrice', 'servicePlan']);
             },
             'hostingPlan',
             'pendingPlan',
