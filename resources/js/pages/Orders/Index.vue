@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
-import { formatDate, formatPrice } from '@/lib/utils';
+import { cn, formatDate, formatPrice } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Eye, ShoppingCart, Trash2 } from 'lucide-vue-next';
+import { ArrowRight, Eye, ReceiptText, ShoppingCart, Trash2 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface OrderItem {
@@ -136,36 +136,66 @@ const getStatusText = (status: string) => {
 
     <CustomerLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-4 p-4 sm:space-y-6 sm:p-6">
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                    <h1 class="font-serif text-2xl font-medium tracking-tight sm:text-3xl">Pesanan Saya</h1>
-                    <p class="text-muted-foreground">Lihat dan kelola pesanan layanan Anda</p>
+            <Card class="relative overflow-hidden border-border/60 bg-card/70 shadow-sm backdrop-blur">
+                <div class="pointer-events-none absolute inset-0 opacity-60 dark:opacity-80">
+                    <div class="absolute -inset-24 bg-[radial-gradient(closest-side,rgba(16,185,129,0.16),transparent_65%)]"></div>
+                    <div class="absolute -right-24 -top-32 h-96 w-96 bg-[radial-gradient(closest-side,rgba(34,211,238,0.14),transparent_60%)]"></div>
+                    <div class="absolute inset-0 bg-[linear-gradient(to_right,transparent_0,rgba(16,185,129,0.05)_50%,transparent_100%)]"></div>
                 </div>
-                <Button asChild class="w-full sm:w-auto">
-                    <Link href="/hosting">Lihat Produk</Link>
-                </Button>
-            </div>
+                <CardContent class="relative p-4 sm:p-6">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div class="min-w-0">
+                            <div class="mb-2 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-xs text-muted-foreground">
+                                <ReceiptText class="h-3.5 w-3.5 text-emerald-600 dark:text-green-400" />
+                                <span>Riwayat transaksi</span>
+                            </div>
+                            <h1 class="font-serif text-2xl font-medium tracking-tight sm:text-3xl">Pesanan Saya</h1>
+                            <p class="mt-1 text-sm text-muted-foreground sm:text-base">Lihat status dan detail pesanan layanan Anda</p>
+                        </div>
+                        <div class="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[240px]">
+                            <Button asChild size="sm" class="w-full justify-between">
+                                <Link href="/hosting">
+                                    <span class="inline-flex items-center gap-2">
+                                        <ShoppingCart class="h-4 w-4" />
+                                        Lihat Produk
+                                    </span>
+                                    <ArrowRight class="h-4 w-4 opacity-80" />
+                                </Link>
+                            </Button>
+                            <Button asChild variant="outline" size="sm" class="w-full justify-between">
+                                <Link href="/customer/invoices">
+                                    <span class="inline-flex items-center gap-2">
+                                        <ReceiptText class="h-4 w-4 text-emerald-600 dark:text-green-400" />
+                                        Lihat Tagihan
+                                    </span>
+                                    <ArrowRight class="h-4 w-4 opacity-70" />
+                                </Link>
+                            </Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
             <div v-if="orders.length" class="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
-                <Card>
+                <Card class="rounded-lg border-border/60 shadow-sm">
                     <CardHeader class="pb-2">
                         <CardDescription>Total Pesanan</CardDescription>
                         <CardTitle class="text-2xl font-semibold">{{ totalOrders }}</CardTitle>
                     </CardHeader>
                 </Card>
-                <Card>
+                <Card class="rounded-lg border-border/60 shadow-sm">
                     <CardHeader class="pb-2">
                         <CardDescription>Menunggu</CardDescription>
                         <CardTitle class="text-2xl font-semibold">{{ pendingOrders }}</CardTitle>
                     </CardHeader>
                 </Card>
-                <Card>
+                <Card class="rounded-lg border-border/60 shadow-sm">
                     <CardHeader class="pb-2">
                         <CardDescription>Diproses</CardDescription>
                         <CardTitle class="text-2xl font-semibold">{{ processingOrders }}</CardTitle>
                     </CardHeader>
                 </Card>
-                <Card>
+                <Card class="rounded-lg border-border/60 shadow-sm">
                     <CardHeader class="pb-2">
                         <CardDescription>Selesai</CardDescription>
                         <CardTitle class="text-2xl font-semibold">{{ completedOrders }}</CardTitle>
@@ -173,7 +203,7 @@ const getStatusText = (status: string) => {
                 </Card>
             </div>
 
-            <Card v-if="orders.length === 0">
+            <Card v-if="orders.length === 0" class="rounded-lg border-border/60 shadow-sm">
                 <CardContent class="flex flex-col items-center gap-4 py-10 text-center">
                     <div class="space-y-1">
                         <div class="font-serif text-xl font-medium">Belum ada pesanan</div>
@@ -185,7 +215,7 @@ const getStatusText = (status: string) => {
                 </CardContent>
             </Card>
 
-            <Card v-else>
+            <Card v-else class="rounded-lg border-border/60 shadow-sm">
                 <CardHeader>
                     <CardTitle class="flex items-center gap-2">
                         <ShoppingCart class="h-5 w-5" />
@@ -194,64 +224,59 @@ const getStatusText = (status: string) => {
                     <CardDescription>Semua pesanan yang terkait dengan akun Anda</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Pesanan</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead class="text-right">Total</TableHead>
-                                <TableHead class="text-right">Aksi</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow v-for="order in orders" :key="order.id">
-                                <TableCell>
-                                    <div class="space-y-0.5">
-                                        <div class="font-medium">Order <span class="font-mono">#{{ order.id }}</span></div>
-                                        <div class="text-sm text-muted-foreground">
-                                            {{ formatDate(order.created_at) }} • {{ getOrderItemsSummary(order) }}
+                    <div class="overflow-hidden rounded-lg border border-border/60">
+                        <div class="divide-y divide-border/60">
+                            <div v-for="order in orders" :key="order.id" class="flex items-start justify-between gap-3 bg-background/40 px-3 py-3">
+                                <div class="min-w-0">
+                                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                        <div class="font-medium">
+                                            Order <span class="font-mono">#{{ order.id }}</span>
                                         </div>
-                                        <div class="text-[11px] text-muted-foreground capitalize">
-                                            {{ order.billing_cycle.replace('_', ' ') }}
-                                            <span v-if="order.expires_at"> • Kadaluarsa {{ formatDate(order.expires_at) }}</span>
-                                        </div>
+                                        <Badge :variant="getStatusVariant(order.status)" :class="getStatusColor(order.status)">
+                                            {{ getStatusText(order.status) }}
+                                        </Badge>
                                     </div>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge :variant="getStatusVariant(order.status)" :class="getStatusColor(order.status)">
-                                        {{ getStatusText(order.status) }}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell class="text-right">
-                                    <template v-if="order.discount_amount && order.discount_amount > 0">
-                                        <div class="text-xs text-muted-foreground line-through">{{ formatPrice(order.total_amount) }}</div>
-                                        <div class="font-medium">{{ formatPrice(getPayableAmount(order)) }}</div>
-                                    </template>
-                                    <template v-else>
-                                        <div class="font-medium">{{ formatPrice(order.total_amount) }}</div>
-                                    </template>
-                                </TableCell>
-                                <TableCell class="text-right">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <Button variant="outline" size="sm" asChild>
-                                            <Link :href="`/customer/orders/${order.id}`">
+                                    <div class="mt-1 text-sm text-muted-foreground">
+                                        {{ formatDate(order.created_at) }} • {{ getOrderItemsSummary(order) }}
+                                    </div>
+                                    <div class="mt-0.5 text-[11px] text-muted-foreground capitalize">
+                                        {{ order.billing_cycle.replace('_', ' ') }}
+                                        <span v-if="order.expires_at"> • Kadaluarsa {{ formatDate(order.expires_at) }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex shrink-0 flex-col items-end gap-2">
+                                    <div class="text-right">
+                                        <template v-if="order.discount_amount && order.discount_amount > 0">
+                                            <div class="text-xs text-muted-foreground line-through">{{ formatPrice(order.total_amount) }}</div>
+                                            <div class="font-medium">{{ formatPrice(getPayableAmount(order)) }}</div>
+                                        </template>
+                                        <template v-else>
+                                            <div class="font-medium">{{ formatPrice(order.total_amount) }}</div>
+                                        </template>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <Button variant="outline" size="sm" asChild class="h-8 px-3">
+                                            <Link :href="`/customer/orders/${order.id}`" class="inline-flex items-center gap-2">
                                                 <Eye class="h-4 w-4" />
+                                                <span class="text-xs">Detail</span>
                                             </Link>
                                         </Button>
                                         <Button
                                             v-if="order.status === 'pending'"
                                             variant="destructive"
                                             size="sm"
+                                            class="h-8 px-3"
                                             :disabled="deletingOrders.has(order.id)"
                                             @click="deleteOrder(order.id)"
                                         >
                                             <Trash2 class="h-4 w-4" />
                                         </Button>
                                     </div>
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
         </div>

@@ -1,20 +1,22 @@
-<script setup>
+<script setup lang="ts">
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import CustomerLayout from '@/layouts/CustomerLayout.vue';
+import customer from '@/routes/customer';
+import { type BreadcrumbItem } from '@/types';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 
 import { Separator } from '@/components/ui/separator';
-import { formatDate, formatPrice } from '@/lib/utils';
-import { AlertCircle, Building2, CheckCircle, CreditCard, FileText } from 'lucide-vue-next';
+import { cn, formatDate, formatPrice } from '@/lib/utils';
+import { AlertCircle, ArrowRight, Building2, CheckCircle, Copy, CreditCard, FileText, ShieldCheck } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
-const props = defineProps({
-    invoice: Object,
-    banks: Array,
-});
+const props = defineProps<{
+    invoice: any;
+    banks: any[];
+}>();
 
 const form = useForm({
     bank_id: props.invoice.bank_id || '',
@@ -25,8 +27,23 @@ const confirmForm = useForm({
     payment_proof: '',
 });
 
-const selectedBank = ref(null);
+const selectedBank = ref<any | null>(null);
 const showConfirmation = ref(false);
+
+const customerRoutes = customer as any;
+const getCustomerUrl = (getter: () => string | undefined, fallback: string) => {
+    try {
+        return getter() || fallback;
+    } catch {
+        return fallback;
+    }
+};
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Customer Dashboard', href: getCustomerUrl(() => customerRoutes?.dashboard?.().url, '/customer/dashboard') },
+    { title: 'Tagihan', href: getCustomerUrl(() => customerRoutes?.invoices?.index?.().url, '/customer/invoices') },
+    { title: props.invoice.invoice_number || 'Pembayaran', href: getCustomerUrl(() => customerRoutes?.invoices?.payment?.(props.invoice.id).url, `/customer/invoices/${props.invoice.id}/payment`) },
+];
 
 const updateSelectedBank = () => {
     if (form.bank_id) {
@@ -82,6 +99,14 @@ const totalWithFee = computed(() => {
     return baseAmount + adminFee;
 });
 
+const copyValue = async (value: string) => {
+    try {
+        await navigator.clipboard.writeText(value);
+    } catch {
+        //
+    }
+};
+
 // Initialize selected bank if already set
 if (props.invoice.bank_id) {
     selectedBank.value = props.banks.find((bank) => bank.id == props.invoice.bank_id);
@@ -92,279 +117,323 @@ if (props.invoice.bank_id) {
 <template>
     <Head :title="`Pembayaran Invoice ${invoice.invoice_number}`" />
 
-    <AppLayout>
-        <template #header>
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-xl leading-tight font-semibold text-gray-800 dark:text-gray-200">
-                        Pembayaran Invoice {{ invoice.invoice_number }}
-                    </h2>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Pilih metode pembayaran dan selesaikan transaksi</p>
+    <CustomerLayout :breadcrumbs="breadcrumbs">
+        <div class="mx-auto w-full max-w-5xl space-y-4 p-4 sm:space-y-6 sm:p-6">
+            <Card class="relative overflow-hidden border-border/60 bg-card/70 shadow-sm backdrop-blur">
+                <div class="pointer-events-none absolute inset-0 opacity-60 dark:opacity-80">
+                    <div class="absolute -inset-24 bg-[radial-gradient(closest-side,rgba(16,185,129,0.18),transparent_65%)]"></div>
+                    <div class="absolute -right-24 -top-32 h-96 w-96 bg-[radial-gradient(closest-side,rgba(34,211,238,0.16),transparent_60%)]"></div>
+                    <div class="absolute inset-0 bg-[linear-gradient(to_right,transparent_0,rgba(16,185,129,0.05)_50%,transparent_100%)]"></div>
                 </div>
-            </div>
-        </template>
-
-        <div class="py-12">
-            <div class="mx-auto max-w-4xl space-y-6 sm:px-6 lg:px-8">
-                <!-- Invoice Summary -->
-                <Card>
-                    <CardHeader>
-                        <CardTitle class="flex items-center gap-2">
-                            <FileText class="h-5 w-5" />
-                            Ringkasan Invoice
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground">Invoice Number</label>
-                                <p class="font-semibold">{{ invoice.invoice_number }}</p>
+                <CardContent class="relative p-4 sm:p-6">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div class="min-w-0">
+                            <div class="mb-2 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-xs text-muted-foreground">
+                                <ShieldCheck class="h-3.5 w-3.5 text-emerald-600 dark:text-green-400" />
+                                <span>Pembayaran</span>
                             </div>
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground">Status</label>
-                                <div class="mt-1">
-                                    <Badge :class="getStatusClass(invoice.status)">
-                                        {{ getStatusText(invoice.status) }}
-                                    </Badge>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground">Due Date</label>
-                                <p :class="isOverdue ? 'font-semibold text-red-600' : ''">{{ formatDate(invoice.due_date) }}</p>
+                            <h1 class="font-serif text-2xl font-medium leading-tight tracking-tight sm:text-3xl">
+                                Invoice <span class="font-mono">{{ invoice.invoice_number }}</span>
+                            </h1>
+                            <div class="mt-2 flex flex-wrap items-center gap-2">
+                                <Badge :class="getStatusClass(invoice.status)">{{ getStatusText(invoice.status) }}</Badge>
+                                <span class="text-sm text-muted-foreground">
+                                    Jatuh tempo
+                                    <span :class="cn('font-medium', isOverdue ? 'text-red-600 dark:text-red-400' : '')">{{ formatDate(invoice.due_date) }}</span>
+                                </span>
                             </div>
                         </div>
 
-                        <Separator class="my-4" />
-
-                        <div class="space-y-2">
-                            <div class="flex justify-between">
-                                <span>Subtotal:</span>
-                                <span class="font-medium">{{ formatPrice(invoice.amount) }}</span>
+                        <div class="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[280px]">
+                            <Button
+                                :as="Link"
+                                :href="getCustomerUrl(() => customerRoutes?.invoices?.show?.(invoice.id).url, `/customer/invoices/${invoice.id}`)"
+                                variant="outline"
+                                size="sm"
+                                class="w-full justify-between"
+                            >
+                                <span class="inline-flex items-center gap-2">
+                                    <FileText class="h-4 w-4 text-emerald-600 dark:text-green-400" />
+                                    Lihat Invoice
+                                </span>
+                                <ArrowRight class="h-4 w-4 opacity-70" />
+                            </Button>
+                            <div class="rounded-lg border border-border/60 bg-background/60 p-3">
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-muted-foreground">Subtotal</span>
+                                    <span class="font-medium">{{ formatPrice(invoice.amount) }}</span>
+                                </div>
+                                <div v-if="selectedBank && Number(selectedBank.admin_fee) > 0" class="mt-1 flex items-center justify-between text-sm">
+                                    <span class="text-muted-foreground">Biaya admin</span>
+                                    <span class="font-medium">{{ formatPrice(selectedBank.admin_fee) }}</span>
+                                </div>
+                                <Separator class="my-2" />
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-muted-foreground">Total transfer</span>
+                                    <span class="font-serif text-xl font-medium text-emerald-700 dark:text-green-400">{{ formatPrice(totalWithFee) }}</span>
+                                </div>
                             </div>
-                            <div v-if="selectedBank && selectedBank.admin_fee > 0" class="flex justify-between text-sm text-muted-foreground">
-                                <span>Admin Fee ({{ selectedBank.bank_name }}):</span>
-                                <span>{{ formatPrice(selectedBank.admin_fee) }}</span>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div class="grid gap-4 md:grid-cols-5 md:gap-6">
+                <div class="space-y-4 md:col-span-3">
+                    <Card v-if="!showConfirmation" class="rounded-lg border-border/60 shadow-sm">
+                        <CardHeader>
+                            <CardTitle class="flex items-center gap-2">
+                                <CreditCard class="h-5 w-5 text-emerald-600 dark:text-green-400" />
+                                Pilih Metode Pembayaran
+                            </CardTitle>
+                            <CardDescription>Pilih metode, pilih bank, lalu lanjutkan ke instruksi transfer</CardDescription>
+                        </CardHeader>
+                        <CardContent class="space-y-6">
+                            <form @submit.prevent="submitPayment" class="space-y-6">
+                                <div class="space-y-3">
+                                    <Label>Metode Pembayaran</Label>
+                                    <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+                                        <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-border/60 bg-background/40 p-3 transition-colors hover:bg-muted/40">
+                                            <input
+                                                type="radio"
+                                                value="bank_transfer"
+                                                v-model="form.payment_method"
+                                                class="mt-1 h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                                            />
+                                            <span class="min-w-0">
+                                                <span class="block font-medium">Transfer Bank</span>
+                                                <span class="block text-xs text-muted-foreground">ATM/Internet Banking</span>
+                                            </span>
+                                        </label>
+                                        <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-border/60 bg-background/40 p-3 transition-colors hover:bg-muted/40">
+                                            <input
+                                                type="radio"
+                                                value="credit_card"
+                                                v-model="form.payment_method"
+                                                class="mt-1 h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                                            />
+                                            <span class="min-w-0">
+                                                <span class="block font-medium">Kartu Kredit</span>
+                                                <span class="block text-xs text-muted-foreground">Visa/Mastercard</span>
+                                            </span>
+                                        </label>
+                                        <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-border/60 bg-background/40 p-3 transition-colors hover:bg-muted/40">
+                                            <input
+                                                type="radio"
+                                                value="e_wallet"
+                                                v-model="form.payment_method"
+                                                class="mt-1 h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                                            />
+                                            <span class="min-w-0">
+                                                <span class="block font-medium">E-Wallet</span>
+                                                <span class="block text-xs text-muted-foreground">GoPay/OVO/DANA</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                    <div v-if="form.errors.payment_method" class="text-sm text-red-600">
+                                        {{ form.errors.payment_method }}
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <Label for="bank_id">Pilih Bank</Label>
+                                    <select
+                                        v-model="form.bank_id"
+                                        @change="updateSelectedBank"
+                                        id="bank_id"
+                                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        <option value="" disabled>Pilih bank untuk pembayaran</option>
+                                        <option v-for="bank in banks" :key="bank.id" :value="bank.id.toString()">
+                                            {{ bank.bank_name }} ({{ bank.bank_code }}){{ bank.admin_fee > 0 ? ' - Fee: ' + formatPrice(bank.admin_fee) : '' }}
+                                        </option>
+                                    </select>
+                                    <div v-if="form.errors.bank_id" class="text-sm text-red-600">
+                                        {{ form.errors.bank_id }}
+                                    </div>
+                                </div>
+
+                                <Card v-if="selectedBank" class="border-border/60 bg-muted/20">
+                                    <CardHeader class="pb-3">
+                                        <CardTitle class="text-base">Detail Bank</CardTitle>
+                                        <CardDescription>Gunakan detail ini saat transfer</CardDescription>
+                                    </CardHeader>
+                                    <CardContent class="space-y-3">
+                                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                            <div class="rounded-md border border-border/60 bg-background/50 p-3">
+                                                <div class="text-xs text-muted-foreground">Bank</div>
+                                                <div class="mt-0.5 font-medium">{{ selectedBank.bank_name }}</div>
+                                            </div>
+                                            <div class="rounded-md border border-border/60 bg-background/50 p-3">
+                                                <div class="text-xs text-muted-foreground">Kode Bank</div>
+                                                <div class="mt-0.5 font-mono font-medium">{{ selectedBank.bank_code }}</div>
+                                            </div>
+                                            <div class="rounded-md border border-border/60 bg-background/50 p-3 sm:col-span-2">
+                                                <div class="flex items-center justify-between">
+                                                    <div class="text-xs text-muted-foreground">No. Rekening</div>
+                                                    <button
+                                                        type="button"
+                                                        class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                                                        @click="copyValue(String(selectedBank.account_number || ''))"
+                                                    >
+                                                        <Copy class="h-3.5 w-3.5" />
+                                                        Copy
+                                                    </button>
+                                                </div>
+                                                <div class="mt-0.5 font-mono text-lg font-semibold text-emerald-700 dark:text-green-400">
+                                                    {{ selectedBank.account_number }}
+                                                </div>
+                                                <div class="mt-1 text-xs text-muted-foreground">a.n. {{ selectedBank.account_name }}</div>
+                                            </div>
+                                        </div>
+                                        <div
+                                            v-if="Number(selectedBank.admin_fee) > 0"
+                                            class="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-900 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-100"
+                                        >
+                                            <div class="flex items-start gap-2">
+                                                <AlertCircle class="mt-0.5 h-4 w-4" />
+                                                <div class="min-w-0">
+                                                    Biaya admin <span class="font-medium">{{ formatPrice(selectedBank.admin_fee) }}</span> sudah dihitung ke total.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                <Button type="submit" :disabled="form.processing" class="w-full justify-between">
+                                    <span class="inline-flex items-center gap-2">
+                                        <CreditCard class="h-4 w-4" />
+                                        {{ form.processing ? 'Memproses...' : 'Lanjutkan' }}
+                                    </span>
+                                    <ArrowRight class="h-4 w-4 opacity-80" />
+                                </Button>
+                            </form>
+                        </CardContent>
+                    </Card>
+
+                    <Card v-else class="rounded-lg border-border/60 shadow-sm">
+                        <CardHeader>
+                            <CardTitle class="flex items-center gap-2">
+                                <Building2 class="h-5 w-5 text-emerald-600 dark:text-green-400" />
+                                Instruksi Pembayaran
+                            </CardTitle>
+                            <CardDescription>Transfer sesuai detail berikut, lalu konfirmasi</CardDescription>
+                        </CardHeader>
+                        <CardContent class="space-y-6">
+                            <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-900/20 dark:text-emerald-100">
+                                <div class="flex items-start gap-3">
+                                    <AlertCircle class="mt-0.5 h-5 w-5" />
+                                    <div class="min-w-0">
+                                        <div class="text-sm font-medium">Transfer sejumlah</div>
+                                        <div class="mt-1 flex flex-wrap items-center gap-2">
+                                            <div class="font-serif text-2xl font-medium">{{ formatPrice(totalWithFee) }}</div>
+                                            <button
+                                                type="button"
+                                                class="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
+                                                @click="copyValue(String(totalWithFee))"
+                                            >
+                                                <Copy class="h-3.5 w-3.5" />
+                                                Copy
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-if="selectedBank" class="grid gap-3 sm:grid-cols-2">
+                                <div class="rounded-lg border border-border/60 bg-background/40 p-3">
+                                    <div class="text-xs text-muted-foreground">Bank</div>
+                                    <div class="mt-0.5 font-medium">{{ selectedBank.bank_name }}</div>
+                                </div>
+                                <div class="rounded-lg border border-border/60 bg-background/40 p-3">
+                                    <div class="text-xs text-muted-foreground">Kode Bank</div>
+                                    <div class="mt-0.5 font-mono font-medium">{{ selectedBank.bank_code }}</div>
+                                </div>
+                                <div class="rounded-lg border border-border/60 bg-background/40 p-3 sm:col-span-2">
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-xs text-muted-foreground">No. Rekening</div>
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                                            @click="copyValue(String(selectedBank.account_number || ''))"
+                                        >
+                                            <Copy class="h-3.5 w-3.5" />
+                                            Copy
+                                        </button>
+                                    </div>
+                                    <div class="mt-0.5 font-mono text-xl font-semibold text-emerald-700 dark:text-green-400">{{ selectedBank.account_number }}</div>
+                                    <div class="mt-1 text-xs text-muted-foreground">a.n. {{ selectedBank.account_name }}</div>
+                                </div>
+                            </div>
+
+                            <Separator />
+
+                            <form @submit.prevent="confirmPayment" class="space-y-4">
+                                <div class="space-y-2">
+                                    <Label for="payment_proof">Catatan Pembayaran (Opsional)</Label>
+                                    <textarea
+                                        id="payment_proof"
+                                        v-model="confirmForm.payment_proof"
+                                        placeholder="Masukkan nomor referensi transfer atau catatan lainnya..."
+                                        rows="3"
+                                        class="flex min-h-[88px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                    />
+                                    <p class="text-xs text-muted-foreground">Contoh: nomor referensi, jam transfer, atau catatan lain untuk admin.</p>
+                                </div>
+
+                                <div class="flex flex-col gap-2 sm:flex-row">
+                                    <Button type="submit" :disabled="confirmForm.processing" class="w-full justify-between sm:flex-1">
+                                        <span class="inline-flex items-center gap-2">
+                                            <CheckCircle class="h-4 w-4" />
+                                            {{ confirmForm.processing ? 'Memproses...' : 'Konfirmasi Pembayaran' }}
+                                        </span>
+                                        <ArrowRight class="h-4 w-4 opacity-80" />
+                                    </Button>
+                                    <Button type="button" variant="outline" class="w-full sm:w-auto" @click="showConfirmation = false">
+                                        Ubah Metode
+                                    </Button>
+                                </div>
+                            </form>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <div class="space-y-4 md:col-span-2">
+                    <Card class="rounded-lg border-border/60 shadow-sm">
+                        <CardHeader class="pb-3">
+                            <CardTitle class="text-base">Ringkasan</CardTitle>
+                            <CardDescription>Detail pembayaran invoice</CardDescription>
+                        </CardHeader>
+                        <CardContent class="space-y-3">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-muted-foreground">Invoice</span>
+                                <span class="font-mono font-medium">{{ invoice.invoice_number }}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-muted-foreground">Status</span>
+                                <Badge :class="getStatusClass(invoice.status)">{{ getStatusText(invoice.status) }}</Badge>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-muted-foreground">Jatuh tempo</span>
+                                <span :class="cn('font-medium', isOverdue ? 'text-red-600 dark:text-red-400' : '')">{{ formatDate(invoice.due_date) }}</span>
                             </div>
                             <Separator />
-                            <div class="flex justify-between text-lg font-bold">
-                                <span>Total:</span>
-                                <span class="text-primary">{{ formatPrice(totalWithFee) }}</span>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-muted-foreground">Subtotal</span>
+                                <span class="font-medium">{{ formatPrice(invoice.amount) }}</span>
                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <!-- Payment Method Selection -->
-                <Card v-if="!showConfirmation">
-                    <CardHeader>
-                        <CardTitle class="flex items-center gap-2">
-                            <CreditCard class="h-5 w-5" />
-                            Pilih Metode Pembayaran
-                        </CardTitle>
-                        <CardDescription> Pilih bank dan metode pembayaran yang Anda inginkan </CardDescription>
-                    </CardHeader>
-                    <CardContent class="space-y-6">
-                        <form @submit.prevent="submitPayment">
-                            <!-- Payment Method -->
-                            <div class="space-y-3">
-                                <Label>Metode Pembayaran</Label>
-                                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                                    <div class="flex items-center space-x-2 rounded-lg border p-4">
-                                        <input
-                                            type="radio"
-                                            value="bank_transfer"
-                                            id="bank_transfer"
-                                            v-model="form.payment_method"
-                                            class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                                        />
-                                        <Label for="bank_transfer" class="flex-1 cursor-pointer">
-                                            <div class="font-medium">Transfer Bank</div>
-                                            <div class="text-sm text-muted-foreground">Transfer melalui ATM/Internet Banking</div>
-                                        </Label>
-                                    </div>
-                                    <div class="flex items-center space-x-2 rounded-lg border p-4">
-                                        <input
-                                            type="radio"
-                                            value="credit_card"
-                                            id="credit_card"
-                                            v-model="form.payment_method"
-                                            class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                                        />
-                                        <Label for="credit_card" class="flex-1 cursor-pointer">
-                                            <div class="font-medium">Kartu Kredit</div>
-                                            <div class="text-sm text-muted-foreground">Visa, Mastercard, dll</div>
-                                        </Label>
-                                    </div>
-                                    <div class="flex items-center space-x-2 rounded-lg border p-4">
-                                        <input
-                                            type="radio"
-                                            value="e_wallet"
-                                            id="e_wallet"
-                                            v-model="form.payment_method"
-                                            class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                                        />
-                                        <Label for="e_wallet" class="flex-1 cursor-pointer">
-                                            <div class="font-medium">E-Wallet</div>
-                                            <div class="text-sm text-muted-foreground">GoPay, OVO, DANA, dll</div>
-                                        </Label>
-                                    </div>
-                                </div>
-                                <div v-if="form.errors.payment_method" class="text-sm text-red-600">
-                                    {{ form.errors.payment_method }}
-                                </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-muted-foreground">Biaya admin</span>
+                                <span class="font-medium">{{ selectedBank ? formatPrice(selectedBank.admin_fee || 0) : formatPrice(0) }}</span>
                             </div>
-
-                            <!-- Bank Selection -->
-                            <div class="space-y-3">
-                                <Label for="bank_id">Pilih Bank</Label>
-                                <select
-                                    v-model="form.bank_id"
-                                    @change="updateSelectedBank"
-                                    id="bank_id"
-                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white"
-                                >
-                                    <option value="" disabled>Pilih bank untuk pembayaran</option>
-                                    <option v-for="bank in banks" :key="bank.id" :value="bank.id.toString()">
-                                        {{ bank.bank_name }} ({{ bank.bank_code }}){{
-                                            bank.admin_fee > 0 ? ' - Fee: ' + formatPrice(bank.admin_fee) : ''
-                                        }}
-                                    </option>
-                                </select>
-                                <div v-if="form.errors.bank_id" class="text-sm text-red-600">
-                                    {{ form.errors.bank_id }}
-                                </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-muted-foreground">Total</span>
+                                <span class="font-serif text-xl font-medium text-emerald-700 dark:text-green-400">{{ formatPrice(totalWithFee) }}</span>
                             </div>
-
-                            <!-- Selected Bank Details -->
-                            <Card v-if="selectedBank" class="bg-muted/50">
-                                <CardHeader>
-                                    <CardTitle class="text-base">Detail Bank Terpilih</CardTitle>
-                                </CardHeader>
-                                <CardContent class="space-y-2">
-                                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                        <div>
-                                            <label class="text-sm font-medium text-muted-foreground">Bank</label>
-                                            <p class="font-medium">{{ selectedBank.bank_name }}</p>
-                                        </div>
-                                        <div>
-                                            <label class="text-sm font-medium text-muted-foreground">Kode Bank</label>
-                                            <p>{{ selectedBank.bank_code }}</p>
-                                        </div>
-                                        <div>
-                                            <label class="text-sm font-medium text-muted-foreground">No. Rekening</label>
-                                            <p class="font-mono">{{ selectedBank.account_number }}</p>
-                                        </div>
-                                        <div>
-                                            <label class="text-sm font-medium text-muted-foreground">Nama Rekening</label>
-                                            <p>{{ selectedBank.account_name }}</p>
-                                        </div>
-                                    </div>
-                                    <div v-if="selectedBank.branch">
-                                        <label class="text-sm font-medium text-muted-foreground">Cabang</label>
-                                        <p>{{ selectedBank.branch }}</p>
-                                    </div>
-                                    <div
-                                        v-if="selectedBank.admin_fee > 0"
-                                        class="rounded border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-800 dark:bg-yellow-900/20"
-                                    >
-                                        <div class="flex items-center">
-                                            <AlertCircle class="mr-2 h-4 w-4 text-yellow-600" />
-                                            <span class="text-sm">Biaya admin: {{ formatPrice(selectedBank.admin_fee) }}</span>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            <Button type="submit" :disabled="form.processing" class="w-full">
-                                <CreditCard class="mr-2 h-4 w-4" />
-                                {{ form.processing ? 'Memproses...' : 'Lanjutkan Pembayaran' }}
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
-
-                <!-- Payment Confirmation -->
-                <Card v-if="showConfirmation">
-                    <CardHeader>
-                        <CardTitle class="flex items-center gap-2">
-                            <Building2 class="h-5 w-5" />
-                            Instruksi Pembayaran
-                        </CardTitle>
-                        <CardDescription> Silakan lakukan pembayaran sesuai instruksi di bawah ini </CardDescription>
-                    </CardHeader>
-                    <CardContent class="space-y-6">
-                        <div class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <AlertCircle class="h-5 w-5 text-blue-400" />
-                                </div>
-                                <div class="ml-3">
-                                    <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">Instruksi Pembayaran</h3>
-                                    <p class="mt-1 text-sm text-blue-700 dark:text-blue-300">
-                                        Transfer sejumlah {{ formatPrice(totalWithFee) }} ke rekening di bawah ini.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div v-if="selectedBank" class="space-y-4">
-                            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <div class="space-y-2">
-                                    <label class="text-sm font-medium text-muted-foreground">Bank Tujuan</label>
-                                    <p class="text-lg font-semibold">{{ selectedBank.bank_name }}</p>
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-sm font-medium text-muted-foreground">Kode Bank</label>
-                                    <p class="font-mono text-lg">{{ selectedBank.bank_code }}</p>
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-sm font-medium text-muted-foreground">No. Rekening</label>
-                                    <p class="font-mono text-xl font-bold text-primary">{{ selectedBank.account_number }}</p>
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-sm font-medium text-muted-foreground">Nama Rekening</label>
-                                    <p class="text-lg font-semibold">{{ selectedBank.account_name }}</p>
-                                </div>
-                            </div>
-
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium text-muted-foreground">Jumlah Transfer</label>
-                                <p class="text-2xl font-bold text-primary">{{ formatPrice(totalWithFee) }}</p>
-                            </div>
-
-                            <div v-if="selectedBank.branch" class="space-y-2">
-                                <label class="text-sm font-medium text-muted-foreground">Cabang</label>
-                                <p>{{ selectedBank.branch }}</p>
-                            </div>
-                        </div>
-
-                        <Separator />
-
-                        <!-- Payment Confirmation Form -->
-                        <form @submit.prevent="confirmPayment" class="space-y-4">
-                            <div class="space-y-2">
-                                <Label for="payment_proof">Catatan Pembayaran (Opsional)</Label>
-                                <textarea
-                                    id="payment_proof"
-                                    v-model="confirmForm.payment_proof"
-                                    placeholder="Masukkan nomor referensi transfer atau catatan lainnya..."
-                                    rows="3"
-                                    class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                                />
-                                <p class="text-sm text-muted-foreground">Anda dapat menambahkan nomor referensi transfer atau catatan lainnya.</p>
-                            </div>
-
-                            <div class="flex gap-3">
-                                <Button type="submit" :disabled="confirmForm.processing" class="flex-1">
-                                    <CheckCircle class="mr-2 h-4 w-4" />
-                                    {{ confirmForm.processing ? 'Memproses...' : 'Konfirmasi Pembayaran' }}
-                                </Button>
-                                <Button type="button" variant="outline" @click="showConfirmation = false"> Ubah Metode </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
-    </AppLayout>
+    </CustomerLayout>
 </template>

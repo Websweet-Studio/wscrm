@@ -1,16 +1,34 @@
-<script setup>
+<script setup lang="ts">
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import AppLayout from '@/layouts/AppLayout.vue';
+import CustomerLayout from '@/layouts/CustomerLayout.vue';
+import { cn } from '@/lib/utils';
 import { formatDate, formatPrice } from '@/lib/utils';
+import customer from '@/routes/customer';
+import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { Building2, Calendar, CreditCard, FileText, Package, User } from 'lucide-vue-next';
+import { ArrowRight, Building2, Calendar, CreditCard, FileText, Package, ReceiptText, ShieldCheck, User } from 'lucide-vue-next';
 
-const props = defineProps({
-    invoice: Object,
-    banks: Array,
-});
+const props = defineProps<{
+    invoice: any;
+    banks: any[];
+}>();
+
+const customerRoutes = customer as any;
+const getCustomerUrl = (getter: () => string | undefined, fallback: string) => {
+    try {
+        return getter() || fallback;
+    } catch {
+        return fallback;
+    }
+};
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Customer Dashboard', href: getCustomerUrl(() => customerRoutes?.dashboard?.().url, '/customer/dashboard') },
+    { title: 'Tagihan', href: getCustomerUrl(() => customerRoutes?.invoices?.index?.().url, '/customer/invoices') },
+    { title: props.invoice.invoice_number || 'Invoice', href: getCustomerUrl(() => customerRoutes?.invoices?.show?.(props.invoice.id).url, `/customer/invoices/${props.invoice.id}`) },
+];
 
 const getStatusClass = (status) => {
     const classes = {
@@ -71,24 +89,72 @@ const canPay = () => {
 <template>
     <Head :title="`Invoice ${invoice.invoice_number}`" />
 
-    <AppLayout>
-        <template #header>
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-xl leading-tight font-semibold text-gray-800 dark:text-gray-200">Invoice {{ invoice.invoice_number }}</h2>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Detail invoice dan informasi pembayaran</p>
+    <CustomerLayout :breadcrumbs="breadcrumbs">
+        <div class="mx-auto w-full max-w-5xl space-y-4 p-4 sm:space-y-6 sm:p-6">
+            <Card class="relative overflow-hidden border-border/60 bg-card/70 shadow-sm backdrop-blur">
+                <div class="pointer-events-none absolute inset-0 opacity-60 dark:opacity-80">
+                    <div class="absolute -inset-24 bg-[radial-gradient(closest-side,rgba(16,185,129,0.16),transparent_65%)]"></div>
+                    <div class="absolute -right-24 -top-32 h-96 w-96 bg-[radial-gradient(closest-side,rgba(34,211,238,0.14),transparent_60%)]"></div>
+                    <div class="absolute inset-0 bg-[linear-gradient(to_right,transparent_0,rgba(16,185,129,0.05)_50%,transparent_100%)]"></div>
                 </div>
-                <div class="flex items-center gap-3">
-                    <Button v-if="canPay()" :as="Link" :href="`/customer/invoices/${invoice.id}/payment`">
-                        <CreditCard class="mr-2 h-4 w-4" />
-                        Bayar Sekarang
-                    </Button>
-                </div>
-            </div>
-        </template>
+                <CardContent class="relative p-4 sm:p-6">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div class="min-w-0">
+                            <div class="mb-2 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-xs text-muted-foreground">
+                                <ReceiptText class="h-3.5 w-3.5 text-emerald-600 dark:text-green-400" />
+                                <span>Detail Invoice</span>
+                            </div>
+                            <h1 class="font-serif text-2xl font-medium leading-tight tracking-tight sm:text-3xl">
+                                Invoice <span class="font-mono">{{ invoice.invoice_number }}</span>
+                            </h1>
+                            <div class="mt-2 flex flex-wrap items-center gap-2">
+                                <Badge :class="getStatusClass(invoice.status)">{{ getStatusText(invoice.status) }}</Badge>
+                                <span class="text-sm text-muted-foreground">
+                                    Jatuh tempo
+                                    <span :class="cn('font-medium', isOverdue() ? 'text-red-600 dark:text-red-400' : '')">{{ formatDate(invoice.due_date) }}</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[260px]">
+                            <Button
+                                v-if="canPay()"
+                                :as="Link"
+                                :href="`/customer/invoices/${invoice.id}/payment`"
+                                size="sm"
+                                class="w-full justify-between"
+                            >
+                                <span class="inline-flex items-center gap-2">
+                                    <CreditCard class="h-4 w-4" />
+                                    Bayar Sekarang
+                                </span>
+                                <ArrowRight class="h-4 w-4 opacity-80" />
+                            </Button>
+                            <Button
+                                :as="Link"
+                                :href="getCustomerUrl(() => customerRoutes?.invoices?.index?.().url, '/customer/invoices')"
+                                variant="outline"
+                                size="sm"
+                                class="w-full justify-between"
+                            >
+                                <span class="inline-flex items-center gap-2">
+                                    <ShieldCheck class="h-4 w-4 text-emerald-600 dark:text-green-400" />
+                                    Kembali ke Tagihan
+                                </span>
+                                <ArrowRight class="h-4 w-4 opacity-70" />
+                            </Button>
+                            <div class="rounded-lg border border-border/60 bg-background/60 p-3">
+                                <div class="text-xs text-muted-foreground">Total</div>
+                                <div class="mt-0.5 font-serif text-xl font-medium text-emerald-700 dark:text-green-400">
+                                    {{ formatPrice(invoice.amount) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-4xl space-y-6 sm:px-6 lg:px-8">
+            <div class="grid gap-4 md:grid-cols-5 md:gap-6">
+                <div class="space-y-4 md:col-span-3">
                 <!-- Invoice Status Alert -->
                 <div v-if="isOverdue()" class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
                     <div class="flex items-center">
@@ -122,7 +188,7 @@ const canPay = () => {
                 </div>
 
                 <!-- Invoice Details -->
-                <Card>
+                <Card class="rounded-lg border-border/60 shadow-sm">
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2">
                             <FileText class="h-5 w-5" />
@@ -168,7 +234,7 @@ const canPay = () => {
                 </Card>
 
                 <!-- Customer Information -->
-                <Card>
+                <Card class="rounded-lg border-border/60 shadow-sm">
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2">
                             <User class="h-5 w-5" />
@@ -194,7 +260,7 @@ const canPay = () => {
                 </Card>
 
                 <!-- Order Information -->
-                <Card v-if="invoice.order">
+                <Card v-if="invoice.order" class="rounded-lg border-border/60 shadow-sm">
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2">
                             <Package class="h-5 w-5" />
@@ -220,7 +286,7 @@ const canPay = () => {
                 </Card>
 
                 <!-- Payment Information -->
-                <Card>
+                <Card class="rounded-lg border-border/60 shadow-sm">
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2">
                             <Building2 class="h-5 w-5" />
@@ -277,7 +343,7 @@ const canPay = () => {
                 </Card>
 
                 <!-- Notes -->
-                <Card v-if="invoice.notes">
+                <Card v-if="invoice.notes" class="rounded-lg border-border/60 shadow-sm">
                     <CardHeader>
                         <CardTitle>Catatan</CardTitle>
                     </CardHeader>
@@ -285,7 +351,54 @@ const canPay = () => {
                         <p class="text-sm text-muted-foreground">{{ invoice.notes }}</p>
                     </CardContent>
                 </Card>
+                </div>
+                <div class="space-y-4 md:col-span-2">
+                    <Card class="rounded-lg border-border/60 shadow-sm">
+                        <CardHeader class="pb-3">
+                            <CardTitle class="text-base">Ringkasan</CardTitle>
+                        </CardHeader>
+                        <CardContent class="space-y-3">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-muted-foreground">Invoice</span>
+                                <span class="font-mono font-medium">{{ invoice.invoice_number }}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-muted-foreground">Status</span>
+                                <Badge :class="getStatusClass(invoice.status)">{{ getStatusText(invoice.status) }}</Badge>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-muted-foreground">Jatuh tempo</span>
+                                <span :class="cn('font-medium', isOverdue() ? 'text-red-600 dark:text-red-400' : '')">{{ formatDate(invoice.due_date) }}</span>
+                            </div>
+                            <div v-if="invoice.paid_at" class="flex items-center justify-between text-sm">
+                                <span class="text-muted-foreground">Dibayar</span>
+                                <span class="font-medium">{{ formatDate(invoice.paid_at) }}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-muted-foreground">Dibuat</span>
+                                <span class="font-medium">{{ formatDate(invoice.created_at) }}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-muted-foreground">Total</span>
+                                <span class="font-serif text-xl font-medium text-emerald-700 dark:text-green-400">{{ formatPrice(invoice.amount) }}</span>
+                            </div>
+                            <Button
+                                v-if="canPay()"
+                                :as="Link"
+                                :href="`/customer/invoices/${invoice.id}/payment`"
+                                size="sm"
+                                class="w-full justify-between"
+                            >
+                                <span class="inline-flex items-center gap-2">
+                                    <CreditCard class="h-4 w-4" />
+                                    Bayar Sekarang
+                                </span>
+                                <ArrowRight class="h-4 w-4 opacity-80" />
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
-    </AppLayout>
+    </CustomerLayout>
 </template>

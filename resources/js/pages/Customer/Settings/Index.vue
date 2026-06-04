@@ -5,8 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
+import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { ArrowRight, KeyRound, Save, ShieldCheck, UserRound } from 'lucide-vue-next';
 
 const page = usePage();
 const customer = page.props.auth.customer;
@@ -55,16 +57,45 @@ const submitPassword = () => {
 
     <CustomerLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-4 p-4 sm:space-y-6 sm:p-6">
-            <div>
-                <h1 class="font-serif text-2xl font-medium leading-tight tracking-tight sm:text-3xl">Settings</h1>
-                <p class="text-muted-foreground">Kelola informasi akun dan keamanan Anda</p>
-            </div>
+            <Card class="relative overflow-hidden border-border/60 bg-card/70 shadow-sm backdrop-blur">
+                <div class="pointer-events-none absolute inset-0 opacity-60 dark:opacity-80">
+                    <div class="absolute -inset-24 bg-[radial-gradient(closest-side,rgba(16,185,129,0.16),transparent_65%)]"></div>
+                    <div class="absolute -right-24 -top-32 h-96 w-96 bg-[radial-gradient(closest-side,rgba(34,211,238,0.14),transparent_60%)]"></div>
+                    <div class="absolute inset-0 bg-[linear-gradient(to_right,transparent_0,rgba(16,185,129,0.05)_50%,transparent_100%)]"></div>
+                </div>
+                <CardContent class="relative p-4 sm:p-6">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div class="min-w-0">
+                            <div class="mb-2 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-xs text-muted-foreground">
+                                <ShieldCheck class="h-3.5 w-3.5 text-emerald-600 dark:text-green-400" />
+                                <span>Pengaturan Akun</span>
+                            </div>
+                            <h1 class="font-serif text-2xl font-medium leading-tight tracking-tight sm:text-3xl">Settings</h1>
+                            <p class="mt-1 text-sm text-muted-foreground sm:text-base">Kelola informasi profil dan keamanan akun Anda</p>
+                        </div>
+                        <div class="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[260px]">
+                            <Button asChild size="sm" class="w-full justify-between">
+                                <a href="/customer/dashboard">
+                                    <span class="inline-flex items-center gap-2">
+                                        <UserRound class="h-4 w-4" />
+                                        Kembali ke Dashboard
+                                    </span>
+                                    <ArrowRight class="h-4 w-4 opacity-80" />
+                                </a>
+                            </Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
-            <div class="grid gap-6">
+            <div class="grid gap-6 lg:grid-cols-5">
                 <!-- Profile Settings -->
-                <Card class="rounded-lg shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
+                <Card class="rounded-lg border-border/60 shadow-sm lg:col-span-3">
                     <CardHeader>
-                        <CardTitle class="font-serif font-medium tracking-tight">Informasi Profil</CardTitle>
+                        <CardTitle class="flex items-center gap-2 font-serif font-medium tracking-tight">
+                            <UserRound class="h-5 w-5 text-emerald-600 dark:text-green-400" />
+                            Informasi Profil
+                        </CardTitle>
                         <CardDescription class="leading-relaxed"> Perbarui informasi profil dan alamat email Anda </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -155,9 +186,10 @@ const submitPassword = () => {
                             </div>
 
                             <div class="flex">
-                                <Button type="submit" :disabled="profileForm.processing" class="w-full sm:ml-auto sm:w-auto">
+                                <Button type="submit" :disabled="profileForm.processing" class="w-full justify-between sm:ml-auto sm:w-auto">
                                     <span v-if="!profileForm.processing">Simpan Perubahan</span>
                                     <span v-else>Menyimpan...</span>
+                                    <Save v-if="!profileForm.processing" class="ml-2 h-4 w-4" />
                                 </Button>
                             </div>
                         </form>
@@ -165,9 +197,12 @@ const submitPassword = () => {
                 </Card>
 
                 <!-- Password Settings -->
-                <Card class="rounded-lg shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
+                <Card class="rounded-lg border-border/60 shadow-sm lg:col-span-2">
                     <CardHeader>
-                        <CardTitle class="font-serif font-medium tracking-tight">Ubah Password</CardTitle>
+                        <CardTitle class="flex items-center gap-2 font-serif font-medium tracking-tight">
+                            <KeyRound class="h-5 w-5 text-emerald-600 dark:text-green-400" />
+                            Ubah Password
+                        </CardTitle>
                         <CardDescription class="leading-relaxed"> Perbarui password akun Anda untuk menjaga keamanan </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -209,9 +244,10 @@ const submitPassword = () => {
                             </div>
 
                             <div class="flex">
-                                <Button type="submit" :disabled="passwordForm.processing" class="w-full sm:ml-auto sm:w-auto">
+                                <Button type="submit" :disabled="passwordForm.processing" class="w-full justify-between sm:ml-auto sm:w-auto">
                                     <span v-if="!passwordForm.processing">Ubah Password</span>
                                     <span v-else>Mengubah...</span>
+                                    <KeyRound v-if="!passwordForm.processing" class="ml-2 h-4 w-4" />
                                 </Button>
                             </div>
                         </form>
