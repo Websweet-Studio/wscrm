@@ -9,11 +9,13 @@ import { Menu } from 'lucide-vue-next';
 interface Props {
     breadcrumbs?: BreadcrumbItemType[];
     useCustomSidebar?: boolean;
+    showAppearanceTabs?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     breadcrumbs: () => [],
     useCustomSidebar: false,
+    showAppearanceTabs: true,
 });
 
 let hasRekaUISidebar = true;
@@ -39,19 +41,15 @@ const toggleSidebar = () => {
     <header
         class="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-6"
     >
-        <!-- Reka UI Sidebar Trigger (for CustomerLayout) -->
         <Button v-if="hasRekaUISidebar" variant="ghost" size="icon" @click="toggleSidebar" class="h-11 w-11">
             <Menu class="h-5 w-5" />
         </Button>
 
-        <!-- Custom Sidebar Triggers (for AppSidebarLayout) -->
         <template v-else>
-            <!-- Mobile Menu Button -->
             <Button variant="ghost" size="icon" @click="emit('toggleMobileSidebar')" class="h-11 w-11 lg:hidden">
                 <Menu class="h-5 w-5" />
             </Button>
 
-            <!-- Desktop Sidebar Toggle -->
             <Button variant="ghost" size="icon" @click="emit('toggleSidebar')" class="hidden h-11 w-11 lg:flex">
                 <Menu class="h-5 w-5" />
             </Button>
@@ -61,7 +59,7 @@ const toggleSidebar = () => {
             <Breadcrumbs :breadcrumbs="breadcrumbs" />
         </template>
 
-        <div class="ml-auto flex items-center gap-2">
+        <div v-if="props.showAppearanceTabs" class="ml-auto flex items-center gap-2">
             <AppearanceTabs />
         </div>
     </header>

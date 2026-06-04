@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
-import { formatDate, formatPrice } from '@/lib/utils';
+import { cn, formatDate, formatPrice } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ChevronLeft, ShoppingCart, Trash2 } from 'lucide-vue-next';
+import { ArrowRight, ChevronLeft, ReceiptText, ShoppingCart, Trash2 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface OrderItem {
@@ -104,42 +104,66 @@ const deleteOrder = () => {
 
     <CustomerLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-4 p-4 sm:space-y-6 sm:p-6">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div class="space-y-1">
-                    <div class="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" asChild class="h-11 w-11">
-                            <Link href="/customer/orders">
-                                <ChevronLeft class="h-5 w-5" />
-                            </Link>
-                        </Button>
-                        <div>
-                            <h1 class="font-serif text-2xl font-medium leading-tight tracking-tight sm:text-3xl">
-                                Order <span class="font-mono">#{{ order.id }}</span>
-                            </h1>
-                            <p class="text-sm text-muted-foreground">Dibuat {{ formatDate(order.created_at) }}</p>
+            <Card class="relative overflow-hidden border-border/60 bg-card/70 shadow-sm backdrop-blur">
+                <div class="pointer-events-none absolute inset-0 opacity-60 dark:opacity-80">
+                    <div class="absolute -inset-24 bg-[radial-gradient(closest-side,rgba(16,185,129,0.16),transparent_65%)]"></div>
+                    <div class="absolute -right-24 -top-32 h-96 w-96 bg-[radial-gradient(closest-side,rgba(34,211,238,0.14),transparent_60%)]"></div>
+                    <div class="absolute inset-0 bg-[linear-gradient(to_right,transparent_0,rgba(16,185,129,0.05)_50%,transparent_100%)]"></div>
+                </div>
+                <CardContent class="relative p-4 sm:p-6">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div class="min-w-0">
+                            <div class="mb-2 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-xs text-muted-foreground">
+                                <ReceiptText class="h-3.5 w-3.5 text-emerald-600 dark:text-green-400" />
+                                <span>Detail Pesanan</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <Button variant="ghost" size="icon" asChild class="mt-0.5 h-10 w-10">
+                                    <Link href="/customer/orders">
+                                        <ChevronLeft class="h-5 w-5" />
+                                    </Link>
+                                </Button>
+                                <div class="min-w-0">
+                                    <h1 class="font-serif text-2xl font-medium leading-tight tracking-tight sm:text-3xl">
+                                        Order <span class="font-mono">#{{ order.id }}</span>
+                                    </h1>
+                                    <p class="mt-1 text-sm text-muted-foreground">Dibuat {{ formatDate(order.created_at) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[260px]">
+                            <div class="flex items-center justify-between">
+                                <Badge :variant="getStatusVariant(order.status)" :class="getStatusColor(order.status)">
+                                    {{ order.status }}
+                                </Badge>
+                                <span class="text-xs text-muted-foreground">{{ order.billing_cycle.replace('_', ' ') }}</span>
+                            </div>
+                            <div class="rounded-lg border border-border/60 bg-background/60 p-3 text-right">
+                                <template v-if="order.discount_amount && order.discount_amount > 0">
+                                    <div class="text-xs text-muted-foreground line-through">{{ formatPrice(order.total_amount) }}</div>
+                                    <div class="font-serif text-xl font-medium text-emerald-700 dark:text-green-400">{{ formatPrice(payableAmount) }}</div>
+                                    <div class="text-xs text-muted-foreground">Diskon: {{ formatPrice(order.discount_amount) }}</div>
+                                </template>
+                                <template v-else>
+                                    <div class="font-serif text-xl font-medium text-emerald-700 dark:text-green-400">{{ formatPrice(order.total_amount) }}</div>
+                                </template>
+                            </div>
+                            <Button asChild variant="outline" size="sm" class="w-full justify-between">
+                                <Link href="/customer/invoices">
+                                    <span class="inline-flex items-center gap-2">
+                                        <ReceiptText class="h-4 w-4 text-emerald-600 dark:text-green-400" />
+                                        Lihat Tagihan
+                                    </span>
+                                    <ArrowRight class="h-4 w-4 opacity-70" />
+                                </Link>
+                            </Button>
                         </div>
                     </div>
-                </div>
-
-                <div class="flex flex-col gap-2 sm:items-end">
-                    <Badge :variant="getStatusVariant(order.status)" :class="getStatusColor(order.status)">
-                        {{ order.status }}
-                    </Badge>
-                    <div class="text-right">
-                        <template v-if="order.discount_amount && order.discount_amount > 0">
-                            <div class="text-xs text-muted-foreground line-through">{{ formatPrice(order.total_amount) }}</div>
-                            <div class="font-serif text-xl font-medium">{{ formatPrice(payableAmount) }}</div>
-                            <div class="text-xs text-muted-foreground">Diskon: {{ formatPrice(order.discount_amount) }}</div>
-                        </template>
-                        <template v-else>
-                            <div class="font-serif text-xl font-medium">{{ formatPrice(order.total_amount) }}</div>
-                        </template>
-                    </div>
-                </div>
-            </div>
+                </CardContent>
+            </Card>
 
             <div class="grid gap-6 lg:grid-cols-3">
-                <Card class="rounded-lg shadow-[rgba(0,0,0,0.05)_0px_4px_24px] lg:col-span-2">
+                <Card class="rounded-lg border-border/60 shadow-sm lg:col-span-2">
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2 font-serif font-medium tracking-tight">
                             <ShoppingCart class="h-5 w-5" />
@@ -148,45 +172,30 @@ const deleteOrder = () => {
                         <CardDescription>Rincian item yang termasuk dalam order ini</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Item</TableHead>
-                                    <TableHead>Billing</TableHead>
-                                    <TableHead class="text-right">Harga</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow v-for="item in order.order_items" :key="item.id">
-                                    <TableCell>
-                                        <div class="space-y-0.5">
-                                            <div class="font-medium">
-                                                {{ item.domain_name || order.domain_name || item.item_type }}
-                                            </div>
-                                            <div class="text-[11px] text-muted-foreground capitalize">
-                                                {{ item.item_type }}
-                                                <span v-if="item.quantity > 1"> • × {{ item.quantity }}</span>
-                                            </div>
+                        <div class="overflow-hidden rounded-lg border border-border/60">
+                            <div class="divide-y divide-border/60">
+                                <div v-for="item in order.order_items" :key="item.id" class="flex items-start justify-between gap-3 bg-background/40 px-3 py-3">
+                                    <div class="min-w-0">
+                                        <div class="truncate font-medium">
+                                            {{ item.domain_name || order.domain_name || item.item_type }}
                                         </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <div class="text-sm capitalize">
-                                            {{ (item.billing_cycle || order.billing_cycle).replace('_', ' ') }}
+                                        <div class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground capitalize">
+                                            <span>{{ item.item_type }}</span>
+                                            <span v-if="item.quantity > 1">• × {{ item.quantity }}</span>
+                                            <span>• {{ (item.billing_cycle || order.billing_cycle).replace('_', ' ') }}</span>
+                                            <span v-if="item.expires_at || order.expires_at">• Kadaluarsa {{ formatDate((item.expires_at || order.expires_at) as string) }}</span>
                                         </div>
-                                        <div v-if="item.expires_at || order.expires_at" class="text-[11px] text-muted-foreground">
-                                            Kadaluarsa {{ formatDate((item.expires_at || order.expires_at) as string) }}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell class="text-right">
+                                    </div>
+                                    <div class="shrink-0 text-right">
                                         <div class="font-medium">{{ formatPrice(item.price) }}</div>
-                                    </TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
 
-                <Card class="rounded-lg shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
+                <Card class="rounded-lg border-border/60 shadow-sm">
                     <CardHeader>
                         <CardTitle class="font-serif font-medium tracking-tight">Ringkasan</CardTitle>
                         <CardDescription>Informasi pembayaran order</CardDescription>
@@ -223,4 +232,3 @@ const deleteOrder = () => {
         </div>
     </CustomerLayout>
 </template>
-
