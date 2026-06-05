@@ -2,40 +2,119 @@
 
 define('LARAVEL_START', microtime(true));
 
-// ========================================
-// INSTALLER CHECK - PRIORITY #1
-// ========================================
-// Check if installer exists and installation is not completed
-if (is_dir(__DIR__.'/install')) {
-    // For flat deployment, check wscrm folder for installer.lock
-    $installerLockPaths = [
-        __DIR__.'/wscrm/storage/installer.lock',      // wscrm in same directory
-        __DIR__.'/../wscrm/storage/installer.lock',   // wscrm moved outside web root
-        __DIR__.'/../storage/installer.lock',          // standard Laravel structure
-    ];
+$scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+$basePath = rtrim(str_replace('\\', '/', (string) dirname($scriptName)), '/');
+if ($basePath === '/') {
+    $basePath = '';
+}
+$installPrefix = $basePath . '/install';
+$installUrl = $installPrefix . '/';
 
-    $installCompleted = false;
-    foreach ($installerLockPaths as $lockPath) {
-        if (file_exists($lockPath)) {
-            $installCompleted = true;
+$envCandidates = [
+    __DIR__.'/.env',
+    __DIR__.'/wscrm/.env',
+    __DIR__.'/../wscrm/.env',
+];
+$appEnv = getenv('APP_ENV') ?: ($_SERVER['APP_ENV'] ?? '');
+foreach ($envCandidates as $envPath) {
+    if ($appEnv !== '' || ! is_file($envPath)) {
+        continue;
+    }
+    $envContent = @file_get_contents($envPath);
+    if ($envContent === false) {
+        continue;
+    }
+    if (preg_match('/^APP_ENV\s*=\s*(.*)$/m', $envContent, $m)) {
+        $appEnv = trim($m[1], " \t\n\r\0\x0B\"'");
+        break;
+    }
+}
+$isLocal = in_array(strtolower((string) $appEnv), ['local', 'development', 'dev'], true);
+$serverHost = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? '')));
+$isLocalHttp = in_array($serverHost, ['localhost', '127.0.0.1', '::1'], true);
+$skipByEnv = $isLocal && $isLocalHttp;
+
+$skipMarkerPaths = [
+    __DIR__.'/storage/installer.skip',
+    __DIR__.'/wscrm/storage/installer.skip',
+    __DIR__.'/../wscrm/storage/installer.skip',
+];
+$hasSkipMarker = false;
+foreach ($skipMarkerPaths as $path) {
+    if (is_file($path)) {
+        $hasSkipMarker = true;
+        break;
+    }
+}
+
+$installerLockPaths = [
+    __DIR__.'/storage/installer.lock',
+    __DIR__.'/wscrm/storage/installer.lock',
+    __DIR__.'/../wscrm/storage/installer.lock',
+];
+$installCompleted = false;
+foreach ($installerLockPaths as $lockPath) {
+    if (is_file($lockPath)) {
+        $installCompleted = true;
+        break;
+    }
+}
+
+if (! $skipByEnv && ! $hasSkipMarker && ! $installCompleted) {
+    $docRoot = (string) ($_SERVER['DOCUMENT_ROOT'] ?? '');
+    $docRoot = $docRoot !== '' ? rtrim($docRoot, '/\\') : '';
+
+    $installerDirs = [
+        __DIR__.'/install',
+        __DIR__.'/public/install',
+        ($docRoot !== '' ? $docRoot.'/install' : ''),
+        ($docRoot !== '' ? $docRoot.'/public/install' : ''),
+    ];
+    $installerBase = null;
+    foreach ($installerDirs as $dir) {
+        if ($dir !== '' && is_dir($dir)) {
+            $installerBase = $dir;
             break;
         }
     }
 
-    // If installation not completed, ALWAYS redirect to installer
-    // DO NOT continue to Laravel bootstrap
-    if (! $installCompleted) {
+    if ($installerBase !== null) {
         $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
+        $path = parse_url($requestUri, PHP_URL_PATH) ?: '/';
 
-        // Only allow installer URLs to proceed
-        if (strpos($requestUri, '/install') !== 0) {
-            header('Location: /install/', true, 302);
+        if (strpos($path, $installPrefix) !== 0) {
+            header('Location: ' . $installUrl, true, 302);
             exit('Redirecting to installer...');
         }
 
-        // If we're accessing installer URLs, let installer handle it
-        // DO NOT load Laravel at all
-        return;
+        $subPath = ltrim(substr($path, strlen($installPrefix)), '/');
+    $subPath = $subPath === '' ? 'index.php' : $subPath;
+
+    $baseReal = realpath($installerBase);
+    $fileReal = realpath($installerBase.'/'.$subPath);
+
+    if ($baseReal !== false && $fileReal !== false) {
+        $baseReal = rtrim(str_replace('\\', '/', $baseReal), '/').'/';
+        $fileRealNormalized = str_replace('\\', '/', $fileReal);
+
+        if (strpos($fileRealNormalized, $baseReal) === 0 && is_file($fileReal)) {
+            $ext = strtolower(pathinfo($fileReal, PATHINFO_EXTENSION));
+            if ($ext === 'php') {
+                require $fileReal;
+                exit;
+            }
+
+            header('Content-Type: text/plain; charset=utf-8');
+            readfile($fileReal);
+            exit;
+        }
+    }
+
+    $fallbackIndex = $installerBase.'/index.php';
+    if (is_file($fallbackIndex)) {
+        require $fallbackIndex;
+        exit;
+    }
     }
 }
 
