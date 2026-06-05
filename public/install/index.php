@@ -127,7 +127,8 @@ function detectWscrmFolder()
 {
     $currentDir = rtrim(str_replace('\\', '/', __DIR__), '/');  // Normalize path
     $publicHtmlDir = dirname($currentDir);
-    $publicHtmlParent = dirname($_SERVER['DOCUMENT_ROOT']);
+    $documentRoot = rtrim(str_replace('\\', '/', (string) ($_SERVER['DOCUMENT_ROOT'] ?? '')), '/');
+    $publicHtmlParent = dirname($documentRoot);
 
     // Normalize all paths to use forward slashes
     $publicHtmlDir = str_replace('\\', '/', $publicHtmlDir);
@@ -150,12 +151,25 @@ function detectWscrmFolder()
         return rtrim($path1, '/'); // Remove trailing slash
     }
 
-    // Priority 2: Check if wscrm exists in public_html (fresh extract)
-    $path2 = $publicHtmlDir . '/wscrm';
-    $exists2 = is_dir($path2);
-    $debugInfo['checks'][] = ['path' => $path2, 'exists' => $exists2, 'priority' => 2];
-    if ($exists2) {
-        return rtrim($path2, '/'); // Remove trailing slash
+    $path2a = $documentRoot !== '' ? ($documentRoot . '/wscrm') : '';
+    $exists2a = $path2a !== '' ? is_dir($path2a) : false;
+    $debugInfo['checks'][] = ['path' => $path2a, 'exists' => $exists2a, 'priority' => '2a'];
+    if ($exists2a) {
+        return rtrim($path2a, '/');
+    }
+
+    $path2b = $documentRoot !== '' ? ($documentRoot . '/public/wscrm') : '';
+    $exists2b = $path2b !== '' ? is_dir($path2b) : false;
+    $debugInfo['checks'][] = ['path' => $path2b, 'exists' => $exists2b, 'priority' => '2b'];
+    if ($exists2b) {
+        return rtrim($path2b, '/');
+    }
+
+    $path2c = $publicHtmlDir . '/wscrm';
+    $exists2c = is_dir($path2c);
+    $debugInfo['checks'][] = ['path' => $path2c, 'exists' => $exists2c, 'priority' => '2c'];
+    if ($exists2c) {
+        return rtrim($path2c, '/');
     }
 
     // Priority 3: Check relative to install directory
@@ -827,6 +841,125 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             exit;
 
+        case 'cleanup_after_install':
+            $targetWscrmPath = str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT'])) . '/wscrm';
+            $detectedPath = detectWscrmFolder();
+            $possiblePaths = array_unique(array_filter([$targetWscrmPath, $detectedPath]));
+
+            $actualWscrmPath = '';
+            foreach ($possiblePaths as $path) {
+                if (! $path || ! is_dir($path)) {
+                    continue;
+                }
+
+                if (file_exists($path . '/.env')) {
+                    $actualWscrmPath = $path;
+                    break;
+                }
+            }
+
+            if (! $actualWscrmPath) {
+                echo json_encode(['success' => false, 'message' => 'Folder wscrm tidak ditemukan atau file .env belum ada.']);
+                exit;
+            }
+
+            $outputs = [];
+            $runInWscrm = function ($label, $command) use ($actualWscrmPath, &$outputs) {
+                $currentDir = getcwd();
+                chdir($actualWscrmPath);
+                $output = executeSimpleCommand($command);
+                chdir($currentDir);
+                $outputs[] = "== {$label} ==\n{$command}\n{$output}";
+            };
+
+            $envFile = $actualWscrmPath . '/.env';
+            if (file_exists($envFile)) {
+                $envContent = file_get_contents($envFile);
+                if (preg_match('/^APP_KEY=\s*$/m', $envContent) || ! preg_match('/^APP_KEY=/m', $envContent)) {
+                    $appKey = 'base64:' . base64_encode(random_bytes(32));
+
+                    if (preg_match('/^APP_KEY=/m', $envContent)) {
+                        $envContent = preg_replace('/^APP_KEY=.*$/m', 'APP_KEY=' . $appKey, $envContent);
+                    } else {
+                        $envContent .= "\nAPP_KEY=" . $appKey;
+                    }
+
+                    file_put_contents($envFile, $envContent);
+                    $outputs[] = "== APP_KEY ==\nAPP_KEY dibuat otomatis (fallback)";
+                }
+            }
+
+            $runInWscrm('Artisan Up', 'php artisan up');
+
+            $lockPath = $actualWscrmPath . '/storage/installer.lock';
+            if (! is_dir(dirname($lockPath))) {
+                @mkdir(dirname($lockPath), 0755, true);
+            }
+            if (! file_exists($lockPath)) {
+                @file_put_contents($lockPath, date('Y-m-d H:i:s'));
+            }
+            $outputs[] = "== Installer Lock ==\ninstaller.lock dibuat di: {$lockPath}";
+
+            $actualReal = realpath($actualWscrmPath);
+            $targetLooksValid = is_file($actualWscrmPath . '/artisan') && (is_file($actualWscrmPath . '/vendor/autoload.php') || is_file($actualWscrmPath . '/bootstrap/app.php'));
+            $documentRoot = rtrim(str_replace('\\', '/', (string) ($_SERVER['DOCUMENT_ROOT'] ?? '')), '/');
+            $publicDir = rtrim(str_replace('\\', '/', dirname(__DIR__)), '/');
+            $cleanupCandidates = array_unique(array_filter([
+                ($documentRoot !== '' ? $documentRoot . '/wscrm' : null),
+                ($documentRoot !== '' ? $documentRoot . '/public/wscrm' : null),
+                ($publicDir !== '' ? $publicDir . '/wscrm' : null),
+            ]));
+
+            if ($targetLooksValid && $actualReal) {
+                foreach ($cleanupCandidates as $candidate) {
+                    if (! is_dir($candidate)) {
+                        continue;
+                    }
+                    $candidateReal = realpath($candidate);
+                    if ($candidateReal && $candidateReal === $actualReal) {
+                        continue;
+                    }
+                    $deletedSource = deleteDirectoryRecursive($candidate);
+                    $outputs[] = "== Cleanup wscrm (public_html) ==\nPath: {$candidate}\nResult: " . ($deletedSource ? 'DELETED' : 'FAILED');
+                }
+            } else {
+                $outputs[] = "== Cleanup wscrm (public_html) ==\nDilewati demi keamanan (target wscrm tidak tervalidasi).";
+            }
+
+            $installPath = __DIR__;
+            $deleted = false;
+
+            if (function_exists('deleteDirectory')) {
+                $deleted = (bool) deleteDirectory($installPath);
+            }
+
+            if (! $deleted) {
+                $deleteDirectoryLocal = function ($dir) use (&$deleteDirectoryLocal) {
+                    if (! is_dir($dir)) {
+                        return false;
+                    }
+                    $files = array_diff(scandir($dir), ['.', '..']);
+                    foreach ($files as $file) {
+                        $filePath = $dir . '/' . $file;
+                        if (is_dir($filePath)) {
+                            $deleteDirectoryLocal($filePath);
+                        } else {
+                            @unlink($filePath);
+                        }
+                    }
+                    return @rmdir($dir);
+                };
+
+                $deleted = (bool) $deleteDirectoryLocal($installPath);
+            }
+
+            echo json_encode([
+                'success' => (bool) $deleted,
+                'message' => $deleted ? 'Cleanup selesai. Folder install berhasil dihapus.' : 'Cleanup selesai, tapi gagal menghapus folder install. Silakan hapus manual.',
+                'output' => implode("\n\n", $outputs),
+            ]);
+            exit;
+
         case 'finalize_install':
             $targetWscrmPath = str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT'])) . '/wscrm';
             $detectedPath = detectWscrmFolder();
@@ -875,7 +1008,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             };
 
             $runInWscrm('Migrations', 'php artisan migrate --force');
-            $runInWscrm('DB Seeder', 'php artisan db:seed --force');
+            $seeders = [
+                'BrandingSettingsSeeder',
+                'HostingPlanSeeder',
+                'DomainPriceSeeder',
+                'ServicePlanSeeder',
+            ];
+            foreach ($seeders as $seeder) {
+                $runInWscrm('Seeder: ' . $seeder, 'php artisan db:seed --class=' . $seeder . ' --force');
+            }
             $runInWscrm('Storage Link', 'php artisan storage:link');
             $runInWscrm('Clear Cache', 'php artisan optimize:clear');
             $runInWscrm('Optimize', 'php artisan optimize');
@@ -888,6 +1029,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if (! file_exists($lockPath)) {
                 @file_put_contents($lockPath, date('Y-m-d H:i:s'));
+            }
+
+            $actualReal = realpath($actualWscrmPath);
+            $targetLooksValid = is_file($actualWscrmPath . '/artisan') && (is_file($actualWscrmPath . '/vendor/autoload.php') || is_file($actualWscrmPath . '/bootstrap/app.php'));
+            $documentRoot = rtrim(str_replace('\\', '/', (string) ($_SERVER['DOCUMENT_ROOT'] ?? '')), '/');
+            $publicDir = rtrim(str_replace('\\', '/', dirname(__DIR__)), '/');
+            $cleanupCandidates = array_unique(array_filter([
+                ($documentRoot !== '' ? $documentRoot . '/wscrm' : null),
+                ($documentRoot !== '' ? $documentRoot . '/public/wscrm' : null),
+                ($publicDir !== '' ? $publicDir . '/wscrm' : null),
+            ]));
+
+            if ($targetLooksValid && $actualReal) {
+                foreach ($cleanupCandidates as $candidate) {
+                    if (! is_dir($candidate)) {
+                        continue;
+                    }
+                    $candidateReal = realpath($candidate);
+                    if ($candidateReal && $candidateReal === $actualReal) {
+                        continue;
+                    }
+                    $deletedSource = deleteDirectoryRecursive($candidate);
+                    $outputs[] = "== Cleanup wscrm (public_html) ==\nPath: {$candidate}\nResult: " . ($deletedSource ? 'DELETED' : 'FAILED');
+                }
+            } else {
+                $outputs[] = "== Cleanup wscrm (public_html) ==\nDilewati demi keamanan (target wscrm tidak tervalidasi).";
             }
 
             $installPath = __DIR__;
@@ -1010,7 +1177,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         break;
                     case 'db_seed':
                         $output = executeSimpleCommand('php artisan config:clear');
-                        $output .= "\n" . executeSimpleCommand('php artisan db:seed --force');
+                        $seeders = [
+                            'BrandingSettingsSeeder',
+                            'HostingPlanSeeder',
+                            'DomainPriceSeeder',
+                            'ServicePlanSeeder',
+                        ];
+                        foreach ($seeders as $seeder) {
+                            $output .= "\n\n== Seeder: {$seeder} ==\n";
+                            $output .= executeSimpleCommand('php artisan db:seed --class=' . $seeder . ' --force');
+                        }
                         break;
                     case 'storage_link':
                         $output = executeSimpleCommand('php artisan config:clear');
@@ -1035,6 +1211,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         break;
                     case 'config_cache':
                         $output = executeSimpleCommand('php artisan config:cache');
+                        break;
+                    case 'up':
+                        $output = executeSimpleCommand('php artisan up');
                         break;
                     case 'check_env':
                         $envPath = '.env';
@@ -1105,15 +1284,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Check installation progress
 $wscrmPath = detectWscrmFolder();
-$publicHtmlParent = str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT']));
+$documentRoot = rtrim(str_replace('\\', '/', (string) ($_SERVER['DOCUMENT_ROOT'] ?? '')), '/');
+$publicHtmlParent = str_replace('\\', '/', dirname($documentRoot));
 $targetWscrmPath = $publicHtmlParent . '/wscrm';
+$publicDir = rtrim(str_replace('\\', '/', dirname(__DIR__)), '/');
+
+$sourceCandidates = array_unique(array_filter([
+    ($documentRoot !== '' ? $documentRoot . '/wscrm' : null),
+    ($documentRoot !== '' ? $documentRoot . '/public/wscrm' : null),
+    ($publicDir !== '' ? $publicDir . '/wscrm' : null),
+]));
+$targetReal = realpath($targetWscrmPath);
+$hasWscrmInPublicHtml = false;
+foreach ($sourceCandidates as $candidate) {
+    if (! is_dir($candidate)) {
+        continue;
+    }
+    $candidateReal = realpath($candidate);
+    if ($candidateReal && $targetReal && $candidateReal === $targetReal) {
+        continue;
+    }
+    $hasWscrmInPublicHtml = true;
+    break;
+}
 
 // Check if installation is completely finished
-$isAlreadyInstalled = is_dir($targetWscrmPath) && file_exists($targetWscrmPath . '/.env') && file_exists($targetWscrmPath . '/storage/installer.lock');
+$isAlreadyInstalled = is_dir($targetWscrmPath) && file_exists($targetWscrmPath . '/.env') && file_exists($targetWscrmPath . '/storage/installer.lock') && ! $hasWscrmInPublicHtml;
 
 // Check progress markers
 $step1Complete = (bool) $wscrmPath; // Folder detected
-$step2Complete = is_dir($targetWscrmPath); // Folder moved to target location
+$step2Complete = is_dir($targetWscrmPath) && ! $hasWscrmInPublicHtml; // Folder moved to target location
 $step3Complete = file_exists($targetWscrmPath . '/.env'); // Environment configured
 
 $host = $_SERVER['HTTP_HOST'] ?? '';
@@ -1599,6 +1799,22 @@ $isLocalHost = in_array($hostNoPort, ['localhost', '127.0.0.1', '::1'], true);
             white-space: pre-wrap;
         }
 
+        .progress-wrap {
+            margin-top: 12px;
+            height: 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border-2);
+            background: var(--surface-2);
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--brand), var(--brand-2));
+            transition: width 180ms ease;
+        }
+
         .actions {
             margin-top: 14px;
             display: flex;
@@ -1629,10 +1845,12 @@ $isLocalHost = in_array($hostNoPort, ['localhost', '127.0.0.1', '::1'], true);
         <?php if ($isAlreadyInstalled) { ?>
             <div class="alert alert-success">
                 <strong>Instalasi sudah selesai</strong><br>
-                WSCRM sudah terinstall di: <code><?= htmlspecialchars($targetWscrmPath) ?></code><br><br>
+                WSCRM sudah terinstall di: <code><?= htmlspecialchars($targetWscrmPath) ?></code><br>
+                Folder wscrm di public_html sudah tidak ada. Anda bisa menghapus folder install untuk keamanan.<br><br>
 
                 <div class="actions">
-                    <button onclick="finalizeInstall()" class="btn btn-primary">Install</button>
+                    <button onclick="finalizeInstall()" class="btn btn-primary" data-mode="cleanup">Hapus folder install</button>
+                    <a href="../" class="btn btn-outline">Buka aplikasi</a>
                 </div>
                 <div id="finalize-result" class="result"></div>
             </div>
@@ -2088,66 +2306,185 @@ $isLocalHost = in_array($hostNoPort, ['localhost', '127.0.0.1', '::1'], true);
             const btn = event.target;
             const originalText = btn.textContent;
             btn.disabled = true;
-            btn.textContent = 'Menginstall...';
+            btn.textContent = 'Menjalankan...';
+            const mode = btn && btn.dataset && btn.dataset.mode ? btn.dataset.mode : 'full';
 
             const resultDiv = document.getElementById('finalize-result');
             if (resultDiv) {
                 resultDiv.innerHTML = `
                 <div class="alert alert-info">
-                    <strong>Memproses install...</strong><br>
-                    Menjalankan migrate, seeder, storage link, clear cache, optimize, config cache, lalu menghapus folder install.
+                    <strong>${mode === 'cleanup' ? 'Menghapus folder install...' : 'Menjalankan proses install...'}</strong><br>
+                    ${mode === 'cleanup'
+                        ? 'Membersihkan folder install dan folder wscrm di public_html (jika masih ada).'
+                        : 'Menjalankan cek lokasi folder, migrasi, seeder, storage link, clear cache, optimize, config cache, lalu cleanup.'}
+                    <div class="result">
+                        <div class="progress-wrap">
+                            <div class="progress-bar" id="install-progress-bar" style="width: 0%"></div>
+                        </div>
+                        <pre class="code-block" id="install-log"></pre>
+                    </div>
                 </div>
             `;
             }
 
-            fetch('index.php', {
+            const logEl = document.getElementById('install-log');
+            const barEl = document.getElementById('install-progress-bar');
+
+            const appendLog = (text) => {
+                if (!logEl) {
+                    return;
+                }
+                logEl.textContent += (logEl.textContent ? "\n" : "") + text;
+                logEl.scrollTop = logEl.scrollHeight;
+            };
+
+            const setProgress = (percent) => {
+                if (barEl) {
+                    barEl.style.width = `${percent}%`;
+                }
+            };
+
+            const post = (body) => {
+                return fetch('index.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: 'action=finalize_install'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    const out = data.output ? `<pre class="code-block">${data.output}</pre>` : '';
-                    if (resultDiv) {
-                        if (data.success) {
-                            resultDiv.innerHTML = `
-                            <div class="alert alert-success">
-                                <strong>${data.message}</strong>
-                                ${out}
-                            </div>
-                        `;
-                        } else {
-                            resultDiv.innerHTML = `
-                            <div class="alert alert-error">
-                                <strong>${data.message}</strong>
-                                ${out}
-                            </div>
-                        `;
-                        }
+                    body,
+                }).then((r) => r.json());
+            };
+
+            const fullSteps = [{
+                label: 'Deteksi & cek lokasi wscrm',
+                run: async () => {
+                    const data = await post('action=detect_wscrm');
+                    if (!data.success) {
+                        throw new Error(data.message || 'Gagal mendeteksi folder wscrm');
+                    }
+                    appendLog(`== Deteksi WSCRM ==\nPath: ${data.path}\nTarget: ${data.target_path}\nSejajar public_html: ${data.already_in_target_location ? 'YA' : 'TIDAK'}`);
+                },
+            }, {
+                label: 'Cek environment',
+                run: async () => {
+                    const data = await post('action=laravel_command&command=check_env');
+                    if (!data.success) {
+                        throw new Error(data.message || 'Gagal cek environment');
+                    }
+                    appendLog(`== Check Env ==\n${data.output || ''}`);
+                },
+            }, {
+                label: 'Migrasi',
+                run: async () => {
+                    const data = await post('action=laravel_command&command=migrate');
+                    if (!data.success) {
+                        throw new Error(data.message || 'Gagal menjalankan migrasi');
+                    }
+                    appendLog(`== Migrate ==\n${data.output || ''}`);
+                },
+            }, {
+                label: 'Seeder',
+                run: async () => {
+                    const data = await post('action=laravel_command&command=db_seed');
+                    if (!data.success) {
+                        throw new Error(data.message || 'Gagal menjalankan seeder');
+                    }
+                    appendLog(`== DB Seed ==\n${data.output || ''}`);
+                },
+            }, {
+                label: 'Storage Link',
+                run: async () => {
+                    const data = await post('action=laravel_command&command=storage_link');
+                    if (!data.success) {
+                        throw new Error(data.message || 'Gagal membuat storage link');
+                    }
+                    appendLog(`== Storage Link ==\n${data.output || ''}`);
+                },
+            }, {
+                label: 'Clear Cache',
+                run: async () => {
+                    const data = await post('action=laravel_command&command=clear_cache');
+                    if (!data.success) {
+                        throw new Error(data.message || 'Gagal clear cache');
+                    }
+                    appendLog(`== Clear Cache ==\n${data.output || ''}`);
+                },
+            }, {
+                label: 'Optimize',
+                run: async () => {
+                    const data = await post('action=laravel_command&command=optimize');
+                    if (!data.success) {
+                        throw new Error(data.message || 'Gagal optimize');
+                    }
+                    appendLog(`== Optimize ==\n${data.output || ''}`);
+                },
+            }, {
+                label: 'Config Cache',
+                run: async () => {
+                    const data = await post('action=laravel_command&command=config_cache');
+                    if (!data.success) {
+                        throw new Error(data.message || 'Gagal config cache');
+                    }
+                    appendLog(`== Config Cache ==\n${data.output || ''}`);
+                },
+            }, {
+                label: 'Artisan Up',
+                run: async () => {
+                    const data = await post('action=laravel_command&command=up');
+                    if (!data.success) {
+                        throw new Error(data.message || 'Gagal artisan up');
+                    }
+                    appendLog(`== Artisan Up ==\n${data.output || ''}`);
+                },
+            }, {
+                label: 'Cleanup',
+                run: async () => {
+                    const data = await post('action=cleanup_after_install');
+                    const out = data.output ? `\n\n${data.output}` : '';
+                    if (!data.success) {
+                        throw new Error((data.message || 'Cleanup gagal') + out);
+                    }
+                    appendLog(`== Cleanup ==\n${data.message}${out}`);
+                },
+            }];
+
+            const steps = mode === 'cleanup' ? [{
+                label: 'Cleanup',
+                run: async () => {
+                    const data = await post('action=cleanup_after_install');
+                    const out = data.output ? `\n\n${data.output}` : '';
+                    if (!data.success) {
+                        throw new Error((data.message || 'Cleanup gagal') + out);
+                    }
+                    appendLog(`== Cleanup ==\n${data.message}${out}`);
+                },
+            }] : fullSteps;
+
+            (async () => {
+                try {
+                    appendLog(mode === 'cleanup' ? 'Mulai cleanup...' : 'Mulai proses install...');
+                    for (let i = 0; i < steps.length; i++) {
+                        const step = steps[i];
+                        appendLog(`\n[${i + 1}/${steps.length}] ${step.label}`);
+                        await step.run();
+                        setProgress(Math.round(((i + 1) / steps.length) * 100));
                     }
 
-                    if (data.success) {
-                        setTimeout(() => {
-                            window.location.href = '../';
-                        }, 2500);
-                    } else {
-                        btn.disabled = false;
-                        btn.textContent = originalText;
-                    }
-                })
-                .catch(error => {
+                    appendLog(mode === 'cleanup' ? '\nCleanup selesai. Mengalihkan ke aplikasi...' : '\nInstall selesai. Mengalihkan ke aplikasi...');
+                    setTimeout(() => {
+                        window.location.href = '../';
+                    }, 1800);
+                } catch (e) {
                     if (resultDiv) {
                         resultDiv.innerHTML = `
                         <div class="alert alert-error">
-                            <strong>Error: ${error.message}</strong>
+                            <strong>Gagal:</strong> ${e && e.message ? e.message : 'Unknown error'}
                         </div>
                     `;
                     }
                     btn.disabled = false;
                     btn.textContent = originalText;
-                });
+                }
+            })();
         }
 
         function skipInstaller() {
