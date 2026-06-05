@@ -39,7 +39,7 @@ const toggleSidebar = () => {
 
 <template>
     <header
-        class="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-6"
+        class="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-background/95 px-4 supports-[backdrop-filter]:bg-background/60 sm:px-6"
     >
         <Button v-if="hasRekaUISidebar" variant="ghost" size="icon" @click="toggleSidebar" class="h-11 w-11">
             <Menu class="h-5 w-5" />

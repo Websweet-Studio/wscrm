@@ -52,6 +52,45 @@ const pendingOrders = computed(() => props.orders.filter((order) => order.status
 const processingOrders = computed(() => props.orders.filter((order) => order.status === 'processing').length);
 const completedOrders = computed(() => props.orders.filter((order) => order.status === 'completed').length);
 
+const sortOption = ref<'expires_asc' | 'expires_desc' | 'created_desc' | 'created_asc' | 'az' | 'za'>('expires_asc');
+
+const toTime = (value?: string | null) => {
+    if (!value) return null;
+    const date = new Date(value);
+    const time = date.getTime();
+    return Number.isNaN(time) ? null : time;
+};
+
+const sortedOrders = computed(() => {
+    const list = [...props.orders];
+
+    const compareText = (a: string, b: string) =>
+        a.localeCompare(b, 'id-ID', {
+            numeric: true,
+            sensitivity: 'base',
+        });
+
+    list.sort((a, b) => {
+        if (sortOption.value === 'created_desc' || sortOption.value === 'created_asc') {
+            const aTime = toTime(a.created_at) ?? 0;
+            const bTime = toTime(b.created_at) ?? 0;
+            return sortOption.value === 'created_desc' ? bTime - aTime : aTime - bTime;
+        }
+
+        if (sortOption.value === 'expires_asc' || sortOption.value === 'expires_desc') {
+            const aTime = toTime(a.expires_at) ?? (sortOption.value === 'expires_asc' ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY);
+            const bTime = toTime(b.expires_at) ?? (sortOption.value === 'expires_asc' ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY);
+            return sortOption.value === 'expires_asc' ? aTime - bTime : bTime - aTime;
+        }
+
+        const aLabel = getOrderItemsSummary(a);
+        const bLabel = getOrderItemsSummary(b);
+        return sortOption.value === 'az' ? compareText(aLabel, bLabel) : compareText(bLabel, aLabel);
+    });
+
+    return list;
+});
+
 const deleteOrder = (orderId: number) => {
     if (confirm('Apakah Anda yakin ingin menghapus order ini?')) {
         deletingOrders.value.add(orderId);
@@ -217,16 +256,33 @@ const getStatusText = (status: string) => {
 
             <Card v-else class="rounded-lg border-border/60 shadow-sm">
                 <CardHeader>
-                    <CardTitle class="flex items-center gap-2">
-                        <ShoppingCart class="h-5 w-5" />
-                        Daftar Pesanan
-                    </CardTitle>
-                    <CardDescription>Semua pesanan yang terkait dengan akun Anda</CardDescription>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <CardTitle class="flex items-center gap-2">
+                                <ShoppingCart class="h-5 w-5" />
+                                Daftar Pesanan
+                            </CardTitle>
+                            <CardDescription>Semua pesanan yang terkait dengan akun Anda</CardDescription>
+                        </div>
+                        <div class="flex w-full items-center gap-2 sm:w-auto">
+                            <select
+                                v-model="sortOption"
+                                class="flex h-9 w-full cursor-pointer rounded-md border border-border bg-input px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none sm:w-[220px]"
+                            >
+                                <option value="expires_asc">Kadaluarsa terdekat</option>
+                                <option value="expires_desc">Kadaluarsa terjauh</option>
+                                <option value="created_desc">Tanggal order terbaru</option>
+                                <option value="created_asc">Tanggal order terlama</option>
+                                <option value="az">A-Z</option>
+                                <option value="za">Z-A</option>
+                            </select>
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <div class="overflow-hidden rounded-lg border border-border/60">
                         <div class="divide-y divide-border/60">
-                            <div v-for="order in orders" :key="order.id" class="flex items-start justify-between gap-3 bg-background/40 px-3 py-3">
+                            <div v-for="order in sortedOrders" :key="order.id" class="flex items-start justify-between gap-3 bg-background/40 px-3 py-3">
                                 <div class="min-w-0">
                                     <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
                                         <div class="font-medium">

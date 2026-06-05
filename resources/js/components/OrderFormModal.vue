@@ -4,8 +4,8 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Trash2, X } from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
+import { Check, ChevronsUpDown, Plus, Trash2, X } from 'lucide-vue-next';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 interface Customer {
     id: number;
@@ -94,17 +94,61 @@ const formData = ref({
 
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
-const customerSearch = ref('');
+const customerPickerOpen = ref(false);
+const customerQuery = ref('');
+const customerPickerRoot = ref<HTMLElement | null>(null);
+const customerSearchInput = ref<HTMLInputElement | null>(null);
 
 const filteredCustomers = computed(() => {
-    const query = customerSearch.value.toLowerCase().trim();
-    if (!query) return props.customers;
+    const query = customerQuery.value.toLowerCase().trim();
+    if (! query) return props.customers;
     return props.customers.filter((customer) => {
         return (
             customer.name.toLowerCase().includes(query) ||
             customer.email.toLowerCase().includes(query)
         );
     });
+});
+
+const selectedCustomer = computed(() => {
+    const id = Number(formData.value.customer_id || 0);
+    if (! id) return null;
+    return props.customers.find((c) => c.id === id) || null;
+});
+
+const toggleCustomerPicker = async () => {
+    customerPickerOpen.value = ! customerPickerOpen.value;
+    if (customerPickerOpen.value) {
+        await nextTick();
+        customerSearchInput.value?.focus();
+    }
+};
+
+const selectCustomer = (customerId: number) => {
+    formData.value.customer_id = String(customerId);
+    customerPickerOpen.value = false;
+};
+
+const clearCustomer = () => {
+    formData.value.customer_id = '';
+    customerQuery.value = '';
+};
+
+const onDocumentPointerDown = (event: MouseEvent | PointerEvent) => {
+    if (! customerPickerOpen.value) return;
+    const root = customerPickerRoot.value;
+    if (! root) return;
+    const target = event.target as Node | null;
+    if (target && root.contains(target)) return;
+    customerPickerOpen.value = false;
+};
+
+onMounted(() => {
+    document.addEventListener('pointerdown', onDocumentPointerDown, { capture: true });
+});
+
+onBeforeUnmount(() => {
+    document.removeEventListener('pointerdown', onDocumentPointerDown, { capture: true } as any);
 });
 
 const modalTitle = computed(() => {
@@ -460,23 +504,67 @@ const extendExpiryOneYear = () => {
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <Label :for="`${mode}-customer`">Pelanggan *</Label>
-                        <Input
-                            v-model="customerSearch"
-                            type="text"
-                            class="mb-2"
-                            placeholder="Cari nama atau email pelanggan..."
-                        />
-                        <select
-                            :id="`${mode}-customer`"
-                            v-model="formData.customer_id"
-                            class="flex h-9 w-full cursor-pointer rounded-md border border-border bg-input px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
-                            required
-                        >
-                            <option value="">Pilih Pelanggan</option>
-                            <option v-for="customer in filteredCustomers" :key="customer.id" :value="customer.id">
-                                {{ customer.name }} ({{ customer.email }})
-                            </option>
-                        </select>
+                        <div ref="customerPickerRoot" class="relative">
+                            <button
+                                type="button"
+                                :id="`${mode}-customer`"
+                                @click="toggleCustomerPicker"
+                                class="flex h-9 w-full items-center justify-between rounded-md border border-border bg-input px-3 py-1 text-left text-sm text-foreground shadow-sm transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+                            >
+                                <span class="min-w-0 truncate">
+                                    <span v-if="selectedCustomer" class="font-medium">
+                                        {{ selectedCustomer.name }}
+                                        <span class="font-normal text-muted-foreground">({{ selectedCustomer.email }})</span>
+                                    </span>
+                                    <span v-else class="text-muted-foreground">Pilih pelanggan…</span>
+                                </span>
+                                <span class="flex items-center gap-2">
+                                    <button
+                                        v-if="formData.customer_id"
+                                        type="button"
+                                        class="rounded-sm px-1 text-muted-foreground hover:text-foreground"
+                                        @click.stop="clearCustomer"
+                                    >
+                                        <X class="h-4 w-4" />
+                                    </button>
+                                    <ChevronsUpDown class="h-4 w-4 text-muted-foreground" />
+                                </span>
+                            </button>
+
+                            <div
+                                v-if="customerPickerOpen"
+                                class="absolute z-50 mt-2 w-full overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md"
+                            >
+                                <div class="border-b border-border p-2">
+                                    <Input
+                                        ref="customerSearchInput"
+                                        v-model="customerQuery"
+                                        type="text"
+                                        placeholder="Cari nama atau email…"
+                                        class="h-9"
+                                    />
+                                </div>
+                                <div class="max-h-64 overflow-y-auto p-1">
+                                    <button
+                                        v-for="customer in filteredCustomers"
+                                        :key="customer.id"
+                                        type="button"
+                                        class="flex w-full items-center justify-between gap-3 rounded-md px-2 py-2 text-left text-sm transition-colors hover:bg-muted/60"
+                                        @click="selectCustomer(customer.id)"
+                                    >
+                                        <span class="min-w-0">
+                                            <span class="block truncate font-medium">{{ customer.name }}</span>
+                                            <span class="block truncate text-xs text-muted-foreground">{{ customer.email }}</span>
+                                        </span>
+                                        <Check v-if="String(customer.id) === String(formData.customer_id)" class="h-4 w-4 text-primary" />
+                                    </button>
+
+                                    <div v-if="filteredCustomers.length === 0" class="px-3 py-6 text-center text-sm text-muted-foreground">
+                                        Pelanggan tidak ditemukan.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <p v-if="errors.customer_id" class="mt-1 text-xs text-red-500">{{ errors.customer_id }}</p>
                     </div>
 

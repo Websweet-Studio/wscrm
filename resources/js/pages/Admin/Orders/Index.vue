@@ -260,17 +260,23 @@ const getExpiryBadge = (expiryDate: string) => {
 };
 
 const getItemName = (item: OrderItem) => {
-    if (item.domain_name) return item.domain_name;
-
     if (item.item_type === 'hosting') {
         const plan = props.hostingPlans.find((p) => p.id === item.item_id);
-        return plan ? plan.plan_name : 'Hosting Plan';
+        if (!plan) return 'Hosting';
+        return `${plan.plan_name} (${plan.storage_gb}GB)`;
     }
     if (['service', 'app', 'web', 'maintenance'].includes(item.item_type)) {
         const plan = props.servicePlans.find((p) => p.id === item.item_id);
         return plan ? plan.name : 'Service Plan';
     }
     return item.item_type;
+};
+
+const getItemLabel = (orderItem: OrderItem, order: Order) => {
+    if (orderItem.item_type === 'hosting') {
+        return getItemName(orderItem);
+    }
+    return orderItem.domain_name || order.domain_name || getItemName(orderItem);
 };
 
 const getBillingCycleLabel = (cycle?: string) => {
@@ -646,7 +652,7 @@ const getSortIcon = (field: string) => {
                                                     {{ getServiceTypeText(orderItem.item_type) }}
                                                 </span>
                                                 <span class="text-sm font-medium">
-                                                    {{ orderItem.domain_name || order.domain_name || getItemName(orderItem) }}
+                                                    {{ getItemLabel(orderItem, order) }}
                                                 </span>
                                             </div>
                                         </div>
