@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\PaymentAccount;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -33,11 +34,19 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        $paymentAccounts = PaymentAccount::query()
+            ->active()
+            ->orderBy('type')
+            ->orderBy('name')
+            ->limit(12)
+            ->get();
+
         return Inertia::render('Customer/Dashboard', [
             'customer' => $customer,
             'services' => $services,
             'recentOrders' => $recentOrders,
             'unpaidInvoices' => $unpaidInvoices,
+            'paymentAccounts' => $paymentAccounts,
         ]);
     }
 }

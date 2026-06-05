@@ -1,16 +1,32 @@
 <script setup lang="ts">
 import CustomerNavUser from '@/components/CustomerNavUser.vue';
 import NavMain from '@/components/NavMain.vue';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import customer from '@/routes/customer';
 import { type NavItem } from '@/types';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { Home, LayoutGrid, Settings, ShoppingCart } from 'lucide-vue-next';
+import { Headphones, Home, LayoutGrid, Settings, ShoppingCart } from 'lucide-vue-next';
 import AppSidebarLogo from './AppSidebarLogo.vue';
+import { computed, ref } from 'vue';
 
 const page = usePage();
 const customerBadges = page.props.customerBadges || {};
 const { state } = useSidebar();
+const supportOpen = ref(false);
+
+const whatsappNumber = computed(() => {
+    const raw = ((page.props as any)?.brandingSettings?.company_whatsapp as string | undefined) || '';
+    const digits = raw.replace(/[^0-9]/g, '');
+    return digits || null;
+});
+
+const whatsappLink = computed(() => {
+    if (!whatsappNumber.value) return null;
+    const text = encodeURIComponent('Halo Admin, saya butuh bantuan.');
+    return `https://wa.me/${whatsappNumber.value}?text=${text}`;
+});
 
 const getCustomerUrl = (getter: () => string | undefined, fallback: string) => {
     try {
@@ -90,11 +106,43 @@ const mainNavItems: NavItem[] = [
 
         <SidebarContent>
             <NavMain :items="mainNavItems" />
+
+            <SidebarGroup class="px-2 py-0">
+                <SidebarGroupLabel>Support</SidebarGroupLabel>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton :tooltip="'Support'" @click="supportOpen = true">
+                            <Headphones class="h-4 w-4" />
+                            <span>Support</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarGroup>
         </SidebarContent>
 
         <SidebarFooter class="border-t border-sidebar-border/60">
             <CustomerNavUser :minimized="state === 'collapsed'" />
         </SidebarFooter>
     </Sidebar>
+    <Dialog v-model:open="supportOpen">
+        <DialogContent class="sm:max-w-md">
+            <DialogHeader>
+                <DialogTitle>Support</DialogTitle>
+                <DialogDescription>
+                    Jika ada kendala atau butuh bantuan, silakan hubungi WhatsApp admin.
+                </DialogDescription>
+            </DialogHeader>
+            <div v-if="!whatsappNumber" class="rounded-md border border-border/60 bg-muted/20 p-3 text-sm text-muted-foreground">
+                Nomor WhatsApp admin belum diatur.
+            </div>
+            <DialogFooter class="gap-2">
+                <Button type="button" variant="outline" @click="supportOpen = false">Tutup</Button>
+                <Button v-if="whatsappLink" asChild>
+                    <a :href="whatsappLink" target="_blank" rel="noopener noreferrer">Chat WhatsApp Admin</a>
+                </Button>
+                <Button v-else disabled>Chat WhatsApp Admin</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
     <slot />
 </template>

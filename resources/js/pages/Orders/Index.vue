@@ -2,6 +2,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { cn, formatDate, formatPrice } from '@/lib/utils';
@@ -46,6 +47,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const deletingOrders = ref<Set<number>>(new Set());
+const deleteConfirmOpen = ref(false);
+const orderToDelete = ref<Order | null>(null);
 
 const totalOrders = computed(() => props.orders.length);
 const pendingOrders = computed(() => props.orders.filter((order) => order.status === 'pending').length);
@@ -91,20 +94,24 @@ const sortedOrders = computed(() => {
     return list;
 });
 
-const deleteOrder = (orderId: number) => {
-    if (confirm('Apakah Anda yakin ingin menghapus order ini?')) {
-        deletingOrders.value.add(orderId);
+const requestDeleteOrder = (order: Order) => {
+    orderToDelete.value = order;
+    deleteConfirmOpen.value = true;
+};
 
-        router.delete(`/customer/orders/${orderId}`, {
-            onSuccess: () => {
-                deletingOrders.value.delete(orderId);
-            },
-            onError: () => {
-                deletingOrders.value.delete(orderId);
-                alert('Gagal menghapus order. Silakan coba lagi.');
-            },
-        });
-    }
+const confirmDeleteOrder = () => {
+    const order = orderToDelete.value;
+    if (!order) return;
+
+    deletingOrders.value.add(order.id);
+
+    router.delete(`/customer/orders/${order.id}`, {
+        onFinish: () => {
+            deletingOrders.value.delete(order.id);
+            deleteConfirmOpen.value = false;
+            orderToDelete.value = null;
+        },
+    });
 };
 
 const getStatusColor = (status: string) => {
@@ -281,60 +288,113 @@ const getStatusText = (status: string) => {
                 </CardHeader>
                 <CardContent>
                     <div class="overflow-hidden rounded-lg border border-border/60">
-                        <div class="divide-y divide-border/60">
-                            <div v-for="order in sortedOrders" :key="order.id" class="flex items-start justify-between gap-3 bg-background/40 px-3 py-3">
-                                <div class="min-w-0">
-                                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                        <div class="font-medium">
-                                            Order <span class="font-mono">#{{ order.id }}</span>
-                                        </div>
-                                        <Badge :variant="getStatusVariant(order.status)" :class="getStatusColor(order.status)">
-                                            {{ getStatusText(order.status) }}
-                                        </Badge>
-                                    </div>
-                                    <div class="mt-1 text-sm text-muted-foreground">
-                                        {{ getOrderItemsSummary(order) }}
-                                    </div>
-                                    <div class="mt-0.5 text-[11px] text-muted-foreground capitalize">
-                                        {{ order.billing_cycle.replace('_', ' ') }}
-                                        <span v-if="order.expires_at"> • Kadaluarsa {{ formatDate(order.expires_at) }}</span>
-                                    </div>
-                                </div>
-
-                                <div class="flex shrink-0 flex-col items-end gap-2">
-                                    <div class="text-right">
-                                        <template v-if="order.discount_amount && order.discount_amount > 0">
-                                            <div class="text-xs text-muted-foreground line-through">{{ formatPrice(order.total_amount) }}</div>
-                                            <div class="font-medium">{{ formatPrice(getPayableAmount(order)) }}</div>
-                                        </template>
-                                        <template v-else>
-                                            <div class="font-medium">{{ formatPrice(order.total_amount) }}</div>
-                                        </template>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <Button variant="outline" size="sm" asChild class="h-8 px-3">
-                                            <Link :href="`/customer/orders/${order.id}`" class="inline-flex items-center gap-2">
-                                                <Eye class="h-4 w-4" />
-                                                <span class="text-xs">Detail</span>
-                                            </Link>
-                                        </Button>
-                                        <Button
-                                            v-if="order.status === 'pending'"
-                                            variant="destructive"
-                                            size="sm"
-                                            class="h-8 px-3"
-                                            :disabled="deletingOrders.has(order.id)"
-                                            @click="deleteOrder(order.id)"
+                        <div class="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead class="min-w-[140px]">Pesanan</TableHead>
+                                        <TableHead class="min-w-[220px]">Item</TableHead>
+                                        <TableHead class="min-w-[160px] hidden md:table-cell">Kadaluarsa</TableHead>
+                                        <TableHead class="min-w-[120px]">Status</TableHead>
+                                        <TableHead class="min-w-[160px] text-right">Total</TableHead>
+                                        <TableHead
+                                            class="min-w-[140px] text-right sticky right-0 z-20 border-l border-border/60 bg-background/95 shadow-[-12px_0_16px_-16px_rgba(0,0,0,0.25)] backdrop-blur"
                                         >
-                                            <Trash2 class="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
+                                            Aksi
+                                        </TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow v-for="order in sortedOrders" :key="order.id">
+                                        <TableCell class="align-top">
+                                            <div class="font-medium">
+                                                Order <span class="font-mono">#{{ order.id }}</span>
+                                            </div>
+                                            <div class="mt-0.5 text-[11px] text-muted-foreground capitalize">
+                                                {{ order.billing_cycle.replace('_', ' ') }}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell class="align-top">
+                                            <div class="font-medium">{{ getOrderItemsSummary(order) }}</div>
+                                            <div class="mt-0.5 text-xs text-muted-foreground">
+                                                <span v-if="order.expires_at" class="sm:hidden">Kadaluarsa {{ formatDate(order.expires_at) }}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell class="align-top hidden md:table-cell">
+                                            <div class="text-sm">{{ order.expires_at ? formatDate(order.expires_at) : '-' }}</div>
+                                        </TableCell>
+                                        <TableCell class="align-top">
+                                            <Badge :variant="getStatusVariant(order.status)" :class="getStatusColor(order.status)">
+                                                {{ getStatusText(order.status) }}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell class="align-top text-right">
+                                            <template v-if="order.discount_amount && order.discount_amount > 0">
+                                                <div class="text-xs text-muted-foreground line-through">{{ formatPrice(order.total_amount) }}</div>
+                                                <div class="font-medium">{{ formatPrice(getPayableAmount(order)) }}</div>
+                                            </template>
+                                            <template v-else>
+                                                <div class="font-medium">{{ formatPrice(order.total_amount) }}</div>
+                                            </template>
+                                        </TableCell>
+                                        <TableCell class="align-top text-right sticky right-0 z-10 border-l border-border/60 bg-background/95 shadow-[-12px_0_16px_-16px_rgba(0,0,0,0.25)]">
+                                            <div class="inline-flex items-center justify-end gap-2">
+                                                <Button variant="outline" size="sm" asChild class="h-8 px-3">
+                                                    <Link :href="`/customer/orders/${order.id}`" class="inline-flex items-center gap-2">
+                                                        <Eye class="h-4 w-4" />
+                                                        <span class="text-xs">Detail</span>
+                                                    </Link>
+                                                </Button>
+                                                <Button
+                                                    v-if="order.status === 'pending'"
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    class="h-8 px-3"
+                                                    :disabled="deletingOrders.has(order.id)"
+                                                    @click="requestDeleteOrder(order)"
+                                                >
+                                                    <Trash2 class="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
                         </div>
                     </div>
                 </CardContent>
             </Card>
         </div>
+
+        <Dialog v-model:open="deleteConfirmOpen">
+            <DialogContent class="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Hapus Pesanan</DialogTitle>
+                    <DialogDescription>
+                        Pesanan yang dihapus tidak dapat dikembalikan. Lanjutkan hapus?
+                    </DialogDescription>
+                </DialogHeader>
+                <div v-if="orderToDelete" class="rounded-lg border border-border/60 bg-muted/20 p-3 text-sm">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="truncate font-medium">Pesanan #{{ orderToDelete.id }}</div>
+                            <div class="mt-0.5 truncate text-xs text-muted-foreground">{{ getOrderItemsSummary(orderToDelete) }}</div>
+                        </div>
+                        <div class="shrink-0 font-medium">{{ formatPrice(getPayableAmount(orderToDelete)) }}</div>
+                    </div>
+                </div>
+                <DialogFooter class="gap-2">
+                    <Button type="button" variant="outline" @click="deleteConfirmOpen = false">Batal</Button>
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        :disabled="!orderToDelete || (orderToDelete ? deletingOrders.has(orderToDelete.id) : false)"
+                        @click="confirmDeleteOrder"
+                    >
+                        Hapus
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </CustomerLayout>
 </template>

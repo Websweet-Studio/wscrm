@@ -294,9 +294,10 @@ const handleImageError = (event: Event) => {
 
 const submitSettings = () => {
     // Only submit non-image settings - image settings handled via dedicated endpoints
+    const allowedTypes = new Set(['text', 'textarea', 'color']);
     const settingsArray = Object.values(props.settings)
         .flat()
-        .filter((setting) => setting.type !== 'image')
+        .filter((setting) => allowedTypes.has(setting.type))
         .map((setting) => ({
             key: setting.key,
             value: form.settings[setting.key],
