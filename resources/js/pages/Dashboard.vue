@@ -7,8 +7,24 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
-import { BarChart3, Calendar, DollarSign, ShoppingCart, TrendingDown, TrendingUp, Users, CheckCircle2, Clock, ArrowRight, RefreshCw, CheckSquare, ListTodo, UserPlus, CreditCard } from 'lucide-vue-next';
-import { computed } from 'vue';
+import {
+    ArrowRight,
+    BarChart3,
+    Calendar,
+    CheckCircle2,
+    CheckSquare,
+    Clock,
+    CreditCard,
+    DollarSign,
+    Download,
+    ListTodo,
+    RefreshCw,
+    ShoppingCart,
+    TrendingDown,
+    TrendingUp,
+    Users,
+} from 'lucide-vue-next';
+import { computed, onMounted, ref } from 'vue';
 
 interface Stats {
     customers: {
@@ -123,6 +139,27 @@ const refreshDashboard = () => {
     router.reload({ only: ['stats', 'recentActivities', 'expiringServices', 'activeServices', 'chartData', 'myPendingTasks'] });
 };
 
+const githubRepoUrl = 'https://github.com/Websweet-Studio/wscrm/';
+const updateInfo = ref<any | null>(null);
+const isCheckingUpdate = ref(false);
+
+const checkForUpdates = async () => {
+    isCheckingUpdate.value = true;
+    try {
+        const response = await fetch('/admin/system/check-updates');
+        const data = await response.json();
+        if (response.ok) {
+            updateInfo.value = data;
+        }
+    } finally {
+        isCheckingUpdate.value = false;
+    }
+};
+
+onMounted(() => {
+    checkForUpdates();
+});
+
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
@@ -189,6 +226,34 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                     </Button>
                 </div>
             </div>
+
+            <Card v-if="updateInfo?.has_update" class="border border-emerald-200/60 bg-emerald-50/60 dark:border-emerald-900/50 dark:bg-emerald-950/30">
+                <CardHeader class="px-4 pb-3 sm:px-6">
+                    <CardTitle class="flex items-center gap-2 text-base sm:text-lg" style="font-family: Georgia, serif;">
+                        <Download class="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+                        Update tersedia
+                    </CardTitle>
+                    <CardDescription class="text-xs sm:text-sm">
+                        Versi saat ini <span class="font-mono">{{ updateInfo.current_version }}</span> • Versi terbaru
+                        <span class="font-mono font-medium">{{ updateInfo.latest_version }}</span>
+                    </CardDescription>
+                </CardHeader>
+                <CardContent class="flex flex-col gap-2 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                    <div class="text-xs text-muted-foreground">
+                        Sumber update: <a :href="githubRepoUrl" target="_blank" rel="noreferrer" class="underline underline-offset-4 hover:text-foreground">{{ githubRepoUrl }}</a>
+                    </div>
+                    <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                        <Button variant="outline" size="sm" asChild class="w-full sm:w-auto">
+                            <Link href="/admin/system/update">Buka Update Sistem</Link>
+                        </Button>
+                        <Button size="sm" class="w-full justify-between sm:w-auto" @click="router.visit('/admin/system/update')">
+                            Install Sekarang
+                            <ArrowRight class="ml-2 h-4 w-4" />
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+            <div v-else-if="isCheckingUpdate" class="text-xs text-muted-foreground">Mengecek update…</div>
 
             <!-- Quick Actions -->
             <Card>
