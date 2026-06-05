@@ -13,34 +13,29 @@ import { cn, formatDate, formatPrice } from '@/lib/utils';
 import { AlertCircle, ArrowRight, Building2, CheckCircle, Copy, CreditCard, FileText, ShieldCheck, Wallet } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
-type PaymentMethod = {
-    key: string;
-    label: string;
-    description?: string;
+type PaymentAccount = {
+    id: number;
+    type: 'bank' | 'ewallet' | 'qris';
+    name: string;
+    account_number: string | null;
+    account_name: string | null;
+    qris_provider: string | null;
+    qris_image_path: string | null;
 };
 
 const props = defineProps<{
     invoice: any;
-    banks: any[];
-    paymentMethods: PaymentMethod[];
+    paymentAccounts: PaymentAccount[];
 }>();
 
-const availablePaymentMethods = computed(() => {
-    const methods = Array.isArray(props.paymentMethods) ? props.paymentMethods : [];
-    if (methods.length > 0) return methods;
-    return [{ key: 'bank_transfer', label: 'Transfer Bank', description: 'ATM/Internet Banking' }];
-});
-
 const form = useForm({
-    bank_id: props.invoice.bank_id || '',
-    payment_method: props.invoice.payment_method || availablePaymentMethods.value[0]?.key || 'bank_transfer',
+    payment_account_id: props.invoice.payment_account_id || '',
 });
 
 const confirmForm = useForm({
     payment_proof: '',
 });
 
-const selectedBank = ref<any | null>(null);
 const showConfirmation = ref(false);
 
 const customerRoutes = customer as any;
@@ -58,19 +53,10 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: props.invoice.invoice_number || 'Pembayaran', href: getCustomerUrl(() => customerRoutes?.invoices?.payment?.(props.invoice.id).url, `/customer/invoices/${props.invoice.id}/payment`) },
 ];
 
-const updateSelectedBank = () => {
-    if (form.bank_id) {
-        selectedBank.value = props.banks.find((bank) => bank.id == form.bank_id);
-    } else {
-        selectedBank.value = null;
-    }
-};
-
 const submitPayment = () => {
     form.post(`/customer/invoices/${props.invoice.id}/process-payment`, {
         onSuccess: () => {
             showConfirmation.value = true;
-            updateSelectedBank();
         },
     });
 };
@@ -108,8 +94,7 @@ const isOverdue = computed(() => {
 
 const totalWithFee = computed(() => {
     const baseAmount = parseFloat(props.invoice.amount);
-    const adminFee = selectedBank.value ? parseFloat(selectedBank.value.admin_fee || 0) : 0;
-    return baseAmount + adminFee;
+    return baseAmount;
 });
 
 const copyValue = async (value: string) => {
@@ -120,15 +105,35 @@ const copyValue = async (value: string) => {
     }
 };
 
-const getMethodIcon = (key: string) => {
-    if (key === 'bank_transfer') return Building2;
-    if (key === 'e_wallet') return Wallet;
+const selectedPaymentAccount = computed(() => {
+    const id = Number(form.payment_account_id);
+    if (!Number.isFinite(id) || id <= 0) return null;
+    return props.paymentAccounts.find((p) => p.id === id) || null;
+});
+
+const groupedPaymentAccounts = computed(() => {
+    const groups: Record<string, PaymentAccount[]> = { bank: [], ewallet: [], qris: [] };
+    (props.paymentAccounts || []).forEach((p) => {
+        if (p.type === 'bank') groups.bank.push(p);
+        else if (p.type === 'ewallet') groups.ewallet.push(p);
+        else if (p.type === 'qris') groups.qris.push(p);
+    });
+    return groups as { bank: PaymentAccount[]; ewallet: PaymentAccount[]; qris: PaymentAccount[] };
+});
+
+const paymentTypeLabel = (type: PaymentAccount['type']) => {
+    if (type === 'bank') return 'Bank';
+    if (type === 'ewallet') return 'E-Wallet';
+    return 'QRIS';
+};
+
+const getTypeIcon = (type: PaymentAccount['type']) => {
+    if (type === 'bank') return Building2;
+    if (type === 'ewallet') return Wallet;
     return CreditCard;
 };
 
-// Initialize selected bank if already set
-if (props.invoice.bank_id) {
-    selectedBank.value = props.banks.find((bank) => bank.id == props.invoice.bank_id);
+if (props.invoice.payment_account_id) {
     showConfirmation.value = true;
 }
 </script>
@@ -182,10 +187,6 @@ if (props.invoice.bank_id) {
                                     <span class="text-muted-foreground">Subtotal</span>
                                     <span class="font-medium">{{ formatPrice(invoice.amount) }}</span>
                                 </div>
-                                <div v-if="selectedBank && Number(selectedBank.admin_fee) > 0" class="mt-1 flex items-center justify-between text-sm">
-                                    <span class="text-muted-foreground">Biaya admin</span>
-                                    <span class="font-medium">{{ formatPrice(selectedBank.admin_fee) }}</span>
-                                </div>
                                 <Separator class="my-2" />
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm text-muted-foreground">Total transfer</span>
@@ -205,102 +206,57 @@ if (props.invoice.bank_id) {
                                 <CreditCard class="h-5 w-5 text-emerald-600 dark:text-green-400" />
                                 Pilih Metode Pembayaran
                             </CardTitle>
-                            <CardDescription>Pilih metode, pilih bank, lalu lanjutkan ke instruksi transfer</CardDescription>
+                            <CardDescription>Pilih metode pembayaran untuk mendapatkan instruksi</CardDescription>
                         </CardHeader>
                         <CardContent class="space-y-6">
                             <form @submit.prevent="submitPayment" class="space-y-6">
                                 <div class="space-y-3">
                                     <Label>Metode Pembayaran</Label>
-                                    <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-                                        <label
-                                            v-for="method in availablePaymentMethods"
-                                            :key="method.key"
-                                            class="flex cursor-pointer items-start gap-3 rounded-lg border border-border/60 bg-background/40 p-3 transition-colors hover:bg-muted/40"
-                                        >
-                                            <input
-                                                type="radio"
-                                                :value="method.key"
-                                                v-model="form.payment_method"
-                                                class="mt-1 h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                                            />
-                                            <span class="min-w-0">
-                                                <span class="flex items-center gap-2 font-medium">
-                                                    <component :is="getMethodIcon(method.key)" class="h-4 w-4 text-emerald-600 dark:text-green-400" />
-                                                    <span class="truncate">{{ method.label || method.key }}</span>
-                                                </span>
-                                                <span v-if="method.description" class="block text-xs text-muted-foreground">{{ method.description }}</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div v-if="form.errors.payment_method" class="text-sm text-red-600">
-                                        {{ form.errors.payment_method }}
-                                    </div>
-                                </div>
-
-                                <div class="space-y-3">
-                                    <Label for="bank_id">Pilih Bank</Label>
-                                    <select
-                                        v-model="form.bank_id"
-                                        @change="updateSelectedBank"
-                                        id="bank_id"
-                                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        <option value="" disabled>Pilih bank untuk pembayaran</option>
-                                        <option v-for="bank in banks" :key="bank.id" :value="bank.id.toString()">
-                                            {{ bank.bank_name }} ({{ bank.bank_code }}){{ bank.admin_fee > 0 ? ' - Fee: ' + formatPrice(bank.admin_fee) : '' }}
-                                        </option>
-                                    </select>
-                                    <div v-if="form.errors.bank_id" class="text-sm text-red-600">
-                                        {{ form.errors.bank_id }}
-                                    </div>
-                                </div>
-
-                                <Card v-if="selectedBank" class="border-border/60 bg-muted/20">
-                                    <CardHeader class="pb-3">
-                                        <CardTitle class="text-base">Detail Bank</CardTitle>
-                                        <CardDescription>Gunakan detail ini saat transfer</CardDescription>
-                                    </CardHeader>
-                                    <CardContent class="space-y-3">
-                                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                            <div class="rounded-md border border-border/60 bg-background/50 p-3">
-                                                <div class="text-xs text-muted-foreground">Bank</div>
-                                                <div class="mt-0.5 font-medium">{{ selectedBank.bank_name }}</div>
+                                    <div class="space-y-5">
+                                        <div v-for="(items, type) in groupedPaymentAccounts" :key="type" v-if="items.length > 0" class="space-y-3">
+                                            <div class="flex items-center gap-2 text-sm font-medium">
+                                                <component :is="getTypeIcon(type as any)" class="h-4 w-4 text-emerald-600 dark:text-green-400" />
+                                                <span>{{ paymentTypeLabel(type as any) }}</span>
                                             </div>
-                                            <div class="rounded-md border border-border/60 bg-background/50 p-3">
-                                                <div class="text-xs text-muted-foreground">Kode Bank</div>
-                                                <div class="mt-0.5 font-mono font-medium">{{ selectedBank.bank_code }}</div>
-                                            </div>
-                                            <div class="rounded-md border border-border/60 bg-background/50 p-3 sm:col-span-2">
-                                                <div class="flex items-center justify-between">
-                                                    <div class="text-xs text-muted-foreground">No. Rekening</div>
-                                                    <button
-                                                        type="button"
-                                                        class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                                                        @click="copyValue(String(selectedBank.account_number || ''))"
-                                                    >
-                                                        <Copy class="h-3.5 w-3.5" />
-                                                        Copy
-                                                    </button>
-                                                </div>
-                                                <div class="mt-0.5 font-mono text-lg font-semibold text-emerald-700 dark:text-green-400">
-                                                    {{ selectedBank.account_number }}
-                                                </div>
-                                                <div class="mt-1 text-xs text-muted-foreground">a.n. {{ selectedBank.account_name }}</div>
+                                            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                                <label
+                                                    v-for="item in items"
+                                                    :key="item.id"
+                                                    class="flex cursor-pointer items-start gap-3 rounded-lg border border-border/60 bg-background/40 p-3 transition-colors hover:bg-muted/40"
+                                                >
+                                                    <input
+                                                        type="radio"
+                                                        :value="item.id.toString()"
+                                                        v-model="form.payment_account_id"
+                                                        class="mt-1 h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                                                    />
+                                                    <span class="min-w-0 flex-1 space-y-1">
+                                                        <span class="block font-medium">{{ item.name }}</span>
+                                                        <template v-if="item.type === 'bank'">
+                                                            <span class="block text-xs text-muted-foreground">No. Rek: {{ item.account_number || '-' }}</span>
+                                                            <span class="block text-xs text-muted-foreground">a.n. {{ item.account_name || '-' }}</span>
+                                                        </template>
+                                                        <template v-else-if="item.type === 'ewallet'">
+                                                            <span class="block text-xs text-muted-foreground">Nomor: {{ item.account_number || '-' }}</span>
+                                                        </template>
+                                                        <template v-else-if="item.type === 'qris'">
+                                                            <span class="block text-xs text-muted-foreground">Scan QR untuk bayar</span>
+                                                            <img
+                                                                v-if="item.qris_image_path"
+                                                                :src="item.qris_image_path"
+                                                                alt="QRIS"
+                                                                class="mt-2 h-28 w-28 rounded-md border border-border/60 object-contain"
+                                                            />
+                                                        </template>
+                                                    </span>
+                                                </label>
                                             </div>
                                         </div>
-                                        <div
-                                            v-if="Number(selectedBank.admin_fee) > 0"
-                                            class="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-900 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-100"
-                                        >
-                                            <div class="flex items-start gap-2">
-                                                <AlertCircle class="mt-0.5 h-4 w-4" />
-                                                <div class="min-w-0">
-                                                    Biaya admin <span class="font-medium">{{ formatPrice(selectedBank.admin_fee) }}</span> sudah dihitung ke total.
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                    </div>
+                                    <div v-if="form.errors.payment_account_id" class="text-sm text-red-600">
+                                        {{ form.errors.payment_account_id }}
+                                    </div>
+                                </div>
 
                                 <Button type="submit" :disabled="form.processing" class="w-full justify-between">
                                     <span class="inline-flex items-center gap-2">
@@ -319,7 +275,7 @@ if (props.invoice.bank_id) {
                                 <Building2 class="h-5 w-5 text-emerald-600 dark:text-green-400" />
                                 Instruksi Pembayaran
                             </CardTitle>
-                            <CardDescription>Transfer sesuai detail berikut, lalu konfirmasi</CardDescription>
+                            <CardDescription>Ikuti instruksi berikut, lalu konfirmasi</CardDescription>
                         </CardHeader>
                         <CardContent class="space-y-6">
                             <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-900/20 dark:text-emerald-100">
@@ -342,29 +298,63 @@ if (props.invoice.bank_id) {
                                 </div>
                             </div>
 
-                            <div v-if="selectedBank" class="grid gap-3 sm:grid-cols-2">
+                            <div v-if="selectedPaymentAccount" class="grid gap-3 sm:grid-cols-2">
                                 <div class="rounded-lg border border-border/60 bg-background/40 p-3">
-                                    <div class="text-xs text-muted-foreground">Bank</div>
-                                    <div class="mt-0.5 font-medium">{{ selectedBank.bank_name }}</div>
+                                    <div class="text-xs text-muted-foreground">Metode</div>
+                                    <div class="mt-0.5 flex items-center gap-2 font-medium">
+                                        <component :is="getTypeIcon(selectedPaymentAccount.type)" class="h-4 w-4 text-emerald-600 dark:text-green-400" />
+                                        <span>{{ paymentTypeLabel(selectedPaymentAccount.type) }}</span>
+                                    </div>
                                 </div>
                                 <div class="rounded-lg border border-border/60 bg-background/40 p-3">
-                                    <div class="text-xs text-muted-foreground">Kode Bank</div>
-                                    <div class="mt-0.5 font-mono font-medium">{{ selectedBank.bank_code }}</div>
+                                    <div class="text-xs text-muted-foreground">Nama</div>
+                                    <div class="mt-0.5 font-medium">{{ selectedPaymentAccount.name }}</div>
                                 </div>
-                                <div class="rounded-lg border border-border/60 bg-background/40 p-3 sm:col-span-2">
+
+                                <div v-if="selectedPaymentAccount.type === 'bank'" class="rounded-lg border border-border/60 bg-background/40 p-3 sm:col-span-2">
                                     <div class="flex items-center justify-between">
                                         <div class="text-xs text-muted-foreground">No. Rekening</div>
                                         <button
                                             type="button"
                                             class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                                            @click="copyValue(String(selectedBank.account_number || ''))"
+                                            @click="copyValue(String(selectedPaymentAccount.account_number || ''))"
                                         >
                                             <Copy class="h-3.5 w-3.5" />
                                             Copy
                                         </button>
                                     </div>
-                                    <div class="mt-0.5 font-mono text-xl font-semibold text-emerald-700 dark:text-green-400">{{ selectedBank.account_number }}</div>
-                                    <div class="mt-1 text-xs text-muted-foreground">a.n. {{ selectedBank.account_name }}</div>
+                                    <div class="mt-0.5 font-mono text-xl font-semibold text-emerald-700 dark:text-green-400">{{ selectedPaymentAccount.account_number || '-' }}</div>
+                                    <div class="mt-1 text-xs text-muted-foreground">a.n. {{ selectedPaymentAccount.account_name || '-' }}</div>
+                                </div>
+
+                                <div v-else-if="selectedPaymentAccount.type === 'ewallet'" class="rounded-lg border border-border/60 bg-background/40 p-3 sm:col-span-2">
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-xs text-muted-foreground">Nomor E-Wallet</div>
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                                            @click="copyValue(String(selectedPaymentAccount.account_number || ''))"
+                                        >
+                                            <Copy class="h-3.5 w-3.5" />
+                                            Copy
+                                        </button>
+                                    </div>
+                                    <div class="mt-0.5 font-mono text-xl font-semibold text-emerald-700 dark:text-green-400">{{ selectedPaymentAccount.account_number || '-' }}</div>
+                                </div>
+
+                                <div v-else-if="selectedPaymentAccount.type === 'qris'" class="rounded-lg border border-border/60 bg-background/40 p-3 sm:col-span-2">
+                                    <div class="text-xs text-muted-foreground">QRIS</div>
+                                    <div class="mt-2 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+                                        <img
+                                            v-if="selectedPaymentAccount.qris_image_path"
+                                            :src="selectedPaymentAccount.qris_image_path"
+                                            alt="QRIS"
+                                            class="h-44 w-44 rounded-md border border-border/60 object-contain"
+                                        />
+                                        <div class="text-sm text-muted-foreground">
+                                            Scan QR untuk melakukan pembayaran.
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -425,8 +415,8 @@ if (props.invoice.bank_id) {
                                 <span class="font-medium">{{ formatPrice(invoice.amount) }}</span>
                             </div>
                             <div class="flex items-center justify-between text-sm">
-                                <span class="text-muted-foreground">Biaya admin</span>
-                                <span class="font-medium">{{ selectedBank ? formatPrice(selectedBank.admin_fee || 0) : formatPrice(0) }}</span>
+                                <span class="text-muted-foreground">Metode</span>
+                                <span class="font-medium">{{ selectedPaymentAccount ? paymentTypeLabel(selectedPaymentAccount.type) : '-' }}</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-muted-foreground">Total</span>

@@ -9,6 +9,7 @@ import domainPrices from './domain-prices'
 import hostingPlans from './hosting-plans'
 import bulkPricing from './bulk-pricing'
 import banks from './banks'
+import payments from './payments'
 import blog from './blog'
 import expenses from './expenses'
 import users from './users'
@@ -162,6 +163,7 @@ domainPrices: Object.assign(domainPrices, domainPrices),
 hostingPlans: Object.assign(hostingPlans, hostingPlans),
 bulkPricing: Object.assign(bulkPricing, bulkPricing),
 banks: Object.assign(banks, banks),
+payments: Object.assign(payments, payments),
 blog: Object.assign(blog, blog),
 expenses: Object.assign(expenses, expenses),
 impersonate: Object.assign(impersonate, impersonate),

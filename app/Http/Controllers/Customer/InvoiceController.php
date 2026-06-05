@@ -3,13 +3,11 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Models\Bank;
-use App\Models\BrandingSetting;
 use App\Models\Invoice;
+use App\Models\PaymentAccount;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,7 +21,7 @@ class InvoiceController extends Controller
         $customer = Auth::guard('customer')->user();
 
         $invoices = $customer->invoices()
-            ->with(['bank', 'order'])
+            ->with(['bank', 'paymentAccount', 'order'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -39,15 +37,10 @@ class InvoiceController extends Controller
     {
         $this->authorize('view', $invoice);
 
-        $invoice->load(['bank', 'order', 'customer']);
-
-        $activeBanks = Bank::where('is_active', true)
-            ->orderBy('bank_name')
-            ->get();
+        $invoice->load(['bank', 'paymentAccount', 'order', 'customer']);
 
         return Inertia::render('Customer/Invoices/Show', [
             'invoice' => $invoice,
-            'banks' => $activeBanks,
         ]);
     }
 
@@ -63,24 +56,18 @@ class InvoiceController extends Controller
                 ->with('error', 'Invoice sudah dibayar.');
         }
 
-        $invoice->load(['bank', 'order', 'customer']);
+        $invoice->load(['bank', 'paymentAccount', 'order', 'customer']);
 
-        $activeBanks = Bank::where('is_active', true)
-            ->orderBy('bank_name')
+        $paymentAccounts = PaymentAccount::query()
+            ->active()
+            ->orderBy('sort')
+            ->orderBy('type')
+            ->orderBy('name')
             ->get();
-
-        $paymentMethods = BrandingSetting::getActivePaymentMethods();
-        if (count($paymentMethods) === 0) {
-            $paymentMethods = array_values(array_filter(BrandingSetting::getPaymentMethods(), fn (array $m) => ($m['key'] ?? null) === 'bank_transfer'));
-        }
-        if (count($paymentMethods) === 0) {
-            $paymentMethods = BrandingSetting::getPaymentMethods();
-        }
 
         return Inertia::render('Customer/Invoices/Payment', [
             'invoice' => $invoice,
-            'banks' => $activeBanks,
-            'paymentMethods' => $paymentMethods,
+            'paymentAccounts' => $paymentAccounts,
         ]);
     }
 
@@ -96,32 +83,22 @@ class InvoiceController extends Controller
                 ->with('error', 'Invoice sudah dibayar.');
         }
 
-        $paymentMethods = BrandingSetting::getActivePaymentMethods();
-        if (count($paymentMethods) === 0) {
-            $paymentMethods = array_values(array_filter(BrandingSetting::getPaymentMethods(), fn (array $m) => ($m['key'] ?? null) === 'bank_transfer'));
-        }
-        if (count($paymentMethods) === 0) {
-            $paymentMethods = BrandingSetting::getPaymentMethods();
-        }
-
-        $allowedPaymentMethodKeys = array_values(array_filter(array_map(fn (array $m) => $m['key'] ?? null, $paymentMethods)));
-
         $request->validate([
-            'bank_id' => 'required|exists:banks,id',
-            'payment_method' => ['required', Rule::in($allowedPaymentMethodKeys)],
+            'payment_account_id' => 'required|exists:payment_accounts,id',
         ]);
 
-        $bank = Bank::findOrFail($request->bank_id);
+        $paymentAccount = PaymentAccount::findOrFail($request->payment_account_id);
 
-        if (! $bank->is_active) {
+        if (! $paymentAccount->is_active) {
             return redirect()->back()
-                ->with('error', 'Bank yang dipilih tidak aktif.');
+                ->with('error', 'Metode pembayaran yang dipilih tidak aktif.');
         }
 
-        // Update invoice with selected bank and payment method
+        // Update invoice with selected payment account
         $invoice->update([
-            'bank_id' => $request->bank_id,
-            'payment_method' => $request->payment_method,
+            'bank_id' => null,
+            'payment_account_id' => $paymentAccount->id,
+            'payment_method' => $paymentAccount->type,
             'status' => 'sent', // Mark as sent for payment
         ]);
 

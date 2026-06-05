@@ -25,6 +25,7 @@ class Invoice extends Model
         'paid_at',
         'payment_method',
         'bank_id',
+        'payment_account_id',
         'notes',
     ];
 
@@ -52,6 +53,11 @@ class Invoice extends Model
     public function bank(): BelongsTo
     {
         return $this->belongsTo(Bank::class);
+    }
+
+    public function paymentAccount(): BelongsTo
+    {
+        return $this->belongsTo(PaymentAccount::class);
     }
 
     public function scopePaid($query)

@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Admin\BankController;
 use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\BrandingController;
 use App\Http\Controllers\Admin\BulkPricingController;
@@ -13,6 +12,7 @@ use App\Http\Controllers\Admin\HostingPlanController;
 use App\Http\Controllers\Admin\ImpersonateController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\PaymentAccountController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\TaskCategoryController;
@@ -47,8 +47,13 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::post('bulk-pricing/save-config', [BulkPricingController::class, 'saveConfig'])->name('bulk-pricing.save-config');
     Route::get('bulk-pricing/load-config/{id}', [BulkPricingController::class, 'loadConfig'])->name('bulk-pricing.load-config');
     Route::delete('bulk-pricing/delete-config/{id}', [BulkPricingController::class, 'deleteConfig'])->name('bulk-pricing.delete-config');
-    Route::resource('banks', BankController::class);
-    Route::patch('banks/{bank}/toggle-status', [BankController::class, 'toggleStatus'])->name('banks.toggle-status');
+    Route::get('banks', fn () => redirect()->route('admin.payments.index'))->name('banks.redirect');
+
+    Route::get('payments', [PaymentAccountController::class, 'index'])->name('payments.index');
+    Route::post('payments', [PaymentAccountController::class, 'store'])->name('payments.store');
+    Route::put('payments/{payment}', [PaymentAccountController::class, 'update'])->name('payments.update');
+    Route::delete('payments/{payment}', [PaymentAccountController::class, 'destroy'])->name('payments.destroy');
+    Route::patch('payments/{payment}/toggle-status', [PaymentAccountController::class, 'toggleStatus'])->name('payments.toggle-status');
 
     // Blog Management
     Route::resource('blog', BlogController::class);

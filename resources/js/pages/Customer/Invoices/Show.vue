@@ -12,7 +12,6 @@ import { ArrowRight, Building2, Calendar, CreditCard, FileText, Package, Receipt
 
 const props = defineProps<{
     invoice: any;
-    banks: any[];
 }>();
 
 const customerRoutes = customer as any;
@@ -294,40 +293,57 @@ const canPay = () => {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div v-if="invoice.bank" class="space-y-4">
+                        <div v-if="invoice.payment_account" class="space-y-4">
+                            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div>
+                                    <label class="text-sm font-medium text-muted-foreground">Jenis</label>
+                                    <p class="font-medium">{{ invoice.payment_account.type }}</p>
+                                </div>
+                                <div>
+                                    <label class="text-sm font-medium text-muted-foreground">Nama</label>
+                                    <p class="font-medium">{{ invoice.payment_account.name }}</p>
+                                </div>
+                            </div>
+
+                            <div v-if="invoice.payment_account.type === 'bank'" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div>
+                                    <label class="text-sm font-medium text-muted-foreground">Nomor Rekening</label>
+                                    <p class="font-mono">{{ invoice.payment_account.account_number || '-' }}</p>
+                                </div>
+                                <div>
+                                    <label class="text-sm font-medium text-muted-foreground">Nama Pemilik</label>
+                                    <p>{{ invoice.payment_account.account_name || '-' }}</p>
+                                </div>
+                            </div>
+
+                            <div v-else-if="invoice.payment_account.type === 'qris'" class="space-y-2">
+                                <label class="text-sm font-medium text-muted-foreground">QRIS</label>
+                                <img
+                                    v-if="invoice.payment_account.qris_image_path"
+                                    :src="invoice.payment_account.qris_image_path"
+                                    alt="QRIS"
+                                    class="h-56 w-56 rounded-md border border-border/60 object-contain"
+                                />
+                            </div>
+
+                            <div v-if="invoice.payment_method" class="text-sm text-muted-foreground">
+                                {{ invoice.payment_method }}
+                            </div>
+                        </div>
+                        <div v-else-if="invoice.bank" class="space-y-4">
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div>
                                     <label class="text-sm font-medium text-muted-foreground">Bank</label>
                                     <p class="font-medium">{{ invoice.bank.bank_name }}</p>
                                 </div>
                                 <div>
-                                    <label class="text-sm font-medium text-muted-foreground">Bank Code</label>
-                                    <p>{{ invoice.bank.bank_code }}</p>
-                                </div>
-                                <div>
-                                    <label class="text-sm font-medium text-muted-foreground">Account Number</label>
+                                    <label class="text-sm font-medium text-muted-foreground">Nomor Rekening</label>
                                     <p class="font-mono">{{ invoice.bank.account_number }}</p>
                                 </div>
-                                <div>
-                                    <label class="text-sm font-medium text-muted-foreground">Account Name</label>
+                                <div class="md:col-span-2">
+                                    <label class="text-sm font-medium text-muted-foreground">Nama Pemilik</label>
                                     <p>{{ invoice.bank.account_name }}</p>
                                 </div>
-                            </div>
-                            <div v-if="invoice.bank.branch">
-                                <label class="text-sm font-medium text-muted-foreground">Branch</label>
-                                <p>{{ invoice.bank.branch }}</p>
-                            </div>
-                            <div v-if="invoice.bank.swift_code">
-                                <label class="text-sm font-medium text-muted-foreground">SWIFT Code</label>
-                                <p class="font-mono">{{ invoice.bank.swift_code }}</p>
-                            </div>
-                            <div v-if="invoice.payment_method">
-                                <label class="text-sm font-medium text-muted-foreground">Payment Method</label>
-                                <p>{{ invoice.payment_method }}</p>
-                            </div>
-                            <div v-if="invoice.bank.admin_fee > 0">
-                                <label class="text-sm font-medium text-muted-foreground">Admin Fee</label>
-                                <p>{{ formatPrice(invoice.bank.admin_fee) }}</p>
                             </div>
                         </div>
                         <div v-else class="py-8 text-center text-muted-foreground">

@@ -95,9 +95,9 @@ const getFinancialChildren = () => {
             icon: Globe,
         },
         {
-            title: 'Bank Management',
-            href: '/admin/banks',
-            icon: Building,
+            title: 'Payment Management',
+            href: '/admin/payments',
+            icon: CreditCard,
         },
     ];
 
