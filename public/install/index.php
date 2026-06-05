@@ -827,6 +827,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             exit;
 
+        case 'finalize_install':
+            $targetWscrmPath = str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT'])) . '/wscrm';
+            $detectedPath = detectWscrmFolder();
+            $possiblePaths = array_unique(array_filter([$targetWscrmPath, $detectedPath]));
+
+            $actualWscrmPath = '';
+            foreach ($possiblePaths as $path) {
+                if (! $path || ! is_dir($path)) {
+                    continue;
+                }
+
+                if (file_exists($path . '/.env')) {
+                    $actualWscrmPath = $path;
+                    break;
+                }
+            }
+
+            if (! $actualWscrmPath) {
+                echo json_encode(['success' => false, 'message' => 'Folder wscrm tidak ditemukan atau file .env belum ada.']);
+                exit;
+            }
+
+            $envFile = $actualWscrmPath . '/.env';
+            if (file_exists($envFile)) {
+                $envContent = file_get_contents($envFile);
+                if (preg_match('/^APP_KEY=\s*$/m', $envContent) || ! preg_match('/^APP_KEY=/m', $envContent)) {
+                    $appKey = 'base64:' . base64_encode(random_bytes(32));
+
+                    if (preg_match('/^APP_KEY=/m', $envContent)) {
+                        $envContent = preg_replace('/^APP_KEY=.*$/m', 'APP_KEY=' . $appKey, $envContent);
+                    } else {
+                        $envContent .= "\nAPP_KEY=" . $appKey;
+                    }
+
+                    file_put_contents($envFile, $envContent);
+                }
+            }
+
+            $outputs = [];
+            $runInWscrm = function ($label, $command) use ($actualWscrmPath, &$outputs) {
+                $currentDir = getcwd();
+                chdir($actualWscrmPath);
+                $output = executeSimpleCommand($command);
+                chdir($currentDir);
+                $outputs[] = "== {$label} ==\n{$command}\n{$output}";
+            };
+
+            $runInWscrm('Migrations', 'php artisan migrate --force');
+            $runInWscrm('DB Seeder', 'php artisan db:seed --force');
+            $runInWscrm('Storage Link', 'php artisan storage:link');
+            $runInWscrm('Clear Cache', 'php artisan optimize:clear');
+            $runInWscrm('Optimize', 'php artisan optimize');
+            $runInWscrm('Config Cache', 'php artisan config:cache');
+            $runInWscrm('Artisan Up', 'php artisan up');
+
+            $lockPath = $actualWscrmPath . '/storage/installer.lock';
+            if (! is_dir(dirname($lockPath))) {
+                @mkdir(dirname($lockPath), 0755, true);
+            }
+            if (! file_exists($lockPath)) {
+                @file_put_contents($lockPath, date('Y-m-d H:i:s'));
+            }
+
+            $installPath = __DIR__;
+
+            if (function_exists('deleteDirectory') && deleteDirectory($installPath)) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Install selesai. Folder install berhasil dihapus. Mengalihkan ke aplikasi...',
+                    'output' => implode("\n\n", $outputs),
+                ]);
+                exit;
+            }
+
+            // Fallback: define local deleteDirectory if not available in this scope
+            $deleteDirectoryLocal = function ($dir) use (&$deleteDirectoryLocal) {
+                if (! is_dir($dir)) {
+                    return false;
+                }
+                $files = array_diff(scandir($dir), ['.', '..']);
+                foreach ($files as $file) {
+                    $filePath = $dir . '/' . $file;
+                    if (is_dir($filePath)) {
+                        $deleteDirectoryLocal($filePath);
+                    } else {
+                        @unlink($filePath);
+                    }
+                }
+                return @rmdir($dir);
+            };
+
+            $deleted = $deleteDirectoryLocal($installPath);
+            echo json_encode([
+                'success' => (bool) $deleted,
+                'message' => $deleted ? 'Install selesai. Folder install berhasil dihapus. Mengalihkan ke aplikasi...' : 'Install selesai, tapi gagal menghapus folder install. Silakan hapus manual.',
+                'output' => implode("\n\n", $outputs),
+            ]);
+            exit;
+
         case 'test_database':
             $dbHost = $_POST['db_host'] ?? 'localhost';
             $dbPort = $_POST['db_port'] ?? '3306';
@@ -1532,38 +1631,10 @@ $isLocalHost = in_array($hostNoPort, ['localhost', '127.0.0.1', '::1'], true);
                 <strong>Instalasi sudah selesai</strong><br>
                 WSCRM sudah terinstall di: <code><?= htmlspecialchars($targetWscrmPath) ?></code><br><br>
 
-                <div class="alert alert-info">
-                    <strong>Tools tambahan:</strong> Sebelum menghapus installer, Anda dapat menjalankan tools di bawah untuk setup final:
-                </div>
-
-                <!-- Laravel Tools Section -->
-                <div class="tools">
-                    <h4 class="tools-title">Setup tools Laravel</h4>
-
-                    <div class="tools-grid">
-                        <button onclick="runLaravelCommand('migrate')" class="btn">Run migrations</button>
-                        <button onclick="runLaravelCommand('db_seed')" class="btn">Run DB seeder</button>
-                        <button onclick="runLaravelCommand('storage_link')" class="btn">Create storage link</button>
-                        <button onclick="runLaravelCommand('key_generate')" class="btn">Generate app key</button>
-                        <button onclick="runLaravelCommand('clear_cache')" class="btn">Clear all cache</button>
-                        <button onclick="runLaravelCommand('optimize')" class="btn">Optimize app</button>
-                        <button onclick="runLaravelCommand('config_cache')" class="btn">Cache config</button>
-                        <button onclick="runLaravelCommand('check_env')" class="btn">Check .env</button>
-                    </div>
-
-                    <div id="laravel-tools-result" class="result"></div>
-                </div>
-
-                <div class="alert alert-info">
-                    <strong>Penting:</strong> Aplikasi tidak dapat diakses selama folder install masih ada.<br>
-                    Silakan hapus folder install terlebih dahulu untuk mengakses aplikasi.
-                </div>
-
                 <div class="actions">
-                    <button onclick="deleteInstallFolder()" class="btn btn-danger">Hapus folder install dan buka aplikasi</button>
-                    <a href="../" class="btn btn-outline">Coba buka aplikasi (akan error)</a>
+                    <button onclick="finalizeInstall()" class="btn btn-primary">Install</button>
                 </div>
-                <div id="delete-result" class="result"></div>
+                <div id="finalize-result" class="result"></div>
             </div>
         <?php } else { ?>
             <div class="step <?= $step1Complete ? 'completed' : '' ?>" id="step1">
@@ -1595,10 +1666,9 @@ $isLocalHost = in_array($hostNoPort, ['localhost', '127.0.0.1', '::1'], true);
                         Environment sudah dikonfigurasi dan aplikasi siap digunakan.
                     </div>
                     <div class="actions">
-                        <a href="../" class="btn btn-primary">Buka aplikasi</a>
-                        <button onclick="deleteInstallFolder()" class="btn btn-danger">Hapus folder install</button>
+                        <button onclick="finalizeInstall()" class="btn btn-primary">Install</button>
                     </div>
-                    <div id="delete-result" class="result"></div>
+                    <div id="finalize-result" class="result"></div>
                 <?php } else { ?>
                     <button class="btn btn-success" onclick="showEnvConfiguration()">Install</button>
                     <div id="env-config-form" class="config-form" style="display: none;">
@@ -2009,6 +2079,72 @@ $isLocalHost = in_array($hostNoPort, ['localhost', '127.0.0.1', '::1'], true);
                         <strong>Error: ${error.message}</strong>
                     </div>
                 `;
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                });
+        }
+
+        function finalizeInstall() {
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Menginstall...';
+
+            const resultDiv = document.getElementById('finalize-result');
+            if (resultDiv) {
+                resultDiv.innerHTML = `
+                <div class="alert alert-info">
+                    <strong>Memproses install...</strong><br>
+                    Menjalankan migrate, seeder, storage link, clear cache, optimize, config cache, lalu menghapus folder install.
+                </div>
+            `;
+            }
+
+            fetch('index.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'action=finalize_install'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const out = data.output ? `<pre class="code-block">${data.output}</pre>` : '';
+                    if (resultDiv) {
+                        if (data.success) {
+                            resultDiv.innerHTML = `
+                            <div class="alert alert-success">
+                                <strong>${data.message}</strong>
+                                ${out}
+                            </div>
+                        `;
+                        } else {
+                            resultDiv.innerHTML = `
+                            <div class="alert alert-error">
+                                <strong>${data.message}</strong>
+                                ${out}
+                            </div>
+                        `;
+                        }
+                    }
+
+                    if (data.success) {
+                        setTimeout(() => {
+                            window.location.href = '../';
+                        }, 2500);
+                    } else {
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
+                })
+                .catch(error => {
+                    if (resultDiv) {
+                        resultDiv.innerHTML = `
+                        <div class="alert alert-error">
+                            <strong>Error: ${error.message}</strong>
+                        </div>
+                    `;
+                    }
                     btn.disabled = false;
                     btn.textContent = originalText;
                 });
