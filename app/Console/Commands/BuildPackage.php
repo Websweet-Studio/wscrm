@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use Symfony\Component\Process\Process;
 use ZipArchive;
 
 class BuildPackage extends Command
@@ -83,9 +84,18 @@ class BuildPackage extends Command
         File::makeDirectory($distDir, 0755, true);
         File::makeDirectory($tempDir, 0755, true);
 
-        // Step 1: Run npm build
-        $this->info('📦 Building frontend assets...');
-        $this->executeCommand('npm run build:clean');
+        $manifestPath = public_path('build/manifest.json');
+        if (! File::exists($manifestPath)) {
+            $this->info('📦 Building frontend assets...');
+            try {
+                $this->executeCommand('npm run build:clean');
+            } catch (\Throwable $e) {
+                $this->error('❌ Build frontend assets gagal: ' . $e->getMessage());
+                return self::FAILURE;
+            }
+        } else {
+            $this->info('📦 Frontend assets sudah ada, melewati build.');
+        }
 
         // Step 2: Copy files untuk deployment
         $this->info('📁 Copying application files...');
@@ -703,18 +713,15 @@ Generated: ' . date('Y-m-d H:i:s');
 
     protected function executeCommand(string $command): void
     {
-        $process = proc_open(
-            $command,
-            [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
-            $pipes,
-            base_path()
-        );
+        $process = Process::fromShellCommandline($command, base_path());
+        $process->setTimeout(null);
+        $process->run(function ($type, $buffer) {
+            $this->output->write($buffer);
+        });
 
-        if (is_resource($process)) {
-            fclose($pipes[0]);
-            fclose($pipes[1]);
-            fclose($pipes[2]);
-            proc_close($process);
+        if (! $process->isSuccessful()) {
+            $code = (string) $process->getExitCode();
+            throw new \RuntimeException("Command failed (exit {$code}): {$command}");
         }
     }
 }
