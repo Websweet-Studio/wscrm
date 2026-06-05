@@ -423,17 +423,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            // Get target wscrm path
+            // Pastikan folder wscrm berada di lokasi target (sejajar dengan public_html).
+            // Pindah folder dilakukan otomatis saat klik install (configure_env), tidak ada step terpisah.
             $detectedWscrmPath = detectWscrmFolder();
             $publicHtmlParent = str_replace('\\', '/', dirname($_SERVER['DOCUMENT_ROOT']));
-            $targetWscrmPath = $detectedWscrmPath ?: ($publicHtmlParent . '/wscrm');
+            $targetWscrmPath = $publicHtmlParent . '/wscrm';
+
+            if ($detectedWscrmPath) {
+                $normalizedDetected = rtrim(str_replace('\\', '/', $detectedWscrmPath), '/');
+                $normalizedTarget = rtrim(str_replace('\\', '/', $targetWscrmPath), '/');
+
+                $detectedReal = realpath($normalizedDetected);
+                $targetReal = realpath($normalizedTarget);
+
+                $isSameLocation = $detectedReal && $targetReal ? ($detectedReal === $targetReal) : ($normalizedDetected === $normalizedTarget);
+
+                if (! $isSameLocation && ! is_dir($normalizedTarget)) {
+                    $moveResult = moveWscrmFolder($normalizedDetected, $normalizedTarget);
+                    if (! ($moveResult['success'] ?? false)) {
+                        echo json_encode([
+                            'success' => false,
+                            'message' => 'Gagal memindahkan folder wscrm: ' . ($moveResult['message'] ?? 'Unknown error'),
+                            'details' => $moveResult,
+                        ]);
+                        exit;
+                    }
+                }
+            }
 
             error_log('Target wscrm path: ' . $targetWscrmPath);
             error_log('Directory exists: ' . (is_dir($targetWscrmPath) ? 'YES' : 'NO'));
 
             if (! is_dir($targetWscrmPath)) {
-                error_log('ERROR Target wscrm directory not found: ' . $targetWscrmPath);
-                echo json_encode(['success' => false, 'message' => 'Folder wscrm tidak ditemukan di lokasi target: ' . $targetWscrmPath]);
+                $fallback = $detectedWscrmPath ?: $targetWscrmPath;
+                error_log('ERROR Target wscrm directory not found: ' . $fallback);
+                echo json_encode(['success' => false, 'message' => 'Folder wscrm tidak ditemukan. Pastikan file package sudah diextract dengan benar.']);
                 exit;
             }
 
@@ -1559,25 +1583,10 @@ $isLocalHost = in_array($hostNoPort, ['localhost', '127.0.0.1', '::1'], true);
                 <?php } ?>
             </div>
 
-            <div class="step <?= $step2Complete ? 'completed' : '' ?><?= $step1Complete && ! $step2Complete ? ' active' : '' ?>" id="step2" style="display: <?= $step1Complete ? 'block' : 'none' ?>;">
-                <div class="step-title">Step 2: Pindahkan folder WSCRM</div>
+            <div class="step <?= $step3Complete ? 'completed' : '' ?><?= $step1Complete && ! $step3Complete ? ' active' : '' ?>" id="step3" style="display: <?= $step1Complete ? 'block' : 'none' ?>;">
+                <div class="step-title">Step 2: <?= $step3Complete ? 'Konfigurasi selesai' : 'Install (Setup environment)' ?></div>
                 <div class="step-description">
-                    Folder wscrm akan dipindahkan ke lokasi yang tepat (sejajar dengan public_html).
-                </div>
-
-                <div class="alert alert-info">
-                    <strong>Target lokasi:</strong><br>
-                    <div class="path-info"><?= htmlspecialchars($targetWscrmPath) ?></div>
-                </div>
-
-                <button class="btn" onclick="moveWscrm()">Jalankan Operasi</button>
-                <div id="move-result"></div>
-            </div>
-
-            <div class="step <?= $step3Complete ? 'completed' : '' ?><?= $step2Complete && ! $step3Complete ? ' active' : '' ?>" id="step3" style="display: <?= $step2Complete ? 'block' : 'none' ?>;">
-                <div class="step-title">Step 3: <?= $step3Complete ? 'Konfigurasi selesai' : 'Setup environment' ?></div>
-                <div class="step-description">
-                    <?= $step3Complete ? 'Environment sudah dikonfigurasi. Aplikasi siap digunakan.' : 'Konfigurasikan environment untuk menyelesaikan instalasi.' ?>
+                    <?= $step3Complete ? 'Environment sudah dikonfigurasi. Aplikasi siap digunakan.' : 'Konfigurasikan environment untuk menyelesaikan instalasi. Folder wscrm akan dipindahkan otomatis saat proses install.' ?>
                 </div>
 
                 <?php if ($step3Complete) { ?>
@@ -1591,7 +1600,7 @@ $isLocalHost = in_array($hostNoPort, ['localhost', '127.0.0.1', '::1'], true);
                     </div>
                     <div id="delete-result" class="result"></div>
                 <?php } else { ?>
-                    <button class="btn btn-success" onclick="showEnvConfiguration()">Setup environment</button>
+                    <button class="btn btn-success" onclick="showEnvConfiguration()">Install</button>
                     <div id="env-config-form" class="config-form" style="display: none;">
                         <div class="config-header">
                             <h3>Konfigurasi environment</h3>
