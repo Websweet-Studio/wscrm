@@ -28,7 +28,6 @@ yarn-error.log
 # Build output
 /dist
 
-# UI components (generated)
-/resources/js/components/ui/
+# UI components
 /test-extract.claude/settings.json
 /.claude/
