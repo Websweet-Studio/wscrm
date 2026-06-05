@@ -70,19 +70,16 @@
             "@php artisan test"
         ],
         "build:production": [
-            "powershell -Command \"if (Test-Path 'dist') { Remove-Item -Recurse -Force 'dist' }\"",
             "npm run build:clean",
             "@php artisan build:package --output=dist/wscrm.{version}.zip --force --no-interaction"
         ],
         "build:package": [
-            "powershell -Command \"if (Test-Path 'dist') { Remove-Item -Recurse -Force 'dist' }\"",
             "@php artisan build:package --no-interaction"
         ],
         "build:flat-deployment": [
-            "powershell -Command \"if (Test-Path 'dist') { Remove-Item -Recurse -Force 'dist' }\"",
             "npm run build",
             "@php artisan config:cache",
-            "@php artisan route:cache", 
+            "@php artisan route:cache",
             "@php artisan view:cache",
             "@php artisan build:flat-deployment"
         ]
