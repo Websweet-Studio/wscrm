@@ -140,17 +140,24 @@ const refreshDashboard = () => {
 };
 
 const githubRepoUrl = 'https://github.com/Websweet-Studio/wscrm/';
+const githubReleasesUrl = 'https://github.com/Websweet-Studio/wscrm/releases/';
 const updateInfo = ref<any | null>(null);
 const isCheckingUpdate = ref(false);
+const updateCheckError = ref<string>('');
 
 const checkForUpdates = async () => {
     isCheckingUpdate.value = true;
+    updateCheckError.value = '';
     try {
         const response = await fetch('/admin/system/check-updates');
         const data = await response.json();
         if (response.ok) {
             updateInfo.value = data;
+        } else {
+            updateCheckError.value = data?.error || 'Gagal mengecek update';
         }
+    } catch (e: any) {
+        updateCheckError.value = e?.message || 'Gagal mengecek update';
     } finally {
         isCheckingUpdate.value = false;
     }
@@ -227,6 +234,43 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                 </div>
             </div>
 
+            <Card>
+                <CardHeader class="px-4 pb-3 sm:px-6">
+                    <CardTitle style="font-family: Georgia, serif;" class="text-base sm:text-lg">Versi Aplikasi</CardTitle>
+                    <CardDescription class="text-xs sm:text-sm">
+                        Versi saat ini <span class="font-mono">{{ updateInfo?.current_version || '—' }}</span>
+                        <span v-if="updateInfo?.latest_version"> • Versi terbaru <span class="font-mono font-medium">{{ updateInfo.latest_version }}</span></span>
+                    </CardDescription>
+                </CardHeader>
+                <CardContent class="flex flex-col gap-2 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                    <div class="text-xs text-muted-foreground">
+                        <template v-if="updateInfo?.has_update === true">
+                            Update tersedia di GitHub Releases.
+                        </template>
+                        <template v-else-if="updateInfo && updateInfo?.has_update === false">
+                            Sistem sudah menggunakan versi terbaru.
+                        </template>
+                        <template v-else-if="updateCheckError">
+                            {{ updateCheckError }}
+                        </template>
+                        <template v-else>
+                            {{ isCheckingUpdate ? 'Mengecek update…' : 'Klik cek update untuk memeriksa versi terbaru.' }}
+                        </template>
+                    </div>
+                    <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                        <Button variant="outline" size="sm" class="w-full sm:w-auto" :disabled="isCheckingUpdate" @click="checkForUpdates">
+                            {{ isCheckingUpdate ? 'Checking…' : 'Cek Update' }}
+                        </Button>
+                        <Button variant="outline" size="sm" asChild class="w-full sm:w-auto">
+                            <a :href="githubReleasesUrl" target="_blank" rel="noreferrer">GitHub Releases</a>
+                        </Button>
+                        <Button size="sm" asChild class="w-full sm:w-auto">
+                            <Link href="/admin/system/update">Update Sistem</Link>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
             <Card v-if="updateInfo?.has_update" class="border border-emerald-200/60 bg-emerald-50/60 dark:border-emerald-900/50 dark:bg-emerald-950/30">
                 <CardHeader class="px-4 pb-3 sm:px-6">
                     <CardTitle class="flex items-center gap-2 text-base sm:text-lg" style="font-family: Georgia, serif;">
@@ -240,7 +284,10 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                 </CardHeader>
                 <CardContent class="flex flex-col gap-2 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                     <div class="text-xs text-muted-foreground">
-                        Sumber update: <a :href="githubRepoUrl" target="_blank" rel="noreferrer" class="underline underline-offset-4 hover:text-foreground">{{ githubRepoUrl }}</a>
+                        Sumber update:
+                        <a :href="githubReleasesUrl" target="_blank" rel="noreferrer" class="underline underline-offset-4 hover:text-foreground">
+                            {{ githubReleasesUrl }}
+                        </a>
                     </div>
                     <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                         <Button variant="outline" size="sm" asChild class="w-full sm:w-auto">
@@ -253,7 +300,6 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                     </div>
                 </CardContent>
             </Card>
-            <div v-else-if="isCheckingUpdate" class="text-xs text-muted-foreground">Mengecek update…</div>
 
             <!-- Quick Actions -->
             <Card>
