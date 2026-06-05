@@ -4,11 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { formatPrice } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { Building2, Edit, Eye, Plus, ToggleLeft, ToggleRight, Trash2, X } from 'lucide-vue-next';
@@ -17,15 +14,9 @@ import { ref } from 'vue';
 interface Bank {
     id: number;
     bank_name: string;
-    bank_code: string;
     account_number: string;
     account_name: string;
-    branch?: string;
-    swift_code?: string;
-    description?: string;
     is_active: boolean;
-    admin_fee: number;
-    bank_type: 'local' | 'international';
     created_at: string;
     updated_at: string;
 }
@@ -57,41 +48,20 @@ const bankToDelete = ref<Bank | null>(null);
 
 interface BankForm {
     bank_name: string;
-    bank_code: string;
     account_number: string;
     account_name: string;
-    branch: string;
-    swift_code: string;
-    description: string;
-    is_active: boolean;
-    admin_fee: number;
-    bank_type: 'local' | 'international';
 }
 
 const createForm = useForm<BankForm>({
     bank_name: '',
-    bank_code: '',
     account_number: '',
     account_name: '',
-    branch: '',
-    swift_code: '',
-    description: '',
-    is_active: true,
-    admin_fee: 0,
-    bank_type: 'local',
 });
 
 const editForm = useForm<BankForm>({
     bank_name: '',
-    bank_code: '',
     account_number: '',
     account_name: '',
-    branch: '',
-    swift_code: '',
-    description: '',
-    is_active: true,
-    admin_fee: 0,
-    bank_type: 'local',
 });
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -101,10 +71,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const getStatusClass = (isActive: boolean) => {
     return isActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground';
-};
-
-const getBankTypeClass = (type: Bank['bank_type']) => {
-    return type === 'local' ? 'bg-secondary text-secondary-foreground' : 'bg-muted text-muted-foreground';
 };
 
 const formatPaginationLabel = (label: string) => {
@@ -161,15 +127,8 @@ const openEditModal = (bank: Bank) => {
     selectedBank.value = bank;
     editForm.reset();
     editForm.bank_name = bank.bank_name;
-    editForm.bank_code = bank.bank_code;
     editForm.account_number = bank.account_number;
     editForm.account_name = bank.account_name;
-    editForm.branch = bank.branch || '';
-    editForm.swift_code = bank.swift_code || '';
-    editForm.description = bank.description || '';
-    editForm.is_active = bank.is_active;
-    editForm.admin_fee = bank.admin_fee;
-    editForm.bank_type = bank.bank_type;
     showEditModal.value = true;
 };
 
@@ -219,10 +178,8 @@ const submitEdit = () => {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Bank</TableHead>
-                                        <TableHead>Kode</TableHead>
-                                        <TableHead>Rekening</TableHead>
-                                        <TableHead>Tipe</TableHead>
-                                        <TableHead>Admin Fee</TableHead>
+                                        <TableHead>Nomor Rekening</TableHead>
+                                        <TableHead>Nama Pemilik</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead class="text-right">Aksi</TableHead>
                                     </TableRow>
@@ -230,27 +187,13 @@ const submitEdit = () => {
                                 <TableBody>
                                     <TableRow v-for="bank in banks.data" :key="bank.id">
                                         <TableCell>
-                                            <div>
-                                                <div class="font-medium">{{ bank.bank_name }}</div>
-                                                <div class="text-sm text-muted-foreground">{{ bank.account_name }}</div>
-                                            </div>
+                                            <div class="font-medium">{{ bank.bank_name }}</div>
                                         </TableCell>
                                         <TableCell>
-                                            <code class="rounded bg-muted px-2 py-1 text-sm">{{ bank.bank_code }}</code>
+                                            <div class="font-mono text-sm">{{ bank.account_number }}</div>
                                         </TableCell>
                                         <TableCell>
-                                            <div>
-                                                <div class="font-mono text-sm">{{ bank.account_number }}</div>
-                                                <div v-if="bank.branch" class="text-sm text-muted-foreground">{{ bank.branch }}</div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge :class="getBankTypeClass(bank.bank_type)" class="text-xs">
-                                                {{ bank.bank_type === 'local' ? 'Lokal' : 'Internasional' }}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            {{ formatPrice(bank.admin_fee) }}
+                                            {{ bank.account_name }}
                                         </TableCell>
                                         <TableCell>
                                             <Badge :class="getStatusClass(bank.is_active)" class="text-xs">
@@ -367,19 +310,6 @@ const submitEdit = () => {
                             <p v-if="createForm.errors.bank_name" class="mt-1 text-xs text-destructive">{{ createForm.errors.bank_name }}</p>
                         </div>
 
-                        <!-- Bank Code -->
-                        <div>
-                            <Label for="create-bank-code">Kode Bank *</Label>
-                            <Input
-                                id="create-bank-code"
-                                v-model="createForm.bank_code"
-                                placeholder="Contoh: BCA"
-                                :aria-invalid="!!createForm.errors.bank_code"
-                                required
-                            />
-                            <p v-if="createForm.errors.bank_code" class="mt-1 text-xs text-destructive">{{ createForm.errors.bank_code }}</p>
-                        </div>
-
                         <!-- Account Number -->
                         <div>
                             <Label for="create-account-number">Nomor Rekening *</Label>
@@ -405,81 +335,6 @@ const submitEdit = () => {
                             />
                             <p v-if="createForm.errors.account_name" class="mt-1 text-xs text-destructive">{{ createForm.errors.account_name }}</p>
                         </div>
-
-                        <!-- Branch -->
-                        <div>
-                            <Label for="create-branch">Cabang</Label>
-                            <Input
-                                id="create-branch"
-                                v-model="createForm.branch"
-                                placeholder="Contoh: Jakarta Pusat"
-                                :aria-invalid="!!createForm.errors.branch"
-                            />
-                            <p v-if="createForm.errors.branch" class="mt-1 text-xs text-destructive">{{ createForm.errors.branch }}</p>
-                        </div>
-
-                        <!-- SWIFT Code -->
-                        <div>
-                            <Label for="create-swift-code">Kode SWIFT</Label>
-                            <Input
-                                id="create-swift-code"
-                                v-model="createForm.swift_code"
-                                placeholder="Contoh: CENAIDJA"
-                                :aria-invalid="!!createForm.errors.swift_code"
-                            />
-                            <p v-if="createForm.errors.swift_code" class="mt-1 text-xs text-destructive">{{ createForm.errors.swift_code }}</p>
-                        </div>
-
-                        <!-- Bank Type -->
-                        <div>
-                            <Label for="create-bank-type">Tipe Bank *</Label>
-                            <select
-                                v-model="createForm.bank_type"
-                                id="create-bank-type"
-                                class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:bg-input/30"
-                                :aria-invalid="!!createForm.errors.bank_type"
-                                required
-                            >
-                                <option value="" disabled>Pilih tipe bank</option>
-                                <option value="local">Lokal</option>
-                                <option value="international">Internasional</option>
-                            </select>
-                            <p v-if="createForm.errors.bank_type" class="mt-1 text-xs text-destructive">{{ createForm.errors.bank_type }}</p>
-                        </div>
-
-                        <!-- Admin Fee -->
-                        <div>
-                            <Label for="create-admin-fee">Biaya Admin</Label>
-                            <Input
-                                id="create-admin-fee"
-                                v-model.number="createForm.admin_fee"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                placeholder="0"
-                                :aria-invalid="!!createForm.errors.admin_fee"
-                            />
-                            <p v-if="createForm.errors.admin_fee" class="mt-1 text-xs text-destructive">{{ createForm.errors.admin_fee }}</p>
-                        </div>
-                    </div>
-
-                    <!-- Description -->
-                    <div>
-                        <Label for="create-description">Deskripsi</Label>
-                        <Textarea
-                            id="create-description"
-                            v-model="createForm.description"
-                            placeholder="Deskripsi tambahan tentang bank ini..."
-                            :aria-invalid="!!createForm.errors.description"
-                            :rows="3"
-                        />
-                        <p v-if="createForm.errors.description" class="mt-1 text-xs text-destructive">{{ createForm.errors.description }}</p>
-                    </div>
-
-                    <!-- Active Status -->
-                    <div class="flex items-center space-x-2">
-                        <Switch id="create-is-active" v-model:checked="createForm.is_active" />
-                        <Label for="create-is-active">Bank Aktif</Label>
                     </div>
 
                     <div class="flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end">
@@ -528,19 +383,6 @@ const submitEdit = () => {
                             <p v-if="editForm.errors.bank_name" class="mt-1 text-xs text-destructive">{{ editForm.errors.bank_name }}</p>
                         </div>
 
-                        <!-- Bank Code -->
-                        <div>
-                            <Label for="edit-bank-code">Kode Bank *</Label>
-                            <Input
-                                id="edit-bank-code"
-                                v-model="editForm.bank_code"
-                                placeholder="Contoh: BCA"
-                                :aria-invalid="!!editForm.errors.bank_code"
-                                required
-                            />
-                            <p v-if="editForm.errors.bank_code" class="mt-1 text-xs text-destructive">{{ editForm.errors.bank_code }}</p>
-                        </div>
-
                         <!-- Account Number -->
                         <div>
                             <Label for="edit-account-number">Nomor Rekening *</Label>
@@ -566,81 +408,6 @@ const submitEdit = () => {
                             />
                             <p v-if="editForm.errors.account_name" class="mt-1 text-xs text-destructive">{{ editForm.errors.account_name }}</p>
                         </div>
-
-                        <!-- Branch -->
-                        <div>
-                            <Label for="edit-branch">Cabang</Label>
-                            <Input
-                                id="edit-branch"
-                                v-model="editForm.branch"
-                                placeholder="Contoh: Jakarta Pusat"
-                                :aria-invalid="!!editForm.errors.branch"
-                            />
-                            <p v-if="editForm.errors.branch" class="mt-1 text-xs text-destructive">{{ editForm.errors.branch }}</p>
-                        </div>
-
-                        <!-- SWIFT Code -->
-                        <div>
-                            <Label for="edit-swift-code">Kode SWIFT</Label>
-                            <Input
-                                id="edit-swift-code"
-                                v-model="editForm.swift_code"
-                                placeholder="Contoh: CENAIDJA"
-                                :aria-invalid="!!editForm.errors.swift_code"
-                            />
-                            <p v-if="editForm.errors.swift_code" class="mt-1 text-xs text-destructive">{{ editForm.errors.swift_code }}</p>
-                        </div>
-
-                        <!-- Bank Type -->
-                        <div>
-                            <Label for="edit-bank-type">Tipe Bank *</Label>
-                            <select
-                                v-model="editForm.bank_type"
-                                id="edit-bank-type"
-                                class="flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:bg-input/30"
-                                :aria-invalid="!!editForm.errors.bank_type"
-                                required
-                            >
-                                <option value="" disabled>Pilih tipe bank</option>
-                                <option value="local">Lokal</option>
-                                <option value="international">Internasional</option>
-                            </select>
-                            <p v-if="editForm.errors.bank_type" class="mt-1 text-xs text-destructive">{{ editForm.errors.bank_type }}</p>
-                        </div>
-
-                        <!-- Admin Fee -->
-                        <div>
-                            <Label for="edit-admin-fee">Biaya Admin</Label>
-                            <Input
-                                id="edit-admin-fee"
-                                v-model.number="editForm.admin_fee"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                placeholder="0"
-                                :aria-invalid="!!editForm.errors.admin_fee"
-                            />
-                            <p v-if="editForm.errors.admin_fee" class="mt-1 text-xs text-destructive">{{ editForm.errors.admin_fee }}</p>
-                        </div>
-                    </div>
-
-                    <!-- Description -->
-                    <div>
-                        <Label for="edit-description">Deskripsi</Label>
-                        <Textarea
-                            id="edit-description"
-                            v-model="editForm.description"
-                            placeholder="Deskripsi tambahan tentang bank ini..."
-                            :aria-invalid="!!editForm.errors.description"
-                            :rows="3"
-                        />
-                        <p v-if="editForm.errors.description" class="mt-1 text-xs text-destructive">{{ editForm.errors.description }}</p>
-                    </div>
-
-                    <!-- Active Status -->
-                    <div class="flex items-center space-x-2">
-                        <Switch id="edit-is-active" v-model:checked="editForm.is_active" />
-                        <Label for="edit-is-active">Bank Aktif</Label>
                     </div>
 
                     <div class="flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end">

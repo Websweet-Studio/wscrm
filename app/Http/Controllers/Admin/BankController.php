@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Bank;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -41,18 +42,22 @@ class BankController extends Controller
     {
         $validated = $request->validate([
             'bank_name' => 'required|string|max:255',
-            'bank_code' => 'required|string|max:10|unique:banks,bank_code',
             'account_number' => 'required|string|max:255',
             'account_name' => 'required|string|max:255',
-            'branch' => 'nullable|string|max:255',
-            'swift_code' => 'nullable|string|max:11',
-            'description' => 'nullable|string',
-            'is_active' => 'boolean',
-            'admin_fee' => 'numeric|min:0',
-            'bank_type' => 'required|in:local,international',
         ]);
 
-        Bank::create($validated);
+        Bank::create([
+            'bank_name' => $validated['bank_name'],
+            'bank_code' => $this->generateUniqueBankCode($validated['bank_name']),
+            'account_number' => $validated['account_number'],
+            'account_name' => $validated['account_name'],
+            'branch' => null,
+            'swift_code' => null,
+            'description' => null,
+            'is_active' => true,
+            'admin_fee' => 0,
+            'bank_type' => 'local',
+        ]);
 
         return redirect()->route('admin.banks.index')
             ->with('success', 'Bank berhasil ditambahkan.');
@@ -89,15 +94,8 @@ class BankController extends Controller
     {
         $validated = $request->validate([
             'bank_name' => 'required|string|max:255',
-            'bank_code' => 'required|string|max:10|unique:banks,bank_code,'.$bank->id,
             'account_number' => 'required|string|max:255',
             'account_name' => 'required|string|max:255',
-            'branch' => 'nullable|string|max:255',
-            'swift_code' => 'nullable|string|max:11',
-            'description' => 'nullable|string',
-            'is_active' => 'boolean',
-            'admin_fee' => 'numeric|min:0',
-            'bank_type' => 'required|in:local,international',
         ]);
 
         $bank->update($validated);
@@ -105,6 +103,34 @@ class BankController extends Controller
         return redirect()->route('admin.banks.index')
             ->with('success', 'Bank berhasil diperbarui.');
     }
+
+    private function generateUniqueBankCode(string $bankName): string
+    {
+        $ascii = Str::ascii($bankName);
+        $clean = strtoupper((string) preg_replace('/[^A-Z0-9]+/', '', $ascii));
+        $base = substr($clean !== '' ? $clean : 'BANK', 0, 10);
+
+        if (! Bank::where('bank_code', $base)->exists()) {
+            return $base;
+        }
+
+        for ($i = 2; $i <= 999; $i++) {
+            $suffix = (string) $i;
+            $prefixLen = max(1, 10 - strlen($suffix));
+            $candidate = substr($base, 0, $prefixLen).$suffix;
+
+            if (! Bank::where('bank_code', $candidate)->exists()) {
+                return $candidate;
+            }
+        }
+
+        do {
+            $candidate = 'BK'.str_pad((string) random_int(0, 99999999), 8, '0', STR_PAD_LEFT);
+        } while (Bank::where('bank_code', $candidate)->exists());
+
+        return $candidate;
+    }
+
 
     /**
      * Remove the specified resource from storage.

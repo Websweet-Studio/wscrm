@@ -10,17 +10,30 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 
 import { Separator } from '@/components/ui/separator';
 import { cn, formatDate, formatPrice } from '@/lib/utils';
-import { AlertCircle, ArrowRight, Building2, CheckCircle, Copy, CreditCard, FileText, ShieldCheck } from 'lucide-vue-next';
+import { AlertCircle, ArrowRight, Building2, CheckCircle, Copy, CreditCard, FileText, ShieldCheck, Wallet } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+
+type PaymentMethod = {
+    key: string;
+    label: string;
+    description?: string;
+};
 
 const props = defineProps<{
     invoice: any;
     banks: any[];
+    paymentMethods: PaymentMethod[];
 }>();
+
+const availablePaymentMethods = computed(() => {
+    const methods = Array.isArray(props.paymentMethods) ? props.paymentMethods : [];
+    if (methods.length > 0) return methods;
+    return [{ key: 'bank_transfer', label: 'Transfer Bank', description: 'ATM/Internet Banking' }];
+});
 
 const form = useForm({
     bank_id: props.invoice.bank_id || '',
-    payment_method: props.invoice.payment_method || 'bank_transfer',
+    payment_method: props.invoice.payment_method || availablePaymentMethods.value[0]?.key || 'bank_transfer',
 });
 
 const confirmForm = useForm({
@@ -105,6 +118,12 @@ const copyValue = async (value: string) => {
     } catch {
         //
     }
+};
+
+const getMethodIcon = (key: string) => {
+    if (key === 'bank_transfer') return Building2;
+    if (key === 'e_wallet') return Wallet;
+    return CreditCard;
 };
 
 // Initialize selected bank if already set
@@ -193,40 +212,23 @@ if (props.invoice.bank_id) {
                                 <div class="space-y-3">
                                     <Label>Metode Pembayaran</Label>
                                     <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-                                        <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-border/60 bg-background/40 p-3 transition-colors hover:bg-muted/40">
+                                        <label
+                                            v-for="method in availablePaymentMethods"
+                                            :key="method.key"
+                                            class="flex cursor-pointer items-start gap-3 rounded-lg border border-border/60 bg-background/40 p-3 transition-colors hover:bg-muted/40"
+                                        >
                                             <input
                                                 type="radio"
-                                                value="bank_transfer"
+                                                :value="method.key"
                                                 v-model="form.payment_method"
                                                 class="mt-1 h-4 w-4 border-gray-300 text-primary focus:ring-primary"
                                             />
                                             <span class="min-w-0">
-                                                <span class="block font-medium">Transfer Bank</span>
-                                                <span class="block text-xs text-muted-foreground">ATM/Internet Banking</span>
-                                            </span>
-                                        </label>
-                                        <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-border/60 bg-background/40 p-3 transition-colors hover:bg-muted/40">
-                                            <input
-                                                type="radio"
-                                                value="credit_card"
-                                                v-model="form.payment_method"
-                                                class="mt-1 h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                                            />
-                                            <span class="min-w-0">
-                                                <span class="block font-medium">Kartu Kredit</span>
-                                                <span class="block text-xs text-muted-foreground">Visa/Mastercard</span>
-                                            </span>
-                                        </label>
-                                        <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-border/60 bg-background/40 p-3 transition-colors hover:bg-muted/40">
-                                            <input
-                                                type="radio"
-                                                value="e_wallet"
-                                                v-model="form.payment_method"
-                                                class="mt-1 h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                                            />
-                                            <span class="min-w-0">
-                                                <span class="block font-medium">E-Wallet</span>
-                                                <span class="block text-xs text-muted-foreground">GoPay/OVO/DANA</span>
+                                                <span class="flex items-center gap-2 font-medium">
+                                                    <component :is="getMethodIcon(method.key)" class="h-4 w-4 text-emerald-600 dark:text-green-400" />
+                                                    <span class="truncate">{{ method.label || method.key }}</span>
+                                                </span>
+                                                <span v-if="method.description" class="block text-xs text-muted-foreground">{{ method.description }}</span>
                                             </span>
                                         </label>
                                     </div>

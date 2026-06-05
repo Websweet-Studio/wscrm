@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Services\InvoiceGeneratorService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -162,6 +163,17 @@ class InvoiceController extends Controller
         return back()->with('message', 'Invoice updated successfully.');
     }
 
+    public function destroy(Invoice $invoice)
+    {
+        if ($invoice->status === 'paid') {
+            return back()->with('error', 'Invoice yang sudah dibayar tidak bisa dihapus.');
+        }
+
+        $invoice->delete();
+
+        return back()->with('success', 'Invoice berhasil dihapus.');
+    }
+
     public function generateRenewalInvoices(InvoiceGeneratorService $generator)
     {
         $count = $generator->generateRenewalInvoices(30);
@@ -204,6 +216,56 @@ class InvoiceController extends Controller
         ]);
 
         return back()->with('success', 'Invoice berhasil ditandai sebagai dibayar.');
+    }
+
+    public function bulkMarkAsPaid(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:invoices,id',
+        ]);
+
+        $ids = array_values(array_unique($validated['ids']));
+
+        $alreadyPaid = Invoice::whereIn('id', $ids)->where('status', 'paid')->count();
+        $now = now();
+
+        $updated = Invoice::whereIn('id', $ids)
+            ->where('status', '!=', 'paid')
+            ->update([
+                'status' => 'paid',
+                'paid_at' => $now,
+            ]);
+
+        if ($updated === 0 && $alreadyPaid > 0) {
+            return back()->with('message', 'Semua invoice yang dipilih sudah dalam status dibayar.');
+        }
+
+        return back()->with('success', "Berhasil menandai {$updated} invoice sebagai dibayar. {$alreadyPaid} invoice sudah dibayar.");
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:invoices,id',
+        ]);
+
+        $ids = array_values(array_unique($validated['ids']));
+
+        return DB::transaction(function () use ($ids) {
+            $paidCount = Invoice::whereIn('id', $ids)->where('status', 'paid')->count();
+
+            $deleted = Invoice::whereIn('id', $ids)
+                ->where('status', '!=', 'paid')
+                ->delete();
+
+            if ($deleted === 0 && $paidCount > 0) {
+                return back()->with('error', 'Invoice yang sudah dibayar tidak bisa dihapus.');
+            }
+
+            return back()->with('success', "Berhasil menghapus {$deleted} invoice. {$paidCount} invoice sudah dibayar (tidak dihapus).");
+        });
     }
 
     /**

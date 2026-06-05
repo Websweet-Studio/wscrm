@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bank;
+use App\Models\BrandingSetting;
 use App\Models\Invoice;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -67,9 +69,18 @@ class InvoiceController extends Controller
             ->orderBy('bank_name')
             ->get();
 
+        $paymentMethods = BrandingSetting::getActivePaymentMethods();
+        if (count($paymentMethods) === 0) {
+            $paymentMethods = array_values(array_filter(BrandingSetting::getPaymentMethods(), fn (array $m) => ($m['key'] ?? null) === 'bank_transfer'));
+        }
+        if (count($paymentMethods) === 0) {
+            $paymentMethods = BrandingSetting::getPaymentMethods();
+        }
+
         return Inertia::render('Customer/Invoices/Payment', [
             'invoice' => $invoice,
             'banks' => $activeBanks,
+            'paymentMethods' => $paymentMethods,
         ]);
     }
 
@@ -85,9 +96,19 @@ class InvoiceController extends Controller
                 ->with('error', 'Invoice sudah dibayar.');
         }
 
+        $paymentMethods = BrandingSetting::getActivePaymentMethods();
+        if (count($paymentMethods) === 0) {
+            $paymentMethods = array_values(array_filter(BrandingSetting::getPaymentMethods(), fn (array $m) => ($m['key'] ?? null) === 'bank_transfer'));
+        }
+        if (count($paymentMethods) === 0) {
+            $paymentMethods = BrandingSetting::getPaymentMethods();
+        }
+
+        $allowedPaymentMethodKeys = array_values(array_filter(array_map(fn (array $m) => $m['key'] ?? null, $paymentMethods)));
+
         $request->validate([
             'bank_id' => 'required|exists:banks,id',
-            'payment_method' => 'required|in:bank_transfer,credit_card,e_wallet',
+            'payment_method' => ['required', Rule::in($allowedPaymentMethodKeys)],
         ]);
 
         $bank = Bank::findOrFail($request->bank_id);

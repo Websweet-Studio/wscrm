@@ -18,6 +18,7 @@ class BrandingController extends Controller
     public function index()
     {
         BrandingSetting::ensureDefaultsIfEmpty();
+        BrandingSetting::ensurePaymentMethodsSettingExists();
         $settings = BrandingSetting::getAllActive()->groupBy('type');
 
         return Inertia::render('Admin/Branding', [
@@ -48,14 +49,24 @@ class BrandingController extends Controller
             'settings' => 'required|array',
             'settings.*.key' => 'required|string|exists:branding_settings,key',
             'settings.*.value' => 'nullable|string',
-            'settings.*.type' => ['required', Rule::in(['text', 'textarea', 'color'])],
+            'settings.*.type' => ['required', Rule::in(['text', 'textarea', 'color', 'payment'])],
         ]);
 
         // Only update non-image settings
         collect($validated['settings'])->each(function (array $settingData): void {
+            $value = $settingData['value'];
+
+            if ($settingData['key'] === 'payment_methods') {
+                $normalized = BrandingSetting::normalizePaymentMethods($value);
+                $value = json_encode($normalized, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            }
+
             BrandingSetting::where('key', $settingData['key'])
                 ->where('type', '!=', 'image')
-                ->update(['value' => $settingData['value']]);
+                ->update([
+                    'value' => $value,
+                    'type' => $settingData['type'],
+                ]);
         });
 
         // Reload fresh data after update

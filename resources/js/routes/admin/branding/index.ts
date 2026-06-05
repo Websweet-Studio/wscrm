@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\BrandingController::update
- * @see app/Http/Controllers/Admin/BrandingController.php:45
+ * @see app/Http/Controllers/Admin/BrandingController.php:46
  * @route '/admin/branding'
  */
 export const update = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -94,7 +94,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\BrandingController::update
- * @see app/Http/Controllers/Admin/BrandingController.php:45
+ * @see app/Http/Controllers/Admin/BrandingController.php:46
  * @route '/admin/branding'
  */
 update.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ update.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\BrandingController::update
- * @see app/Http/Controllers/Admin/BrandingController.php:45
+ * @see app/Http/Controllers/Admin/BrandingController.php:46
  * @route '/admin/branding'
  */
 update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -113,7 +113,7 @@ update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\BrandingController::update
- * @see app/Http/Controllers/Admin/BrandingController.php:45
+ * @see app/Http/Controllers/Admin/BrandingController.php:46
  * @route '/admin/branding'
  */
     const updateForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -128,7 +128,7 @@ update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\BrandingController::update
- * @see app/Http/Controllers/Admin/BrandingController.php:45
+ * @see app/Http/Controllers/Admin/BrandingController.php:46
  * @route '/admin/branding'
  */
         updateForm.patch = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -144,7 +144,7 @@ update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\BrandingController::uploadImage
- * @see app/Http/Controllers/Admin/BrandingController.php:76
+ * @see app/Http/Controllers/Admin/BrandingController.php:87
  * @route '/admin/branding/upload-image'
  */
 export const uploadImage = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -159,7 +159,7 @@ uploadImage.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\BrandingController::uploadImage
- * @see app/Http/Controllers/Admin/BrandingController.php:76
+ * @see app/Http/Controllers/Admin/BrandingController.php:87
  * @route '/admin/branding/upload-image'
  */
 uploadImage.url = (options?: RouteQueryOptions) => {
@@ -168,7 +168,7 @@ uploadImage.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\BrandingController::uploadImage
- * @see app/Http/Controllers/Admin/BrandingController.php:76
+ * @see app/Http/Controllers/Admin/BrandingController.php:87
  * @route '/admin/branding/upload-image'
  */
 uploadImage.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -178,7 +178,7 @@ uploadImage.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\BrandingController::uploadImage
- * @see app/Http/Controllers/Admin/BrandingController.php:76
+ * @see app/Http/Controllers/Admin/BrandingController.php:87
  * @route '/admin/branding/upload-image'
  */
     const uploadImageForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -188,7 +188,7 @@ uploadImage.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\BrandingController::uploadImage
- * @see app/Http/Controllers/Admin/BrandingController.php:76
+ * @see app/Http/Controllers/Admin/BrandingController.php:87
  * @route '/admin/branding/upload-image'
  */
         uploadImageForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -199,7 +199,7 @@ uploadImage.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     uploadImage.form = uploadImageForm
 /**
 * @see \App\Http\Controllers\Admin\BrandingController::deleteImage
- * @see app/Http/Controllers/Admin/BrandingController.php:125
+ * @see app/Http/Controllers/Admin/BrandingController.php:136
  * @route '/admin/branding/delete-image'
  */
 export const deleteImage = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -214,7 +214,7 @@ deleteImage.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\BrandingController::deleteImage
- * @see app/Http/Controllers/Admin/BrandingController.php:125
+ * @see app/Http/Controllers/Admin/BrandingController.php:136
  * @route '/admin/branding/delete-image'
  */
 deleteImage.url = (options?: RouteQueryOptions) => {
@@ -223,7 +223,7 @@ deleteImage.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\BrandingController::deleteImage
- * @see app/Http/Controllers/Admin/BrandingController.php:125
+ * @see app/Http/Controllers/Admin/BrandingController.php:136
  * @route '/admin/branding/delete-image'
  */
 deleteImage.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -233,7 +233,7 @@ deleteImage.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
 
     /**
 * @see \App\Http\Controllers\Admin\BrandingController::deleteImage
- * @see app/Http/Controllers/Admin/BrandingController.php:125
+ * @see app/Http/Controllers/Admin/BrandingController.php:136
  * @route '/admin/branding/delete-image'
  */
     const deleteImageForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -248,7 +248,7 @@ deleteImage.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
 
             /**
 * @see \App\Http\Controllers\Admin\BrandingController::deleteImage
- * @see app/Http/Controllers/Admin/BrandingController.php:125
+ * @see app/Http/Controllers/Admin/BrandingController.php:136
  * @route '/admin/branding/delete-image'
  */
         deleteImageForm.delete = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

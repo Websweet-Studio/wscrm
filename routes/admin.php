@@ -33,7 +33,9 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::get('services', [ServiceController::class, 'index'])->name('services.index');
     Route::get('services/{id}', [ServiceController::class, 'show'])->name('services.show');
     Route::resource('service-plans', ServicePlanController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
-    Route::resource('invoices', InvoiceController::class)->only(['index', 'show', 'store', 'update']);
+    Route::patch('invoices/bulk/mark-paid', [InvoiceController::class, 'bulkMarkAsPaid'])->name('invoices.bulk-mark-paid');
+    Route::delete('invoices/bulk', [InvoiceController::class, 'bulkDestroy'])->name('invoices.bulk-destroy');
+    Route::resource('invoices', InvoiceController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
     Route::get('invoices/{invoice}/download', [InvoiceController::class, 'downloadPdf'])->name('invoices.download');
     Route::patch('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markAsPaid'])->name('invoices.mark-paid');
     Route::post('invoices/generate-renewals', [InvoiceController::class, 'generateRenewalInvoices'])->name('invoices.generate-renewals');

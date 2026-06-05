@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Clock, DollarSign, Edit, Eye, FileText, Plus, Search, X } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Clock, DollarSign, Edit, Eye, FileText, Plus, Search, Trash2, X } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
 
 interface Customer {
     id: number;
@@ -242,6 +242,65 @@ const filteredServices = computed(() => {
     return props.services.filter((service) => service.customer_id == createForm.customer_id);
 });
 
+const selectedInvoiceIds = ref<number[]>([]);
+const pageInvoiceIds = computed(() => (props.invoices?.data || []).map((invoice) => invoice.id));
+const isAllSelected = computed(() => pageInvoiceIds.value.length > 0 && pageInvoiceIds.value.every((id) => selectedInvoiceIds.value.includes(id)));
+
+watch(
+    () => pageInvoiceIds.value.join(','),
+    () => {
+        selectedInvoiceIds.value = [];
+    },
+);
+
+const toggleSelectAll = () => {
+    selectedInvoiceIds.value = isAllSelected.value ? [] : [...pageInvoiceIds.value];
+};
+
+const clearSelection = () => {
+    selectedInvoiceIds.value = [];
+};
+
+const bulkMarkingPaid = ref(false);
+const bulkDeleting = ref(false);
+
+const bulkMarkAsPaid = () => {
+    if (selectedInvoiceIds.value.length === 0 || bulkMarkingPaid.value) return;
+    bulkMarkingPaid.value = true;
+
+    router.patch(
+        '/admin/invoices/bulk/mark-paid',
+        { ids: selectedInvoiceIds.value },
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                bulkMarkingPaid.value = false;
+            },
+            onSuccess: () => {
+                clearSelection();
+            },
+        },
+    );
+};
+
+const bulkDelete = () => {
+    if (selectedInvoiceIds.value.length === 0 || bulkDeleting.value) return;
+    if (!confirm(`Hapus ${selectedInvoiceIds.value.length} invoice yang dipilih? (Invoice yang sudah dibayar akan dilewati)`)) return;
+
+    bulkDeleting.value = true;
+
+    router.delete('/admin/invoices/bulk', {
+        data: { ids: selectedInvoiceIds.value },
+        preserveScroll: true,
+        onFinish: () => {
+            bulkDeleting.value = false;
+        },
+        onSuccess: () => {
+            clearSelection();
+        },
+    });
+};
+
 const getDefaultDueDate = () => {
     const date = new Date();
     date.setDate(date.getDate() + 14); // 14 days from now
@@ -380,6 +439,26 @@ const markAsPaid = (invoice: Invoice) => {
                         <Button @click="handleSearch" class="cursor-pointer">Search</Button>
                     </div>
 
+                    <div
+                        v-if="selectedInvoiceIds.length > 0"
+                        class="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <div class="text-sm text-foreground">
+                            <span class="font-medium">{{ selectedInvoiceIds.length }}</span> invoice dipilih
+                        </div>
+                        <div class="flex flex-col gap-2 sm:flex-row">
+                            <Button size="sm" class="cursor-pointer" :disabled="bulkMarkingPaid" @click="bulkMarkAsPaid">
+                                <CheckCircle class="mr-2 h-4 w-4" />
+                                Tandai Dibayar
+                            </Button>
+                            <Button size="sm" variant="destructive" class="cursor-pointer" :disabled="bulkDeleting" @click="bulkDelete">
+                                <Trash2 class="mr-2 h-4 w-4" />
+                                Hapus
+                            </Button>
+                            <Button size="sm" variant="outline" class="cursor-pointer" @click="clearSelection">Clear</Button>
+                        </div>
+                    </div>
+
                     <!-- Invoices Table -->
                     <div v-if="!invoices?.data || invoices.data.length === 0" class="py-12 text-center text-muted-foreground">
                         <FileText class="mx-auto h-12 w-12 text-muted-foreground/40" />
@@ -391,6 +470,14 @@ const markAsPaid = (invoice: Invoice) => {
                         <table class="w-full border-collapse">
                             <thead>
                                 <tr class="border-b border-border">
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                        <input
+                                            type="checkbox"
+                                            :checked="isAllSelected"
+                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                            @change="toggleSelectAll"
+                                        >
+                                    </th>
                                     <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                                         <button
                                             @click="sortBy('invoice_number')"
@@ -469,6 +556,14 @@ const markAsPaid = (invoice: Invoice) => {
                                     :key="invoice.id"
                                     class="border-b border-border transition-colors hover:bg-muted/30"
                                 >
+                                    <td class="px-3 py-4">
+                                        <input
+                                            v-model="selectedInvoiceIds"
+                                            :value="invoice.id"
+                                            type="checkbox"
+                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                        >
+                                    </td>
                                     <td class="px-3 py-4 text-sm font-medium text-foreground">{{ invoice.invoice_number }}</td>
                                     <td class="px-3 py-4 text-sm">
                                         <div class="font-medium text-foreground">{{ invoice.customer.name }}</div>

@@ -170,6 +170,49 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div v-if="paymentSetting" class="space-y-6">
+                            <h2 class="text-lg font-medium" style="font-family: Georgia, serif;">Metode Pembayaran</h2>
+                            <p class="text-sm text-muted-foreground">Atur metode pembayaran yang tampil di halaman pembayaran invoice customer</p>
+
+                            <div class="overflow-hidden rounded-lg border border-border/60">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead class="w-[180px]">Key</TableHead>
+                                            <TableHead>Label</TableHead>
+                                            <TableHead>Deskripsi</TableHead>
+                                            <TableHead class="w-[110px]">Urutan</TableHead>
+                                            <TableHead class="w-[110px] text-right">Aktif</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        <TableRow v-for="method in paymentMethods" :key="method.key">
+                                            <TableCell>
+                                                <div class="inline-flex rounded-md border border-border/60 bg-muted/30 px-2 py-1 font-mono text-xs">
+                                                    {{ method.key }}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input v-model="method.label" placeholder="Label" />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input v-model="method.description" placeholder="Deskripsi" />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input v-model="method.sort" type="number" inputmode="numeric" />
+                                            </TableCell>
+                                            <TableCell class="text-right">
+                                                <div class="flex items-center justify-end gap-2">
+                                                    <span class="text-xs text-muted-foreground">{{ method.enabled ? 'On' : 'Off' }}</span>
+                                                    <Switch v-model:checked="method.enabled" />
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </div>
                     </div>
 
                         <div class="mt-8 flex justify-end gap-2 border-t pt-6">
@@ -189,10 +232,13 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useForm } from '@inertiajs/vue3';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 interface BrandingSetting {
     id: number;
@@ -209,6 +255,7 @@ interface Props {
         textarea?: BrandingSetting[];
         color?: BrandingSetting[];
         image?: BrandingSetting[];
+        payment?: BrandingSetting[];
     };
 }
 
@@ -223,6 +270,54 @@ const form = useForm({
 // Preview functionality
 const imagePreviews = ref<Record<string, string>>({});
 const uploadingImages = ref<Record<string, boolean>>({});
+
+type PaymentMethod = {
+    key: string;
+    label: string;
+    description: string;
+    enabled: boolean;
+    sort: number;
+};
+
+const paymentSetting = computed(() => props.settings.payment?.[0] ?? null);
+const paymentMethods = ref<PaymentMethod[]>([]);
+
+const defaultPaymentMethods = (): PaymentMethod[] => [
+    { key: 'bank_transfer', label: 'Transfer Bank', description: 'ATM/Internet Banking', enabled: true, sort: 10 },
+    { key: 'credit_card', label: 'Kartu Kredit', description: 'Visa/Mastercard', enabled: false, sort: 20 },
+    { key: 'e_wallet', label: 'E-Wallet', description: 'GoPay/OVO/DANA', enabled: false, sort: 30 },
+];
+
+const parsePaymentMethods = (raw: string | null): PaymentMethod[] => {
+    if (!raw || !raw.trim()) return defaultPaymentMethods();
+
+    try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return defaultPaymentMethods();
+
+        const normalized = parsed
+            .filter((row) => row && typeof row === 'object')
+            .map((row) => {
+                const key = String((row as any).key || '').trim();
+                if (!key) return null;
+
+                const label = String((row as any).label || key).trim() || key;
+                const description = String((row as any).description || '').trim();
+                const enabled = Boolean((row as any).enabled);
+                const sort = Number.isFinite(Number((row as any).sort)) ? Number((row as any).sort) : 0;
+
+                return { key, label, description, enabled, sort };
+            })
+            .filter(Boolean) as PaymentMethod[];
+
+        if (normalized.length === 0) return defaultPaymentMethods();
+
+        normalized.sort((a, b) => (a.sort || 0) - (b.sort || 0) || a.key.localeCompare(b.key));
+        return normalized;
+    } catch {
+        return defaultPaymentMethods();
+    }
+};
 
 const createImagePreview = (file: File, key: string) => {
     const reader = new FileReader();
@@ -247,7 +342,21 @@ onMounted(() => {
         .forEach((setting) => {
             form.settings[setting.key] = setting.value;
         });
+
+    if (paymentSetting.value) {
+        paymentMethods.value = parsePaymentMethods(form.settings.payment_methods as string | null);
+        form.settings.payment_methods = JSON.stringify(paymentMethods.value);
+    }
 });
+
+watch(
+    paymentMethods,
+    () => {
+        if (!paymentSetting.value) return;
+        form.settings.payment_methods = JSON.stringify(paymentMethods.value);
+    },
+    { deep: true },
+);
 
 // Setting labels mapping
 const settingLabels: Record<string, string> = {
@@ -330,6 +439,10 @@ const resetForm = () => {
         .forEach((setting) => {
             form.settings[setting.key] = setting.value;
         });
+
+    if (paymentSetting.value) {
+        paymentMethods.value = parsePaymentMethods(form.settings.payment_methods as string | null);
+    }
 };
 
 const handleImageUpload = async (event: Event, key: string) => {

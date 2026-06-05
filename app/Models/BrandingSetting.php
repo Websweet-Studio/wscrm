@@ -160,4 +160,134 @@ class BrandingSetting extends Model
 
         static::query()->insert($rows);
     }
+
+    public static function ensurePaymentMethodsSettingExists(): void
+    {
+        if (! \Schema::hasTable('branding_settings')) {
+            return;
+        }
+
+        $default = json_encode(static::defaultPaymentMethods(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        $setting = static::firstOrNew(['key' => 'payment_methods']);
+        $setting->type = 'payment';
+        $setting->description = $setting->description ?: 'Daftar metode pembayaran yang tersedia untuk customer saat membayar invoice';
+        $setting->is_active = true;
+
+        if ($setting->exists === false || $setting->value === null || trim((string) $setting->value) === '') {
+            $setting->value = $default;
+        }
+
+        $setting->save();
+    }
+
+    public static function getPaymentMethods(): array
+    {
+        $default = static::defaultPaymentMethods();
+        $raw = static::getValue('payment_methods', json_encode($default, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
+        return static::normalizePaymentMethods($raw, $default);
+    }
+
+    public static function getActivePaymentMethods(): array
+    {
+        return array_values(array_filter(static::getPaymentMethods(), fn (array $method) => (bool) ($method['enabled'] ?? false)));
+    }
+
+    public static function normalizePaymentMethods(mixed $raw, ?array $fallback = null): array
+    {
+        $fallback = $fallback ?? static::defaultPaymentMethods();
+
+        if (! is_string($raw) || trim($raw) === '') {
+            return $fallback;
+        }
+
+        try {
+            $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\Throwable) {
+            return $fallback;
+        }
+
+        if (! is_array($decoded)) {
+            return $fallback;
+        }
+
+        $normalized = [];
+
+        foreach ($decoded as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $key = isset($row['key']) ? (string) $row['key'] : '';
+            $key = trim($key);
+            if ($key === '') {
+                continue;
+            }
+
+            $label = isset($row['label']) ? (string) $row['label'] : '';
+            $label = trim($label);
+            if ($label === '') {
+                $label = $key;
+            }
+
+            $description = isset($row['description']) ? (string) $row['description'] : '';
+            $description = trim($description);
+
+            $enabled = (bool) ($row['enabled'] ?? false);
+            $sort = isset($row['sort']) ? (int) $row['sort'] : 0;
+
+            $normalized[] = [
+                'key' => $key,
+                'label' => $label,
+                'description' => $description,
+                'enabled' => $enabled,
+                'sort' => $sort,
+            ];
+        }
+
+        if (count($normalized) === 0) {
+            return $fallback;
+        }
+
+        usort($normalized, function (array $a, array $b) {
+            $as = (int) ($a['sort'] ?? 0);
+            $bs = (int) ($b['sort'] ?? 0);
+
+            if ($as === $bs) {
+                return strcmp((string) ($a['key'] ?? ''), (string) ($b['key'] ?? ''));
+            }
+
+            return $as <=> $bs;
+        });
+
+        return $normalized;
+    }
+
+    private static function defaultPaymentMethods(): array
+    {
+        return [
+            [
+                'key' => 'bank_transfer',
+                'label' => 'Transfer Bank',
+                'description' => 'ATM/Internet Banking',
+                'enabled' => true,
+                'sort' => 10,
+            ],
+            [
+                'key' => 'credit_card',
+                'label' => 'Kartu Kredit',
+                'description' => 'Visa/Mastercard',
+                'enabled' => false,
+                'sort' => 20,
+            ],
+            [
+                'key' => 'e_wallet',
+                'label' => 'E-Wallet',
+                'description' => 'GoPay/OVO/DANA',
+                'enabled' => false,
+                'sort' => 30,
+            ],
+        ];
+    }
 }
