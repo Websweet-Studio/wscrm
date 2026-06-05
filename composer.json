@@ -70,7 +70,6 @@
             "@php artisan test"
         ],
         "build:production": [
-            "npm run build:clean",
             "@php artisan build:package --output=dist/wscrm.{version}.zip --force --no-interaction"
         ],
         "build:package": [

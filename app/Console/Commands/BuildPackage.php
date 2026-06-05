@@ -84,17 +84,12 @@ class BuildPackage extends Command
         File::makeDirectory($distDir, 0755, true);
         File::makeDirectory($tempDir, 0755, true);
 
-        $manifestPath = public_path('build/manifest.json');
-        if (! File::exists($manifestPath)) {
-            $this->info('📦 Building frontend assets...');
-            try {
-                $this->executeCommand('npm run build:clean');
-            } catch (\Throwable $e) {
-                $this->error('❌ Build frontend assets gagal: ' . $e->getMessage());
-                return self::FAILURE;
-            }
-        } else {
-            $this->info('📦 Frontend assets sudah ada, melewati build.');
+        $this->info('📦 Building frontend assets...');
+        try {
+            $this->executeCommand('npm run build:clean');
+        } catch (\Throwable $e) {
+            $this->error('❌ Build frontend assets gagal: ' . $e->getMessage());
+            return self::FAILURE;
         }
 
         // Step 2: Copy files untuk deployment
