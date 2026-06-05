@@ -22,6 +22,7 @@ import {
     Palette,
     PenTool,
     Server,
+    Settings,
     ShoppingCart,
     Tags,
     Users,
@@ -83,23 +84,7 @@ onMounted(() => {
 
 // Define financial children based on user role
 const getFinancialChildren = () => {
-    const baseChildren = [
-        {
-            title: 'Invoices',
-            href: '/admin/invoices',
-            icon: FileText,
-        },
-        {
-            title: 'Domain Prices',
-            href: '/admin/domain-prices',
-            icon: Globe,
-        },
-        {
-            title: 'Payment Management',
-            href: '/admin/payments',
-            icon: CreditCard,
-        },
-    ];
+    const baseChildren: NavItem[] = [];
 
     // Only add expenses for super_admin
     if (user.role === 'super_admin') {
@@ -112,6 +97,8 @@ const getFinancialChildren = () => {
 
     return baseChildren;
 };
+
+const financialChildren = getFinancialChildren();
 
 const mainNavItems: NavItem[] = [
     {
@@ -157,6 +144,11 @@ const mainNavItems: NavItem[] = [
                 href: '/admin/services?status=active',
                 icon: Package,
             },
+            {
+                title: 'Invoices',
+                href: '/admin/invoices',
+                icon: FileText,
+            },
         ],
     },
     {
@@ -187,25 +179,46 @@ const mainNavItems: NavItem[] = [
         ],
     },
     {
+        title: 'Domain Prices',
+        href: '/admin/domain-prices',
+        icon: Globe,
+    },
+    {
         title: 'Blog',
         href: '/admin/blog',
         icon: PenTool,
     },
+    ...(financialChildren.length > 0
+        ? ([
+              {
+                  title: 'Financial',
+                  href: '#',
+                  icon: DollarSign,
+                  children: financialChildren,
+              },
+          ] as NavItem[])
+        : []),
     {
-        title: 'Financial',
+        title: 'Setting',
         href: '#',
-        icon: DollarSign,
-        children: getFinancialChildren(),
-    },
-    {
-        title: 'Branding',
-        href: '/admin/branding',
-        icon: Palette,
-    },
-    {
-        title: 'Database',
-        href: '/admin/database',
-        icon: FileText,
+        icon: Settings,
+        children: [
+            {
+                title: 'Payment Management',
+                href: '/admin/payments',
+                icon: CreditCard,
+            },
+            {
+                title: 'Branding',
+                href: '/admin/branding',
+                icon: Palette,
+            },
+            {
+                title: 'Database',
+                href: '/admin/database',
+                icon: FileText,
+            },
+        ],
     },
 ];
 

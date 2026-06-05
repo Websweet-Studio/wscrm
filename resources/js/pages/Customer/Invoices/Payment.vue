@@ -213,45 +213,47 @@ if (props.invoice.payment_account_id) {
                                 <div class="space-y-3">
                                     <Label>Metode Pembayaran</Label>
                                     <div class="space-y-5">
-                                        <div v-for="(items, type) in groupedPaymentAccounts" :key="type" v-if="items.length > 0" class="space-y-3">
-                                            <div class="flex items-center gap-2 text-sm font-medium">
-                                                <component :is="getTypeIcon(type as any)" class="h-4 w-4 text-emerald-600 dark:text-green-400" />
-                                                <span>{{ paymentTypeLabel(type as any) }}</span>
+                                        <template v-for="(items, type) in groupedPaymentAccounts" :key="type">
+                                            <div v-if="items && items.length > 0" class="space-y-3">
+                                                <div class="flex items-center gap-2 text-sm font-medium">
+                                                    <component :is="getTypeIcon(type as any)" class="h-4 w-4 text-emerald-600 dark:text-green-400" />
+                                                    <span>{{ paymentTypeLabel(type as any) }}</span>
+                                                </div>
+                                                <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                                    <label
+                                                        v-for="item in items"
+                                                        :key="item.id"
+                                                        class="flex cursor-pointer items-start gap-3 rounded-lg border border-border/60 bg-background/40 p-3 transition-colors hover:bg-muted/40"
+                                                    >
+                                                        <input
+                                                            type="radio"
+                                                            :value="item.id.toString()"
+                                                            v-model="form.payment_account_id"
+                                                            class="mt-1 h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                                                        />
+                                                        <span class="min-w-0 flex-1 space-y-1">
+                                                            <span class="block font-medium">{{ item.name }}</span>
+                                                            <template v-if="item.type === 'bank'">
+                                                                <span class="block text-xs text-muted-foreground">No. Rek: {{ item.account_number || '-' }}</span>
+                                                                <span class="block text-xs text-muted-foreground">a.n. {{ item.account_name || '-' }}</span>
+                                                            </template>
+                                                            <template v-else-if="item.type === 'ewallet'">
+                                                                <span class="block text-xs text-muted-foreground">Nomor: {{ item.account_number || '-' }}</span>
+                                                            </template>
+                                                            <template v-else-if="item.type === 'qris'">
+                                                                <span class="block text-xs text-muted-foreground">Scan QR untuk bayar</span>
+                                                                <img
+                                                                    v-if="item.qris_image_path"
+                                                                    :src="item.qris_image_path"
+                                                                    alt="QRIS"
+                                                                    class="mt-2 h-28 w-28 rounded-md border border-border/60 object-contain"
+                                                                />
+                                                            </template>
+                                                        </span>
+                                                    </label>
+                                                </div>
                                             </div>
-                                            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                                                <label
-                                                    v-for="item in items"
-                                                    :key="item.id"
-                                                    class="flex cursor-pointer items-start gap-3 rounded-lg border border-border/60 bg-background/40 p-3 transition-colors hover:bg-muted/40"
-                                                >
-                                                    <input
-                                                        type="radio"
-                                                        :value="item.id.toString()"
-                                                        v-model="form.payment_account_id"
-                                                        class="mt-1 h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                                                    />
-                                                    <span class="min-w-0 flex-1 space-y-1">
-                                                        <span class="block font-medium">{{ item.name }}</span>
-                                                        <template v-if="item.type === 'bank'">
-                                                            <span class="block text-xs text-muted-foreground">No. Rek: {{ item.account_number || '-' }}</span>
-                                                            <span class="block text-xs text-muted-foreground">a.n. {{ item.account_name || '-' }}</span>
-                                                        </template>
-                                                        <template v-else-if="item.type === 'ewallet'">
-                                                            <span class="block text-xs text-muted-foreground">Nomor: {{ item.account_number || '-' }}</span>
-                                                        </template>
-                                                        <template v-else-if="item.type === 'qris'">
-                                                            <span class="block text-xs text-muted-foreground">Scan QR untuk bayar</span>
-                                                            <img
-                                                                v-if="item.qris_image_path"
-                                                                :src="item.qris_image_path"
-                                                                alt="QRIS"
-                                                                class="mt-2 h-28 w-28 rounded-md border border-border/60 object-contain"
-                                                            />
-                                                        </template>
-                                                    </span>
-                                                </label>
-                                            </div>
-                                        </div>
+                                        </template>
                                     </div>
                                     <div v-if="form.errors.payment_account_id" class="text-sm text-red-600">
                                         {{ form.errors.payment_account_id }}

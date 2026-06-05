@@ -91,7 +91,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const getStatusClass = (isActive: boolean) => {
-    return isActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground';
+    return isActive
+        ? 'bg-emerald-100 text-emerald-800'
+        : 'bg-muted text-muted-foreground';
 };
 
 const formatPaginationLabel = (label: string) => {
