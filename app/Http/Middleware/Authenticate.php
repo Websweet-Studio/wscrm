@@ -14,7 +14,7 @@ class Authenticate extends Middleware
         if (! $request->expectsJson()) {
             // Check if this is a customer route
             if ($request->is('customer/*')) {
-                return '/login?type=customer';
+                return '/login';
             }
 
             // Check if this is an admin route

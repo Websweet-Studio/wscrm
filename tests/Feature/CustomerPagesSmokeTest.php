@@ -20,16 +20,13 @@ test('customer guest pages can be opened', function (string $url, string $compon
 
 test('customer login redirects to unified login page', function () {
     $response = $this->get('/customer/login');
-    $response->assertRedirect('/login?type=customer');
+    $response->assertRedirect('/login');
 });
 
-test('unified login page shows customer tab when type=customer', function () {
-    $response = $this->get('/login?type=customer');
+test('unified login page can be opened', function () {
+    $response = $this->get('/login');
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) => $page
-        ->component('auth/Login')
-        ->where('loginType', 'customer')
-    );
+    $response->assertInertia(fn ($page) => $page->component('auth/Login'));
 });
 
 test('customer authenticated pages can be opened', function () {

@@ -4,7 +4,7 @@ import services from './services'
 import invoices from './invoices'
 import settings from './settings'
 /**
- * @see routes/customer.php:20
+ * @see routes/customer.php:21
  * @route '/customer/login'
  */
 export const login = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -18,7 +18,7 @@ login.definition = {
 } satisfies RouteDefinition<["get","head"]>
 
 /**
- * @see routes/customer.php:20
+ * @see routes/customer.php:21
  * @route '/customer/login'
  */
 login.url = (options?: RouteQueryOptions) => {
@@ -26,7 +26,7 @@ login.url = (options?: RouteQueryOptions) => {
 }
 
 /**
- * @see routes/customer.php:20
+ * @see routes/customer.php:21
  * @route '/customer/login'
  */
 login.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ login.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     method: 'get',
 })
 /**
- * @see routes/customer.php:20
+ * @see routes/customer.php:21
  * @route '/customer/login'
  */
 login.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -43,7 +43,7 @@ login.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 })
 
     /**
- * @see routes/customer.php:20
+ * @see routes/customer.php:21
  * @route '/customer/login'
  */
     const loginForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -52,7 +52,7 @@ login.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     })
 
             /**
- * @see routes/customer.php:20
+ * @see routes/customer.php:21
  * @route '/customer/login'
  */
         loginForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -60,7 +60,7 @@ login.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
             method: 'get',
         })
             /**
- * @see routes/customer.php:20
+ * @see routes/customer.php:21
  * @route '/customer/login'
  */
         loginForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

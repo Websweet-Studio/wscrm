@@ -237,7 +237,7 @@ const getStatusText = (status: string) => {
                                         </Badge>
                                     </div>
                                     <div class="mt-1 text-sm text-muted-foreground">
-                                        {{ formatDate(order.created_at) }} • {{ getOrderItemsSummary(order) }}
+                                        {{ getOrderItemsSummary(order) }}
                                     </div>
                                     <div class="mt-0.5 text-[11px] text-muted-foreground capitalize">
                                         {{ order.billing_cycle.replace('_', ' ') }}

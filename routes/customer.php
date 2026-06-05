@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ImpersonateController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Customer\Auth\LoginController;
 use App\Http\Controllers\Customer\Auth\RegisterController;
 use App\Http\Controllers\Customer\DashboardController;
@@ -18,9 +19,9 @@ Route::prefix('customer')->name('customer.')->group(function () {
 
     Route::middleware('guest:customer')->group(function () {
         Route::get('login', function () {
-            return redirect('/login?type=customer');
+            return redirect('/login');
         })->name('login');
-        Route::post('login', [LoginController::class, 'store']);
+        Route::post('login', [AuthenticatedSessionController::class, 'store']);
         Route::get('register', [RegisterController::class, 'create'])->name('register');
         Route::post('register', [RegisterController::class, 'store']);
         Route::get('terms', [LoginController::class, 'terms'])->name('terms');
