@@ -2,46 +2,40 @@
 
 define('LARAVEL_START', microtime(true));
 
-// ========================================
-// INSTALLER CHECK - PRIORITY #1
-// ========================================
-// Check if installer exists and installation is not completed
-if (is_dir(__DIR__.'/install')) {
-    // For flat deployment, check wscrm folder for installer.lock
-    $installerLockPaths = [
-        __DIR__.'/wscrm/storage/installer.lock',      // wscrm in same directory
-        __DIR__.'/../wscrm/storage/installer.lock',   // wscrm moved outside web root
-        __DIR__.'/../storage/installer.lock',          // standard Laravel structure
-    ];
-
-    $installCompleted = false;
-    foreach ($installerLockPaths as $lockPath) {
-        if (file_exists($lockPath)) {
-            $installCompleted = true;
-            break;
-        }
-    }
-
-    // If installation not completed, ALWAYS redirect to installer
-    // DO NOT continue to Laravel bootstrap
-    if (! $installCompleted) {
-        $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
-
-        // Only allow installer URLs to proceed
-        if (strpos($requestUri, '/install') !== 0) {
-            header('Location: /install/', true, 302);
-            exit('Redirecting to installer...');
-        }
-
-        // If we're accessing installer URLs, let installer handle it
-        // DO NOT load Laravel at all
-        return;
+$skipInstaller = false;
+$envPaths = [
+    __DIR__.'/wscrm/.env',
+    __DIR__.'/../wscrm/.env',
+    __DIR__.'/../.env',
+];
+foreach ($envPaths as $envPath) {
+    if (file_exists($envPath)) {
+        $envContent = file_get_contents($envPath);
+        $skipInstaller = strpos($envContent, 'APP_ENV=local') !== false;
+        break;
     }
 }
 
-// ========================================
-// LARAVEL BOOTSTRAP - ONLY AFTER INSTALL
-// ========================================
+$skipMarkerPaths = [
+    __DIR__.'/../storage/installer.skip',
+    __DIR__.'/../wscrm/storage/installer.skip',
+    __DIR__.'/wscrm/storage/installer.skip',
+];
+$hasSkipMarker = false;
+foreach ($skipMarkerPaths as $path) {
+    if (file_exists($path)) {
+        $hasSkipMarker = true;
+        break;
+    }
+}
+
+if (is_dir(__DIR__.'/install') && ! $skipInstaller && ! $hasSkipMarker) {
+    $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
+    if (strpos($requestUri, '/install') !== 0) {
+        header('Location: /install/', true, 302);
+        exit;
+    }
+}
 
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
