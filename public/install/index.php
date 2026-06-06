@@ -604,16 +604,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $htaccessContent = file_get_contents($htaccessTemplatePath);
                 $htaccessContent = str_replace('{{DATE}}', date('Y-m-d H:i:s'), $htaccessContent);
 
-                // Generate .htaccess in public_html directory (web root)
-                $publicHtmlDir = $_SERVER['DOCUMENT_ROOT'];
-                $htaccessPath = $publicHtmlDir . '/.htaccess';
+                $scriptFilename = (string) ($_SERVER['SCRIPT_FILENAME'] ?? '');
+                $installDir = $scriptFilename !== '' ? dirname($scriptFilename) : __DIR__;
+                $appWebRootDir = dirname($installDir);
+                $publicHtmlDir = (string) ($_SERVER['DOCUMENT_ROOT'] ?? '');
+
+                $candidateDirs = array_values(array_unique(array_filter([
+                    $appWebRootDir,
+                    $publicHtmlDir,
+                ])));
+
+                $htaccessPath = $candidateDirs[0] . '/.htaccess';
 
                 error_log('Creating .htaccess at: ' . $htaccessPath);
 
-                if (file_put_contents($htaccessPath, $htaccessContent)) {
-                    error_log('.htaccess created successfully in public_html');
-                } else {
-                    error_log('ERROR Failed to create .htaccess in public_html');
+                $written = false;
+                foreach ($candidateDirs as $dir) {
+                    $path = rtrim($dir, '/\\') . '/.htaccess';
+                    if (@file_put_contents($path, $htaccessContent) !== false) {
+                        error_log('.htaccess created successfully at: ' . $path);
+                        $written = true;
+                        break;
+                    }
+                }
+
+                if (! $written) {
+                    error_log('ERROR Failed to create .htaccess in: ' . implode(', ', $candidateDirs));
                 }
             }
 
@@ -1320,6 +1336,13 @@ $host = $_SERVER['HTTP_HOST'] ?? '';
 $hostNoPort = explode(':', $host)[0];
 $isLocalHost = in_array($hostNoPort, ['localhost', '127.0.0.1', '::1'], true);
 
+$scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+$scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+$scriptDir = rtrim(str_replace('\\', '/', (string) dirname($scriptName)), '/');
+$basePath = preg_replace('~/install$~', '', $scriptDir);
+$basePath = $basePath === '/' ? '' : $basePath;
+$defaultAppUrl = $scheme . '://' . $host . $basePath;
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -1911,7 +1934,7 @@ $isLocalHost = in_array($hostNoPort, ['localhost', '127.0.0.1', '::1'], true);
                                         <span class="label-text">URL Aplikasi</span>
                                         <span class="label-desc">URL lengkap dimana aplikasi dapat diakses</span>
                                     </label>
-                                    <input type="url" id="app_url" class="form-control" value="<?= htmlspecialchars((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']) ?>" required>
+                                    <input type="url" id="app_url" class="form-control" value="<?= htmlspecialchars($defaultAppUrl) ?>" required>
                                 </div>
                             </div>
                         </div>
