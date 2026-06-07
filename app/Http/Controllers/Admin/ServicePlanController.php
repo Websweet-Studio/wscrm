@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ServicePlan;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -97,5 +99,21 @@ class ServicePlanController extends Controller
         $servicePlan->delete();
 
         return redirect()->back()->with('success', 'Paket layanan berhasil dihapus!');
+    }
+
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'distinct'],
+        ]);
+
+        $ids = array_values(array_unique(array_map('intval', $validated['ids'])));
+
+        $deleted = DB::transaction(function () use ($ids) {
+            return ServicePlan::whereIn('id', $ids)->delete();
+        });
+
+        return redirect()->back()->with('success', "{$deleted} paket layanan berhasil dihapus.");
     }
 }

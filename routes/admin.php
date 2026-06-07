@@ -35,6 +35,7 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
 
     Route::get('services', [ServiceController::class, 'index'])->name('services.index');
     Route::get('services/{id}', [ServiceController::class, 'show'])->name('services.show');
+    Route::delete('service-plans/bulk', [ServicePlanController::class, 'bulkDestroy'])->name('service-plans.bulk-destroy');
     Route::resource('service-plans', ServicePlanController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
     Route::patch('invoices/bulk/mark-paid', [InvoiceController::class, 'bulkMarkAsPaid'])->name('invoices.bulk-mark-paid');
     Route::delete('invoices/bulk', [InvoiceController::class, 'bulkDestroy'])->name('invoices.bulk-destroy');
@@ -42,6 +43,7 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::get('invoices/{invoice}/download', [InvoiceController::class, 'downloadPdf'])->name('invoices.download');
     Route::patch('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markAsPaid'])->name('invoices.mark-paid');
     Route::post('invoices/generate-renewals', [InvoiceController::class, 'generateRenewalInvoices'])->name('invoices.generate-renewals');
+    Route::delete('domain-prices/bulk', [DomainPriceController::class, 'bulkDestroy'])->name('domain-prices.bulk-destroy');
     Route::resource('domain-prices', DomainPriceController::class);
     Route::delete('hosting-plans/bulk', [HostingPlanController::class, 'bulkDestroy'])->name('hosting-plans.bulk-destroy');
     Route::resource('hosting-plans', HostingPlanController::class);

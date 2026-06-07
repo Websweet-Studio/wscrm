@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DomainPrice;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -103,5 +104,22 @@ class DomainPriceController extends Controller
 
         return redirect()->route('admin.domain-prices.index')
             ->with('success', 'Harga domain berhasil dihapus.');
+    }
+
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'distinct'],
+        ]);
+
+        $ids = array_values(array_unique(array_map('intval', $validated['ids'])));
+
+        $deleted = DB::transaction(function () use ($ids) {
+            return DomainPrice::whereIn('id', $ids)->delete();
+        });
+
+        return redirect()->route('admin.domain-prices.index')
+            ->with('success', "{$deleted} harga domain berhasil dihapus.");
     }
 }

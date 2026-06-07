@@ -9,7 +9,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ChevronDown, ChevronUp, Edit, Plus, Search, Trash2, X } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 interface DomainPrice {
     id: number;
@@ -45,6 +45,53 @@ const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const selectedDomain = ref<DomainPrice | null>(null);
 const domainToDelete = ref<DomainPrice | null>(null);
+
+const selectedDomainPriceIds = ref<number[]>([]);
+const pageDomainPriceIds = computed(() => props.domainPrices.data.map((domain) => domain.id));
+const isAllSelected = computed(
+    () => pageDomainPriceIds.value.length > 0 && pageDomainPriceIds.value.every((id) => selectedDomainPriceIds.value.includes(id)),
+);
+
+watch(
+    () => pageDomainPriceIds.value.join(','),
+    () => {
+        selectedDomainPriceIds.value = [];
+    },
+);
+
+const toggleSelectAll = () => {
+    selectedDomainPriceIds.value = isAllSelected.value ? [] : [...pageDomainPriceIds.value];
+};
+
+const toggleDomainPriceSelection = (domainPriceId: number) => {
+    if (selectedDomainPriceIds.value.includes(domainPriceId)) {
+        selectedDomainPriceIds.value = selectedDomainPriceIds.value.filter((id) => id !== domainPriceId);
+        return;
+    }
+    selectedDomainPriceIds.value = [...selectedDomainPriceIds.value, domainPriceId];
+};
+
+const clearSelection = () => {
+    selectedDomainPriceIds.value = [];
+};
+
+const bulkDeleting = ref(false);
+const bulkDelete = () => {
+    if (selectedDomainPriceIds.value.length === 0 || bulkDeleting.value) return;
+    if (!confirm(`Hapus ${selectedDomainPriceIds.value.length} harga domain yang dipilih?`)) return;
+
+    bulkDeleting.value = true;
+    router.delete('/admin/domain-prices/bulk', {
+        data: { ids: selectedDomainPriceIds.value },
+        preserveScroll: true,
+        onFinish: () => {
+            bulkDeleting.value = false;
+        },
+        onSuccess: () => {
+            clearSelection();
+        },
+    });
+};
 
 const createForm = useForm({
     extension: '',
@@ -198,10 +245,34 @@ const confirmDelete = () => {
                         <Button @click="handleSearch" class="cursor-pointer">Cari</Button>
                     </div>
 
+                    <div
+                        v-if="selectedDomainPriceIds.length > 0"
+                        class="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <div class="text-sm text-foreground">
+                            <span class="font-medium">{{ selectedDomainPriceIds.length }}</span> harga domain dipilih
+                        </div>
+                        <div class="flex flex-col gap-2 sm:flex-row">
+                            <Button size="sm" variant="destructive" class="cursor-pointer" :disabled="bulkDeleting" @click="bulkDelete">
+                                <Trash2 class="mr-2 h-4 w-4" />
+                                Hapus yang dipilih
+                            </Button>
+                            <Button size="sm" variant="outline" class="cursor-pointer" @click="clearSelection">Clear</Button>
+                        </div>
+                    </div>
+
                     <div class="overflow-x-auto rounded-md border">
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead class="w-[46px]">
+                                        <input
+                                            type="checkbox"
+                                            :checked="isAllSelected"
+                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                            @change="toggleSelectAll"
+                                        />
+                                    </TableHead>
                                     <TableHead>
                                         <button @click="sortBy('extension')" class="flex cursor-pointer items-center space-x-1 hover:text-foreground">
                                             <span>Ekstensi</span>
@@ -267,6 +338,14 @@ const confirmDelete = () => {
                             </TableHeader>
                             <TableBody>
                                 <TableRow v-for="domain in domainPrices.data" :key="domain.id">
+                                    <TableCell class="w-[46px]">
+                                        <input
+                                            type="checkbox"
+                                            :checked="selectedDomainPriceIds.includes(domain.id)"
+                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                            @change="toggleDomainPriceSelection(domain.id)"
+                                        />
+                                    </TableCell>
                                     <TableCell class="font-medium">.{{ domain.extension }}</TableCell>
                                     <TableCell>{{ formatPrice(domain.base_cost) }}</TableCell>
                                     <TableCell>{{ formatPrice(domain.renewal_cost) }}</TableCell>

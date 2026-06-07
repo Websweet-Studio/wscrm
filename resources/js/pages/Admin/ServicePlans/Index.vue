@@ -8,7 +8,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { CheckCircle, Edit, Eye, Plus, Search, Trash2, X, XCircle } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 interface ServicePlan {
     id: number;
@@ -47,6 +47,51 @@ const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const selectedServicePlan = ref<ServicePlan | null>(null);
 const servicePlanToDelete = ref<ServicePlan | null>(null);
+
+const selectedServicePlanIds = ref<number[]>([]);
+const pageServicePlanIds = computed(() => (props.servicePlans?.data || []).map((plan) => plan.id));
+const isAllSelected = computed(() => pageServicePlanIds.value.length > 0 && pageServicePlanIds.value.every((id) => selectedServicePlanIds.value.includes(id)));
+
+watch(
+    () => pageServicePlanIds.value.join(','),
+    () => {
+        selectedServicePlanIds.value = [];
+    },
+);
+
+const toggleSelectAll = () => {
+    selectedServicePlanIds.value = isAllSelected.value ? [] : [...pageServicePlanIds.value];
+};
+
+const toggleServicePlanSelection = (planId: number) => {
+    if (selectedServicePlanIds.value.includes(planId)) {
+        selectedServicePlanIds.value = selectedServicePlanIds.value.filter((id) => id !== planId);
+        return;
+    }
+    selectedServicePlanIds.value = [...selectedServicePlanIds.value, planId];
+};
+
+const clearSelection = () => {
+    selectedServicePlanIds.value = [];
+};
+
+const bulkDeleting = ref(false);
+const bulkDelete = () => {
+    if (selectedServicePlanIds.value.length === 0 || bulkDeleting.value) return;
+    if (!confirm(`Hapus ${selectedServicePlanIds.value.length} paket layanan yang dipilih?`)) return;
+
+    bulkDeleting.value = true;
+    router.delete('/admin/service-plans/bulk', {
+        data: { ids: selectedServicePlanIds.value },
+        preserveScroll: true,
+        onFinish: () => {
+            bulkDeleting.value = false;
+        },
+        onSuccess: () => {
+            clearSelection();
+        },
+    });
+};
 
 const createForm = useForm({
     name: '',
@@ -254,6 +299,22 @@ const removeFeature = (form: any, featureName: string) => {
                         <Button @click="handleSearch" class="cursor-pointer">Cari</Button>
                     </div>
 
+                    <div
+                        v-if="selectedServicePlanIds.length > 0"
+                        class="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <div class="text-sm text-foreground">
+                            <span class="font-medium">{{ selectedServicePlanIds.length }}</span> paket layanan dipilih
+                        </div>
+                        <div class="flex flex-col gap-2 sm:flex-row">
+                            <Button size="sm" variant="destructive" class="cursor-pointer" :disabled="bulkDeleting" @click="bulkDelete">
+                                <Trash2 class="mr-2 h-4 w-4" />
+                                Hapus yang dipilih
+                            </Button>
+                            <Button size="sm" variant="outline" class="cursor-pointer" @click="clearSelection">Clear</Button>
+                        </div>
+                    </div>
+
                     <!-- Service Plans Table -->
                     <div v-if="servicePlans.data.length === 0" class="py-8 text-center text-muted-foreground">Paket layanan tidak ditemukan.</div>
 
@@ -261,6 +322,14 @@ const removeFeature = (form: any, featureName: string) => {
                         <table class="w-full border-collapse">
                             <thead>
                                 <tr class="border-b border-border">
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
+                                        <input
+                                            type="checkbox"
+                                            :checked="isAllSelected"
+                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                            @change="toggleSelectAll"
+                                        />
+                                    </th>
                                     <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">ID</th>
                                     <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Nama</th>
                                     <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Kategori</th>
@@ -277,6 +346,14 @@ const removeFeature = (form: any, featureName: string) => {
                                     :key="plan.id"
                                     class="border-b border-border transition-colors hover:bg-muted/30"
                                 >
+                                    <td class="px-3 py-4">
+                                        <input
+                                            type="checkbox"
+                                            :checked="selectedServicePlanIds.includes(plan.id)"
+                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                            @change="toggleServicePlanSelection(plan.id)"
+                                        />
+                                    </td>
                                     <td class="px-3 py-4 text-sm font-medium text-foreground">#{{ plan.id }}</td>
                                     <td class="px-3 py-4 text-sm font-medium text-foreground">{{ plan.name }}</td>
                                     <td class="px-3 py-4">

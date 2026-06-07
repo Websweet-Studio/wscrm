@@ -1,7 +1,72 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
+* @see \App\Http\Controllers\Admin\DomainPriceController::bulkDestroy
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:109
+ * @route '/admin/domain-prices/bulk'
+ */
+export const bulkDestroy = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+    url: bulkDestroy.url(options),
+    method: 'delete',
+})
+
+bulkDestroy.definition = {
+    methods: ["delete"],
+    url: '/admin/domain-prices/bulk',
+} satisfies RouteDefinition<["delete"]>
+
+/**
+* @see \App\Http\Controllers\Admin\DomainPriceController::bulkDestroy
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:109
+ * @route '/admin/domain-prices/bulk'
+ */
+bulkDestroy.url = (options?: RouteQueryOptions) => {
+    return bulkDestroy.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Admin\DomainPriceController::bulkDestroy
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:109
+ * @route '/admin/domain-prices/bulk'
+ */
+bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+    url: bulkDestroy.url(options),
+    method: 'delete',
+})
+
+    /**
+* @see \App\Http\Controllers\Admin\DomainPriceController::bulkDestroy
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:109
+ * @route '/admin/domain-prices/bulk'
+ */
+    const bulkDestroyForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: bulkDestroy.url({
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'DELETE',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\DomainPriceController::bulkDestroy
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:109
+ * @route '/admin/domain-prices/bulk'
+ */
+        bulkDestroyForm.delete = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: bulkDestroy.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'DELETE',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    bulkDestroy.form = bulkDestroyForm
+/**
 * @see \App\Http\Controllers\Admin\DomainPriceController::index
- * @see app/Http/Controllers/Admin/DomainPriceController.php:14
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:15
  * @route '/admin/domain-prices'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +81,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::index
- * @see app/Http/Controllers/Admin/DomainPriceController.php:14
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:15
  * @route '/admin/domain-prices'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +90,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::index
- * @see app/Http/Controllers/Admin/DomainPriceController.php:14
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:15
  * @route '/admin/domain-prices'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +99,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::index
- * @see app/Http/Controllers/Admin/DomainPriceController.php:14
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:15
  * @route '/admin/domain-prices'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +109,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::index
- * @see app/Http/Controllers/Admin/DomainPriceController.php:14
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:15
  * @route '/admin/domain-prices'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +119,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::index
- * @see app/Http/Controllers/Admin/DomainPriceController.php:14
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:15
  * @route '/admin/domain-prices'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +128,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::index
- * @see app/Http/Controllers/Admin/DomainPriceController.php:14
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:15
  * @route '/admin/domain-prices'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +144,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::create
- * @see app/Http/Controllers/Admin/DomainPriceController.php:47
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:48
  * @route '/admin/domain-prices/create'
  */
 export const create = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +159,7 @@ create.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::create
- * @see app/Http/Controllers/Admin/DomainPriceController.php:47
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:48
  * @route '/admin/domain-prices/create'
  */
 create.url = (options?: RouteQueryOptions) => {
@@ -103,7 +168,7 @@ create.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::create
- * @see app/Http/Controllers/Admin/DomainPriceController.php:47
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:48
  * @route '/admin/domain-prices/create'
  */
 create.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -112,7 +177,7 @@ create.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::create
- * @see app/Http/Controllers/Admin/DomainPriceController.php:47
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:48
  * @route '/admin/domain-prices/create'
  */
 create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -122,7 +187,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::create
- * @see app/Http/Controllers/Admin/DomainPriceController.php:47
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:48
  * @route '/admin/domain-prices/create'
  */
     const createForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -132,7 +197,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::create
- * @see app/Http/Controllers/Admin/DomainPriceController.php:47
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:48
  * @route '/admin/domain-prices/create'
  */
         createForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -141,7 +206,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::create
- * @see app/Http/Controllers/Admin/DomainPriceController.php:47
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:48
  * @route '/admin/domain-prices/create'
  */
         createForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -157,7 +222,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     create.form = createForm
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::store
- * @see app/Http/Controllers/Admin/DomainPriceController.php:52
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:53
  * @route '/admin/domain-prices'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -172,7 +237,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::store
- * @see app/Http/Controllers/Admin/DomainPriceController.php:52
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:53
  * @route '/admin/domain-prices'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -181,7 +246,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::store
- * @see app/Http/Controllers/Admin/DomainPriceController.php:52
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:53
  * @route '/admin/domain-prices'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -191,7 +256,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::store
- * @see app/Http/Controllers/Admin/DomainPriceController.php:52
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:53
  * @route '/admin/domain-prices'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -201,7 +266,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::store
- * @see app/Http/Controllers/Admin/DomainPriceController.php:52
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:53
  * @route '/admin/domain-prices'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -212,7 +277,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::show
- * @see app/Http/Controllers/Admin/DomainPriceController.php:69
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:70
  * @route '/admin/domain-prices/{domain_price}'
  */
 export const show = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -227,7 +292,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::show
- * @see app/Http/Controllers/Admin/DomainPriceController.php:69
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:70
  * @route '/admin/domain-prices/{domain_price}'
  */
 show.url = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -260,7 +325,7 @@ show.url = (args: { domain_price: number | { id: number } } | [domain_price: num
 
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::show
- * @see app/Http/Controllers/Admin/DomainPriceController.php:69
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:70
  * @route '/admin/domain-prices/{domain_price}'
  */
 show.get = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -269,7 +334,7 @@ show.get = (args: { domain_price: number | { id: number } } | [domain_price: num
 })
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::show
- * @see app/Http/Controllers/Admin/DomainPriceController.php:69
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:70
  * @route '/admin/domain-prices/{domain_price}'
  */
 show.head = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -279,7 +344,7 @@ show.head = (args: { domain_price: number | { id: number } } | [domain_price: nu
 
     /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::show
- * @see app/Http/Controllers/Admin/DomainPriceController.php:69
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:70
  * @route '/admin/domain-prices/{domain_price}'
  */
     const showForm = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -289,7 +354,7 @@ show.head = (args: { domain_price: number | { id: number } } | [domain_price: nu
 
             /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::show
- * @see app/Http/Controllers/Admin/DomainPriceController.php:69
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:70
  * @route '/admin/domain-prices/{domain_price}'
  */
         showForm.get = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -298,7 +363,7 @@ show.head = (args: { domain_price: number | { id: number } } | [domain_price: nu
         })
             /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::show
- * @see app/Http/Controllers/Admin/DomainPriceController.php:69
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:70
  * @route '/admin/domain-prices/{domain_price}'
  */
         showForm.head = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -314,7 +379,7 @@ show.head = (args: { domain_price: number | { id: number } } | [domain_price: nu
     show.form = showForm
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::edit
- * @see app/Http/Controllers/Admin/DomainPriceController.php:76
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:77
  * @route '/admin/domain-prices/{domain_price}/edit'
  */
 export const edit = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -329,7 +394,7 @@ edit.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::edit
- * @see app/Http/Controllers/Admin/DomainPriceController.php:76
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:77
  * @route '/admin/domain-prices/{domain_price}/edit'
  */
 edit.url = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -362,7 +427,7 @@ edit.url = (args: { domain_price: number | { id: number } } | [domain_price: num
 
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::edit
- * @see app/Http/Controllers/Admin/DomainPriceController.php:76
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:77
  * @route '/admin/domain-prices/{domain_price}/edit'
  */
 edit.get = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -371,7 +436,7 @@ edit.get = (args: { domain_price: number | { id: number } } | [domain_price: num
 })
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::edit
- * @see app/Http/Controllers/Admin/DomainPriceController.php:76
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:77
  * @route '/admin/domain-prices/{domain_price}/edit'
  */
 edit.head = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -381,7 +446,7 @@ edit.head = (args: { domain_price: number | { id: number } } | [domain_price: nu
 
     /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::edit
- * @see app/Http/Controllers/Admin/DomainPriceController.php:76
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:77
  * @route '/admin/domain-prices/{domain_price}/edit'
  */
     const editForm = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -391,7 +456,7 @@ edit.head = (args: { domain_price: number | { id: number } } | [domain_price: nu
 
             /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::edit
- * @see app/Http/Controllers/Admin/DomainPriceController.php:76
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:77
  * @route '/admin/domain-prices/{domain_price}/edit'
  */
         editForm.get = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -400,7 +465,7 @@ edit.head = (args: { domain_price: number | { id: number } } | [domain_price: nu
         })
             /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::edit
- * @see app/Http/Controllers/Admin/DomainPriceController.php:76
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:77
  * @route '/admin/domain-prices/{domain_price}/edit'
  */
         editForm.head = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -416,7 +481,7 @@ edit.head = (args: { domain_price: number | { id: number } } | [domain_price: nu
     edit.form = editForm
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::update
- * @see app/Http/Controllers/Admin/DomainPriceController.php:83
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:84
  * @route '/admin/domain-prices/{domain_price}'
  */
 export const update = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -431,7 +496,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::update
- * @see app/Http/Controllers/Admin/DomainPriceController.php:83
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:84
  * @route '/admin/domain-prices/{domain_price}'
  */
 update.url = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -464,7 +529,7 @@ update.url = (args: { domain_price: number | { id: number } } | [domain_price: n
 
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::update
- * @see app/Http/Controllers/Admin/DomainPriceController.php:83
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:84
  * @route '/admin/domain-prices/{domain_price}'
  */
 update.put = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -473,7 +538,7 @@ update.put = (args: { domain_price: number | { id: number } } | [domain_price: n
 })
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::update
- * @see app/Http/Controllers/Admin/DomainPriceController.php:83
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:84
  * @route '/admin/domain-prices/{domain_price}'
  */
 update.patch = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -483,7 +548,7 @@ update.patch = (args: { domain_price: number | { id: number } } | [domain_price:
 
     /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::update
- * @see app/Http/Controllers/Admin/DomainPriceController.php:83
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:84
  * @route '/admin/domain-prices/{domain_price}'
  */
     const updateForm = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -498,7 +563,7 @@ update.patch = (args: { domain_price: number | { id: number } } | [domain_price:
 
             /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::update
- * @see app/Http/Controllers/Admin/DomainPriceController.php:83
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:84
  * @route '/admin/domain-prices/{domain_price}'
  */
         updateForm.put = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -512,7 +577,7 @@ update.patch = (args: { domain_price: number | { id: number } } | [domain_price:
         })
             /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::update
- * @see app/Http/Controllers/Admin/DomainPriceController.php:83
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:84
  * @route '/admin/domain-prices/{domain_price}'
  */
         updateForm.patch = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -528,7 +593,7 @@ update.patch = (args: { domain_price: number | { id: number } } | [domain_price:
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::destroy
- * @see app/Http/Controllers/Admin/DomainPriceController.php:100
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:101
  * @route '/admin/domain-prices/{domain_price}'
  */
 export const destroy = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -543,7 +608,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::destroy
- * @see app/Http/Controllers/Admin/DomainPriceController.php:100
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:101
  * @route '/admin/domain-prices/{domain_price}'
  */
 destroy.url = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -576,7 +641,7 @@ destroy.url = (args: { domain_price: number | { id: number } } | [domain_price: 
 
 /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::destroy
- * @see app/Http/Controllers/Admin/DomainPriceController.php:100
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:101
  * @route '/admin/domain-prices/{domain_price}'
  */
 destroy.delete = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -586,7 +651,7 @@ destroy.delete = (args: { domain_price: number | { id: number } } | [domain_pric
 
     /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::destroy
- * @see app/Http/Controllers/Admin/DomainPriceController.php:100
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:101
  * @route '/admin/domain-prices/{domain_price}'
  */
     const destroyForm = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -601,7 +666,7 @@ destroy.delete = (args: { domain_price: number | { id: number } } | [domain_pric
 
             /**
 * @see \App\Http\Controllers\Admin\DomainPriceController::destroy
- * @see app/Http/Controllers/Admin/DomainPriceController.php:100
+ * @see app/Http/Controllers/Admin/DomainPriceController.php:101
  * @route '/admin/domain-prices/{domain_price}'
  */
         destroyForm.delete = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -616,7 +681,8 @@ destroy.delete = (args: { domain_price: number | { id: number } } | [domain_pric
     
     destroy.form = destroyForm
 const domainPrices = {
-    index: Object.assign(index, index),
+    bulkDestroy: Object.assign(bulkDestroy, bulkDestroy),
+index: Object.assign(index, index),
 create: Object.assign(create, create),
 store: Object.assign(store, store),
 show: Object.assign(show, show),
