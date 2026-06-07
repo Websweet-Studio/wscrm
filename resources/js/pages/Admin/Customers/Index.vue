@@ -16,7 +16,7 @@ import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ChevronDown, ChevronUp, Clock, Edit, Key, LogIn, Mail, MoreHorizontal, Plus, Search, Trash2, UserCheck, Users, UserX, X } from 'lucide-vue-next';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 interface Customer {
     id: number;
@@ -60,6 +60,51 @@ const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const selectedCustomer = ref<Customer | null>(null);
 const customerToDelete = ref<Customer | null>(null);
+
+const selectedCustomerIds = ref<number[]>([]);
+const pageCustomerIds = computed(() => (props.customers?.data || []).map((customer) => customer.id));
+const isAllSelected = computed(() => pageCustomerIds.value.length > 0 && pageCustomerIds.value.every((id) => selectedCustomerIds.value.includes(id)));
+
+watch(
+    () => pageCustomerIds.value.join(','),
+    () => {
+        selectedCustomerIds.value = [];
+    },
+);
+
+const toggleSelectAll = () => {
+    selectedCustomerIds.value = isAllSelected.value ? [] : [...pageCustomerIds.value];
+};
+
+const toggleCustomerSelection = (customerId: number) => {
+    if (selectedCustomerIds.value.includes(customerId)) {
+        selectedCustomerIds.value = selectedCustomerIds.value.filter((id) => id !== customerId);
+        return;
+    }
+    selectedCustomerIds.value = [...selectedCustomerIds.value, customerId];
+};
+
+const clearSelection = () => {
+    selectedCustomerIds.value = [];
+};
+
+const bulkDeleting = ref(false);
+const bulkDelete = () => {
+    if (selectedCustomerIds.value.length === 0 || bulkDeleting.value) return;
+    if (!confirm(`Hapus ${selectedCustomerIds.value.length} pelanggan yang dipilih?`)) return;
+
+    bulkDeleting.value = true;
+    router.delete('/admin/customers/bulk', {
+        data: { ids: selectedCustomerIds.value },
+        preserveScroll: true,
+        onFinish: () => {
+            bulkDeleting.value = false;
+        },
+        onSuccess: () => {
+            clearSelection();
+        },
+    });
+};
 
 // Username checking state
 const usernameStatus = ref<'idle' | 'checking' | 'available' | 'unavailable'>('idle');
@@ -461,6 +506,22 @@ const getSortIcon = (field: string) => {
                         <Button @click="handleSearch" class="cursor-pointer">Cari</Button>
                     </div>
 
+                    <div
+                        v-if="selectedCustomerIds.length > 0"
+                        class="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <div class="text-sm text-foreground">
+                            <span class="font-medium">{{ selectedCustomerIds.length }}</span> pelanggan dipilih
+                        </div>
+                        <div class="flex flex-col gap-2 sm:flex-row">
+                            <Button size="sm" variant="destructive" class="cursor-pointer" :disabled="bulkDeleting" @click="bulkDelete">
+                                <Trash2 class="mr-2 h-4 w-4" />
+                                Hapus yang dipilih
+                            </Button>
+                            <Button size="sm" variant="outline" class="cursor-pointer" @click="clearSelection">Clear</Button>
+                        </div>
+                    </div>
+
                     <!-- Customer Table -->
                     <div v-if="!customers?.data || customers.data.length === 0" class="py-12 text-center text-muted-foreground">
                         <Users class="mx-auto h-12 w-12 text-muted-foreground/40" />
@@ -472,6 +533,14 @@ const getSortIcon = (field: string) => {
                         <table class="w-full border-collapse">
                             <thead>
                                 <tr class="border-b border-border">
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
+                                        <input
+                                            type="checkbox"
+                                            :checked="isAllSelected"
+                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                            @change="toggleSelectAll"
+                                        />
+                                    </th>
                                     <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
                                         <button @click="sortBy('id')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>ID</span>
@@ -536,6 +605,14 @@ const getSortIcon = (field: string) => {
                                     :key="customer.id"
                                     class="border-b border-border transition-colors hover:bg-muted/30"
                                 >
+                                    <td class="px-3 py-4">
+                                        <input
+                                            type="checkbox"
+                                            :checked="selectedCustomerIds.includes(customer.id)"
+                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                            @change="toggleCustomerSelection(customer.id)"
+                                        />
+                                    </td>
                                     <td class="px-3 py-4 text-sm font-medium text-foreground">#{{ customer.id }}</td>
                                     <td class="px-3 py-4 text-sm font-medium text-foreground">{{ customer.name }}</td>
                                     <td class="px-3 py-4 text-sm text-muted-foreground">{{ customer.email }}</td>

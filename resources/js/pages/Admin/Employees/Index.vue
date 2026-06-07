@@ -9,7 +9,7 @@ import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Building2, Clock, Edit, Key, Plus, Search, Trash2, UserCheck, Users, UserX, X } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 interface Employee {
     id: number;
@@ -60,6 +60,51 @@ const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const selectedEmployee = ref<Employee | null>(null);
 const employeeToDelete = ref<Employee | null>(null);
+
+const selectedEmployeeIds = ref<number[]>([]);
+const pageEmployeeIds = computed(() => (props.employees?.data || []).map((employee) => employee.id));
+const isAllSelected = computed(() => pageEmployeeIds.value.length > 0 && pageEmployeeIds.value.every((id) => selectedEmployeeIds.value.includes(id)));
+
+watch(
+    () => pageEmployeeIds.value.join(','),
+    () => {
+        selectedEmployeeIds.value = [];
+    },
+);
+
+const toggleSelectAll = () => {
+    selectedEmployeeIds.value = isAllSelected.value ? [] : [...pageEmployeeIds.value];
+};
+
+const toggleEmployeeSelection = (employeeId: number) => {
+    if (selectedEmployeeIds.value.includes(employeeId)) {
+        selectedEmployeeIds.value = selectedEmployeeIds.value.filter((id) => id !== employeeId);
+        return;
+    }
+    selectedEmployeeIds.value = [...selectedEmployeeIds.value, employeeId];
+};
+
+const clearSelection = () => {
+    selectedEmployeeIds.value = [];
+};
+
+const bulkDeleting = ref(false);
+const bulkDelete = () => {
+    if (selectedEmployeeIds.value.length === 0 || bulkDeleting.value) return;
+    if (!confirm(`Hapus ${selectedEmployeeIds.value.length} karyawan yang dipilih?`)) return;
+
+    bulkDeleting.value = true;
+    router.delete('/admin/employees/bulk', {
+        data: { ids: selectedEmployeeIds.value },
+        preserveScroll: true,
+        onFinish: () => {
+            bulkDeleting.value = false;
+        },
+        onSuccess: () => {
+            clearSelection();
+        },
+    });
+};
 
 const createForm = useForm({
     name: '',
@@ -351,6 +396,22 @@ const resetPassword = (employee: Employee) => {
                         <Button @click="handleSearch" class="cursor-pointer">Cari</Button>
                     </div>
 
+                    <div
+                        v-if="selectedEmployeeIds.length > 0"
+                        class="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <div class="text-sm text-foreground">
+                            <span class="font-medium">{{ selectedEmployeeIds.length }}</span> karyawan dipilih
+                        </div>
+                        <div class="flex flex-col gap-2 sm:flex-row">
+                            <Button size="sm" variant="destructive" class="cursor-pointer" :disabled="bulkDeleting" @click="bulkDelete">
+                                <Trash2 class="mr-2 h-4 w-4" />
+                                Hapus yang dipilih
+                            </Button>
+                            <Button size="sm" variant="outline" class="cursor-pointer" @click="clearSelection">Clear</Button>
+                        </div>
+                    </div>
+
                     <!-- Employee Table -->
                     <div v-if="!employees?.data || employees.data.length === 0" class="py-12 text-center text-muted-foreground">
                         <Users class="mx-auto h-12 w-12 text-muted-foreground/40" />
@@ -362,6 +423,14 @@ const resetPassword = (employee: Employee) => {
                         <table class="w-full border-collapse">
                             <thead>
                                 <tr class="border-b border-border">
+                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
+                                        <input
+                                            type="checkbox"
+                                            :checked="isAllSelected"
+                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                            @change="toggleSelectAll"
+                                        />
+                                    </th>
                                     <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">NIK</th>
                                     <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Nama</th>
                                     <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Email</th>
@@ -380,6 +449,14 @@ const resetPassword = (employee: Employee) => {
                                     :key="employee.id"
                                     class="border-b border-border transition-colors hover:bg-muted/30"
                                 >
+                                    <td class="px-3 py-4">
+                                        <input
+                                            type="checkbox"
+                                            :checked="selectedEmployeeIds.includes(employee.id)"
+                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                            @change="toggleEmployeeSelection(employee.id)"
+                                        />
+                                    </td>
                                     <td class="px-3 py-4 text-sm font-medium text-foreground">{{ employee.nik }}</td>
                                     <td class="px-3 py-4 text-sm font-medium text-foreground">{{ employee.user.name }}</td>
                                     <td class="px-3 py-4 text-sm text-muted-foreground">{{ employee.user.email }}</td>

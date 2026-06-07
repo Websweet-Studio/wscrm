@@ -9,7 +9,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { Cpu, Edit, HardDrive, MemoryStick, Plus, Search, Trash2, X } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 interface HostingPlan {
     id: number;
@@ -48,6 +48,51 @@ const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const selectedPlan = ref<HostingPlan | null>(null);
 const planToDelete = ref<HostingPlan | null>(null);
+
+const selectedPlanIds = ref<number[]>([]);
+const pagePlanIds = computed(() => (props.hostingPlans?.data || []).map((plan) => plan.id));
+const isAllSelected = computed(() => pagePlanIds.value.length > 0 && pagePlanIds.value.every((id) => selectedPlanIds.value.includes(id)));
+
+watch(
+    () => pagePlanIds.value.join(','),
+    () => {
+        selectedPlanIds.value = [];
+    },
+);
+
+const toggleSelectAll = () => {
+    selectedPlanIds.value = isAllSelected.value ? [] : [...pagePlanIds.value];
+};
+
+const togglePlanSelection = (planId: number) => {
+    if (selectedPlanIds.value.includes(planId)) {
+        selectedPlanIds.value = selectedPlanIds.value.filter((id) => id !== planId);
+        return;
+    }
+    selectedPlanIds.value = [...selectedPlanIds.value, planId];
+};
+
+const clearSelection = () => {
+    selectedPlanIds.value = [];
+};
+
+const bulkDeleting = ref(false);
+const bulkDelete = () => {
+    if (selectedPlanIds.value.length === 0 || bulkDeleting.value) return;
+    if (!confirm(`Hapus ${selectedPlanIds.value.length} paket hosting yang dipilih?`)) return;
+
+    bulkDeleting.value = true;
+    router.delete('/admin/hosting-plans/bulk', {
+        data: { ids: selectedPlanIds.value },
+        preserveScroll: true,
+        onFinish: () => {
+            bulkDeleting.value = false;
+        },
+        onSuccess: () => {
+            clearSelection();
+        },
+    });
+};
 
 const createForm = useForm({
     plan_name: '',
@@ -201,10 +246,34 @@ const confirmDelete = () => {
                         <Button @click="handleSearch" class="cursor-pointer">Cari</Button>
                     </div>
 
+                    <div
+                        v-if="selectedPlanIds.length > 0"
+                        class="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <div class="text-sm text-foreground">
+                            <span class="font-medium">{{ selectedPlanIds.length }}</span> paket hosting dipilih
+                        </div>
+                        <div class="flex flex-col gap-2 sm:flex-row">
+                            <Button size="sm" variant="destructive" class="cursor-pointer" :disabled="bulkDeleting" @click="bulkDelete">
+                                <Trash2 class="mr-2 h-4 w-4" />
+                                Hapus yang dipilih
+                            </Button>
+                            <Button size="sm" variant="outline" class="cursor-pointer" @click="clearSelection">Clear</Button>
+                        </div>
+                    </div>
+
                     <div class="rounded-md border">
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead class="w-[46px]">
+                                        <input
+                                            type="checkbox"
+                                            :checked="isAllSelected"
+                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                            @change="toggleSelectAll"
+                                        />
+                                    </TableHead>
                                     <TableHead>Nama Paket</TableHead>
                                     <TableHead>Spesifikasi</TableHead>
                                     <TableHead>Harga Jual</TableHead>
@@ -216,6 +285,14 @@ const confirmDelete = () => {
                             </TableHeader>
                             <TableBody>
                                 <TableRow v-for="plan in hostingPlans.data" :key="plan.id">
+                                    <TableCell class="w-[46px]">
+                                        <input
+                                            type="checkbox"
+                                            :checked="selectedPlanIds.includes(plan.id)"
+                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                            @change="togglePlanSelection(plan.id)"
+                                        />
+                                    </TableCell>
                                     <TableCell class="font-medium">{{ plan.plan_name }}</TableCell>
                                     <TableCell>
                                         <div class="flex flex-wrap gap-2 text-xs">

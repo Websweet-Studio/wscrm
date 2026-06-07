@@ -23,7 +23,7 @@ test('admin pages can be opened by verified admin', function (string $url, strin
         ['/admin/invoices', 'Admin/Invoices/Index'],
         ['/admin/domain-prices', 'Admin/DomainPrices/Index'],
         ['/admin/hosting-plans', 'Admin/HostingPlans/Index'],
-        ['/admin/banks', 'Admin/Banks/Index'],
+        ['/admin/payments', 'Admin/Banks/Index'],
         ['/admin/blog', 'Admin/Blog/Index'],
         ['/admin/service-plans', 'Admin/ServicePlans/Index'],
         ['/admin/employees', 'Admin/Employees/Index'],
@@ -35,4 +35,3 @@ test('admin pages can be opened by verified admin', function (string $url, strin
         ['/admin/expenses', 'Admin/Expenses/Index'],
     ];
 });
-

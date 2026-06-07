@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\HostingPlan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -96,5 +97,22 @@ class HostingPlanController extends Controller
 
         return redirect()->route('admin.hosting-plans.index')
             ->with('success', 'Paket hosting berhasil dihapus.');
+    }
+
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'distinct'],
+        ]);
+
+        $ids = array_values(array_unique(array_map('intval', $validated['ids'])));
+
+        $deleted = DB::transaction(function () use ($ids) {
+            return HostingPlan::whereIn('id', $ids)->delete();
+        });
+
+        return redirect()->route('admin.hosting-plans.index')
+            ->with('success', "{$deleted} paket hosting berhasil dihapus.");
     }
 }

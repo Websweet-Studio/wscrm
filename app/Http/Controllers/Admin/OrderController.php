@@ -436,6 +436,47 @@ class OrderController extends Controller
         return redirect()->back()->with('success', $message);
     }
 
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'distinct'],
+        ]);
+
+        $ids = array_values(array_unique(array_map('intval', $validated['ids'])));
+        $orders = Order::whereIn('id', $ids)->get();
+
+        $deleted = 0;
+        $skipped = [];
+
+        foreach ($orders as $order) {
+            if ($order->isService() && $order->status === 'active') {
+                $skipped[] = "#{$order->id} (layanan aktif)";
+                continue;
+            }
+
+            if ($order->isOrder() && $order->status === 'completed') {
+                $skipped[] = "#{$order->id} (pesanan selesai)";
+                continue;
+            }
+
+            DB::transaction(function () use ($order) {
+                $order->orderItems()->delete();
+                $order->invoices()->delete();
+                $order->delete();
+            });
+
+            $deleted++;
+        }
+
+        $message = "{$deleted} data berhasil dihapus.";
+        if (! empty($skipped)) {
+            $message .= ' Dilewati: '.implode(', ', array_slice($skipped, 0, 10)).(count($skipped) > 10 ? '…' : '');
+        }
+
+        return redirect()->back()->with('success', $message);
+    }
+
     public function simulateUpgradeDowngrade(Order $order, Request $request)
     {
         // Get current hosting plan from either direct relationship or order items

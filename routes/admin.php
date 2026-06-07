@@ -22,10 +22,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verified'])->group(function () {
     Route::resource('customers', CustomerController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
+    Route::delete('customers/bulk', [CustomerController::class, 'bulkDestroy'])->name('customers.bulk-destroy');
     Route::post('customers/{customer}/welcome-email', [CustomerController::class, 'sendWelcomeEmail'])->name('customers.welcome-email');
     Route::post('customers/{customer}/resend-password', [CustomerController::class, 'resendPassword'])->name('customers.resend-password');
+    Route::delete('employees/bulk', [EmployeeController::class, 'bulkDestroy'])->name('employees.bulk-destroy');
     Route::resource('employees', EmployeeController::class);
     Route::post('employees/{employee}/reset-password', [EmployeeController::class, 'resetPassword'])->name('employees.reset-password');
+    Route::delete('orders/bulk', [OrderController::class, 'bulkDestroy'])->name('orders.bulk-destroy');
     Route::resource('orders', OrderController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
     Route::post('orders/{order}/simulate-upgrade-downgrade', [OrderController::class, 'simulateUpgradeDowngrade'])->name('orders.simulate-upgrade-downgrade');
     Route::post('orders/{order}/process-upgrade-downgrade', [OrderController::class, 'processUpgradeDowngrade'])->name('orders.process-upgrade-downgrade');
@@ -40,6 +43,7 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::patch('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markAsPaid'])->name('invoices.mark-paid');
     Route::post('invoices/generate-renewals', [InvoiceController::class, 'generateRenewalInvoices'])->name('invoices.generate-renewals');
     Route::resource('domain-prices', DomainPriceController::class);
+    Route::delete('hosting-plans/bulk', [HostingPlanController::class, 'bulkDestroy'])->name('hosting-plans.bulk-destroy');
     Route::resource('hosting-plans', HostingPlanController::class);
     Route::get('bulk-pricing', [BulkPricingController::class, 'index'])->name('bulk-pricing.index');
     Route::post('bulk-pricing/simulate', [BulkPricingController::class, 'simulate'])->name('bulk-pricing.simulate');

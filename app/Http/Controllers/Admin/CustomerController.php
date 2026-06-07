@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
@@ -180,25 +182,51 @@ class CustomerController extends Controller
     public function destroy(Customer $customer)
     {
         try {
-            // Delete all related data in the correct order
-            // First delete invoices
-            $customer->invoices()->delete();
-
-            // Then delete order items and orders
-            foreach ($customer->orders as $order) {
-                $order->orderItems()->delete();
-            }
-            $customer->orders()->delete();
-
-            // Services are now handled through orders - no separate deletion needed
-
-            // Finally delete the customer
-            $customer->delete();
+            $this->deleteCustomerWithRelations($customer);
 
             return redirect()->back()->with('success', 'Pelanggan dan semua data terkait berhasil dihapus!');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal menghapus pelanggan: '.$e->getMessage());
         }
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'distinct'],
+        ]);
+
+        $ids = array_values(array_unique(array_map('intval', $validated['ids'])));
+
+        try {
+            $customers = Customer::whereIn('id', $ids)->get();
+            $deletedCount = 0;
+
+            foreach ($customers as $customer) {
+                $this->deleteCustomerWithRelations($customer);
+                $deletedCount++;
+            }
+
+            return redirect()->back()->with('success', "{$deletedCount} pelanggan berhasil dihapus beserta data terkait.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus pelanggan terpilih: '.$e->getMessage());
+        }
+    }
+
+    private function deleteCustomerWithRelations(Customer $customer): void
+    {
+        DB::transaction(function () use ($customer) {
+            $customer->invoices()->delete();
+
+            $orderIds = $customer->orders()->pluck('id');
+            if ($orderIds->isNotEmpty()) {
+                OrderItem::whereIn('order_id', $orderIds)->delete();
+            }
+
+            $customer->orders()->delete();
+            $customer->delete();
+        });
     }
 
     public function sendWelcomeEmail(Customer $customer)
@@ -211,7 +239,7 @@ class CustomerController extends Controller
     public function resendPassword(Customer $customer)
     {
         $password = \Illuminate\Support\Str::random(10);
-        
+
         $customer->update([
             'password' => \Illuminate\Support\Facades\Hash::make($password),
         ]);

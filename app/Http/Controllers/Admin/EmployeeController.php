@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Http\RedirectResponse;
 
 class EmployeeController extends Controller
 {
@@ -214,6 +216,49 @@ class EmployeeController extends Controller
 
         return redirect()->route('admin.employees.index')
             ->with('success', 'Karyawan berhasil dihapus.');
+    }
+
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $this->checkAdmin();
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'distinct'],
+        ]);
+
+        $ids = array_values(array_unique(array_map('intval', $validated['ids'])));
+        $employees = Employee::with('user')->whereIn('id', $ids)->get();
+
+        $deleted = 0;
+        $skipped = [];
+        $currentUserId = (int) (auth()->id() ?? 0);
+
+        foreach ($employees as $employee) {
+            if ($employee->user_id === $currentUserId) {
+                $skipped[] = "{$employee->nik} (akun sendiri)";
+                continue;
+            }
+
+            if ($employee->user && method_exists($employee->user, 'isSuperAdmin') && $employee->user->isSuperAdmin()) {
+                $skipped[] = "{$employee->nik} (super admin)";
+                continue;
+            }
+
+            DB::transaction(function () use ($employee) {
+                $employee->user?->delete();
+                $employee->delete();
+            });
+
+            $deleted++;
+        }
+
+        $message = "{$deleted} karyawan berhasil dihapus.";
+        if (! empty($skipped)) {
+            $message .= ' Dilewati: '.implode(', ', array_slice($skipped, 0, 10)).(count($skipped) > 10 ? '…' : '');
+        }
+
+        return redirect()->route('admin.employees.index')->with('success', $message);
     }
 
     /**

@@ -1,5 +1,70 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
+* @see \App\Http\Controllers\Admin\OrderController::bulkDestroy
+ * @see app/Http/Controllers/Admin/OrderController.php:439
+ * @route '/admin/orders/bulk'
+ */
+export const bulkDestroy = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+    url: bulkDestroy.url(options),
+    method: 'delete',
+})
+
+bulkDestroy.definition = {
+    methods: ["delete"],
+    url: '/admin/orders/bulk',
+} satisfies RouteDefinition<["delete"]>
+
+/**
+* @see \App\Http\Controllers\Admin\OrderController::bulkDestroy
+ * @see app/Http/Controllers/Admin/OrderController.php:439
+ * @route '/admin/orders/bulk'
+ */
+bulkDestroy.url = (options?: RouteQueryOptions) => {
+    return bulkDestroy.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Admin\OrderController::bulkDestroy
+ * @see app/Http/Controllers/Admin/OrderController.php:439
+ * @route '/admin/orders/bulk'
+ */
+bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+    url: bulkDestroy.url(options),
+    method: 'delete',
+})
+
+    /**
+* @see \App\Http\Controllers\Admin\OrderController::bulkDestroy
+ * @see app/Http/Controllers/Admin/OrderController.php:439
+ * @route '/admin/orders/bulk'
+ */
+    const bulkDestroyForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: bulkDestroy.url({
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'DELETE',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\OrderController::bulkDestroy
+ * @see app/Http/Controllers/Admin/OrderController.php:439
+ * @route '/admin/orders/bulk'
+ */
+        bulkDestroyForm.delete = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: bulkDestroy.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'DELETE',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    bulkDestroy.form = bulkDestroyForm
+/**
 * @see \App\Http\Controllers\Admin\OrderController::index
  * @see app/Http/Controllers/Admin/OrderController.php:23
  * @route '/admin/orders'
@@ -437,7 +502,7 @@ destroy.delete = (args: { order: number | { id: number } } | [order: number | { 
     destroy.form = destroyForm
 /**
 * @see \App\Http\Controllers\Admin\OrderController::simulateUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:439
+ * @see app/Http/Controllers/Admin/OrderController.php:480
  * @route '/admin/orders/{order}/simulate-upgrade-downgrade'
  */
 export const simulateUpgradeDowngrade = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -452,7 +517,7 @@ simulateUpgradeDowngrade.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::simulateUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:439
+ * @see app/Http/Controllers/Admin/OrderController.php:480
  * @route '/admin/orders/{order}/simulate-upgrade-downgrade'
  */
 simulateUpgradeDowngrade.url = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -485,7 +550,7 @@ simulateUpgradeDowngrade.url = (args: { order: number | { id: number } } | [orde
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::simulateUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:439
+ * @see app/Http/Controllers/Admin/OrderController.php:480
  * @route '/admin/orders/{order}/simulate-upgrade-downgrade'
  */
 simulateUpgradeDowngrade.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -495,7 +560,7 @@ simulateUpgradeDowngrade.post = (args: { order: number | { id: number } } | [ord
 
     /**
 * @see \App\Http\Controllers\Admin\OrderController::simulateUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:439
+ * @see app/Http/Controllers/Admin/OrderController.php:480
  * @route '/admin/orders/{order}/simulate-upgrade-downgrade'
  */
     const simulateUpgradeDowngradeForm = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -505,7 +570,7 @@ simulateUpgradeDowngrade.post = (args: { order: number | { id: number } } | [ord
 
             /**
 * @see \App\Http\Controllers\Admin\OrderController::simulateUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:439
+ * @see app/Http/Controllers/Admin/OrderController.php:480
  * @route '/admin/orders/{order}/simulate-upgrade-downgrade'
  */
         simulateUpgradeDowngradeForm.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -516,7 +581,7 @@ simulateUpgradeDowngrade.post = (args: { order: number | { id: number } } | [ord
     simulateUpgradeDowngrade.form = simulateUpgradeDowngradeForm
 /**
 * @see \App\Http\Controllers\Admin\OrderController::processUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:486
+ * @see app/Http/Controllers/Admin/OrderController.php:527
  * @route '/admin/orders/{order}/process-upgrade-downgrade'
  */
 export const processUpgradeDowngrade = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -531,7 +596,7 @@ processUpgradeDowngrade.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::processUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:486
+ * @see app/Http/Controllers/Admin/OrderController.php:527
  * @route '/admin/orders/{order}/process-upgrade-downgrade'
  */
 processUpgradeDowngrade.url = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -564,7 +629,7 @@ processUpgradeDowngrade.url = (args: { order: number | { id: number } } | [order
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::processUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:486
+ * @see app/Http/Controllers/Admin/OrderController.php:527
  * @route '/admin/orders/{order}/process-upgrade-downgrade'
  */
 processUpgradeDowngrade.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -574,7 +639,7 @@ processUpgradeDowngrade.post = (args: { order: number | { id: number } } | [orde
 
     /**
 * @see \App\Http\Controllers\Admin\OrderController::processUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:486
+ * @see app/Http/Controllers/Admin/OrderController.php:527
  * @route '/admin/orders/{order}/process-upgrade-downgrade'
  */
     const processUpgradeDowngradeForm = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -584,7 +649,7 @@ processUpgradeDowngrade.post = (args: { order: number | { id: number } } | [orde
 
             /**
 * @see \App\Http\Controllers\Admin\OrderController::processUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:486
+ * @see app/Http/Controllers/Admin/OrderController.php:527
  * @route '/admin/orders/{order}/process-upgrade-downgrade'
  */
         processUpgradeDowngradeForm.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -594,7 +659,8 @@ processUpgradeDowngrade.post = (args: { order: number | { id: number } } | [orde
     
     processUpgradeDowngrade.form = processUpgradeDowngradeForm
 const orders = {
-    index: Object.assign(index, index),
+    bulkDestroy: Object.assign(bulkDestroy, bulkDestroy),
+index: Object.assign(index, index),
 store: Object.assign(store, store),
 show: Object.assign(show, show),
 update: Object.assign(update, update),

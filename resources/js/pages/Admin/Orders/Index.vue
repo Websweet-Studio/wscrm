@@ -8,7 +8,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ChevronDown, ChevronUp, Edit, Package, Plus, Search, Trash2 } from 'lucide-vue-next';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 interface Customer {
     id: number;
@@ -105,6 +105,51 @@ const orderFormMode = ref<'create' | 'edit'>('create');
 const showDeleteModal = ref(false);
 const selectedOrder = ref<Order | null>(null);
 const orderToDelete = ref<Order | null>(null);
+
+const selectedOrderIds = ref<number[]>([]);
+const pageOrderIds = computed(() => (props.orders?.data || []).map((order) => order.id));
+const isAllSelected = computed(() => pageOrderIds.value.length > 0 && pageOrderIds.value.every((id) => selectedOrderIds.value.includes(id)));
+
+watch(
+    () => pageOrderIds.value.join(','),
+    () => {
+        selectedOrderIds.value = [];
+    },
+);
+
+const toggleSelectAll = () => {
+    selectedOrderIds.value = isAllSelected.value ? [] : [...pageOrderIds.value];
+};
+
+const toggleOrderSelection = (orderId: number) => {
+    if (selectedOrderIds.value.includes(orderId)) {
+        selectedOrderIds.value = selectedOrderIds.value.filter((id) => id !== orderId);
+        return;
+    }
+    selectedOrderIds.value = [...selectedOrderIds.value, orderId];
+};
+
+const clearSelection = () => {
+    selectedOrderIds.value = [];
+};
+
+const bulkDeleting = ref(false);
+const bulkDelete = () => {
+    if (selectedOrderIds.value.length === 0 || bulkDeleting.value) return;
+    if (!confirm(`Hapus ${selectedOrderIds.value.length} data yang dipilih? (Layanan aktif akan dilewati)`)) return;
+
+    bulkDeleting.value = true;
+    router.delete('/admin/orders/bulk', {
+        data: { ids: selectedOrderIds.value },
+        preserveScroll: true,
+        onFinish: () => {
+            bulkDeleting.value = false;
+        },
+        onSuccess: () => {
+            clearSelection();
+        },
+    });
+};
 
 if (currentView.value === 'services' && !props.filters?.status) {
     statusFilter.value = 'active';
@@ -581,10 +626,33 @@ const getSortIcon = (field: string) => {
                     </div>
                 </CardHeader>
                 <CardContent>
+                    <div
+                        v-if="selectedOrderIds.length > 0"
+                        class="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <div class="text-sm text-foreground">
+                            <span class="font-medium">{{ selectedOrderIds.length }}</span> dipilih
+                        </div>
+                        <div class="flex flex-col gap-2 sm:flex-row">
+                            <Button size="sm" variant="destructive" class="cursor-pointer" :disabled="bulkDeleting" @click="bulkDelete">
+                                <Trash2 class="mr-2 h-4 w-4" />
+                                Hapus yang dipilih
+                            </Button>
+                            <Button size="sm" variant="outline" class="cursor-pointer" @click="clearSelection">Clear</Button>
+                        </div>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="w-full table-auto">
                             <thead>
                                 <tr class="border-b">
+                                    <th class="pb-3 pr-3 text-left font-medium">
+                                        <input
+                                            type="checkbox"
+                                            :checked="isAllSelected"
+                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                            @change="toggleSelectAll"
+                                        />
+                                    </th>
                                     <th class="pb-3 text-left font-medium">
                                         <button @click="sortBy('id')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>ID</span>
@@ -630,6 +698,14 @@ const getSortIcon = (field: string) => {
                             </thead>
                             <tbody>
                                 <tr v-for="order in orders.data" :key="order.id" class="border-b hover:bg-muted/50">
+                                    <td class="py-3 pr-3">
+                                        <input
+                                            type="checkbox"
+                                            :checked="selectedOrderIds.includes(order.id)"
+                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                            @change="toggleOrderSelection(order.id)"
+                                        />
+                                    </td>
                                     <td class="py-3">
                                         <div class="font-medium">#{{ order.id }}</div>
                                     </td>
