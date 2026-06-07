@@ -215,7 +215,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
  * @see app/Http/Controllers/Admin/DomainPriceController.php:69
  * @route '/admin/domain-prices/{domain_price}'
  */
-export const show = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -230,7 +230,7 @@ show.definition = {
  * @see app/Http/Controllers/Admin/DomainPriceController.php:69
  * @route '/admin/domain-prices/{domain_price}'
  */
-show.url = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+show.url = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { domain_price: args }
     }
@@ -263,7 +263,7 @@ show.url = (args: { domain_price: string | number | { id: string | number } } | 
  * @see app/Http/Controllers/Admin/DomainPriceController.php:69
  * @route '/admin/domain-prices/{domain_price}'
  */
-show.get = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -272,7 +272,7 @@ show.get = (args: { domain_price: string | number | { id: string | number } } | 
  * @see app/Http/Controllers/Admin/DomainPriceController.php:69
  * @route '/admin/domain-prices/{domain_price}'
  */
-show.head = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
@@ -282,7 +282,7 @@ show.head = (args: { domain_price: string | number | { id: string | number } } |
  * @see app/Http/Controllers/Admin/DomainPriceController.php:69
  * @route '/admin/domain-prices/{domain_price}'
  */
-    const showForm = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const showForm = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: show.url(args, options),
         method: 'get',
     })
@@ -292,7 +292,7 @@ show.head = (args: { domain_price: string | number | { id: string | number } } |
  * @see app/Http/Controllers/Admin/DomainPriceController.php:69
  * @route '/admin/domain-prices/{domain_price}'
  */
-        showForm.get = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        showForm.get = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: show.url(args, options),
             method: 'get',
         })
@@ -301,7 +301,7 @@ show.head = (args: { domain_price: string | number | { id: string | number } } |
  * @see app/Http/Controllers/Admin/DomainPriceController.php:69
  * @route '/admin/domain-prices/{domain_price}'
  */
-        showForm.head = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        showForm.head = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: show.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',
@@ -317,7 +317,7 @@ show.head = (args: { domain_price: string | number | { id: string | number } } |
  * @see app/Http/Controllers/Admin/DomainPriceController.php:76
  * @route '/admin/domain-prices/{domain_price}/edit'
  */
-export const edit = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const edit = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: edit.url(args, options),
     method: 'get',
 })
@@ -332,7 +332,7 @@ edit.definition = {
  * @see app/Http/Controllers/Admin/DomainPriceController.php:76
  * @route '/admin/domain-prices/{domain_price}/edit'
  */
-edit.url = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+edit.url = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { domain_price: args }
     }
@@ -365,7 +365,7 @@ edit.url = (args: { domain_price: string | number | { id: string | number } } | 
  * @see app/Http/Controllers/Admin/DomainPriceController.php:76
  * @route '/admin/domain-prices/{domain_price}/edit'
  */
-edit.get = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+edit.get = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: edit.url(args, options),
     method: 'get',
 })
@@ -374,7 +374,7 @@ edit.get = (args: { domain_price: string | number | { id: string | number } } | 
  * @see app/Http/Controllers/Admin/DomainPriceController.php:76
  * @route '/admin/domain-prices/{domain_price}/edit'
  */
-edit.head = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+edit.head = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: edit.url(args, options),
     method: 'head',
 })
@@ -384,7 +384,7 @@ edit.head = (args: { domain_price: string | number | { id: string | number } } |
  * @see app/Http/Controllers/Admin/DomainPriceController.php:76
  * @route '/admin/domain-prices/{domain_price}/edit'
  */
-    const editForm = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const editForm = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: edit.url(args, options),
         method: 'get',
     })
@@ -394,7 +394,7 @@ edit.head = (args: { domain_price: string | number | { id: string | number } } |
  * @see app/Http/Controllers/Admin/DomainPriceController.php:76
  * @route '/admin/domain-prices/{domain_price}/edit'
  */
-        editForm.get = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        editForm.get = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: edit.url(args, options),
             method: 'get',
         })
@@ -403,7 +403,7 @@ edit.head = (args: { domain_price: string | number | { id: string | number } } |
  * @see app/Http/Controllers/Admin/DomainPriceController.php:76
  * @route '/admin/domain-prices/{domain_price}/edit'
  */
-        editForm.head = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        editForm.head = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: edit.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',
@@ -419,7 +419,7 @@ edit.head = (args: { domain_price: string | number | { id: string | number } } |
  * @see app/Http/Controllers/Admin/DomainPriceController.php:83
  * @route '/admin/domain-prices/{domain_price}'
  */
-export const update = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -434,7 +434,7 @@ update.definition = {
  * @see app/Http/Controllers/Admin/DomainPriceController.php:83
  * @route '/admin/domain-prices/{domain_price}'
  */
-update.url = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+update.url = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { domain_price: args }
     }
@@ -467,7 +467,7 @@ update.url = (args: { domain_price: string | number | { id: string | number } } 
  * @see app/Http/Controllers/Admin/DomainPriceController.php:83
  * @route '/admin/domain-prices/{domain_price}'
  */
-update.put = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -476,7 +476,7 @@ update.put = (args: { domain_price: string | number | { id: string | number } } 
  * @see app/Http/Controllers/Admin/DomainPriceController.php:83
  * @route '/admin/domain-prices/{domain_price}'
  */
-update.patch = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+update.patch = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: update.url(args, options),
     method: 'patch',
 })
@@ -486,7 +486,7 @@ update.patch = (args: { domain_price: string | number | { id: string | number } 
  * @see app/Http/Controllers/Admin/DomainPriceController.php:83
  * @route '/admin/domain-prices/{domain_price}'
  */
-    const updateForm = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const updateForm = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: update.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'PUT',
@@ -501,7 +501,7 @@ update.patch = (args: { domain_price: string | number | { id: string | number } 
  * @see app/Http/Controllers/Admin/DomainPriceController.php:83
  * @route '/admin/domain-prices/{domain_price}'
  */
-        updateForm.put = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        updateForm.put = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: update.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PUT',
@@ -515,7 +515,7 @@ update.patch = (args: { domain_price: string | number | { id: string | number } 
  * @see app/Http/Controllers/Admin/DomainPriceController.php:83
  * @route '/admin/domain-prices/{domain_price}'
  */
-        updateForm.patch = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        updateForm.patch = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: update.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PATCH',
@@ -531,7 +531,7 @@ update.patch = (args: { domain_price: string | number | { id: string | number } 
  * @see app/Http/Controllers/Admin/DomainPriceController.php:100
  * @route '/admin/domain-prices/{domain_price}'
  */
-export const destroy = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -546,7 +546,7 @@ destroy.definition = {
  * @see app/Http/Controllers/Admin/DomainPriceController.php:100
  * @route '/admin/domain-prices/{domain_price}'
  */
-destroy.url = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { domain_price: args }
     }
@@ -579,7 +579,7 @@ destroy.url = (args: { domain_price: string | number | { id: string | number } }
  * @see app/Http/Controllers/Admin/DomainPriceController.php:100
  * @route '/admin/domain-prices/{domain_price}'
  */
-destroy.delete = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -589,7 +589,7 @@ destroy.delete = (args: { domain_price: string | number | { id: string | number 
  * @see app/Http/Controllers/Admin/DomainPriceController.php:100
  * @route '/admin/domain-prices/{domain_price}'
  */
-    const destroyForm = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const destroyForm = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: destroy.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'DELETE',
@@ -604,7 +604,7 @@ destroy.delete = (args: { domain_price: string | number | { id: string | number 
  * @see app/Http/Controllers/Admin/DomainPriceController.php:100
  * @route '/admin/domain-prices/{domain_price}'
  */
-        destroyForm.delete = (args: { domain_price: string | number | { id: string | number } } | [domain_price: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        destroyForm.delete = (args: { domain_price: number | { id: number } } | [domain_price: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: destroy.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'DELETE',

@@ -4,7 +4,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
  * @see app/Http/Controllers/Admin/UserCredentialController.php:12
  * @route '/admin/users/{user}/send-credentials'
  */
-export const sendCredentials = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const sendCredentials = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: sendCredentials.url(args, options),
     method: 'post',
 })
@@ -19,7 +19,7 @@ sendCredentials.definition = {
  * @see app/Http/Controllers/Admin/UserCredentialController.php:12
  * @route '/admin/users/{user}/send-credentials'
  */
-sendCredentials.url = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+sendCredentials.url = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { user: args }
     }
@@ -52,7 +52,7 @@ sendCredentials.url = (args: { user: string | number | { id: string | number } }
  * @see app/Http/Controllers/Admin/UserCredentialController.php:12
  * @route '/admin/users/{user}/send-credentials'
  */
-sendCredentials.post = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+sendCredentials.post = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: sendCredentials.url(args, options),
     method: 'post',
 })
@@ -62,7 +62,7 @@ sendCredentials.post = (args: { user: string | number | { id: string | number } 
  * @see app/Http/Controllers/Admin/UserCredentialController.php:12
  * @route '/admin/users/{user}/send-credentials'
  */
-    const sendCredentialsForm = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const sendCredentialsForm = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: sendCredentials.url(args, options),
         method: 'post',
     })
@@ -72,7 +72,7 @@ sendCredentials.post = (args: { user: string | number | { id: string | number } 
  * @see app/Http/Controllers/Admin/UserCredentialController.php:12
  * @route '/admin/users/{user}/send-credentials'
  */
-        sendCredentialsForm.post = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        sendCredentialsForm.post = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: sendCredentials.url(args, options),
             method: 'post',
         })

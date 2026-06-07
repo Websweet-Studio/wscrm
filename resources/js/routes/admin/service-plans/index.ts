@@ -137,7 +137,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
  * @see app/Http/Controllers/Admin/ServicePlanController.php:42
  * @route '/admin/service-plans/{service_plan}'
  */
-export const show = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -152,7 +152,7 @@ show.definition = {
  * @see app/Http/Controllers/Admin/ServicePlanController.php:42
  * @route '/admin/service-plans/{service_plan}'
  */
-show.url = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+show.url = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { service_plan: args }
     }
@@ -185,7 +185,7 @@ show.url = (args: { service_plan: string | number | { id: string | number } } | 
  * @see app/Http/Controllers/Admin/ServicePlanController.php:42
  * @route '/admin/service-plans/{service_plan}'
  */
-show.get = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -194,7 +194,7 @@ show.get = (args: { service_plan: string | number | { id: string | number } } | 
  * @see app/Http/Controllers/Admin/ServicePlanController.php:42
  * @route '/admin/service-plans/{service_plan}'
  */
-show.head = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
@@ -204,7 +204,7 @@ show.head = (args: { service_plan: string | number | { id: string | number } } |
  * @see app/Http/Controllers/Admin/ServicePlanController.php:42
  * @route '/admin/service-plans/{service_plan}'
  */
-    const showForm = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const showForm = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: show.url(args, options),
         method: 'get',
     })
@@ -214,7 +214,7 @@ show.head = (args: { service_plan: string | number | { id: string | number } } |
  * @see app/Http/Controllers/Admin/ServicePlanController.php:42
  * @route '/admin/service-plans/{service_plan}'
  */
-        showForm.get = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        showForm.get = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: show.url(args, options),
             method: 'get',
         })
@@ -223,7 +223,7 @@ show.head = (args: { service_plan: string | number | { id: string | number } } |
  * @see app/Http/Controllers/Admin/ServicePlanController.php:42
  * @route '/admin/service-plans/{service_plan}'
  */
-        showForm.head = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        showForm.head = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: show.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',
@@ -239,7 +239,7 @@ show.head = (args: { service_plan: string | number | { id: string | number } } |
  * @see app/Http/Controllers/Admin/ServicePlanController.php:72
  * @route '/admin/service-plans/{service_plan}'
  */
-export const update = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -254,7 +254,7 @@ update.definition = {
  * @see app/Http/Controllers/Admin/ServicePlanController.php:72
  * @route '/admin/service-plans/{service_plan}'
  */
-update.url = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+update.url = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { service_plan: args }
     }
@@ -287,7 +287,7 @@ update.url = (args: { service_plan: string | number | { id: string | number } } 
  * @see app/Http/Controllers/Admin/ServicePlanController.php:72
  * @route '/admin/service-plans/{service_plan}'
  */
-update.put = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -296,7 +296,7 @@ update.put = (args: { service_plan: string | number | { id: string | number } } 
  * @see app/Http/Controllers/Admin/ServicePlanController.php:72
  * @route '/admin/service-plans/{service_plan}'
  */
-update.patch = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+update.patch = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: update.url(args, options),
     method: 'patch',
 })
@@ -306,7 +306,7 @@ update.patch = (args: { service_plan: string | number | { id: string | number } 
  * @see app/Http/Controllers/Admin/ServicePlanController.php:72
  * @route '/admin/service-plans/{service_plan}'
  */
-    const updateForm = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const updateForm = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: update.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'PUT',
@@ -321,7 +321,7 @@ update.patch = (args: { service_plan: string | number | { id: string | number } 
  * @see app/Http/Controllers/Admin/ServicePlanController.php:72
  * @route '/admin/service-plans/{service_plan}'
  */
-        updateForm.put = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        updateForm.put = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: update.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PUT',
@@ -335,7 +335,7 @@ update.patch = (args: { service_plan: string | number | { id: string | number } 
  * @see app/Http/Controllers/Admin/ServicePlanController.php:72
  * @route '/admin/service-plans/{service_plan}'
  */
-        updateForm.patch = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        updateForm.patch = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: update.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PATCH',
@@ -351,7 +351,7 @@ update.patch = (args: { service_plan: string | number | { id: string | number } 
  * @see app/Http/Controllers/Admin/ServicePlanController.php:95
  * @route '/admin/service-plans/{service_plan}'
  */
-export const destroy = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -366,7 +366,7 @@ destroy.definition = {
  * @see app/Http/Controllers/Admin/ServicePlanController.php:95
  * @route '/admin/service-plans/{service_plan}'
  */
-destroy.url = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { service_plan: args }
     }
@@ -399,7 +399,7 @@ destroy.url = (args: { service_plan: string | number | { id: string | number } }
  * @see app/Http/Controllers/Admin/ServicePlanController.php:95
  * @route '/admin/service-plans/{service_plan}'
  */
-destroy.delete = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -409,7 +409,7 @@ destroy.delete = (args: { service_plan: string | number | { id: string | number 
  * @see app/Http/Controllers/Admin/ServicePlanController.php:95
  * @route '/admin/service-plans/{service_plan}'
  */
-    const destroyForm = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const destroyForm = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: destroy.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'DELETE',
@@ -424,7 +424,7 @@ destroy.delete = (args: { service_plan: string | number | { id: string | number 
  * @see app/Http/Controllers/Admin/ServicePlanController.php:95
  * @route '/admin/service-plans/{service_plan}'
  */
-        destroyForm.delete = (args: { service_plan: string | number | { id: string | number } } | [service_plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        destroyForm.delete = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: destroy.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'DELETE',
