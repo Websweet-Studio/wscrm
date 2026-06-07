@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
+import { getHostingPlanFinalPrice } from '@/lib/utils';
 
 interface HostingPlan {
     id: number;
@@ -13,6 +14,7 @@ interface HostingPlan {
     ram_gb: number;
     selling_price: number;
     discount_percent: number;
+    use_bulk_pricing?: boolean;
     features: {
         email_accounts: string | number;
         databases: string | number;
@@ -50,9 +52,6 @@ const getBadgeColor = (planName: string) => {
     }
 };
 
-const getDiscountedPrice = (price: number, discount: number) => {
-    return price * (1 - discount / 100);
-};
 </script>
 
 <template>
@@ -79,7 +78,7 @@ const getDiscountedPrice = (price: number, discount: number) => {
                             <div class="flex items-center justify-between">
                                 <CardTitle class="text-lg">{{ plan.storage_gb }}GB</CardTitle>
                                 <span
-                                    v-if="plan.discount_percent !== 0"
+                                    v-if="!plan.use_bulk_pricing && plan.discount_percent !== 0"
                                     :class="`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                                         plan.discount_percent > 0
                                             ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
@@ -94,11 +93,11 @@ const getDiscountedPrice = (price: number, discount: number) => {
 
                         <CardContent class="space-y-4">
                             <div class="text-center">
-                                <div v-if="plan.discount_percent > 0" class="text-sm text-muted-foreground line-through">
-                                    {{ formatPrice(getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
+                                <div v-if="!plan.use_bulk_pricing && plan.discount_percent > 0" class="text-sm text-muted-foreground line-through">
+                                    {{ formatPrice(plan.selling_price) }}
                                 </div>
                                 <div class="text-3xl font-bold">
-                                    {{ formatPrice(plan.selling_price) }}
+                                    {{ formatPrice(getHostingPlanFinalPrice(plan)) }}
                                 </div>
                                 <div class="text-sm text-muted-foreground">per year</div>
                             </div>

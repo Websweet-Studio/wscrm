@@ -101,7 +101,7 @@ const updateActivePlans = () => {
     form.plan_multipliers = newMultipliers;
 
     // Run simulation with updated plans
-    runSimulation();
+    debouncedRunSimulation();
 };
 
 // Filter simulation based on active plan multipliers
@@ -118,13 +118,32 @@ const filteredSimulation = computed(() => {
     return filtered;
 });
 
+const selectedPlanIds = computed(() => {
+    const ids = new Set<number>();
+    for (const planType of Object.keys(filteredSimulation.value)) {
+        for (const row of filteredSimulation.value[planType] || []) {
+            ids.add(row.plan_id);
+        }
+    }
+    return Array.from(ids);
+});
+
+const debounce = <T extends (...args: any[]) => void>(fn: T, waitMs: number) => {
+    let timer: number | undefined;
+    return (...args: Parameters<T>) => {
+        if (timer) {
+            window.clearTimeout(timer);
+        }
+        timer = window.setTimeout(() => fn(...args), waitMs);
+    };
+};
+
 // Watch for props changes
 watch(
     () => props.simulationResults,
     (newResults) => {
         if (newResults?.simulation) {
             simulation.value = newResults.simulation;
-            console.log('Simulation updated from props:', simulation.value);
         }
     },
     { deep: true, immediate: true },
@@ -174,6 +193,7 @@ const runSimulation = async () => {
     try {
         router.post('/admin/bulk-pricing/simulate', form, {
             preserveScroll: true,
+            preserveState: true,
             onSuccess: () => {
                 isSimulating.value = false;
             },
@@ -188,27 +208,30 @@ const runSimulation = async () => {
     }
 };
 
+const debouncedRunSimulation = debounce(() => {
+    runSimulation();
+}, 450);
+
 const applyPricing = () => {
-    if (!Object.keys(filteredSimulation.value).length) {
+    if (selectedPlanIds.value.length === 0) {
         alert('Jalankan simulasi terlebih dahulu!');
         return;
     }
 
-    if (!confirm('Apakah Anda yakin ingin menerapkan pricing baru ini ke semua hosting plans? Perubahan tidak dapat dibatalkan.')) {
+    if (!confirm('Apakah Anda yakin ingin menerapkan pricing baru ini ke hosting plan yang disimulasikan? Perubahan tidak dapat dibatalkan.')) {
         return;
     }
 
     isApplying.value = true;
 
-    const selectedPlanIds = props.hostingPlans.map((plan) => plan.id);
-
     router.post(
         '/admin/bulk-pricing/apply',
         {
             ...form,
-            plan_ids: selectedPlanIds,
+            plan_ids: selectedPlanIds.value,
         },
         {
+            preserveState: true,
             onSuccess: () => {
                 alert('Bulk pricing berhasil diterapkan!');
             },
@@ -294,11 +317,9 @@ const saveConfig = () => {
         })),
     };
 
-    console.log('Saving config data:', saveData);
-
     router.post('/admin/bulk-pricing/save-config', saveData, {
-        onSuccess: (page) => {
-            console.log('Config saved successfully');
+        preserveState: true,
+        onSuccess: () => {
             saveForm.name = '';
             saveForm.description = '';
             saveForm.is_default = false;
@@ -321,9 +342,6 @@ const saveConfig = () => {
             } else {
                 alert('Gagal menyimpan konfigurasi! Silakan coba lagi.');
             }
-        },
-        onFinish: () => {
-            console.log('Save request finished');
         },
     });
 };
@@ -365,11 +383,11 @@ const deleteConfig = (configId: number, configName: string) => {
                         <CardContent class="space-y-4">
                             <div>
                                 <Label for="base-price">Harga Per GB (IDR)</Label>
-                                <Input id="base-price" v-model.number="form.base_price_per_gb" type="number" step="1000" @input="runSimulation" />
+                                <Input id="base-price" v-model.number="form.base_price_per_gb" type="number" step="1000" @input="debouncedRunSimulation" />
                             </div>
                             <div>
                                 <Label for="cost-price">Modal Per GB (IDR)</Label>
-                                <Input id="cost-price" v-model.number="form.cost_per_gb" type="number" step="1000" @input="runSimulation" />
+                                <Input id="cost-price" v-model.number="form.cost_per_gb" type="number" step="1000" @input="debouncedRunSimulation" />
                             </div>
                         </CardContent>
                     </Card>
@@ -397,7 +415,7 @@ const deleteConfig = (configId: number, configName: string) => {
                                             min="0.1"
                                             max="10"
                                             placeholder="1.0"
-                                            @input="runSimulation"
+                                            @input="debouncedRunSimulation"
                                             class="mt-1"
                                         />
                                     </div>
@@ -420,7 +438,7 @@ const deleteConfig = (configId: number, configName: string) => {
                                             min="0.1"
                                             max="10"
                                             placeholder="0.77"
-                                            @input="runSimulation"
+                                            @input="debouncedRunSimulation"
                                             class="mt-1"
                                         />
                                     </div>
@@ -438,7 +456,7 @@ const deleteConfig = (configId: number, configName: string) => {
                         <CardContent class="space-y-4">
                             <div v-for="(tier, index) in form.tier_discounts" :key="index" class="flex gap-2">
                                 <div class="flex-1">
-                                    <Input v-model.number="tier.storage_gb" type="number" placeholder="Contoh: 100 GB" @input="runSimulation" />
+                                    <Input v-model.number="tier.storage_gb" type="number" placeholder="Contoh: 100 GB" @input="debouncedRunSimulation" />
                                 </div>
                                 <div class="flex-1">
                                     <Input
@@ -448,7 +466,7 @@ const deleteConfig = (configId: number, configName: string) => {
                                         min="0"
                                         max="30"
                                         placeholder="Contoh: 5.0%"
-                                        @input="runSimulation"
+                                        @input="debouncedRunSimulation"
                                     />
                                 </div>
                                 <Button variant="outline" size="sm" @click="removeTier(index)" :disabled="form.tier_discounts.length <= 1">
@@ -510,7 +528,7 @@ const deleteConfig = (configId: number, configName: string) => {
 
                                 <Button
                                     @click="applyPricing"
-                                    :disabled="isApplying || !Object.keys(filteredSimulation).length"
+                                    :disabled="isApplying || selectedPlanIds.length === 0"
                                     class="w-full"
                                     variant="destructive"
                                 >
@@ -565,7 +583,7 @@ const deleteConfig = (configId: number, configName: string) => {
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div v-if="Object.keys(filteredSimulation).length === 0" class="py-8 text-center text-muted-foreground">
+                            <div v-if="selectedPlanIds.length === 0" class="py-8 text-center text-muted-foreground">
                                 Jalankan simulasi untuk melihat hasil
                             </div>
                             <div v-else class="space-y-6">

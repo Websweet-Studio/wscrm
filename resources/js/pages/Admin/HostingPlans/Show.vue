@@ -6,6 +6,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowLeft, CheckCircle, Cpu, DollarSign, HardDrive, MemoryStick, Server, Settings, Star, Wifi } from 'lucide-vue-next';
+import { getHostingPlanFinalPrice } from '@/lib/utils';
 
 interface HostingPlan {
     id: number;
@@ -18,6 +19,7 @@ interface HostingPlan {
     maintenance_cost: number;
     discount_percent: number;
     selling_price: number;
+    use_bulk_pricing?: boolean;
     features: string[];
     is_active: boolean;
     created_at: string;
@@ -56,14 +58,14 @@ const formatDate = (date: string) => {
 
 const calculateProfit = () => {
     const costs = props.hostingPlan.modal_cost + props.hostingPlan.maintenance_cost;
-    const discountedPrice = props.hostingPlan.selling_price * (1 - props.hostingPlan.discount_percent / 100);
-    return discountedPrice - costs;
+    const finalPrice = getHostingPlanFinalPrice(props.hostingPlan);
+    return finalPrice - costs;
 };
 
 const calculateProfitMargin = () => {
     const profit = calculateProfit();
-    const discountedPrice = props.hostingPlan.selling_price * (1 - props.hostingPlan.discount_percent / 100);
-    return discountedPrice > 0 ? (profit / discountedPrice) * 100 : 0;
+    const finalPrice = getHostingPlanFinalPrice(props.hostingPlan);
+    return finalPrice > 0 ? (profit / finalPrice) * 100 : 0;
 };
 </script>
 
@@ -200,13 +202,18 @@ const calculateProfitMargin = () => {
                             </div>
 
                             <div
-                                v-if="hostingPlan.discount_percent > 0"
+                                v-if="!hostingPlan.use_bulk_pricing && hostingPlan.discount_percent > 0"
                                 class="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-3"
                             >
                                 <span class="font-medium text-green-800">Discount ({{ hostingPlan.discount_percent }}%):</span>
                                 <span class="font-bold text-green-600"
                                     >-{{ formatPrice((hostingPlan.selling_price * hostingPlan.discount_percent) / 100) }}</span
                                 >
+                            </div>
+
+                            <div class="flex items-center justify-between rounded-lg border border-blue-300 bg-blue-100 p-3">
+                                <span class="font-medium text-blue-900">Final Price:</span>
+                                <span class="font-bold text-blue-800">{{ formatPrice(getHostingPlanFinalPrice(hostingPlan)) }}</span>
                             </div>
 
                             <div class="flex items-center justify-between rounded-lg border border-green-300 bg-green-100 p-3">

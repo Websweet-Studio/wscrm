@@ -10,6 +10,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { Cpu, Edit, HardDrive, MemoryStick, Plus, Search, Trash2, X } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
+import { getHostingPlanFinalPrice } from '@/lib/utils';
 
 interface HostingPlan {
     id: number;
@@ -133,12 +134,6 @@ const formatPrice = (price: number) => {
         currency: 'IDR',
         minimumFractionDigits: 0,
     }).format(price);
-};
-
-const getDiscountedPrice = (price: number, discount: number) => {
-    const result = price * (1 - discount / 100);
-    console.log(`Price Debug: Base=${price}, Discount=${discount}%, Final=${result}`);
-    return result;
 };
 
 const handleSearch = () => {
@@ -318,11 +313,11 @@ const confirmDelete = () => {
                                     <TableCell>
                                         <div class="space-y-1">
                                             <div class="font-semibold text-primary">
-                                                {{ formatPrice(getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
+                                                {{ formatPrice(getHostingPlanFinalPrice(plan)) }}
                                             </div>
-                                            <div v-if="plan.discount_percent > 0" class="text-xs text-primary">
+                                            <div v-if="!plan.use_bulk_pricing && plan.discount_percent > 0" class="text-xs text-primary">
                                                 Hemat
-                                                {{ formatPrice(plan.selling_price - getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
+                                                {{ formatPrice(plan.selling_price - getHostingPlanFinalPrice(plan)) }}
                                             </div>
                                         </div>
                                     </TableCell>
@@ -330,7 +325,9 @@ const confirmDelete = () => {
                                         <div class="space-y-1 text-xs">
                                             <div>Modal: {{ formatPrice(plan.modal_cost) }}</div>
                                             <div>Maintenance: {{ formatPrice(plan.maintenance_cost) }}</div>
-                                            <div v-if="plan.discount_percent > 0" class="text-primary">{{ plan.discount_percent }}% diskon</div>
+                                            <div v-if="!plan.use_bulk_pricing && plan.discount_percent > 0" class="text-primary">
+                                                {{ plan.discount_percent }}% diskon
+                                            </div>
                                             <div v-if="plan.use_bulk_pricing" class="text-primary">Bulk Pricing</div>
                                         </div>
                                     </TableCell>
@@ -800,7 +797,7 @@ const confirmDelete = () => {
                             <strong>Spesifikasi:</strong> {{ planToDelete?.storage_gb }}GB, {{ planToDelete?.cpu_cores }} CPU,
                             {{ planToDelete?.ram_gb }}GB RAM<br />
                             <strong>Harga Final:</strong>
-                            {{ planToDelete ? formatPrice(getDiscountedPrice(planToDelete.selling_price, planToDelete.discount_percent)) : '' }}<br />
+                            {{ planToDelete ? formatPrice(getHostingPlanFinalPrice(planToDelete)) : '' }}<br />
                             <strong v-if="planToDelete?.discount_percent && planToDelete.discount_percent > 0">Diskon:</strong>
                             {{ planToDelete.discount_percent }}%<br />
                             <strong>Status:</strong> {{ planToDelete?.is_active ? 'Aktif' : 'Nonaktif' }}

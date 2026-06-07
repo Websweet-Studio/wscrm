@@ -60,4 +60,20 @@ class HostingPlan extends Model
     {
         return $query->where('plan_name', $planName);
     }
+
+    public function finalPrice(): float
+    {
+        $base = (float) $this->selling_price;
+
+        if ((bool) $this->use_bulk_pricing) {
+            return $base;
+        }
+
+        $discount = (float) $this->discount_percent;
+        if ($discount <= 0) {
+            return $base;
+        }
+
+        return $base * (1 - ($discount / 100));
+    }
 }

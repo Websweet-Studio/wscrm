@@ -6,7 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\BulkPricingConfig;
 use App\Models\HostingPlan;
 use App\Models\PricingTier;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,15 +23,6 @@ class BulkPricingController extends Controller
         $savedConfigs = BulkPricingConfig::active()->orderBy('name')->get();
         $defaultConfig = BulkPricingConfig::getDefaultConfig();
 
-        // If no tiers exist, create default ones
-        if ($pricingTiers->isEmpty()) {
-            foreach (PricingTier::getDefaultTiers() as $tier) {
-                PricingTier::create($tier);
-            }
-            $pricingTiers = PricingTier::active()->ordered()->get();
-        }
-
-        // Run initial simulation with default config
         $initialSimulation = $this->runSimulation(
             $defaultConfig['base_price_per_gb'],
             $defaultConfig['cost_per_gb'],
@@ -46,42 +41,36 @@ class BulkPricingController extends Controller
         ]);
     }
 
-    public function simulate(Request $request)
+    public function simulate(Request $request): Response
     {
-        $request->validate([
-            'base_price_per_gb' => 'required|numeric|min:0',
-            'cost_per_gb' => 'required|numeric|min:0',
-            'plan_multipliers' => 'required|array',
-            'tier_discounts' => 'required|array',
+        $validated = $request->validate([
+            'base_price_per_gb' => ['required', 'numeric', 'min:0', 'gt:cost_per_gb'],
+            'cost_per_gb' => ['required', 'numeric', 'min:0'],
+            'plan_multipliers' => ['required', 'array', 'min:1'],
+            'plan_multipliers.*' => ['numeric', 'min:0.1', 'max:10'],
+            'tier_discounts' => ['required', 'array', 'min:1'],
+            'tier_discounts.*.storage_gb' => ['required', 'numeric', 'min:0.01'],
+            'tier_discounts.*.discount_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
         ]);
 
+        $planMultipliers = $this->normalizePlanMultipliers($validated['plan_multipliers']);
+        $tierDiscounts = $this->normalizeTierDiscounts($validated['tier_discounts']);
         $simulation = $this->runSimulation(
-            $request->base_price_per_gb,
-            $request->cost_per_gb,
-            $request->plan_multipliers,
-            $request->tier_discounts
+            (float) $validated['base_price_per_gb'],
+            (float) $validated['cost_per_gb'],
+            $planMultipliers,
+            $tierDiscounts
         );
 
         return Inertia::render('Admin/BulkPricing/Index', [
-            'pricingTiers' => PricingTier::orderBy('sort_order')->get(),
+            'pricingTiers' => PricingTier::active()->ordered()->get(),
             'hostingPlans' => HostingPlan::all(),
-            'savedConfigs' => BulkPricingConfig::all(),
+            'savedConfigs' => BulkPricingConfig::active()->orderBy('name')->get(),
             'defaultConfig' => [
-                'base_price_per_gb' => 150000,
-                'cost_per_gb' => 112500,
-                'plan_multipliers' => [
-                    'basic' => 1.0,
-                ],
-                'tier_discounts' => [
-                    ['storage_gb' => 1, 'discount_percentage' => 0.00],
-                    ['storage_gb' => 3, 'discount_percentage' => 3.00],
-                    ['storage_gb' => 5, 'discount_percentage' => 7.00],
-                    ['storage_gb' => 10, 'discount_percentage' => 12.00],
-                    ['storage_gb' => 20, 'discount_percentage' => 20.00],
-                    ['storage_gb' => 50, 'discount_percentage' => 30.00],
-                    ['storage_gb' => 100, 'discount_percentage' => 40.00],
-                    ['storage_gb' => 200, 'discount_percentage' => 45.00],
-                ],
+                'base_price_per_gb' => (float) $validated['base_price_per_gb'],
+                'cost_per_gb' => (float) $validated['cost_per_gb'],
+                'plan_multipliers' => $planMultipliers,
+                'tier_discounts' => $tierDiscounts,
             ],
             'simulationResults' => [
                 'simulation' => $simulation,
@@ -89,66 +78,88 @@ class BulkPricingController extends Controller
         ]);
     }
 
-    public function apply(Request $request)
+    public function apply(Request $request): RedirectResponse
     {
-        $request->validate([
-            'base_price_per_gb' => 'required|numeric|min:0',
-            'cost_per_gb' => 'required|numeric|min:0',
-            'plan_multipliers' => 'required|array',
-            'tier_discounts' => 'required|array',
-            'plan_ids' => 'required|array',
+        $validated = $request->validate([
+            'base_price_per_gb' => ['required', 'numeric', 'min:0', 'gt:cost_per_gb'],
+            'cost_per_gb' => ['required', 'numeric', 'min:0'],
+            'plan_multipliers' => ['required', 'array', 'min:1'],
+            'plan_multipliers.*' => ['numeric', 'min:0.1', 'max:10'],
+            'tier_discounts' => ['required', 'array', 'min:1'],
+            'tier_discounts.*.storage_gb' => ['required', 'numeric', 'min:0.01'],
+            'tier_discounts.*.discount_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
+            'plan_ids' => ['required', 'array', 'min:1'],
+            'plan_ids.*' => ['integer', 'distinct', 'exists:hosting_plans,id'],
         ]);
 
-        $basePricePerGb = $request->base_price_per_gb;
-        $costPerGb = $request->cost_per_gb;
-        $planMultipliers = $request->plan_multipliers;
-        $tierDiscounts = $request->tier_discounts;
-        $planIds = $request->plan_ids;
+        $basePricePerGb = (float) $validated['base_price_per_gb'];
+        $costPerGb = (float) $validated['cost_per_gb'];
 
-        // Update pricing tiers
-        PricingTier::truncate();
-        foreach ($tierDiscounts as $index => $tierData) {
-            PricingTier::create([
-                'storage_gb' => $tierData['storage_gb'],
-                'discount_percentage' => $tierData['discount_percentage'],
-                'sort_order' => $index + 1,
-                'is_active' => true,
-            ]);
-        }
+        $planMultipliers = $this->normalizePlanMultipliers($validated['plan_multipliers']);
+        $tierDiscounts = $this->normalizeTierDiscounts($validated['tier_discounts']);
+        $planIds = array_values(array_unique(array_map('intval', $validated['plan_ids'])));
 
-        // Update hosting plans
-        foreach ($planIds as $planId) {
-            $plan = HostingPlan::findOrFail($planId);
-            $planType = strtolower($plan->plan_name);
-            $multiplier = $planMultipliers[$planType] ?? 1.0;
-
-            // Find discount for this plan's storage
-            $discount = 0;
-            foreach ($tierDiscounts as $tierData) {
-                if ($tierData['storage_gb'] == $plan->storage_gb) {
-                    $discount = $tierData['discount_percentage'];
-                    break;
-                }
+        $result = DB::transaction(function () use ($basePricePerGb, $costPerGb, $planMultipliers, $tierDiscounts, $planIds) {
+            PricingTier::query()->delete();
+            foreach ($tierDiscounts as $index => $tierData) {
+                PricingTier::create([
+                    'storage_gb' => (int) round((float) $tierData['storage_gb']),
+                    'discount_percentage' => (float) $tierData['discount_percentage'],
+                    'sort_order' => $index + 1,
+                    'is_active' => true,
+                ]);
             }
 
-            // Calculate new price
-            $pricePerGb = $basePricePerGb * $multiplier;
-            $discountedPricePerGb = $pricePerGb * (1 - $discount / 100);
-            $newPrice = $discountedPricePerGb * $plan->storage_gb;
+            $plans = HostingPlan::whereIn('id', $planIds)->get()->keyBy('id');
 
-            $plan->update([
-                'selling_price' => $newPrice,
-                'base_price_per_gb' => $basePricePerGb,
-                'plan_multiplier' => $multiplier,
-                'cost_per_gb' => $costPerGb,
-                'use_bulk_pricing' => true,
-            ]);
+            $updated = 0;
+            $skipped = [];
+            foreach ($planIds as $planId) {
+                $plan = $plans->get($planId);
+                if (! $plan) {
+                    continue;
+                }
+
+                $planType = strtolower((string) $plan->plan_name);
+                $multiplier = $planMultipliers[$planType] ?? null;
+                if ($multiplier === null) {
+                    $skipped[] = "{$plan->plan_name} (#{$plan->id})";
+                    continue;
+                }
+
+                $storageGb = (float) $plan->storage_gb;
+                $discount = $this->determineDiscountForStorage($storageGb, $tierDiscounts);
+
+                $pricePerGb = $basePricePerGb * (float) $multiplier;
+                $discountedPricePerGb = $pricePerGb * (1 - $discount / 100);
+                $newPrice = $discountedPricePerGb * $storageGb;
+
+                $plan->update([
+                    'selling_price' => $newPrice,
+                    'base_price_per_gb' => $basePricePerGb,
+                    'plan_multiplier' => (float) $multiplier,
+                    'cost_per_gb' => $costPerGb,
+                    'use_bulk_pricing' => true,
+                ]);
+
+                $updated++;
+            }
+
+            return [
+                'updated' => $updated,
+                'skipped' => $skipped,
+            ];
+        });
+
+        $message = "{$result['updated']} hosting plan berhasil diupdate.";
+        if (! empty($result['skipped'])) {
+            $message .= ' Dilewati (multiplier tidak tersedia): '.implode(', ', array_slice($result['skipped'], 0, 10)).(count($result['skipped']) > 10 ? '…' : '');
         }
 
-        return redirect()->back()->with('success', 'Bulk pricing berhasil diterapkan!');
+        return redirect()->back()->with('success', $message);
     }
 
-    public function saveConfig(Request $request)
+    public function saveConfig(Request $request): RedirectResponse
     {
         try {
             $validated = $request->validate([
@@ -188,7 +199,7 @@ class BulkPricingController extends Controller
             $tierDiscounts = collect($validated['tier_discounts'])->sortBy('storage_gb')->values()->all();
             $validated['tier_discounts'] = $tierDiscounts;
 
-            \DB::transaction(function () use ($validated) {
+            DB::transaction(function () use ($validated) {
                 // If setting as default, remove default from others
                 if ($validated['is_default'] ?? false) {
                     BulkPricingConfig::where('is_default', true)->update(['is_default' => false]);
@@ -209,17 +220,17 @@ class BulkPricingController extends Controller
             return redirect()->back()->with('success', 'Konfigurasi berhasil disimpan!');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Bulk pricing config validation failed', [
+            Log::error('Bulk pricing config validation failed', [
                 'errors' => $e->errors(),
-                'input' => $request->all(),
+                'input_keys' => array_keys($request->all()),
             ]);
 
             return redirect()->back()->withErrors($e->errors())->withInput();
 
         } catch (\Exception $e) {
-            \Log::error('Failed to save bulk pricing config', [
+            Log::error('Failed to save bulk pricing config', [
                 'error' => $e->getMessage(),
-                'input' => $request->all(),
+                'input_keys' => array_keys($request->all()),
                 'trace' => $e->getTraceAsString(),
             ]);
 
@@ -229,7 +240,7 @@ class BulkPricingController extends Controller
         }
     }
 
-    public function loadConfig($id)
+    public function loadConfig($id): JsonResponse
     {
         $config = BulkPricingConfig::findOrFail($id);
 
@@ -241,7 +252,7 @@ class BulkPricingController extends Controller
         ]);
     }
 
-    public function deleteConfig($id)
+    public function deleteConfig($id): RedirectResponse
     {
         $config = BulkPricingConfig::findOrFail($id);
 
@@ -252,6 +263,60 @@ class BulkPricingController extends Controller
         $config->delete();
 
         return redirect()->back()->with('success', 'Konfigurasi berhasil dihapus!');
+    }
+
+    private function normalizePlanMultipliers(array $planMultipliers): array
+    {
+        $normalized = [];
+        foreach ($planMultipliers as $key => $value) {
+            $normalizedKey = strtolower(trim((string) $key));
+            $normalized[$normalizedKey] = (float) $value;
+        }
+
+        return $normalized;
+    }
+
+    private function normalizeTierDiscounts(array $tierDiscounts): array
+    {
+        $normalized = collect($tierDiscounts)
+            ->map(function ($tier) {
+                return [
+                    'storage_gb' => (float) ($tier['storage_gb'] ?? 0),
+                    'discount_percentage' => (float) ($tier['discount_percentage'] ?? 0),
+                ];
+            })
+            ->filter(fn ($tier) => $tier['storage_gb'] > 0)
+            ->sortBy('storage_gb')
+            ->values()
+            ->all();
+
+        if (empty($normalized)) {
+            return [
+                ['storage_gb' => 1, 'discount_percentage' => 0.0],
+            ];
+        }
+
+        return $normalized;
+    }
+
+    private function determineDiscountForStorage(float $storageGb, array $tierDiscounts): float
+    {
+        $discount = 0.0;
+        foreach ($tierDiscounts as $tierData) {
+            $tierStorage = (float) ($tierData['storage_gb'] ?? 0);
+            if ($tierStorage <= 0) {
+                continue;
+            }
+
+            if ($tierStorage <= $storageGb) {
+                $discount = (float) ($tierData['discount_percentage'] ?? 0);
+                continue;
+            }
+
+            break;
+        }
+
+        return $discount;
     }
 
     private function runSimulation(float $basePricePerGb, float $costPerGb, array $planMultipliers, array $tierDiscounts): array
@@ -272,23 +337,18 @@ class BulkPricingController extends Controller
                 continue;
             }
 
-            // Find matching discount tier for this plan's storage
-            $discount = 0;
-            foreach ($tierDiscounts as $tierData) {
-                if ($tierData['storage_gb'] <= $plan->storage_gb) {
-                    $discount = $tierData['discount_percentage'];
-                }
-            }
+            $storageGb = (float) $plan->storage_gb;
+            $discount = $this->determineDiscountForStorage($storageGb, $tierDiscounts);
 
             // Calculate new price
             $pricePerGb = $basePricePerGb * $multiplier;
             $discountedPricePerGb = $pricePerGb * (1 - $discount / 100);
-            $newTotalPrice = $discountedPricePerGb * $plan->storage_gb;
+            $newTotalPrice = $discountedPricePerGb * $storageGb;
 
             // Calculate profit
-            $totalCost = $costPerGb * $plan->storage_gb;
+            $totalCost = $costPerGb * $storageGb;
             $profit = $newTotalPrice - $totalCost;
-            $profitPerGb = $profit / $plan->storage_gb;
+            $profitPerGb = $profit / $storageGb;
             $profitMargin = $totalCost > 0 ? ($profit / $totalCost) * 100 : 0;
 
             if (! isset($simulation[$planType])) {
@@ -298,7 +358,7 @@ class BulkPricingController extends Controller
             $simulation[$planType][] = [
                 'plan_id' => $plan->id,
                 'plan_name' => $plan->plan_name,
-                'storage_gb' => $plan->storage_gb,
+                'storage_gb' => $storageGb,
                 'cpu_cores' => $plan->cpu_cores,
                 'ram_gb' => $plan->ram_gb,
                 'current_price' => $plan->selling_price,

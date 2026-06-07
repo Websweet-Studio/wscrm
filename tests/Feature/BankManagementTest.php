@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Bank;
+use App\Models\PaymentAccount;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -14,158 +14,164 @@ beforeEach(function () {
 });
 
 test('admin can view banks index page', function () {
-    Bank::factory()->count(3)->create();
+    PaymentAccount::query()->create([
+        'type' => 'bank',
+        'name' => 'Bank A',
+        'account_number' => '111',
+        'account_name' => 'A',
+        'is_active' => true,
+        'sort' => 0,
+    ]);
+    PaymentAccount::query()->create([
+        'type' => 'ewallet',
+        'name' => 'E-Wallet B',
+        'account_number' => '222',
+        'account_name' => null,
+        'is_active' => true,
+        'sort' => 0,
+    ]);
+    PaymentAccount::query()->create([
+        'type' => 'bank',
+        'name' => 'Bank C',
+        'account_number' => '333',
+        'account_name' => 'C',
+        'is_active' => false,
+        'sort' => 1,
+    ]);
 
     $response = $this->actingAs($this->admin)
-        ->get('/admin/banks');
+        ->get('/admin/payments');
 
     $response->assertStatus(200)
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Banks/Index')
-            ->has('banks.data', 3)
+            ->has('payments.data', 3)
         );
 });
 
 test('admin can create a new bank', function () {
-    $bankData = [
-        'bank_name' => 'Test Bank',
-        'bank_code' => 'TESTBANK',
+    $payload = [
+        'type' => 'bank',
+        'name' => 'Test Bank',
         'account_number' => '1234567890',
         'account_name' => 'Test Account',
-        'bank_type' => 'local',
-        'admin_fee' => 2500.00,
         'is_active' => true,
     ];
 
     $response = $this->actingAs($this->admin)
         ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
-        ->post('/admin/banks', $bankData);
+        ->post('/admin/payments', $payload);
 
-    $response->assertRedirect('/admin/banks');
+    $response->assertRedirect('/admin/payments');
 
-    $this->assertDatabaseHas('banks', [
-        'bank_name' => 'Test Bank',
-        'bank_code' => 'TESTBANK',
+    $this->assertDatabaseHas('payment_accounts', [
+        'type' => 'bank',
+        'name' => 'Test Bank',
         'account_number' => '1234567890',
         'account_name' => 'Test Account',
-        'bank_type' => 'local',
         'is_active' => true,
     ]);
 });
 
-test('admin can view a specific bank', function () {
-    $bank = Bank::factory()->create();
-
-    $response = $this->actingAs($this->admin)
-        ->get("/admin/banks/{$bank->id}");
-
-    $response->assertStatus(200)
-        ->assertInertia(fn ($page) => $page
-            ->component('Admin/Banks/Show')
-            ->where('bank.id', $bank->id)
-        );
-});
-
-test('admin can update a bank', function () {
-    $bank = Bank::factory()->create([
-        'bank_name' => 'Old Bank Name',
+test('admin can update a payment account', function () {
+    $payment = PaymentAccount::query()->create([
+        'type' => 'bank',
+        'name' => 'Old Name',
+        'account_number' => '123',
+        'account_name' => 'Old Account',
         'is_active' => true,
+        'sort' => 0,
     ]);
 
     $updateData = [
-        'bank_name' => 'Updated Bank Name',
-        'bank_code' => $bank->bank_code,
-        'account_number' => $bank->account_number,
-        'account_name' => $bank->account_name,
-        'bank_type' => $bank->bank_type,
-        'admin_fee' => $bank->admin_fee,
+        'type' => 'bank',
+        'name' => 'Updated Name',
+        'account_number' => '999',
+        'account_name' => 'Updated Account',
         'is_active' => false,
     ];
 
     $response = $this->actingAs($this->admin)
         ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
-        ->put("/admin/banks/{$bank->id}", $updateData);
+        ->put("/admin/payments/{$payment->id}", $updateData);
 
-    $response->assertRedirect('/admin/banks');
+    $response->assertRedirect('/admin/payments');
 
-    $this->assertDatabaseHas('banks', [
-        'id' => $bank->id,
-        'bank_name' => 'Updated Bank Name',
+    $this->assertDatabaseHas('payment_accounts', [
+        'id' => $payment->id,
+        'name' => 'Updated Name',
+        'account_number' => '999',
         'is_active' => false,
     ]);
 });
 
-test('admin can delete a bank', function () {
-    $bank = Bank::factory()->create();
-
-    $response = $this->actingAs($this->admin)
-        ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
-        ->delete("/admin/banks/{$bank->id}");
-
-    $response->assertRedirect('/admin/banks');
-
-    $this->assertDatabaseMissing('banks', [
-        'id' => $bank->id,
-    ]);
-});
-
-test('bank code must be unique', function () {
-    Bank::factory()->create(['bank_code' => 'DUPLICATE']);
-
-    $bankData = [
-        'bank_name' => 'Another Bank',
-        'bank_code' => 'DUPLICATE',
-        'account_number' => '9876543210',
-        'account_name' => 'Another Account',
-        'bank_type' => 'local',
-        'admin_fee' => 2500.00,
+test('admin can delete a payment account', function () {
+    $payment = PaymentAccount::query()->create([
+        'type' => 'bank',
+        'name' => 'To Delete',
+        'account_number' => '123',
+        'account_name' => 'Delete',
         'is_active' => true,
-    ];
+        'sort' => 0,
+    ]);
 
     $response = $this->actingAs($this->admin)
         ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
-        ->post('/admin/banks', $bankData);
+        ->delete("/admin/payments/{$payment->id}");
 
-    $response->assertSessionHasErrors(['bank_code']);
+    $response->assertRedirect('/admin/payments');
+
+    $this->assertDatabaseMissing('payment_accounts', [
+        'id' => $payment->id,
+    ]);
 });
 
-test('bank creation requires all mandatory fields', function () {
+test('payment creation requires mandatory fields', function () {
     $response = $this->actingAs($this->admin)
         ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
-        ->post('/admin/banks', []);
+        ->post('/admin/payments', []);
 
     $response->assertSessionHasErrors([
-        'bank_name',
-        'bank_code',
-        'account_number',
-        'account_name',
-        'bank_type',
+        'type',
+        'name',
     ]);
 });
 
-test('admin can toggle bank status', function () {
-    $bank = Bank::factory()->create(['is_active' => true]);
+test('admin can toggle payment status', function () {
+    $payment = PaymentAccount::query()->create([
+        'type' => 'bank',
+        'name' => 'Toggle',
+        'account_number' => '123',
+        'account_name' => 'Toggle',
+        'is_active' => true,
+        'sort' => 0,
+    ]);
 
     $response = $this->actingAs($this->admin)
         ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
-        ->patch("/admin/banks/{$bank->id}/toggle-status");
+        ->patch("/admin/payments/{$payment->id}/toggle-status");
 
     $response->assertRedirect();
 
-    $bank->refresh();
-    expect($bank->is_active)->toBeFalse();
+    $payment->refresh();
+    expect($payment->is_active)->toBeFalse();
 });
 
 test('unauthenticated users cannot access bank management', function () {
-    $response = $this->get('/admin/banks');
+    $response = $this->get('/admin/payments');
 
     $response->assertRedirect('/login');
 });
 
 test('bank can have associated invoices', function () {
-    $bank = Bank::factory()->create();
+    $payment = PaymentAccount::query()->create([
+        'type' => 'bank',
+        'name' => 'Rel',
+        'account_number' => '123',
+        'account_name' => 'Rel',
+        'is_active' => true,
+        'sort' => 0,
+    ]);
 
-    // This test assumes Invoice model exists and has bank_id relationship
-    // You may need to adjust based on your actual Invoice model implementation
-    expect($bank->invoices())->toBeInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class);
+    expect($payment->invoices())->toBeInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class);
 });

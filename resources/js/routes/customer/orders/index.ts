@@ -236,7 +236,7 @@ show.head = (args: { order: number | { id: number } } | [order: number | { id: n
     show.form = showForm
 /**
 * @see \App\Http\Controllers\OrderController::destroy
- * @see app/Http/Controllers/OrderController.php:138
+ * @see app/Http/Controllers/OrderController.php:133
  * @route '/customer/orders/{order}'
  */
 export const destroy = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -251,7 +251,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\OrderController::destroy
- * @see app/Http/Controllers/OrderController.php:138
+ * @see app/Http/Controllers/OrderController.php:133
  * @route '/customer/orders/{order}'
  */
 destroy.url = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -284,7 +284,7 @@ destroy.url = (args: { order: number | { id: number } } | [order: number | { id:
 
 /**
 * @see \App\Http\Controllers\OrderController::destroy
- * @see app/Http/Controllers/OrderController.php:138
+ * @see app/Http/Controllers/OrderController.php:133
  * @route '/customer/orders/{order}'
  */
 destroy.delete = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -294,7 +294,7 @@ destroy.delete = (args: { order: number | { id: number } } | [order: number | { 
 
     /**
 * @see \App\Http\Controllers\OrderController::destroy
- * @see app/Http/Controllers/OrderController.php:138
+ * @see app/Http/Controllers/OrderController.php:133
  * @route '/customer/orders/{order}'
  */
     const destroyForm = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -309,7 +309,7 @@ destroy.delete = (args: { order: number | { id: number } } | [order: number | { 
 
             /**
 * @see \App\Http\Controllers\OrderController::destroy
- * @see app/Http/Controllers/OrderController.php:138
+ * @see app/Http/Controllers/OrderController.php:133
  * @route '/customer/orders/{order}'
  */
         destroyForm.delete = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

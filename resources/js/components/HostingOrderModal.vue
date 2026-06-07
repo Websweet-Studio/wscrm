@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 // Using native HTML elements instead of custom components
 import { Separator } from '@/components/ui/separator';
+import { getHostingPlanFinalPrice } from '@/lib/utils';
 import { router } from '@inertiajs/vue3';
 import { Check, HardDrive, Server, X } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
@@ -20,6 +21,7 @@ interface HostingPlan {
     bandwidth: string;
     selling_price: number;
     discount_percent: number;
+    use_bulk_pricing?: boolean;
     features: string[];
     is_active: boolean;
 }
@@ -64,10 +66,6 @@ const formatPrice = (price: number) => {
     }).format(price);
 };
 
-const getDiscountedPrice = (price: number, discount: number) => {
-    return price * (1 - discount / 100);
-};
-
 // Check if hosting qualifies for bundle discount (2GB+ storage)
 const qualifiesForDiscount = computed(() => {
     return props.hostingPlan.storage_gb >= 2;
@@ -75,7 +73,7 @@ const qualifiesForDiscount = computed(() => {
 
 // Calculate hosting price with bundle discount
 const hostingPrice = computed(() => {
-    const originalPrice = getDiscountedPrice(Number(props.hostingPlan.selling_price), props.hostingPlan.discount_percent);
+    const originalPrice = getHostingPlanFinalPrice(props.hostingPlan);
     if (qualifiesForDiscount.value && domainOption.value === 'new') {
         return originalPrice * 0.9; // 10% discount
     }
@@ -99,7 +97,7 @@ const totalPrice = computed(() => {
 // Calculate savings
 const bundleSavings = computed(() => {
     if (!qualifiesForDiscount.value || domainOption.value !== 'new') return 0;
-    const originalHostingPrice = getDiscountedPrice(Number(props.hostingPlan.selling_price), props.hostingPlan.discount_percent);
+    const originalHostingPrice = getHostingPlanFinalPrice(props.hostingPlan);
     return originalHostingPrice * 0.1; // 10% of hosting price
 });
 
@@ -220,13 +218,16 @@ const handleSubmit = async () => {
                                 <div class="text-right">
                                     <div v-if="bundleSavings > 0" class="text-xs text-gray-500">
                                         <span class="line-through">{{
-                                            formatPrice(getDiscountedPrice(hostingPlan.selling_price, hostingPlan.discount_percent))
+                                            formatPrice(getHostingPlanFinalPrice(hostingPlan))
                                         }}</span>
                                     </div>
                                     <div class="text-lg font-bold text-blue-600">{{ formatPrice(hostingPrice) }}</div>
                                 </div>
                                 <div class="flex flex-col gap-1">
-                                    <Badge v-if="hostingPlan.discount_percent > 0" class="bg-red-500 px-2 py-0.5 text-xs text-white">
+                                    <Badge
+                                        v-if="!hostingPlan.use_bulk_pricing && hostingPlan.discount_percent > 0"
+                                        class="bg-red-500 px-2 py-0.5 text-xs text-white"
+                                    >
                                         {{ hostingPlan.discount_percent }}% OFF
                                     </Badge>
                                     <Badge v-if="qualifiesForDiscount && domainOption === 'new'" class="bg-green-500 px-2 py-0.5 text-xs text-white">

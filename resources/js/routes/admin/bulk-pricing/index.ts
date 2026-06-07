@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::index
- * @see app/Http/Controllers/Admin/BulkPricingController.php:15
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:19
  * @route '/admin/bulk-pricing'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::index
- * @see app/Http/Controllers/Admin/BulkPricingController.php:15
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:19
  * @route '/admin/bulk-pricing'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::index
- * @see app/Http/Controllers/Admin/BulkPricingController.php:15
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:19
  * @route '/admin/bulk-pricing'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::index
- * @see app/Http/Controllers/Admin/BulkPricingController.php:15
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:19
  * @route '/admin/bulk-pricing'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::index
- * @see app/Http/Controllers/Admin/BulkPricingController.php:15
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:19
  * @route '/admin/bulk-pricing'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::index
- * @see app/Http/Controllers/Admin/BulkPricingController.php:15
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:19
  * @route '/admin/bulk-pricing'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::index
- * @see app/Http/Controllers/Admin/BulkPricingController.php:15
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:19
  * @route '/admin/bulk-pricing'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::simulate
- * @see app/Http/Controllers/Admin/BulkPricingController.php:49
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:44
  * @route '/admin/bulk-pricing/simulate'
  */
 export const simulate = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -94,7 +94,7 @@ simulate.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::simulate
- * @see app/Http/Controllers/Admin/BulkPricingController.php:49
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:44
  * @route '/admin/bulk-pricing/simulate'
  */
 simulate.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ simulate.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::simulate
- * @see app/Http/Controllers/Admin/BulkPricingController.php:49
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:44
  * @route '/admin/bulk-pricing/simulate'
  */
 simulate.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -113,7 +113,7 @@ simulate.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::simulate
- * @see app/Http/Controllers/Admin/BulkPricingController.php:49
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:44
  * @route '/admin/bulk-pricing/simulate'
  */
     const simulateForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -123,7 +123,7 @@ simulate.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::simulate
- * @see app/Http/Controllers/Admin/BulkPricingController.php:49
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:44
  * @route '/admin/bulk-pricing/simulate'
  */
         simulateForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -134,7 +134,7 @@ simulate.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     simulate.form = simulateForm
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::apply
- * @see app/Http/Controllers/Admin/BulkPricingController.php:92
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:81
  * @route '/admin/bulk-pricing/apply'
  */
 export const apply = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -149,7 +149,7 @@ apply.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::apply
- * @see app/Http/Controllers/Admin/BulkPricingController.php:92
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:81
  * @route '/admin/bulk-pricing/apply'
  */
 apply.url = (options?: RouteQueryOptions) => {
@@ -158,7 +158,7 @@ apply.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::apply
- * @see app/Http/Controllers/Admin/BulkPricingController.php:92
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:81
  * @route '/admin/bulk-pricing/apply'
  */
 apply.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -168,7 +168,7 @@ apply.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::apply
- * @see app/Http/Controllers/Admin/BulkPricingController.php:92
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:81
  * @route '/admin/bulk-pricing/apply'
  */
     const applyForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -178,7 +178,7 @@ apply.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::apply
- * @see app/Http/Controllers/Admin/BulkPricingController.php:92
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:81
  * @route '/admin/bulk-pricing/apply'
  */
         applyForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -189,7 +189,7 @@ apply.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     apply.form = applyForm
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::saveConfig
- * @see app/Http/Controllers/Admin/BulkPricingController.php:151
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:162
  * @route '/admin/bulk-pricing/save-config'
  */
 export const saveConfig = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -204,7 +204,7 @@ saveConfig.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::saveConfig
- * @see app/Http/Controllers/Admin/BulkPricingController.php:151
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:162
  * @route '/admin/bulk-pricing/save-config'
  */
 saveConfig.url = (options?: RouteQueryOptions) => {
@@ -213,7 +213,7 @@ saveConfig.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::saveConfig
- * @see app/Http/Controllers/Admin/BulkPricingController.php:151
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:162
  * @route '/admin/bulk-pricing/save-config'
  */
 saveConfig.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -223,7 +223,7 @@ saveConfig.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::saveConfig
- * @see app/Http/Controllers/Admin/BulkPricingController.php:151
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:162
  * @route '/admin/bulk-pricing/save-config'
  */
     const saveConfigForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -233,7 +233,7 @@ saveConfig.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::saveConfig
- * @see app/Http/Controllers/Admin/BulkPricingController.php:151
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:162
  * @route '/admin/bulk-pricing/save-config'
  */
         saveConfigForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -244,7 +244,7 @@ saveConfig.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     saveConfig.form = saveConfigForm
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::loadConfig
- * @see app/Http/Controllers/Admin/BulkPricingController.php:232
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:243
  * @route '/admin/bulk-pricing/load-config/{id}'
  */
 export const loadConfig = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -259,7 +259,7 @@ loadConfig.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::loadConfig
- * @see app/Http/Controllers/Admin/BulkPricingController.php:232
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:243
  * @route '/admin/bulk-pricing/load-config/{id}'
  */
 loadConfig.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -287,7 +287,7 @@ loadConfig.url = (args: { id: string | number } | [id: string | number ] | strin
 
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::loadConfig
- * @see app/Http/Controllers/Admin/BulkPricingController.php:232
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:243
  * @route '/admin/bulk-pricing/load-config/{id}'
  */
 loadConfig.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -296,7 +296,7 @@ loadConfig.get = (args: { id: string | number } | [id: string | number ] | strin
 })
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::loadConfig
- * @see app/Http/Controllers/Admin/BulkPricingController.php:232
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:243
  * @route '/admin/bulk-pricing/load-config/{id}'
  */
 loadConfig.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -306,7 +306,7 @@ loadConfig.head = (args: { id: string | number } | [id: string | number ] | stri
 
     /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::loadConfig
- * @see app/Http/Controllers/Admin/BulkPricingController.php:232
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:243
  * @route '/admin/bulk-pricing/load-config/{id}'
  */
     const loadConfigForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -316,7 +316,7 @@ loadConfig.head = (args: { id: string | number } | [id: string | number ] | stri
 
             /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::loadConfig
- * @see app/Http/Controllers/Admin/BulkPricingController.php:232
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:243
  * @route '/admin/bulk-pricing/load-config/{id}'
  */
         loadConfigForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -325,7 +325,7 @@ loadConfig.head = (args: { id: string | number } | [id: string | number ] | stri
         })
             /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::loadConfig
- * @see app/Http/Controllers/Admin/BulkPricingController.php:232
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:243
  * @route '/admin/bulk-pricing/load-config/{id}'
  */
         loadConfigForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -341,7 +341,7 @@ loadConfig.head = (args: { id: string | number } | [id: string | number ] | stri
     loadConfig.form = loadConfigForm
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::deleteConfig
- * @see app/Http/Controllers/Admin/BulkPricingController.php:244
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:255
  * @route '/admin/bulk-pricing/delete-config/{id}'
  */
 export const deleteConfig = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -356,7 +356,7 @@ deleteConfig.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::deleteConfig
- * @see app/Http/Controllers/Admin/BulkPricingController.php:244
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:255
  * @route '/admin/bulk-pricing/delete-config/{id}'
  */
 deleteConfig.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -384,7 +384,7 @@ deleteConfig.url = (args: { id: string | number } | [id: string | number ] | str
 
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::deleteConfig
- * @see app/Http/Controllers/Admin/BulkPricingController.php:244
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:255
  * @route '/admin/bulk-pricing/delete-config/{id}'
  */
 deleteConfig.delete = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -394,7 +394,7 @@ deleteConfig.delete = (args: { id: string | number } | [id: string | number ] | 
 
     /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::deleteConfig
- * @see app/Http/Controllers/Admin/BulkPricingController.php:244
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:255
  * @route '/admin/bulk-pricing/delete-config/{id}'
  */
     const deleteConfigForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -409,7 +409,7 @@ deleteConfig.delete = (args: { id: string | number } | [id: string | number ] | 
 
             /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::deleteConfig
- * @see app/Http/Controllers/Admin/BulkPricingController.php:244
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:255
  * @route '/admin/bulk-pricing/delete-config/{id}'
  */
         deleteConfigForm.delete = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

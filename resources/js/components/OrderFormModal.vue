@@ -4,6 +4,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { getHostingPlanFinalPrice } from '@/lib/utils';
 import { Check, ChevronsUpDown, Plus, Trash2, X } from 'lucide-vue-next';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
@@ -21,6 +22,7 @@ interface HostingPlan {
     cpu_cores: number;
     ram_gb: number;
     discount_percent: number;
+    use_bulk_pricing?: boolean;
 }
 
 interface DomainPrice {
@@ -377,7 +379,7 @@ const getPlansForType = (type: string) => {
     switch (type) {
         case 'hosting':
             return props.hostingPlans.map((plan) => {
-                const discountedPrice = plan.selling_price * (1 - plan.discount_percent / 100);
+                const discountedPrice = getHostingPlanFinalPrice(plan);
                 return {
                     id: plan.id,
                     name: `${plan.plan_name} (${plan.storage_gb}GB, ${plan.cpu_cores} CPU, ${plan.ram_gb}GB RAM) - ${formatPrice(discountedPrice)}`,

@@ -2,6 +2,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getHostingPlanFinalPrice } from '@/lib/utils';
 import { Check, Globe, Server, ShoppingCart, X } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
@@ -14,6 +15,7 @@ interface HostingPlan {
     bandwidth: string;
     selling_price: number;
     discount_percent: number;
+    use_bulk_pricing?: boolean;
     features: string[];
     is_active: boolean;
 }
@@ -76,13 +78,9 @@ const formatPrice = (price: number) => {
     }).format(price);
 };
 
-const getDiscountedPrice = (price: number, discount: number) => {
-    return price * (1 - discount / 100);
-};
-
 const bundlePrice = computed(() => {
     if (!selectedHostingPlan.value) return props.domainPrice.selling_price;
-    const hostingPrice = getDiscountedPrice(selectedHostingPlan.value.selling_price, selectedHostingPlan.value.discount_percent);
+    const hostingPrice = getHostingPlanFinalPrice(selectedHostingPlan.value);
     return hostingPrice + props.domainPrice.selling_price;
 });
 
@@ -171,7 +169,7 @@ const handleSelectDomainOnly = () => {
                                 >
                                     <option v-for="plan in hostingPlans" :key="plan.id" :value="plan.id.toString()">
                                         {{ plan.plan_name }} - {{ plan.storage_gb }}GB -
-                                        {{ formatPrice(getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
+                                        {{ formatPrice(getHostingPlanFinalPrice(plan)) }}
                                     </option>
                                 </select>
                             </div>
@@ -187,7 +185,7 @@ const handleSelectDomainOnly = () => {
                                         <span class="text-gray-600">
                                             {{
                                                 formatPrice(
-                                                    getDiscountedPrice(selectedHostingPlan.selling_price, selectedHostingPlan.discount_percent),
+                                                    getHostingPlanFinalPrice(selectedHostingPlan),
                                                 )
                                             }}
                                         </span>

@@ -20,6 +20,25 @@ export function formatPrice(price: number | string, currency: string = 'IDR'): s
     }).format(numPrice);
 }
 
+export function getHostingPlanFinalPrice(plan: {
+    selling_price: number | string;
+    discount_percent?: number | string | null;
+    use_bulk_pricing?: boolean | null;
+}): number {
+    const base = typeof plan.selling_price === 'string' ? parseFloat(plan.selling_price) : plan.selling_price;
+    if (isNaN(base)) return 0;
+
+    if (plan.use_bulk_pricing) {
+        return base;
+    }
+
+    const discount = plan.discount_percent ?? 0;
+    const discountNumber = typeof discount === 'string' ? parseFloat(discount) : discount;
+    const safeDiscount = isNaN(discountNumber) ? 0 : discountNumber;
+
+    return base * (1 - safeDiscount / 100);
+}
+
 export function formatDate(date: string | Date, format: string = 'short'): string {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
 

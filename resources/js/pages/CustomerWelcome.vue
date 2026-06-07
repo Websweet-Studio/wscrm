@@ -9,6 +9,7 @@ import { Link } from '@inertiajs/vue3';
 import { Calculator, Globe, Server, Shield, Users } from 'lucide-vue-next';
 import { usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import { getHostingPlanFinalPrice } from '@/lib/utils';
 
 interface DomainPrice {
     id: number;
@@ -29,6 +30,7 @@ interface HostingPlan {
     bandwidth: string;
     selling_price: number;
     discount_percent: number;
+    use_bulk_pricing?: boolean;
     features: string[];
     is_active: boolean;
 }
@@ -129,9 +131,7 @@ const calculateTotal = computed(() => {
     }
 
     if (selectedHostingPlan.value) {
-        const hostingPrice = getHostingPrice(selectedHostingPlan.value);
-        const discount = Number(selectedHostingPlan.value.discount_percent) || 0;
-        total += hostingPrice * (1 - discount / 100);
+        total += getHostingPlanFinalPrice(selectedHostingPlan.value);
     }
 
     selectedServicesList.value.forEach((service) => {
@@ -170,7 +170,7 @@ const getWhatsAppUrl = () => {
     }
     
     if (selectedHostingPlan.value) {
-        const hostingPrice = getHostingPrice(selectedHostingPlan.value) * (1 - (Number(selectedHostingPlan.value.discount_percent) || 0) / 100);
+        const hostingPrice = getHostingPlanFinalPrice(selectedHostingPlan.value);
         message += `\n• Hosting: ${selectedHostingPlan.value.plan_name} (${formatPrice(hostingPrice)})`;
     }
     
@@ -255,7 +255,7 @@ const getWhatsAppUrl = () => {
                                             >
                                                 <option :value="null" disabled>Pilih paket hosting</option>
                                                 <option v-for="plan in filteredHostingPlans" :key="plan.id" :value="plan.id">
-                                                    {{ plan.plan_name }} | {{ plan.storage_gb }}GB | {{ plan.cpu_cores }}Core | {{ plan.ram_gb }}GB RAM | {{ formatPrice(getHostingPrice(plan) * (1 - (plan.discount_percent || 0) / 100)) }}/tahun
+                                                    {{ plan.plan_name }} | {{ plan.storage_gb }}GB | {{ plan.cpu_cores }}Core | {{ plan.ram_gb }}GB RAM | {{ formatPrice(getHostingPlanFinalPrice(plan)) }}/tahun
                                                 </option>
                                             </select>
                                     </div>
@@ -298,7 +298,7 @@ const getWhatsAppUrl = () => {
                                                     Hosting {{ selectedHostingPlan.plan_name }}
                                                 </span>
                                                 <span class="font-medium" style="color: #4d4c48;">
-                                                    {{ formatPrice(getHostingPrice(selectedHostingPlan) * (1 - (selectedHostingPlan.discount_percent || 0) / 100)) }}
+                                                    {{ formatPrice(getHostingPlanFinalPrice(selectedHostingPlan)) }}
                                                 </span>
                                             </div>
                                             <div v-for="service in selectedServicesList" :key="service?.id" class="flex justify-between">

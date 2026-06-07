@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
+import { getHostingPlanFinalPrice } from '@/lib/utils';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { Check, Cpu, Filter, HardDrive, MemoryStick, Search, Server, ShoppingCart, Wifi } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
@@ -19,6 +20,7 @@ interface HostingPlan {
     bandwidth: string;
     selling_price: number;
     discount_percent: number;
+    use_bulk_pricing?: boolean;
     features: string[];
     is_active: boolean;
 }
@@ -45,10 +47,6 @@ const formatPrice = (price: number) => {
         currency: 'IDR',
         minimumFractionDigits: 0,
     }).format(price);
-};
-
-const getDiscountedPrice = (price: number, discount: number) => {
-    return price * (1 - discount / 100);
 };
 
 const getActionUrl = () => {
@@ -123,7 +121,7 @@ const filteredPlans = computed(() => {
         );
     }
 
-    return plans.sort((a, b) => a.selling_price - b.selling_price);
+    return plans.sort((a, b) => getHostingPlanFinalPrice(a) - getHostingPlanFinalPrice(b));
 });
 </script>
 
@@ -260,7 +258,10 @@ const filteredPlans = computed(() => {
                                                 <CardTitle class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif;">{{ plan.plan_name }}</CardTitle>
                                             </div>
                                         </div>
-                                        <Badge v-if="plan.discount_percent > 0" style="background-color: #c96442; color: #faf9f5; border-radius: 8px;">
+                                        <Badge
+                                            v-if="!plan.use_bulk_pricing && plan.discount_percent > 0"
+                                            style="background-color: #c96442; color: #faf9f5; border-radius: 8px;"
+                                        >
                                             {{ plan.discount_percent }}% OFF
                                         </Badge>
                                     </div>
@@ -268,15 +269,15 @@ const filteredPlans = computed(() => {
 
                                 <CardContent class="space-y-4">
                                     <div class="text-center">
-                                        <div v-if="plan.discount_percent > 0" class="text-sm line-through" style="color: #87867f;">
-                                            {{ formatPrice(getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}
-                                        </div>
-                                        <div class="text-3xl font-bold" style="color: #c96442;">
+                                        <div v-if="!plan.use_bulk_pricing && plan.discount_percent > 0" class="text-sm line-through" style="color: #87867f;">
                                             {{ formatPrice(plan.selling_price) }}
                                         </div>
+                                        <div class="text-3xl font-bold" style="color: #c96442;">
+                                            {{ formatPrice(getHostingPlanFinalPrice(plan)) }}
+                                        </div>
                                         <div class="text-sm" style="color: #5e5d59;">/tahun</div>
-                                        <div v-if="plan.discount_percent > 0" class="mt-1 text-xs font-medium" style="color: #4d4c48;">
-                                            Hemat {{ formatPrice(plan.selling_price - getDiscountedPrice(plan.selling_price, plan.discount_percent)) }}/tahun
+                                        <div v-if="!plan.use_bulk_pricing && plan.discount_percent > 0" class="mt-1 text-xs font-medium" style="color: #4d4c48;">
+                                            Hemat {{ formatPrice(plan.selling_price - getHostingPlanFinalPrice(plan)) }}/tahun
                                         </div>
                                     </div>
 
