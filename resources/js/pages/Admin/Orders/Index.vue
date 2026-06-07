@@ -23,6 +23,8 @@ interface HostingPlan {
     storage_gb: number;
     cpu_cores: number;
     ram_gb: number;
+    discount_percent?: number;
+    use_bulk_pricing?: boolean;
 }
 
 interface DomainPrice {

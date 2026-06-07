@@ -23,6 +23,7 @@ interface HostingPlan {
     maintenance_cost: number;
     discount_percent: number;
     selling_price: number;
+    use_bulk_pricing?: boolean;
     features: string[];
     is_active: boolean;
 }
