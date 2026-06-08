@@ -11,6 +11,10 @@ const form = useForm({
     file: null as File | null,
 });
 
+const clearForm = useForm({
+    confirm: '',
+});
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Database', href: '/admin/database' },
@@ -29,6 +33,17 @@ const submitImport = () => {
 const onFileChange = (e: Event) => {
     const target = e.target as HTMLInputElement | null;
     form.file = target?.files?.[0] ?? null;
+};
+
+const submitClear = () => {
+    const ok = window.confirm('Ini akan menghapus semua data database kecuali users. Lanjutkan?');
+    if (!ok) return;
+
+    clearForm.post('/admin/database/clear', {
+        onSuccess: () => {
+            clearForm.reset('confirm');
+        },
+    });
 };
 </script>
 
@@ -89,6 +104,37 @@ const onFileChange = (e: Event) => {
                     </CardContent>
                 </Card>
             </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle style="font-family: Georgia, serif;">Clear Database</CardTitle>
+                    <CardDescription>Hapus semua data kecuali tabel users (dan migrations).</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                        <div class="w-full space-y-2">
+                            <Label for="database-clear-confirm">Ketik CLEAR untuk konfirmasi</Label>
+                            <input
+                                id="database-clear-confirm"
+                                v-model="clearForm.confirm"
+                                type="text"
+                                autocomplete="off"
+                                class="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground dark:bg-input/30"
+                            />
+                        </div>
+                        <Button
+                            :disabled="clearForm.processing || clearForm.confirm !== 'CLEAR'"
+                            @click="submitClear"
+                            class="w-full cursor-pointer disabled:cursor-not-allowed sm:w-auto"
+                            variant="destructive"
+                        >
+                            Clear
+                        </Button>
+                    </div>
+                    <div v-if="clearForm.errors.confirm" class="mt-2 text-sm text-destructive">{{ clearForm.errors.confirm }}</div>
+                    <div v-if="clearForm.recentlySuccessful" class="mt-2 text-sm text-primary">Database berhasil dibersihkan</div>
+                </CardContent>
+            </Card>
         </div>
     </AppLayout>
 </template>

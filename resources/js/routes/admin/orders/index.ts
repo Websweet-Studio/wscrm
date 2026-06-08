@@ -202,7 +202,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
  * @see app/Http/Controllers/Admin/OrderController.php:111
  * @route '/admin/orders/{order}'
  */
-export const show = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -217,7 +217,7 @@ show.definition = {
  * @see app/Http/Controllers/Admin/OrderController.php:111
  * @route '/admin/orders/{order}'
  */
-show.url = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+show.url = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { order: args }
     }
@@ -250,7 +250,7 @@ show.url = (args: { order: number | { id: number } } | [order: number | { id: nu
  * @see app/Http/Controllers/Admin/OrderController.php:111
  * @route '/admin/orders/{order}'
  */
-show.get = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -259,7 +259,7 @@ show.get = (args: { order: number | { id: number } } | [order: number | { id: nu
  * @see app/Http/Controllers/Admin/OrderController.php:111
  * @route '/admin/orders/{order}'
  */
-show.head = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
@@ -269,7 +269,7 @@ show.head = (args: { order: number | { id: number } } | [order: number | { id: n
  * @see app/Http/Controllers/Admin/OrderController.php:111
  * @route '/admin/orders/{order}'
  */
-    const showForm = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const showForm = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: show.url(args, options),
         method: 'get',
     })
@@ -279,7 +279,7 @@ show.head = (args: { order: number | { id: number } } | [order: number | { id: n
  * @see app/Http/Controllers/Admin/OrderController.php:111
  * @route '/admin/orders/{order}'
  */
-        showForm.get = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        showForm.get = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: show.url(args, options),
             method: 'get',
         })
@@ -288,7 +288,7 @@ show.head = (args: { order: number | { id: number } } | [order: number | { id: n
  * @see app/Http/Controllers/Admin/OrderController.php:111
  * @route '/admin/orders/{order}'
  */
-        showForm.head = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        showForm.head = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: show.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',
@@ -304,7 +304,7 @@ show.head = (args: { order: number | { id: number } } | [order: number | { id: n
  * @see app/Http/Controllers/Admin/OrderController.php:261
  * @route '/admin/orders/{order}'
  */
-export const update = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -319,7 +319,7 @@ update.definition = {
  * @see app/Http/Controllers/Admin/OrderController.php:261
  * @route '/admin/orders/{order}'
  */
-update.url = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+update.url = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { order: args }
     }
@@ -352,7 +352,7 @@ update.url = (args: { order: number | { id: number } } | [order: number | { id: 
  * @see app/Http/Controllers/Admin/OrderController.php:261
  * @route '/admin/orders/{order}'
  */
-update.put = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -361,7 +361,7 @@ update.put = (args: { order: number | { id: number } } | [order: number | { id: 
  * @see app/Http/Controllers/Admin/OrderController.php:261
  * @route '/admin/orders/{order}'
  */
-update.patch = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+update.patch = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: update.url(args, options),
     method: 'patch',
 })
@@ -371,7 +371,7 @@ update.patch = (args: { order: number | { id: number } } | [order: number | { id
  * @see app/Http/Controllers/Admin/OrderController.php:261
  * @route '/admin/orders/{order}'
  */
-    const updateForm = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const updateForm = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: update.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'PUT',
@@ -386,7 +386,7 @@ update.patch = (args: { order: number | { id: number } } | [order: number | { id
  * @see app/Http/Controllers/Admin/OrderController.php:261
  * @route '/admin/orders/{order}'
  */
-        updateForm.put = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        updateForm.put = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: update.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PUT',
@@ -400,7 +400,7 @@ update.patch = (args: { order: number | { id: number } } | [order: number | { id
  * @see app/Http/Controllers/Admin/OrderController.php:261
  * @route '/admin/orders/{order}'
  */
-        updateForm.patch = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        updateForm.patch = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: update.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PATCH',
@@ -416,7 +416,7 @@ update.patch = (args: { order: number | { id: number } } | [order: number | { id
  * @see app/Http/Controllers/Admin/OrderController.php:418
  * @route '/admin/orders/{order}'
  */
-export const destroy = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -431,7 +431,7 @@ destroy.definition = {
  * @see app/Http/Controllers/Admin/OrderController.php:418
  * @route '/admin/orders/{order}'
  */
-destroy.url = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { order: args }
     }
@@ -464,7 +464,7 @@ destroy.url = (args: { order: number | { id: number } } | [order: number | { id:
  * @see app/Http/Controllers/Admin/OrderController.php:418
  * @route '/admin/orders/{order}'
  */
-destroy.delete = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -474,7 +474,7 @@ destroy.delete = (args: { order: number | { id: number } } | [order: number | { 
  * @see app/Http/Controllers/Admin/OrderController.php:418
  * @route '/admin/orders/{order}'
  */
-    const destroyForm = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const destroyForm = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: destroy.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'DELETE',
@@ -489,7 +489,7 @@ destroy.delete = (args: { order: number | { id: number } } | [order: number | { 
  * @see app/Http/Controllers/Admin/OrderController.php:418
  * @route '/admin/orders/{order}'
  */
-        destroyForm.delete = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        destroyForm.delete = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: destroy.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'DELETE',
@@ -505,7 +505,7 @@ destroy.delete = (args: { order: number | { id: number } } | [order: number | { 
  * @see app/Http/Controllers/Admin/OrderController.php:480
  * @route '/admin/orders/{order}/simulate-upgrade-downgrade'
  */
-export const simulateUpgradeDowngrade = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const simulateUpgradeDowngrade = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: simulateUpgradeDowngrade.url(args, options),
     method: 'post',
 })
@@ -520,7 +520,7 @@ simulateUpgradeDowngrade.definition = {
  * @see app/Http/Controllers/Admin/OrderController.php:480
  * @route '/admin/orders/{order}/simulate-upgrade-downgrade'
  */
-simulateUpgradeDowngrade.url = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+simulateUpgradeDowngrade.url = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { order: args }
     }
@@ -553,7 +553,7 @@ simulateUpgradeDowngrade.url = (args: { order: number | { id: number } } | [orde
  * @see app/Http/Controllers/Admin/OrderController.php:480
  * @route '/admin/orders/{order}/simulate-upgrade-downgrade'
  */
-simulateUpgradeDowngrade.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+simulateUpgradeDowngrade.post = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: simulateUpgradeDowngrade.url(args, options),
     method: 'post',
 })
@@ -563,7 +563,7 @@ simulateUpgradeDowngrade.post = (args: { order: number | { id: number } } | [ord
  * @see app/Http/Controllers/Admin/OrderController.php:480
  * @route '/admin/orders/{order}/simulate-upgrade-downgrade'
  */
-    const simulateUpgradeDowngradeForm = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const simulateUpgradeDowngradeForm = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: simulateUpgradeDowngrade.url(args, options),
         method: 'post',
     })
@@ -573,7 +573,7 @@ simulateUpgradeDowngrade.post = (args: { order: number | { id: number } } | [ord
  * @see app/Http/Controllers/Admin/OrderController.php:480
  * @route '/admin/orders/{order}/simulate-upgrade-downgrade'
  */
-        simulateUpgradeDowngradeForm.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        simulateUpgradeDowngradeForm.post = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: simulateUpgradeDowngrade.url(args, options),
             method: 'post',
         })
@@ -584,7 +584,7 @@ simulateUpgradeDowngrade.post = (args: { order: number | { id: number } } | [ord
  * @see app/Http/Controllers/Admin/OrderController.php:527
  * @route '/admin/orders/{order}/process-upgrade-downgrade'
  */
-export const processUpgradeDowngrade = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const processUpgradeDowngrade = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: processUpgradeDowngrade.url(args, options),
     method: 'post',
 })
@@ -599,7 +599,7 @@ processUpgradeDowngrade.definition = {
  * @see app/Http/Controllers/Admin/OrderController.php:527
  * @route '/admin/orders/{order}/process-upgrade-downgrade'
  */
-processUpgradeDowngrade.url = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+processUpgradeDowngrade.url = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { order: args }
     }
@@ -632,7 +632,7 @@ processUpgradeDowngrade.url = (args: { order: number | { id: number } } | [order
  * @see app/Http/Controllers/Admin/OrderController.php:527
  * @route '/admin/orders/{order}/process-upgrade-downgrade'
  */
-processUpgradeDowngrade.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+processUpgradeDowngrade.post = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: processUpgradeDowngrade.url(args, options),
     method: 'post',
 })
@@ -642,7 +642,7 @@ processUpgradeDowngrade.post = (args: { order: number | { id: number } } | [orde
  * @see app/Http/Controllers/Admin/OrderController.php:527
  * @route '/admin/orders/{order}/process-upgrade-downgrade'
  */
-    const processUpgradeDowngradeForm = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const processUpgradeDowngradeForm = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: processUpgradeDowngrade.url(args, options),
         method: 'post',
     })
@@ -652,7 +652,7 @@ processUpgradeDowngrade.post = (args: { order: number | { id: number } } | [orde
  * @see app/Http/Controllers/Admin/OrderController.php:527
  * @route '/admin/orders/{order}/process-upgrade-downgrade'
  */
-        processUpgradeDowngradeForm.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        processUpgradeDowngradeForm.post = (args: { order: string | number | { id: string | number } } | [order: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: processUpgradeDowngrade.url(args, options),
             method: 'post',
         })

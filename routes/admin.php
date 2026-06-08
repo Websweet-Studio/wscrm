@@ -92,4 +92,5 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::get('database', [DatabaseController::class, 'index'])->name('database.index');
     Route::get('database/export', [DatabaseController::class, 'export'])->name('database.export');
     Route::post('database/import', [DatabaseController::class, 'import'])->name('database.import');
+    Route::post('database/clear', [DatabaseController::class, 'clear'])->name('database.clear');
 });

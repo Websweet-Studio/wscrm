@@ -23,7 +23,7 @@ import system from './system'
  * @see app/Http/Controllers/Admin/ImpersonateController.php:11
  * @route '/admin/impersonate/{customer}'
  */
-export const impersonate = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const impersonate = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: impersonate.url(args, options),
     method: 'post',
 })
@@ -38,7 +38,7 @@ impersonate.definition = {
  * @see app/Http/Controllers/Admin/ImpersonateController.php:11
  * @route '/admin/impersonate/{customer}'
  */
-impersonate.url = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+impersonate.url = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { customer: args }
     }
@@ -71,7 +71,7 @@ impersonate.url = (args: { customer: number | { id: number } } | [customer: numb
  * @see app/Http/Controllers/Admin/ImpersonateController.php:11
  * @route '/admin/impersonate/{customer}'
  */
-impersonate.post = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+impersonate.post = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: impersonate.url(args, options),
     method: 'post',
 })
@@ -81,7 +81,7 @@ impersonate.post = (args: { customer: number | { id: number } } | [customer: num
  * @see app/Http/Controllers/Admin/ImpersonateController.php:11
  * @route '/admin/impersonate/{customer}'
  */
-    const impersonateForm = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const impersonateForm = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: impersonate.url(args, options),
         method: 'post',
     })
@@ -91,7 +91,7 @@ impersonate.post = (args: { customer: number | { id: number } } | [customer: num
  * @see app/Http/Controllers/Admin/ImpersonateController.php:11
  * @route '/admin/impersonate/{customer}'
  */
-        impersonateForm.post = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        impersonateForm.post = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: impersonate.url(args, options),
             method: 'post',
         })

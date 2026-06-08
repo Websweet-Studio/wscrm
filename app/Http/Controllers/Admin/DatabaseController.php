@@ -46,6 +46,68 @@ class DatabaseController extends Controller
         return Response::download($filePath)->deleteFileAfterSend(true);
     }
 
+    public function clear(Request $request)
+    {
+        $request->validate([
+            'confirm' => ['required', 'in:CLEAR'],
+        ]);
+
+        $driver = DB::getDriverName();
+        $database = DB::getDatabaseName();
+        $tables = $this->getTables($driver, $database);
+        $excluded = ['users', 'migrations'];
+
+        $disableFk = $this->getDisableForeignKeyStatement($driver);
+        $enableFk = $this->getEnableForeignKeyStatement($driver);
+
+        $clearedTables = 0;
+
+        try {
+            DB::transaction(function () use ($tables, $excluded, $driver, $disableFk, &$enableFk, &$clearedTables) {
+                if ($disableFk) {
+                    DB::statement($disableFk);
+                }
+
+                foreach ($tables as $table) {
+                    if (in_array($table, $excluded, true)) {
+                        continue;
+                    }
+
+                    if (! Schema::hasTable($table)) {
+                        continue;
+                    }
+
+                    DB::table($table)->delete();
+
+                    if ($driver === 'sqlite') {
+                        try {
+                            DB::statement('DELETE FROM sqlite_sequence WHERE name = ?', [$table]);
+                        } catch (\Throwable $e) {
+                        }
+                    }
+
+                    $clearedTables++;
+                }
+
+                if ($enableFk) {
+                    DB::statement($enableFk);
+                    $enableFk = null;
+                }
+            });
+
+            return redirect()->back()->with('success', "Database berhasil dibersihkan. Tabel dibersihkan: {$clearedTables} (users & migrations tidak dihapus).");
+        } catch (\Throwable $e) {
+            if ($enableFk) {
+                try {
+                    DB::statement($enableFk);
+                } catch (\Throwable $inner) {
+                }
+            }
+
+            return redirect()->back()->with('error', 'Gagal clear database: ' . $e->getMessage());
+        }
+    }
+
     public function import(Request $request)
     {
         $request->validate([

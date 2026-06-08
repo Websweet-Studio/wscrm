@@ -157,7 +157,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     exportMethod.form = exportMethodForm
 /**
 * @see \App\Http\Controllers\Admin\DatabaseController::importMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:49
+ * @see app/Http/Controllers/Admin/DatabaseController.php:111
  * @route '/admin/database/import'
  */
 export const importMethod = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -172,7 +172,7 @@ importMethod.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DatabaseController::importMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:49
+ * @see app/Http/Controllers/Admin/DatabaseController.php:111
  * @route '/admin/database/import'
  */
 importMethod.url = (options?: RouteQueryOptions) => {
@@ -181,7 +181,7 @@ importMethod.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\DatabaseController::importMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:49
+ * @see app/Http/Controllers/Admin/DatabaseController.php:111
  * @route '/admin/database/import'
  */
 importMethod.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -191,7 +191,7 @@ importMethod.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\DatabaseController::importMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:49
+ * @see app/Http/Controllers/Admin/DatabaseController.php:111
  * @route '/admin/database/import'
  */
     const importMethodForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -201,7 +201,7 @@ importMethod.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\DatabaseController::importMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:49
+ * @see app/Http/Controllers/Admin/DatabaseController.php:111
  * @route '/admin/database/import'
  */
         importMethodForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

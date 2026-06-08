@@ -4,7 +4,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
  * @see app/Http/Controllers/ServicePlanController.php:30
  * @route '/services/{servicePlan}'
  */
-export const show = (args: { servicePlan: number | { id: number } } | [servicePlan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { servicePlan: string | number | { id: string | number } } | [servicePlan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -19,7 +19,7 @@ show.definition = {
  * @see app/Http/Controllers/ServicePlanController.php:30
  * @route '/services/{servicePlan}'
  */
-show.url = (args: { servicePlan: number | { id: number } } | [servicePlan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+show.url = (args: { servicePlan: string | number | { id: string | number } } | [servicePlan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { servicePlan: args }
     }
@@ -52,7 +52,7 @@ show.url = (args: { servicePlan: number | { id: number } } | [servicePlan: numbe
  * @see app/Http/Controllers/ServicePlanController.php:30
  * @route '/services/{servicePlan}'
  */
-show.get = (args: { servicePlan: number | { id: number } } | [servicePlan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { servicePlan: string | number | { id: string | number } } | [servicePlan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -61,7 +61,7 @@ show.get = (args: { servicePlan: number | { id: number } } | [servicePlan: numbe
  * @see app/Http/Controllers/ServicePlanController.php:30
  * @route '/services/{servicePlan}'
  */
-show.head = (args: { servicePlan: number | { id: number } } | [servicePlan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { servicePlan: string | number | { id: string | number } } | [servicePlan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
@@ -71,7 +71,7 @@ show.head = (args: { servicePlan: number | { id: number } } | [servicePlan: numb
  * @see app/Http/Controllers/ServicePlanController.php:30
  * @route '/services/{servicePlan}'
  */
-    const showForm = (args: { servicePlan: number | { id: number } } | [servicePlan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const showForm = (args: { servicePlan: string | number | { id: string | number } } | [servicePlan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: show.url(args, options),
         method: 'get',
     })
@@ -81,7 +81,7 @@ show.head = (args: { servicePlan: number | { id: number } } | [servicePlan: numb
  * @see app/Http/Controllers/ServicePlanController.php:30
  * @route '/services/{servicePlan}'
  */
-        showForm.get = (args: { servicePlan: number | { id: number } } | [servicePlan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        showForm.get = (args: { servicePlan: string | number | { id: string | number } } | [servicePlan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: show.url(args, options),
             method: 'get',
         })
@@ -90,7 +90,7 @@ show.head = (args: { servicePlan: number | { id: number } } | [servicePlan: numb
  * @see app/Http/Controllers/ServicePlanController.php:30
  * @route '/services/{servicePlan}'
  */
-        showForm.head = (args: { servicePlan: number | { id: number } } | [servicePlan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        showForm.head = (args: { servicePlan: string | number | { id: string | number } } | [servicePlan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: show.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',
