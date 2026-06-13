@@ -285,6 +285,7 @@ class DemoWebsiteController extends Controller
                 'title' => $demo->title,
                 'url' => $demo->url,
                 'category' => $demo->demoCategory?->name,
+                'category_slug' => $demo->demoCategory?->slug,
                 'description' => $demo->description,
                 'featured_image' => $demo->featured_image_url,
                 'packages' => $demo->demoPackages->map(fn($pkg) => ['name' => $pkg->name]),
@@ -302,6 +303,7 @@ class DemoWebsiteController extends Controller
     if (!C) return;
 
     var LIMIT = parseInt(C.getAttribute('data-limit')) || 0;
+    var CATEGORY = C.getAttribute('data-category') || '';
     var PER_PAGE = parseInt(C.getAttribute('data-per-page')) || 6;
     var PRIMARY = C.getAttribute('data-primary') || '#c96442';
     var BG = C.getAttribute('data-bg') || '#faf9f5';
@@ -311,8 +313,11 @@ class DemoWebsiteController extends Controller
     var BDR = C.getAttribute('data-border') || '#f0eee6';
     var WHATSAPP = C.getAttribute('data-whatsapp') || '';
 
-    var demos = LIMIT > 0 ? ALL_DEMOS.slice(0, LIMIT) : ALL_DEMOS;
-    var totalPages = Math.ceil(demos.length / PER_PAGE);
+    var demos = ALL_DEMOS;
+    if (LIMIT > 0) demos = demos.slice(0, LIMIT);
+    if (CATEGORY) demos = demos.filter(function(d) { return d.category_slug === CATEGORY; });
+    var filteredDemos = demos;
+    var totalPages = Math.ceil(filteredDemos.length / PER_PAGE);
     var currentPage = 1;
 
     // Inject styles
@@ -392,6 +397,12 @@ class DemoWebsiteController extends Controller
     '.wss-ov-wa svg{width:16px;height:16px;flex-shrink:0}' +
     '.wss-overlay iframe{flex:1;border:none;width:100%;height:100%;background:#fff}' +
 
+    /* Category filter */
+    '.wss-flt{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:24px;padding:0 4px}' +
+    '.wss-flt-btn{display:inline-flex;align-items:center;padding:8px 18px;border-radius:10px;font-size:13px;font-weight:500;text-decoration:none;border:1px solid '+BDR+';color:'+TEXT2+';background:'+CARD_BG+';cursor:pointer;transition:all .2s ease;-webkit-user-select:none;user-select:none;line-height:1.4}' +
+    '.wss-flt-btn:hover{background:'+BDR+';border-color:#d5d3ca}' +
+    '.wss-flt-btn.wss-flt-act{background:'+PRIMARY+';color:#fff;border-color:'+PRIMARY+';box-shadow:0 2px 10px rgba(0,0,0,.1)}' +
+
     /* Responsive */
 '@media(max-width:640px){' +
       '.wss-grd{grid-template-columns:1fr;gap:16px}' +
@@ -402,17 +413,57 @@ class DemoWebsiteController extends Controller
       '.wss-btn{padding:10px 16px;font-size:13px}' +
       '.wss-pag{gap:4px}' +
       '.wss-pag a,.wss-pag span{min-width:36px;height:36px;font-size:12px}' +
+      '.wss-flt{gap:6px}' +
+      '.wss-flt-btn{padding:6px 14px;font-size:12px}' +
     '}';
 
     document.head.appendChild(s);
 
-    // Header
-    var title = C.getAttribute('data-title');
-    if (title) {
-        var hdr = document.createElement('div');
-        hdr.className = 'wss-hdr';
-        hdr.innerHTML = '<h2>' + esc(title) + '</h2>' + (C.getAttribute('data-subtitle') ? '<p>' + esc(C.getAttribute('data-subtitle')) + '</p>' : '');
-        C.appendChild(hdr);
+    // Category filter (only when showing all categories)
+    var filterBar;
+    if (!CATEGORY) {
+        var categories = [];
+        demos.forEach(function(d) {
+            if (d.category_slug && categories.every(function(c) { return c.slug !== d.category_slug; })) {
+                categories.push({ slug: d.category_slug, name: d.category });
+            }
+        });
+
+        if (categories.length > 1) {
+            filterBar = document.createElement('div');
+            filterBar.className = 'wss-flt';
+            C.appendChild(filterBar);
+
+            var activeSlug = '';
+
+            function filterByCategory(slug) {
+                activeSlug = slug;
+                filteredDemos = slug ? demos.filter(function(d) { return d.category_slug === slug; }) : demos;
+                currentPage = 1;
+                totalPages = Math.ceil(filteredDemos.length / PER_PAGE);
+                renderFilters();
+                render();
+            }
+
+            function renderFilters() {
+                filterBar.innerHTML = '';
+                var allBtn = document.createElement('button');
+                allBtn.className = 'wss-flt-btn' + (activeSlug === '' ? ' wss-flt-act' : '');
+                allBtn.textContent = 'Semua';
+                allBtn.onclick = function() { filterByCategory(''); };
+                filterBar.appendChild(allBtn);
+
+                categories.forEach(function(cat) {
+                    var btn = document.createElement('button');
+                    btn.className = 'wss-flt-btn' + (activeSlug === cat.slug ? ' wss-flt-act' : '');
+                    btn.textContent = cat.name;
+                    btn.onclick = function() { filterByCategory(cat.slug); };
+                    filterBar.appendChild(btn);
+                });
+            }
+
+            renderFilters();
+        }
     }
 
     if (demos.length === 0) {
@@ -494,13 +545,19 @@ class DemoWebsiteController extends Controller
     function render() {
         var start = (currentPage - 1) * PER_PAGE;
         var end = start + PER_PAGE;
-        var pageDemos = demos.slice(start, end);
+        var pageDemos = filteredDemos.slice(start, end);
 
         // Info
-        info.textContent = 'Menampilkan ' + (start + 1) + '-' + Math.min(end, demos.length) + ' dari ' + demos.length + ' demo';
+        info.textContent = filteredDemos.length > 0
+            ? 'Menampilkan ' + (start + 1) + '-' + Math.min(end, filteredDemos.length) + ' dari ' + filteredDemos.length + ' demo'
+            : '';
 
         // Grid
         grid.innerHTML = '';
+        if (filteredDemos.length === 0) {
+            grid.innerHTML = '<div class="wss-empty"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><h3>Tidak Ada Demo</h3><p>Tidak ada demo dalam kategori ini.</p></div>';
+            return;
+        }
         pageDemos.forEach(function(d) {
             var img = d.featured_image
                 ? '<img src="' + esc(d.featured_image) + '" alt="' + esc(d.title) + '" loading="lazy">'

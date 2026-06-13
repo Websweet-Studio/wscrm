@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
-import { ExternalLink, Filter, LayoutGrid, Monitor, Search, Code, Check, Copy, Palette, LayoutList } from 'lucide-vue-next';
+import { ExternalLink, Filter, LayoutGrid, Monitor, Search, Code, Check, Copy, Palette } from 'lucide-vue-next';
 import { router, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
@@ -113,19 +113,17 @@ const appUrl = window.location.origin;
 const copiedId = ref<string | null>(null);
 
 // JS Embed Configurator
-const embedLimit = ref(0); // 0 = all
+const embedCategory = ref<string | null>(null);
 const embedPerPage = ref(6);
 const embedPrimary = ref('#c96442');
 const embedWhatsapp = ref('');
 
 const jsEmbedCode = computed(() => {
-    const limitAttr = embedLimit.value > 0 ? `\n  data-limit="${embedLimit.value}"` : '';
+    const categoryAttr = embedCategory.value ? `\n  data-category="${embedCategory.value}"` : '';
     const whatsappAttr = embedWhatsapp.value ? `\n  data-whatsapp="${embedWhatsapp.value}"` : '';
-    return `<div id="wss-demo-widget"${limitAttr}${whatsappAttr}
+    return `<div id="wss-demo-widget"${categoryAttr}${whatsappAttr}
   data-per-page="${embedPerPage.value}"
-  data-primary="${embedPrimary.value}"
-  data-title="Demo Website"
-  data-subtitle="Lihat contoh website yang bisa Anda miliki">
+  data-primary="${embedPrimary.value}">
 </div>
 <script src="${appUrl}/demo-web/embed.js"><\/script>`;
 });
@@ -138,22 +136,23 @@ const singleEmbedIframeCode = (demo: DemoItem) => {
 // Preview pagination
 const previewPage = ref(1);
 
-const previewLimitDemos = computed(() => {
+const previewFilteredDemos = computed(() => {
     const all = props.demos?.data || [];
-    return embedLimit.value > 0 ? all.slice(0, embedLimit.value) : all;
+    if (!embedCategory.value) return all;
+    return all.filter(d => d.category_slug === embedCategory.value);
 });
 
 const previewTotalPages = computed(() => {
-    return Math.ceil(previewLimitDemos.value.length / embedPerPage.value);
+    return Math.ceil(previewFilteredDemos.value.length / embedPerPage.value);
 });
 
 const previewDemos = computed(() => {
     const start = (previewPage.value - 1) * embedPerPage.value;
-    return previewLimitDemos.value.slice(start, start + embedPerPage.value);
+    return previewFilteredDemos.value.slice(start, start + embedPerPage.value);
 });
 
 // Reset preview page when settings change
-watch([embedLimit, embedPerPage], () => {
+watch([embedCategory, embedPerPage], () => {
     previewPage.value = 1;
 });
 
@@ -393,7 +392,6 @@ const copyToClipboard = async (text: string, id: string) => {
                             </div>
                             <div>
                                 <h3 class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif">Embed di Website Anda</h3>
-                                <p class="text-sm" style="color: #5e5d59">Widget JS yang menyatu langsung dengan website klien/reseller (tanpa iframe)</p>
                             </div>
                         </div>
 
@@ -401,26 +399,21 @@ const copyToClipboard = async (text: string, id: string) => {
                             <!-- Left: Configurator -->
                             <div class="space-y-4">
                                 <div class="rounded-xl p-4" style="background-color: #ffffff; border: 1px solid #f0eee6">
-                                    <h4 class="mb-3 text-sm font-medium" style="color: #141413">Pengaturan Widget</h4>
 
-                                    <!-- Total Limit -->
+                                    <!-- Category Filter -->
                                     <div class="mb-4">
                                         <label class="mb-1.5 flex items-center gap-2 text-xs font-medium" style="color: #4d4c48">
-                                            <LayoutList class="h-3.5 w-3.5" style="color: #87867f" />
-                                            Total Demo Ditampilkan
+                                            <Filter class="h-3.5 w-3.5" style="color: #87867f" />
+                                            Kategori
                                         </label>
-                                        <input
-                                            v-model.number="embedLimit"
-                                            type="range"
-                                            min="0"
-                                            :max="demos.total || 12"
-                                            class="w-full accent-[#c96442]"
-                                        />
-                                        <div class="mt-1 flex justify-between text-xs" style="color: #87867f">
-                                            <span>Semua</span>
-                                            <span class="font-medium" style="color: #141413">{{ embedLimit === 0 ? 'Semua' : embedLimit + ' demo' }}</span>
-                                            <span>{{ demos.total || 12 }}</span>
-                                        </div>
+                                        <select
+                                            v-model="embedCategory"
+                                            class="w-full rounded-lg border px-3 py-2 text-sm"
+                                            style="background-color: #faf9f5; border-color: #e8e6dc; color: #141413"
+                                        >
+                                            <option :value="null">Semua Kategori</option>
+                                            <option v-for="cat in categories" :key="cat.id" :value="cat.slug">{{ cat.name }}</option>
+                                        </select>
                                     </div>
 
                                     <!-- Per Page -->
@@ -502,7 +495,7 @@ const copyToClipboard = async (text: string, id: string) => {
                                 <div class="rounded-xl p-4" style="background-color: #ffffff; border: 1px solid #f0eee6">
                                     <h4 class="mb-3 text-sm font-medium" style="color: #141413">Kode Embed</h4>
                                     <p class="mb-3 text-xs" style="color: #5e5d59">
-                                        Salin kode di bawah dan tempel di HTML website Anda. Widget akan langsung tampil menyatu dengan desain web.
+                                        Salin kode di bawah dan tempel di HTML website Anda.
                                     </p>
                                     <div class="overflow-x-auto rounded-lg p-3 text-xs leading-relaxed" style="background-color: #141413; color: #b0aea5; font-family: 'Fira Code', monospace">
                                         <pre class="whitespace-pre-wrap break-all" style="color: #b0aea5; font-size: 12px; line-height: 1.7">{{ jsEmbedCode }}</pre>
@@ -532,11 +525,9 @@ const copyToClipboard = async (text: string, id: string) => {
                                 <div class="rounded-xl p-4" style="background-color: #e8e6dc40; border: 1px solid #e8e6dc">
                                     <h4 class="mb-2 text-xs font-medium" style="color: #141413">Opsi Konfigurasi (data-attributes)</h4>
                                     <div class="space-y-1 text-xs" style="color: #5e5d59">
-                                        <p><code style="color: #c96442">data-limit</code> — Total demo (0 = semua)</p>
+                                        <p><code style="color: #c96442">data-category</code> — Filter kategori (slug)</p>
                                         <p><code style="color: #c96442">data-per-page</code> — Demo per halaman (default: 6)</p>
                                         <p><code style="color: #c96442">data-primary</code> — Warna aksen (hex)</p>
-                                        <p><code style="color: #c96442">data-title</code> — Judul widget</p>
-                                        <p><code style="color: #c96442">data-subtitle</code> — Subjudul widget</p>
                                         <p><code style="color: #c96442">data-bg</code> — Warna background</p>
                                         <p><code style="color: #c96442">data-card-bg</code> — Warna background kartu</p>
                                         <p><code style="color: #c96442">data-text</code> — Warna teks utama</p>
@@ -559,10 +550,6 @@ const copyToClipboard = async (text: string, id: string) => {
                                         </div>
                                     </div>
                                     <div class="p-4" style="min-height: 400px; max-height: 600px; overflow-y: auto;">
-                                        <div class="text-center mb-4">
-                                            <h2 class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif">Demo Website</h2>
-                                            <p class="text-xs" style="color: #5e5d59">Lihat contoh website yang bisa Anda miliki</p>
-                                        </div>
                                         <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))">
                                             <div
                                                 v-for="demo in previewDemos"
