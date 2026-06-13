@@ -5,6 +5,8 @@ use App\Http\Controllers\Admin\BrandingController;
 use App\Http\Controllers\Admin\BulkPricingController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DatabaseController;
+use App\Http\Controllers\Admin\DemoCategoryController;
+use App\Http\Controllers\Admin\DemoPackageController;
 use App\Http\Controllers\Admin\DemoWebsiteController as AdminDemoWebsiteController;
 use App\Http\Controllers\Admin\DomainPriceController;
 use App\Http\Controllers\Admin\EmployeeController;
@@ -98,4 +100,8 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     // Demo Website Management
     Route::resource('demo-websites', AdminDemoWebsiteController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::patch('demo-websites/{demoWebsite}/toggle-status', [AdminDemoWebsiteController::class, 'toggleStatus'])->name('demo-websites.toggle-status');
+    Route::resource('demo-categories', DemoCategoryController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::patch('demo-categories/{demoCategory}/toggle-status', [DemoCategoryController::class, 'toggleStatus'])->name('demo-categories.toggle-status');
+    Route::resource('demo-packages', DemoPackageController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::patch('demo-packages/{demoPackage}/toggle-status', [DemoPackageController::class, 'toggleStatus'])->name('demo-packages.toggle-status');
 });

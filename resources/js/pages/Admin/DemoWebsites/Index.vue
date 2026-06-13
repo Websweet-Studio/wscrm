@@ -9,20 +9,34 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { Edit, Eye, Globe, Monitor, Plus, Power, Search, Trash2, X } from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
+import { Edit, Eye, Globe, Power, Plus, Search, Trash2, X } from 'lucide-vue-next';
+import { ref } from 'vue';
+
+interface DemoCategory {
+    id: number;
+    name: string;
+    slug: string;
+}
+
+interface DemoPackage {
+    id: number;
+    name: string;
+    slug: string;
+}
 
 interface DemoWebsite {
     id: number;
     title: string;
     url: string;
-    category: string;
-    package: string | null;
+    demo_category_id: number | null;
+    category: string | null;
     featured_image: string | null;
     featured_image_url: string | null;
     description: string | null;
     is_active: boolean;
     sort_order: number;
+    demo_category?: DemoCategory;
+    demo_packages?: DemoPackage[];
     created_at: string;
     updated_at: string;
 }
@@ -36,10 +50,12 @@ interface Props {
         total: number;
         links: any[];
     };
-    categories: string[];
+    categories: DemoCategory[];
+    packages: DemoPackage[];
     filters: {
         search?: string;
         category?: string;
+        package?: string;
         status?: string;
     };
 }
@@ -48,6 +64,7 @@ const props = defineProps<Props>();
 
 const search = ref(props.filters.search || '');
 const categoryFilter = ref(props.filters.category || '');
+const packageFilter = ref(props.filters.package || '');
 const statusFilter = ref(props.filters.status || '');
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
@@ -63,8 +80,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 const createForm = useForm({
     title: '',
     url: '',
-    category: '',
-    package: '',
+    demo_category_id: '',
+    demo_packages: [] as string[],
     featured_image: null as File | null,
     description: '',
     is_active: true,
@@ -74,8 +91,8 @@ const createForm = useForm({
 const editForm = useForm({
     title: '',
     url: '',
-    category: '',
-    package: '',
+    demo_category_id: '',
+    demo_packages: [] as string[],
     featured_image: null as File | null,
     description: '',
     is_active: true,
@@ -89,6 +106,7 @@ const handleSearch = () => {
         {
             search: search.value,
             category: categoryFilter.value,
+            package: packageFilter.value,
             status: statusFilter.value,
         },
         {
@@ -103,17 +121,17 @@ const submitCreate = () => {
         onSuccess: () => {
             showCreateModal.value = false;
             createForm.reset();
+            createForm.demo_packages = [];
         },
     });
 };
 
 const openEditModal = (demo: DemoWebsite) => {
     selectedDemo.value = demo;
-    editForm.reset();
     editForm.title = demo.title;
     editForm.url = demo.url;
-    editForm.category = demo.category;
-    editForm.package = demo.package || '';
+    editForm.demo_category_id = String(demo.demo_category_id || '');
+    editForm.demo_packages = demo.demo_packages?.map((p: DemoPackage) => String(p.id)) || [];
     editForm.description = demo.description || '';
     editForm.is_active = demo.is_active;
     editForm.sort_order = demo.sort_order;
@@ -128,6 +146,7 @@ const submitEdit = () => {
         onSuccess: () => {
             showEditModal.value = false;
             editForm.reset();
+            editForm.demo_packages = [];
             selectedDemo.value = null;
         },
     });
@@ -154,6 +173,17 @@ const toggleStatus = (demo: DemoWebsite) => {
     router.patch(`/admin/demo-websites/${demo.id}/toggle-status`, {}, {
         preserveScroll: true,
     });
+};
+
+const getCategoryName = (demo: DemoWebsite) => {
+    return demo.demo_category?.name || demo.category || '-';
+};
+
+const getPackageNames = (demo: DemoWebsite) => {
+    if (demo.demo_packages && demo.demo_packages.length > 0) {
+        return demo.demo_packages.map((p: DemoPackage) => p.name);
+    }
+    return [];
 };
 </script>
 
@@ -190,7 +220,15 @@ const toggleStatus = (demo: DemoWebsite) => {
                             @change="handleSearch"
                         >
                             <option value="">Semua Kategori</option>
-                            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                            <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                        </select>
+                        <select
+                            v-model="packageFilter"
+                            class="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            @change="handleSearch"
+                        >
+                            <option value="">Semua Paket</option>
+                            <option v-for="pkg in packages" :key="pkg.id" :value="pkg.id">{{ pkg.name }}</option>
                         </select>
                         <select
                             v-model="statusFilter"
@@ -229,9 +267,16 @@ const toggleStatus = (demo: DemoWebsite) => {
                                     </TableCell>
                                     <TableCell class="font-medium">{{ demo.title }}</TableCell>
                                     <TableCell>
-                                        <Badge variant="outline">{{ demo.category }}</Badge>
+                                        <Badge variant="outline">{{ getCategoryName(demo) }}</Badge>
                                     </TableCell>
-                                    <TableCell>{{ demo.package || '-' }}</TableCell>
+                                    <TableCell>
+                                        <div class="flex flex-wrap gap-1">
+                                            <Badge v-for="pkg in getPackageNames(demo)" :key="pkg" variant="secondary" class="text-xs">
+                                                {{ pkg }}
+                                            </Badge>
+                                            <span v-if="getPackageNames(demo).length === 0" class="text-muted-foreground">-</span>
+                                        </div>
+                                    </TableCell>
                                     <TableCell>
                                         <a :href="demo.url" target="_blank" class="inline-flex items-center gap-1 text-blue-600 hover:underline">
                                             <Eye class="h-3 w-3" />
@@ -266,7 +311,6 @@ const toggleStatus = (demo: DemoWebsite) => {
                         </Table>
                     </div>
 
-                    <!-- Pagination -->
                     <div v-if="demos.last_page > 1" class="flex items-center justify-between pt-4">
                         <div class="text-sm text-muted-foreground">
                             Menampilkan {{ (demos.current_page - 1) * demos.per_page + 1 }} sampai
@@ -274,15 +318,7 @@ const toggleStatus = (demo: DemoWebsite) => {
                         </div>
                         <div class="flex items-center space-x-2">
                             <template v-for="link in demos.links" :key="link.label">
-                                <Button
-                                    v-if="link.url"
-                                    variant="outline"
-                                    size="sm"
-                                    :disabled="!link.url"
-                                    @click="router.visit(link.url)"
-                                    v-html="link.label"
-                                    class="cursor-pointer"
-                                />
+                                <Button v-if="link.url" variant="outline" size="sm" :disabled="!link.url" @click="router.visit(link.url)" v-html="link.label" class="cursor-pointer" />
                             </template>
                         </div>
                     </div>
@@ -316,17 +352,24 @@ const toggleStatus = (demo: DemoWebsite) => {
                         <p v-if="createForm.errors.url" class="mt-1 text-xs text-red-500">{{ createForm.errors.url }}</p>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <Label for="create-category">Kategori *</Label>
-                            <Input id="create-category" v-model="createForm.category" placeholder="travel, property, dll" required />
-                            <p v-if="createForm.errors.category" class="mt-1 text-xs text-red-500">{{ createForm.errors.category }}</p>
+                    <div>
+                        <Label for="create-category">Kategori *</Label>
+                        <select id="create-category" v-model="createForm.demo_category_id" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required>
+                            <option value="">Pilih Kategori</option>
+                            <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                        </select>
+                        <p v-if="createForm.errors.demo_category_id" class="mt-1 text-xs text-red-500">{{ createForm.errors.demo_category_id }}</p>
+                    </div>
+
+                    <div>
+                        <Label>Paket (bisa lebih dari satu)</Label>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            <label v-for="pkg in packages" :key="pkg.id" class="flex items-center gap-2 rounded-md border border-input px-3 py-2 cursor-pointer hover:bg-accent transition-colors" :class="createForm.demo_packages.includes(String(pkg.id)) ? 'bg-accent border-primary' : ''">
+                                <input type="checkbox" :value="String(pkg.id)" v-model="createForm.demo_packages" class="rounded border border-input" />
+                                <span class="text-sm">{{ pkg.name }}</span>
+                            </label>
                         </div>
-                        <div>
-                            <Label for="create-package">Paket</Label>
-                            <Input id="create-package" v-model="createForm.package" placeholder="starter, pro, dll" />
-                            <p v-if="createForm.errors.package" class="mt-1 text-xs text-red-500">{{ createForm.errors.package }}</p>
-                        </div>
+                        <p class="mt-1 text-sm text-muted-foreground">Pilih satu atau lebih paket yang sesuai</p>
                     </div>
 
                     <div>
@@ -388,16 +431,24 @@ const toggleStatus = (demo: DemoWebsite) => {
                         <p v-if="editForm.errors.url" class="mt-1 text-xs text-red-500">{{ editForm.errors.url }}</p>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <Label for="edit-category">Kategori *</Label>
-                            <Input id="edit-category" v-model="editForm.category" required />
-                            <p v-if="editForm.errors.category" class="mt-1 text-xs text-red-500">{{ editForm.errors.category }}</p>
+                    <div>
+                        <Label for="edit-category">Kategori *</Label>
+                        <select id="edit-category" v-model="editForm.demo_category_id" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required>
+                            <option value="">Pilih Kategori</option>
+                            <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                        </select>
+                        <p v-if="editForm.errors.demo_category_id" class="mt-1 text-xs text-red-500">{{ editForm.errors.demo_category_id }}</p>
+                    </div>
+
+                    <div>
+                        <Label>Paket (bisa lebih dari satu)</Label>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            <label v-for="pkg in packages" :key="pkg.id" class="flex items-center gap-2 rounded-md border border-input px-3 py-2 cursor-pointer hover:bg-accent transition-colors" :class="editForm.demo_packages.includes(String(pkg.id)) ? 'bg-accent border-primary' : ''">
+                                <input type="checkbox" :value="String(pkg.id)" v-model="editForm.demo_packages" class="rounded border border-input" />
+                                <span class="text-sm">{{ pkg.name }}</span>
+                            </label>
                         </div>
-                        <div>
-                            <Label for="edit-package">Paket</Label>
-                            <Input id="edit-package" v-model="editForm.package" />
-                        </div>
+                        <p class="mt-1 text-sm text-muted-foreground">Pilih satu atau lebih paket yang sesuai</p>
                     </div>
 
                     <div>
@@ -458,7 +509,8 @@ const toggleStatus = (demo: DemoWebsite) => {
                     <div v-if="demoToDelete" class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
                         <p class="text-sm text-gray-600 dark:text-gray-400">
                             <strong>Judul:</strong> {{ demoToDelete.title }}<br />
-                            <strong>Kategori:</strong> {{ demoToDelete.category }}<br />
+                            <strong>Kategori:</strong> {{ getCategoryName(demoToDelete) }}<br />
+                            <strong>Paket:</strong> {{ getPackageNames(demoToDelete).join(', ') || '-' }}<br />
                             <strong>URL:</strong> {{ demoToDelete.url }}<br />
                             <strong>Status:</strong> {{ demoToDelete.is_active ? 'Aktif' : 'Nonaktif' }}
                         </p>

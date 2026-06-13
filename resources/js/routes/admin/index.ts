@@ -18,6 +18,8 @@ import taskCategories from './task-categories'
 import branding from './branding'
 import database from './database'
 import demoWebsites from './demo-websites'
+import demoCategories from './demo-categories'
+import demoPackages from './demo-packages'
 import system from './system'
 /**
 * @see \App\Http\Controllers\Admin\ImpersonateController::impersonate
@@ -132,6 +134,8 @@ taskCategories: Object.assign(taskCategories, taskCategories),
 branding: Object.assign(branding, branding),
 database: Object.assign(database, database),
 demoWebsites: Object.assign(demoWebsites, demoWebsites),
+demoCategories: Object.assign(demoCategories, demoCategories),
+demoPackages: Object.assign(demoPackages, demoPackages),
 system: Object.assign(system, system),
 }
 

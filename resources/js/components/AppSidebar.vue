@@ -191,8 +191,25 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Demo Website',
-        href: '/admin/demo-websites',
+        href: '#',
         icon: Monitor,
+        children: [
+            {
+                title: 'Demo List',
+                href: '/admin/demo-websites',
+                icon: Monitor,
+            },
+            {
+                title: 'Kategori',
+                href: '/admin/demo-categories',
+                icon: Tags,
+            },
+            {
+                title: 'Paket',
+                href: '/admin/demo-packages',
+                icon: Package,
+            },
+        ],
     },
     ...(financialChildren.length > 0
         ? ([

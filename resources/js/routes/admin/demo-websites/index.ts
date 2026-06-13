@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::index
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:14
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:16
  * @route '/admin/demo-websites'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::index
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:14
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:16
  * @route '/admin/demo-websites'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::index
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:14
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:16
  * @route '/admin/demo-websites'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::index
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:14
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:16
  * @route '/admin/demo-websites'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::store
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:39
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:49
  * @route '/admin/demo-websites'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -59,7 +59,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::store
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:39
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:49
  * @route '/admin/demo-websites'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::store
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:39
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:49
  * @route '/admin/demo-websites'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -78,7 +78,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::update
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:61
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:80
  * @route '/admin/demo-websites/{demo_website}'
  */
 export const update = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -93,7 +93,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::update
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:61
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:80
  * @route '/admin/demo-websites/{demo_website}'
  */
 update.url = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -126,7 +126,7 @@ update.url = (args: { demo_website: number | { id: number } } | [demo_website: n
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::update
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:61
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:80
  * @route '/admin/demo-websites/{demo_website}'
  */
 update.put = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -135,7 +135,7 @@ update.put = (args: { demo_website: number | { id: number } } | [demo_website: n
 })
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::update
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:61
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:80
  * @route '/admin/demo-websites/{demo_website}'
  */
 update.patch = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -145,7 +145,7 @@ update.patch = (args: { demo_website: number | { id: number } } | [demo_website:
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::destroy
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:86
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:114
  * @route '/admin/demo-websites/{demo_website}'
  */
 export const destroy = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -160,7 +160,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::destroy
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:86
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:114
  * @route '/admin/demo-websites/{demo_website}'
  */
 destroy.url = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -193,7 +193,7 @@ destroy.url = (args: { demo_website: number | { id: number } } | [demo_website: 
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::destroy
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:86
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:114
  * @route '/admin/demo-websites/{demo_website}'
  */
 destroy.delete = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -203,7 +203,7 @@ destroy.delete = (args: { demo_website: number | { id: number } } | [demo_websit
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::toggleStatus
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:97
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:126
  * @route '/admin/demo-websites/{demoWebsite}/toggle-status'
  */
 export const toggleStatus = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -218,7 +218,7 @@ toggleStatus.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::toggleStatus
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:97
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:126
  * @route '/admin/demo-websites/{demoWebsite}/toggle-status'
  */
 toggleStatus.url = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -251,7 +251,7 @@ toggleStatus.url = (args: { demoWebsite: number | { id: number } } | [demoWebsit
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::toggleStatus
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:97
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:126
  * @route '/admin/demo-websites/{demoWebsite}/toggle-status'
  */
 toggleStatus.patch = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({

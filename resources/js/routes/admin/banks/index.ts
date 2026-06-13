@@ -1,6 +1,6 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../wayfinder'
 /**
- * @see routes/admin.php:57
+ * @see routes/admin.php:59
  * @route '/admin/banks'
  */
 export const redirect = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -14,7 +14,7 @@ redirect.definition = {
 } satisfies RouteDefinition<["get","head"]>
 
 /**
- * @see routes/admin.php:57
+ * @see routes/admin.php:59
  * @route '/admin/banks'
  */
 redirect.url = (options?: RouteQueryOptions) => {
@@ -22,7 +22,7 @@ redirect.url = (options?: RouteQueryOptions) => {
 }
 
 /**
- * @see routes/admin.php:57
+ * @see routes/admin.php:59
  * @route '/admin/banks'
  */
 redirect.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -30,7 +30,7 @@ redirect.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     method: 'get',
 })
 /**
- * @see routes/admin.php:57
+ * @see routes/admin.php:59
  * @route '/admin/banks'
  */
 redirect.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

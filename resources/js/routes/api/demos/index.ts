@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::index
- * @see app/Http/Controllers/DemoWebsiteController.php:11
+ * @see app/Http/Controllers/DemoWebsiteController.php:13
  * @route '/api/demos'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::index
- * @see app/Http/Controllers/DemoWebsiteController.php:11
+ * @see app/Http/Controllers/DemoWebsiteController.php:13
  * @route '/api/demos'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::index
- * @see app/Http/Controllers/DemoWebsiteController.php:11
+ * @see app/Http/Controllers/DemoWebsiteController.php:13
  * @route '/api/demos'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::index
- * @see app/Http/Controllers/DemoWebsiteController.php:11
+ * @see app/Http/Controllers/DemoWebsiteController.php:13
  * @route '/api/demos'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::show
- * @see app/Http/Controllers/DemoWebsiteController.php:50
+ * @see app/Http/Controllers/DemoWebsiteController.php:69
  * @route '/api/demos/{demoWebsite}'
  */
 export const show = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -59,7 +59,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::show
- * @see app/Http/Controllers/DemoWebsiteController.php:50
+ * @see app/Http/Controllers/DemoWebsiteController.php:69
  * @route '/api/demos/{demoWebsite}'
  */
 show.url = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -92,7 +92,7 @@ show.url = (args: { demoWebsite: number | { id: number } } | [demoWebsite: numbe
 
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::show
- * @see app/Http/Controllers/DemoWebsiteController.php:50
+ * @see app/Http/Controllers/DemoWebsiteController.php:69
  * @route '/api/demos/{demoWebsite}'
  */
 show.get = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -101,7 +101,7 @@ show.get = (args: { demoWebsite: number | { id: number } } | [demoWebsite: numbe
 })
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::show
- * @see app/Http/Controllers/DemoWebsiteController.php:50
+ * @see app/Http/Controllers/DemoWebsiteController.php:69
  * @route '/api/demos/{demoWebsite}'
  */
 show.head = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
