@@ -4,9 +4,10 @@ use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\BrandingController;
 use App\Http\Controllers\Admin\BulkPricingController;
 use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\DatabaseController;
+use App\Http\Controllers\Admin\DemoWebsiteController as AdminDemoWebsiteController;
 use App\Http\Controllers\Admin\DomainPriceController;
 use App\Http\Controllers\Admin\EmployeeController;
-use App\Http\Controllers\Admin\DatabaseController;
 use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\HostingPlanController;
 use App\Http\Controllers\Admin\ImpersonateController;
@@ -93,4 +94,8 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::get('database/export', [DatabaseController::class, 'export'])->name('database.export');
     Route::post('database/import', [DatabaseController::class, 'import'])->name('database.import');
     Route::post('database/clear', [DatabaseController::class, 'clear'])->name('database.clear');
+
+    // Demo Website Management
+    Route::resource('demo-websites', AdminDemoWebsiteController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::patch('demo-websites/{demoWebsite}/toggle-status', [AdminDemoWebsiteController::class, 'toggleStatus'])->name('demo-websites.toggle-status');
 });

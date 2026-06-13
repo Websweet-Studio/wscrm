@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\DatabaseController::index
  * @see app/Http/Controllers/Admin/DatabaseController.php:15
@@ -42,41 +42,6 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\DatabaseController::index
- * @see app/Http/Controllers/Admin/DatabaseController.php:15
- * @route '/admin/database'
- */
-    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: index.url(options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\DatabaseController::index
- * @see app/Http/Controllers/Admin/DatabaseController.php:15
- * @route '/admin/database'
- */
-        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url(options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\Admin\DatabaseController::index
- * @see app/Http/Controllers/Admin/DatabaseController.php:15
- * @route '/admin/database'
- */
-        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\DatabaseController::exportMethod
  * @see app/Http/Controllers/Admin/DatabaseController.php:20
@@ -120,41 +85,6 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\DatabaseController::exportMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:20
- * @route '/admin/database/export'
- */
-    const exportMethodForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: exportMethod.url(options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\DatabaseController::exportMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:20
- * @route '/admin/database/export'
- */
-        exportMethodForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: exportMethod.url(options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\Admin\DatabaseController::exportMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:20
- * @route '/admin/database/export'
- */
-        exportMethodForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: exportMethod.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    exportMethod.form = exportMethodForm
 /**
 * @see \App\Http\Controllers\Admin\DatabaseController::importMethod
  * @see app/Http/Controllers/Admin/DatabaseController.php:111
@@ -189,31 +119,44 @@ importMethod.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\DatabaseController::importMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:111
- * @route '/admin/database/import'
+/**
+* @see \App\Http\Controllers\Admin\DatabaseController::clear
+ * @see app/Http/Controllers/Admin/DatabaseController.php:49
+ * @route '/admin/database/clear'
  */
-    const importMethodForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: importMethod.url(options),
-        method: 'post',
-    })
+export const clear = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: clear.url(options),
+    method: 'post',
+})
 
-            /**
-* @see \App\Http\Controllers\Admin\DatabaseController::importMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:111
- * @route '/admin/database/import'
+clear.definition = {
+    methods: ["post"],
+    url: '/admin/database/clear',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\Admin\DatabaseController::clear
+ * @see app/Http/Controllers/Admin/DatabaseController.php:49
+ * @route '/admin/database/clear'
  */
-        importMethodForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: importMethod.url(options),
-            method: 'post',
-        })
-    
-    importMethod.form = importMethodForm
+clear.url = (options?: RouteQueryOptions) => {
+    return clear.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Admin\DatabaseController::clear
+ * @see app/Http/Controllers/Admin/DatabaseController.php:49
+ * @route '/admin/database/clear'
+ */
+clear.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: clear.url(options),
+    method: 'post',
+})
 const database = {
     index: Object.assign(index, index),
 export: Object.assign(exportMethod, exportMethod),
 import: Object.assign(importMethod, importMethod),
+clear: Object.assign(clear, clear),
 }
 
 export default database

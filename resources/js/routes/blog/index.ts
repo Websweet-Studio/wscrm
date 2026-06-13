@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\BlogController::index
  * @see app/Http/Controllers/BlogController.php:13
@@ -42,47 +42,12 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
-    /**
-* @see \App\Http\Controllers\BlogController::index
- * @see app/Http/Controllers/BlogController.php:13
- * @route '/blog'
- */
-    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: index.url(options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\BlogController::index
- * @see app/Http/Controllers/BlogController.php:13
- * @route '/blog'
- */
-        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url(options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\BlogController::index
- * @see app/Http/Controllers/BlogController.php:13
- * @route '/blog'
- */
-        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    index.form = indexForm
 /**
 * @see \App\Http\Controllers\BlogController::show
  * @see app/Http/Controllers/BlogController.php:82
  * @route '/blog/{blogPost}'
  */
-export const show = (args: { blogPost: string | number | { slug: string | number } } | [blogPost: string | number | { slug: string | number } ] | string | number | { slug: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { blogPost: string | { slug: string } } | [blogPost: string | { slug: string } ] | string | { slug: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -97,7 +62,7 @@ show.definition = {
  * @see app/Http/Controllers/BlogController.php:82
  * @route '/blog/{blogPost}'
  */
-show.url = (args: { blogPost: string | number | { slug: string | number } } | [blogPost: string | number | { slug: string | number } ] | string | number | { slug: string | number }, options?: RouteQueryOptions) => {
+show.url = (args: { blogPost: string | { slug: string } } | [blogPost: string | { slug: string } ] | string | { slug: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { blogPost: args }
     }
@@ -130,7 +95,7 @@ show.url = (args: { blogPost: string | number | { slug: string | number } } | [b
  * @see app/Http/Controllers/BlogController.php:82
  * @route '/blog/{blogPost}'
  */
-show.get = (args: { blogPost: string | number | { slug: string | number } } | [blogPost: string | number | { slug: string | number } ] | string | number | { slug: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { blogPost: string | { slug: string } } | [blogPost: string | { slug: string } ] | string | { slug: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -139,52 +104,17 @@ show.get = (args: { blogPost: string | number | { slug: string | number } } | [b
  * @see app/Http/Controllers/BlogController.php:82
  * @route '/blog/{blogPost}'
  */
-show.head = (args: { blogPost: string | number | { slug: string | number } } | [blogPost: string | number | { slug: string | number } ] | string | number | { slug: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { blogPost: string | { slug: string } } | [blogPost: string | { slug: string } ] | string | { slug: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
 
-    /**
-* @see \App\Http\Controllers\BlogController::show
- * @see app/Http/Controllers/BlogController.php:82
- * @route '/blog/{blogPost}'
- */
-    const showForm = (args: { blogPost: string | number | { slug: string | number } } | [blogPost: string | number | { slug: string | number } ] | string | number | { slug: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: show.url(args, options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\BlogController::show
- * @see app/Http/Controllers/BlogController.php:82
- * @route '/blog/{blogPost}'
- */
-        showForm.get = (args: { blogPost: string | number | { slug: string | number } } | [blogPost: string | number | { slug: string | number } ] | string | number | { slug: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: show.url(args, options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\BlogController::show
- * @see app/Http/Controllers/BlogController.php:82
- * @route '/blog/{blogPost}'
- */
-        showForm.head = (args: { blogPost: string | number | { slug: string | number } } | [blogPost: string | number | { slug: string | number } ] | string | number | { slug: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: show.url(args, {
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    show.form = showForm
 /**
 * @see \App\Http\Controllers\BlogController::category
  * @see app/Http/Controllers/BlogController.php:113
  * @route '/blog/category/{category}'
  */
-export const category = (args: { category: string | number | { slug: string | number } } | [category: string | number | { slug: string | number } ] | string | number | { slug: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const category = (args: { category: string | { slug: string } } | [category: string | { slug: string } ] | string | { slug: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: category.url(args, options),
     method: 'get',
 })
@@ -199,7 +129,7 @@ category.definition = {
  * @see app/Http/Controllers/BlogController.php:113
  * @route '/blog/category/{category}'
  */
-category.url = (args: { category: string | number | { slug: string | number } } | [category: string | number | { slug: string | number } ] | string | number | { slug: string | number }, options?: RouteQueryOptions) => {
+category.url = (args: { category: string | { slug: string } } | [category: string | { slug: string } ] | string | { slug: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { category: args }
     }
@@ -232,7 +162,7 @@ category.url = (args: { category: string | number | { slug: string | number } } 
  * @see app/Http/Controllers/BlogController.php:113
  * @route '/blog/category/{category}'
  */
-category.get = (args: { category: string | number | { slug: string | number } } | [category: string | number | { slug: string | number } ] | string | number | { slug: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+category.get = (args: { category: string | { slug: string } } | [category: string | { slug: string } ] | string | { slug: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: category.url(args, options),
     method: 'get',
 })
@@ -241,46 +171,10 @@ category.get = (args: { category: string | number | { slug: string | number } } 
  * @see app/Http/Controllers/BlogController.php:113
  * @route '/blog/category/{category}'
  */
-category.head = (args: { category: string | number | { slug: string | number } } | [category: string | number | { slug: string | number } ] | string | number | { slug: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+category.head = (args: { category: string | { slug: string } } | [category: string | { slug: string } ] | string | { slug: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: category.url(args, options),
     method: 'head',
 })
-
-    /**
-* @see \App\Http\Controllers\BlogController::category
- * @see app/Http/Controllers/BlogController.php:113
- * @route '/blog/category/{category}'
- */
-    const categoryForm = (args: { category: string | number | { slug: string | number } } | [category: string | number | { slug: string | number } ] | string | number | { slug: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: category.url(args, options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\BlogController::category
- * @see app/Http/Controllers/BlogController.php:113
- * @route '/blog/category/{category}'
- */
-        categoryForm.get = (args: { category: string | number | { slug: string | number } } | [category: string | number | { slug: string | number } ] | string | number | { slug: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: category.url(args, options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\BlogController::category
- * @see app/Http/Controllers/BlogController.php:113
- * @route '/blog/category/{category}'
- */
-        categoryForm.head = (args: { category: string | number | { slug: string | number } } | [category: string | number | { slug: string | number } ] | string | number | { slug: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: category.url(args, {
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    category.form = categoryForm
 const blog = {
     index: Object.assign(index, index),
 show: Object.assign(show, show),

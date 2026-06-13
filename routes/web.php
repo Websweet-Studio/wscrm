@@ -47,6 +47,10 @@ Route::get('/api/username/check', [App\Http\Controllers\Api\UsernameController::
 Route::get('/api/customer/username/check', [App\Http\Controllers\Api\CustomerUsernameController::class, 'checkAvailability'])
     ->name('api.customer.username.check');
 
+// Public demo website API
+Route::get('/api/demos', [App\Http\Controllers\DemoWebsiteController::class, 'publicIndex'])->name('api.demos.index');
+Route::get('/api/demos/{demoWebsite}', [App\Http\Controllers\DemoWebsiteController::class, 'publicShow'])->name('api.demos.show');
+
 Route::get('dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth'])
     ->name('dashboard');

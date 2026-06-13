@@ -18,6 +18,7 @@ import {
     Folder,
     Globe,
     LayoutGrid,
+    Monitor,
     Package,
     Palette,
     PenTool,
@@ -187,6 +188,11 @@ const mainNavItems: NavItem[] = [
         title: 'Blog',
         href: '/admin/blog',
         icon: PenTool,
+    },
+    {
+        title: 'Demo Website',
+        href: '/admin/demo-websites',
+        icon: Monitor,
     },
     ...(financialChildren.length > 0
         ? ([

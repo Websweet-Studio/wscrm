@@ -1,10 +1,10 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\ServicePlanController::show
  * @see app/Http/Controllers/ServicePlanController.php:30
  * @route '/services/{servicePlan}'
  */
-export const show = (args: { servicePlan: string | number | { id: string | number } } | [servicePlan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { servicePlan: number | { id: number } } | [servicePlan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -19,7 +19,7 @@ show.definition = {
  * @see app/Http/Controllers/ServicePlanController.php:30
  * @route '/services/{servicePlan}'
  */
-show.url = (args: { servicePlan: string | number | { id: string | number } } | [servicePlan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+show.url = (args: { servicePlan: number | { id: number } } | [servicePlan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { servicePlan: args }
     }
@@ -52,7 +52,7 @@ show.url = (args: { servicePlan: string | number | { id: string | number } } | [
  * @see app/Http/Controllers/ServicePlanController.php:30
  * @route '/services/{servicePlan}'
  */
-show.get = (args: { servicePlan: string | number | { id: string | number } } | [servicePlan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { servicePlan: number | { id: number } } | [servicePlan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -61,46 +61,10 @@ show.get = (args: { servicePlan: string | number | { id: string | number } } | [
  * @see app/Http/Controllers/ServicePlanController.php:30
  * @route '/services/{servicePlan}'
  */
-show.head = (args: { servicePlan: string | number | { id: string | number } } | [servicePlan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { servicePlan: number | { id: number } } | [servicePlan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
-
-    /**
-* @see \App\Http\Controllers\ServicePlanController::show
- * @see app/Http/Controllers/ServicePlanController.php:30
- * @route '/services/{servicePlan}'
- */
-    const showForm = (args: { servicePlan: string | number | { id: string | number } } | [servicePlan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: show.url(args, options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\ServicePlanController::show
- * @see app/Http/Controllers/ServicePlanController.php:30
- * @route '/services/{servicePlan}'
- */
-        showForm.get = (args: { servicePlan: string | number | { id: string | number } } | [servicePlan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: show.url(args, options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\ServicePlanController::show
- * @see app/Http/Controllers/ServicePlanController.php:30
- * @route '/services/{servicePlan}'
- */
-        showForm.head = (args: { servicePlan: string | number | { id: string | number } } | [servicePlan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: show.url(args, {
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    show.form = showForm
 const servicePlans = {
     show: Object.assign(show, show),
 }

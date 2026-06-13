@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\BrandingController::index
  * @see app/Http/Controllers/Admin/BrandingController.php:18
@@ -42,41 +42,6 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\BrandingController::index
- * @see app/Http/Controllers/Admin/BrandingController.php:18
- * @route '/admin/branding'
- */
-    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: index.url(options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\BrandingController::index
- * @see app/Http/Controllers/Admin/BrandingController.php:18
- * @route '/admin/branding'
- */
-        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url(options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\Admin\BrandingController::index
- * @see app/Http/Controllers/Admin/BrandingController.php:18
- * @route '/admin/branding'
- */
-        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\BrandingController::update
  * @see app/Http/Controllers/Admin/BrandingController.php:45
@@ -111,37 +76,6 @@ update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     method: 'patch',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\BrandingController::update
- * @see app/Http/Controllers/Admin/BrandingController.php:45
- * @route '/admin/branding'
- */
-    const updateForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: update.url({
-                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                        _method: 'PATCH',
-                        ...(options?.query ?? options?.mergeQuery ?? {}),
-                    }
-                }),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\BrandingController::update
- * @see app/Http/Controllers/Admin/BrandingController.php:45
- * @route '/admin/branding'
- */
-        updateForm.patch = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: update.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'PATCH',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'post',
-        })
-    
-    update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\BrandingController::uploadImage
  * @see app/Http/Controllers/Admin/BrandingController.php:81
@@ -176,27 +110,6 @@ uploadImage.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\BrandingController::uploadImage
- * @see app/Http/Controllers/Admin/BrandingController.php:81
- * @route '/admin/branding/upload-image'
- */
-    const uploadImageForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: uploadImage.url(options),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\BrandingController::uploadImage
- * @see app/Http/Controllers/Admin/BrandingController.php:81
- * @route '/admin/branding/upload-image'
- */
-        uploadImageForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: uploadImage.url(options),
-            method: 'post',
-        })
-    
-    uploadImage.form = uploadImageForm
 /**
 * @see \App\Http\Controllers\Admin\BrandingController::deleteImage
  * @see app/Http/Controllers/Admin/BrandingController.php:130
@@ -230,38 +143,6 @@ deleteImage.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
     url: deleteImage.url(options),
     method: 'delete',
 })
-
-    /**
-* @see \App\Http\Controllers\Admin\BrandingController::deleteImage
- * @see app/Http/Controllers/Admin/BrandingController.php:130
- * @route '/admin/branding/delete-image'
- */
-    const deleteImageForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: deleteImage.url({
-                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                        _method: 'DELETE',
-                        ...(options?.query ?? options?.mergeQuery ?? {}),
-                    }
-                }),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\BrandingController::deleteImage
- * @see app/Http/Controllers/Admin/BrandingController.php:130
- * @route '/admin/branding/delete-image'
- */
-        deleteImageForm.delete = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: deleteImage.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'DELETE',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'post',
-        })
-    
-    deleteImage.form = deleteImageForm
 const branding = {
     index: Object.assign(index, index),
 update: Object.assign(update, update),

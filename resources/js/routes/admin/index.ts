@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
 import customers from './customers'
 import employees from './employees'
 import orders from './orders'
@@ -17,13 +17,14 @@ import tasks from './tasks'
 import taskCategories from './task-categories'
 import branding from './branding'
 import database from './database'
+import demoWebsites from './demo-websites'
 import system from './system'
 /**
 * @see \App\Http\Controllers\Admin\ImpersonateController::impersonate
  * @see app/Http/Controllers/Admin/ImpersonateController.php:11
  * @route '/admin/impersonate/{customer}'
  */
-export const impersonate = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const impersonate = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: impersonate.url(args, options),
     method: 'post',
 })
@@ -38,7 +39,7 @@ impersonate.definition = {
  * @see app/Http/Controllers/Admin/ImpersonateController.php:11
  * @route '/admin/impersonate/{customer}'
  */
-impersonate.url = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+impersonate.url = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { customer: args }
     }
@@ -71,32 +72,11 @@ impersonate.url = (args: { customer: string | number | { id: string | number } }
  * @see app/Http/Controllers/Admin/ImpersonateController.php:11
  * @route '/admin/impersonate/{customer}'
  */
-impersonate.post = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+impersonate.post = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: impersonate.url(args, options),
     method: 'post',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\ImpersonateController::impersonate
- * @see app/Http/Controllers/Admin/ImpersonateController.php:11
- * @route '/admin/impersonate/{customer}'
- */
-    const impersonateForm = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: impersonate.url(args, options),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\ImpersonateController::impersonate
- * @see app/Http/Controllers/Admin/ImpersonateController.php:11
- * @route '/admin/impersonate/{customer}'
- */
-        impersonateForm.post = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: impersonate.url(args, options),
-            method: 'post',
-        })
-    
-    impersonate.form = impersonateForm
 /**
 * @see \App\Http\Controllers\Admin\ImpersonateController::stopImpersonation
  * @see app/Http/Controllers/Admin/ImpersonateController.php:29
@@ -130,28 +110,6 @@ stopImpersonation.post = (options?: RouteQueryOptions): RouteDefinition<'post'> 
     url: stopImpersonation.url(options),
     method: 'post',
 })
-
-    /**
-* @see \App\Http\Controllers\Admin\ImpersonateController::stopImpersonation
- * @see app/Http/Controllers/Admin/ImpersonateController.php:29
- * @route '/admin/stop-impersonation'
- */
-    const stopImpersonationForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: stopImpersonation.url(options),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\ImpersonateController::stopImpersonation
- * @see app/Http/Controllers/Admin/ImpersonateController.php:29
- * @route '/admin/stop-impersonation'
- */
-        stopImpersonationForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: stopImpersonation.url(options),
-            method: 'post',
-        })
-    
-    stopImpersonation.form = stopImpersonationForm
 const admin = {
     customers: Object.assign(customers, customers),
 employees: Object.assign(employees, employees),
@@ -173,6 +131,7 @@ tasks: Object.assign(tasks, tasks),
 taskCategories: Object.assign(taskCategories, taskCategories),
 branding: Object.assign(branding, branding),
 database: Object.assign(database, database),
+demoWebsites: Object.assign(demoWebsites, demoWebsites),
 system: Object.assign(system, system),
 }
 

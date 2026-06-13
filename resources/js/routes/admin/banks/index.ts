@@ -1,6 +1,6 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../wayfinder'
 /**
- * @see routes/admin.php:56
+ * @see routes/admin.php:57
  * @route '/admin/banks'
  */
 export const redirect = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -14,7 +14,7 @@ redirect.definition = {
 } satisfies RouteDefinition<["get","head"]>
 
 /**
- * @see routes/admin.php:56
+ * @see routes/admin.php:57
  * @route '/admin/banks'
  */
 redirect.url = (options?: RouteQueryOptions) => {
@@ -22,7 +22,7 @@ redirect.url = (options?: RouteQueryOptions) => {
 }
 
 /**
- * @see routes/admin.php:56
+ * @see routes/admin.php:57
  * @route '/admin/banks'
  */
 redirect.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -30,46 +30,13 @@ redirect.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     method: 'get',
 })
 /**
- * @see routes/admin.php:56
+ * @see routes/admin.php:57
  * @route '/admin/banks'
  */
 redirect.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: redirect.url(options),
     method: 'head',
 })
-
-    /**
- * @see routes/admin.php:56
- * @route '/admin/banks'
- */
-    const redirectForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: redirect.url(options),
-        method: 'get',
-    })
-
-            /**
- * @see routes/admin.php:56
- * @route '/admin/banks'
- */
-        redirectForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: redirect.url(options),
-            method: 'get',
-        })
-            /**
- * @see routes/admin.php:56
- * @route '/admin/banks'
- */
-        redirectForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: redirect.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    redirect.form = redirectForm
 const banks = {
     redirect: Object.assign(redirect, redirect),
 }

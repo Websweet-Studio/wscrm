@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::index
  * @see app/Http/Controllers/Admin/CustomerController.php:17
@@ -42,41 +42,6 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\CustomerController::index
- * @see app/Http/Controllers/Admin/CustomerController.php:17
- * @route '/admin/customers'
- */
-    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: index.url(options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\CustomerController::index
- * @see app/Http/Controllers/Admin/CustomerController.php:17
- * @route '/admin/customers'
- */
-        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url(options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\Admin\CustomerController::index
- * @see app/Http/Controllers/Admin/CustomerController.php:17
- * @route '/admin/customers'
- */
-        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::store
  * @see app/Http/Controllers/Admin/CustomerController.php:118
@@ -111,33 +76,12 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\CustomerController::store
- * @see app/Http/Controllers/Admin/CustomerController.php:118
- * @route '/admin/customers'
- */
-    const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: store.url(options),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\CustomerController::store
- * @see app/Http/Controllers/Admin/CustomerController.php:118
- * @route '/admin/customers'
- */
-        storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: store.url(options),
-            method: 'post',
-        })
-    
-    store.form = storeForm
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::show
  * @see app/Http/Controllers/Admin/CustomerController.php:67
  * @route '/admin/customers/{customer}'
  */
-export const show = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -152,7 +96,7 @@ show.definition = {
  * @see app/Http/Controllers/Admin/CustomerController.php:67
  * @route '/admin/customers/{customer}'
  */
-show.url = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+show.url = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { customer: args }
     }
@@ -185,7 +129,7 @@ show.url = (args: { customer: string | number | { id: string | number } } | [cus
  * @see app/Http/Controllers/Admin/CustomerController.php:67
  * @route '/admin/customers/{customer}'
  */
-show.get = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -194,52 +138,17 @@ show.get = (args: { customer: string | number | { id: string | number } } | [cus
  * @see app/Http/Controllers/Admin/CustomerController.php:67
  * @route '/admin/customers/{customer}'
  */
-show.head = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\CustomerController::show
- * @see app/Http/Controllers/Admin/CustomerController.php:67
- * @route '/admin/customers/{customer}'
- */
-    const showForm = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: show.url(args, options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\CustomerController::show
- * @see app/Http/Controllers/Admin/CustomerController.php:67
- * @route '/admin/customers/{customer}'
- */
-        showForm.get = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: show.url(args, options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\Admin\CustomerController::show
- * @see app/Http/Controllers/Admin/CustomerController.php:67
- * @route '/admin/customers/{customer}'
- */
-        showForm.head = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: show.url(args, {
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    show.form = showForm
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::update
  * @see app/Http/Controllers/Admin/CustomerController.php:146
  * @route '/admin/customers/{customer}'
  */
-export const update = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -254,7 +163,7 @@ update.definition = {
  * @see app/Http/Controllers/Admin/CustomerController.php:146
  * @route '/admin/customers/{customer}'
  */
-update.url = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+update.url = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { customer: args }
     }
@@ -287,7 +196,7 @@ update.url = (args: { customer: string | number | { id: string | number } } | [c
  * @see app/Http/Controllers/Admin/CustomerController.php:146
  * @route '/admin/customers/{customer}'
  */
-update.put = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -296,62 +205,17 @@ update.put = (args: { customer: string | number | { id: string | number } } | [c
  * @see app/Http/Controllers/Admin/CustomerController.php:146
  * @route '/admin/customers/{customer}'
  */
-update.patch = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+update.patch = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: update.url(args, options),
     method: 'patch',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\CustomerController::update
- * @see app/Http/Controllers/Admin/CustomerController.php:146
- * @route '/admin/customers/{customer}'
- */
-    const updateForm = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: update.url(args, {
-                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                        _method: 'PUT',
-                        ...(options?.query ?? options?.mergeQuery ?? {}),
-                    }
-                }),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\CustomerController::update
- * @see app/Http/Controllers/Admin/CustomerController.php:146
- * @route '/admin/customers/{customer}'
- */
-        updateForm.put = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: update.url(args, {
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'PUT',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'post',
-        })
-            /**
-* @see \App\Http\Controllers\Admin\CustomerController::update
- * @see app/Http/Controllers/Admin/CustomerController.php:146
- * @route '/admin/customers/{customer}'
- */
-        updateForm.patch = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: update.url(args, {
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'PATCH',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'post',
-        })
-    
-    update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::destroy
  * @see app/Http/Controllers/Admin/CustomerController.php:182
  * @route '/admin/customers/{customer}'
  */
-export const destroy = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -366,7 +230,7 @@ destroy.definition = {
  * @see app/Http/Controllers/Admin/CustomerController.php:182
  * @route '/admin/customers/{customer}'
  */
-destroy.url = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { customer: args }
     }
@@ -399,42 +263,11 @@ destroy.url = (args: { customer: string | number | { id: string | number } } | [
  * @see app/Http/Controllers/Admin/CustomerController.php:182
  * @route '/admin/customers/{customer}'
  */
-destroy.delete = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\CustomerController::destroy
- * @see app/Http/Controllers/Admin/CustomerController.php:182
- * @route '/admin/customers/{customer}'
- */
-    const destroyForm = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: destroy.url(args, {
-                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                        _method: 'DELETE',
-                        ...(options?.query ?? options?.mergeQuery ?? {}),
-                    }
-                }),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\CustomerController::destroy
- * @see app/Http/Controllers/Admin/CustomerController.php:182
- * @route '/admin/customers/{customer}'
- */
-        destroyForm.delete = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: destroy.url(args, {
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'DELETE',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'post',
-        })
-    
-    destroy.form = destroyForm
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::bulkDestroy
  * @see app/Http/Controllers/Admin/CustomerController.php:193
@@ -469,43 +302,12 @@ bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
     method: 'delete',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\CustomerController::bulkDestroy
- * @see app/Http/Controllers/Admin/CustomerController.php:193
- * @route '/admin/customers/bulk'
- */
-    const bulkDestroyForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: bulkDestroy.url({
-                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                        _method: 'DELETE',
-                        ...(options?.query ?? options?.mergeQuery ?? {}),
-                    }
-                }),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\CustomerController::bulkDestroy
- * @see app/Http/Controllers/Admin/CustomerController.php:193
- * @route '/admin/customers/bulk'
- */
-        bulkDestroyForm.delete = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: bulkDestroy.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'DELETE',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'post',
-        })
-    
-    bulkDestroy.form = bulkDestroyForm
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::welcomeEmail
  * @see app/Http/Controllers/Admin/CustomerController.php:232
  * @route '/admin/customers/{customer}/welcome-email'
  */
-export const welcomeEmail = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const welcomeEmail = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: welcomeEmail.url(args, options),
     method: 'post',
 })
@@ -520,7 +322,7 @@ welcomeEmail.definition = {
  * @see app/Http/Controllers/Admin/CustomerController.php:232
  * @route '/admin/customers/{customer}/welcome-email'
  */
-welcomeEmail.url = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+welcomeEmail.url = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { customer: args }
     }
@@ -553,38 +355,17 @@ welcomeEmail.url = (args: { customer: string | number | { id: string | number } 
  * @see app/Http/Controllers/Admin/CustomerController.php:232
  * @route '/admin/customers/{customer}/welcome-email'
  */
-welcomeEmail.post = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+welcomeEmail.post = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: welcomeEmail.url(args, options),
     method: 'post',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\CustomerController::welcomeEmail
- * @see app/Http/Controllers/Admin/CustomerController.php:232
- * @route '/admin/customers/{customer}/welcome-email'
- */
-    const welcomeEmailForm = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: welcomeEmail.url(args, options),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\CustomerController::welcomeEmail
- * @see app/Http/Controllers/Admin/CustomerController.php:232
- * @route '/admin/customers/{customer}/welcome-email'
- */
-        welcomeEmailForm.post = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: welcomeEmail.url(args, options),
-            method: 'post',
-        })
-    
-    welcomeEmail.form = welcomeEmailForm
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::resendPassword
  * @see app/Http/Controllers/Admin/CustomerController.php:239
  * @route '/admin/customers/{customer}/resend-password'
  */
-export const resendPassword = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const resendPassword = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: resendPassword.url(args, options),
     method: 'post',
 })
@@ -599,7 +380,7 @@ resendPassword.definition = {
  * @see app/Http/Controllers/Admin/CustomerController.php:239
  * @route '/admin/customers/{customer}/resend-password'
  */
-resendPassword.url = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+resendPassword.url = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { customer: args }
     }
@@ -632,32 +413,10 @@ resendPassword.url = (args: { customer: string | number | { id: string | number 
  * @see app/Http/Controllers/Admin/CustomerController.php:239
  * @route '/admin/customers/{customer}/resend-password'
  */
-resendPassword.post = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+resendPassword.post = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: resendPassword.url(args, options),
     method: 'post',
 })
-
-    /**
-* @see \App\Http\Controllers\Admin\CustomerController::resendPassword
- * @see app/Http/Controllers/Admin/CustomerController.php:239
- * @route '/admin/customers/{customer}/resend-password'
- */
-    const resendPasswordForm = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: resendPassword.url(args, options),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\CustomerController::resendPassword
- * @see app/Http/Controllers/Admin/CustomerController.php:239
- * @route '/admin/customers/{customer}/resend-password'
- */
-        resendPasswordForm.post = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: resendPassword.url(args, options),
-            method: 'post',
-        })
-    
-    resendPassword.form = resendPasswordForm
 const customers = {
     index: Object.assign(index, index),
 store: Object.assign(store, store),

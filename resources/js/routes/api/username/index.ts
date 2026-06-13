@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Api\UsernameController::check
  * @see app/Http/Controllers/Api/UsernameController.php:12
@@ -41,42 +41,6 @@ check.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: check.url(options),
     method: 'head',
 })
-
-    /**
-* @see \App\Http\Controllers\Api\UsernameController::check
- * @see app/Http/Controllers/Api/UsernameController.php:12
- * @route '/api/username/check'
- */
-    const checkForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: check.url(options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\Api\UsernameController::check
- * @see app/Http/Controllers/Api/UsernameController.php:12
- * @route '/api/username/check'
- */
-        checkForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: check.url(options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\Api\UsernameController::check
- * @see app/Http/Controllers/Api/UsernameController.php:12
- * @route '/api/username/check'
- */
-        checkForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: check.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    check.form = checkForm
 const username = {
     check: Object.assign(check, check),
 }

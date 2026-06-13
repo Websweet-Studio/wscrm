@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\DomainPriceController::availability
  * @see app/Http/Controllers/DomainPriceController.php:108
@@ -32,28 +32,6 @@ availability.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: availability.url(options),
     method: 'post',
 })
-
-    /**
-* @see \App\Http\Controllers\DomainPriceController::availability
- * @see app/Http/Controllers/DomainPriceController.php:108
- * @route '/api/domains/availability'
- */
-    const availabilityForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: availability.url(options),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\DomainPriceController::availability
- * @see app/Http/Controllers/DomainPriceController.php:108
- * @route '/api/domains/availability'
- */
-        availabilityForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: availability.url(options),
-            method: 'post',
-        })
-    
-    availability.form = availabilityForm
 const domains = {
     availability: Object.assign(availability, availability),
 }

@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../wayfinder'
 import orders from './orders'
 import services from './services'
 import invoices from './invoices'
@@ -42,38 +42,6 @@ login.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
-    /**
- * @see routes/customer.php:21
- * @route '/customer/login'
- */
-    const loginForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: login.url(options),
-        method: 'get',
-    })
-
-            /**
- * @see routes/customer.php:21
- * @route '/customer/login'
- */
-        loginForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: login.url(options),
-            method: 'get',
-        })
-            /**
- * @see routes/customer.php:21
- * @route '/customer/login'
- */
-        loginForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: login.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    login.form = loginForm
 /**
 * @see \App\Http\Controllers\Customer\Auth\RegisterController::register
  * @see app/Http/Controllers/Customer/Auth/RegisterController.php:16
@@ -117,41 +85,6 @@ register.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
-    /**
-* @see \App\Http\Controllers\Customer\Auth\RegisterController::register
- * @see app/Http/Controllers/Customer/Auth/RegisterController.php:16
- * @route '/customer/register'
- */
-    const registerForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: register.url(options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\Customer\Auth\RegisterController::register
- * @see app/Http/Controllers/Customer/Auth/RegisterController.php:16
- * @route '/customer/register'
- */
-        registerForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: register.url(options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\Customer\Auth\RegisterController::register
- * @see app/Http/Controllers/Customer/Auth/RegisterController.php:16
- * @route '/customer/register'
- */
-        registerForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: register.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    register.form = registerForm
 /**
 * @see \App\Http\Controllers\Customer\Auth\LoginController::terms
  * @see app/Http/Controllers/Customer/Auth/LoginController.php:23
@@ -195,41 +128,6 @@ terms.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
-    /**
-* @see \App\Http\Controllers\Customer\Auth\LoginController::terms
- * @see app/Http/Controllers/Customer/Auth/LoginController.php:23
- * @route '/customer/terms'
- */
-    const termsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: terms.url(options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\Customer\Auth\LoginController::terms
- * @see app/Http/Controllers/Customer/Auth/LoginController.php:23
- * @route '/customer/terms'
- */
-        termsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: terms.url(options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\Customer\Auth\LoginController::terms
- * @see app/Http/Controllers/Customer/Auth/LoginController.php:23
- * @route '/customer/terms'
- */
-        termsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: terms.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    terms.form = termsForm
 /**
 * @see \App\Http\Controllers\Customer\Auth\LoginController::logout
  * @see app/Http/Controllers/Customer/Auth/LoginController.php:103
@@ -264,27 +162,6 @@ logout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
-    /**
-* @see \App\Http\Controllers\Customer\Auth\LoginController::logout
- * @see app/Http/Controllers/Customer/Auth/LoginController.php:103
- * @route '/customer/logout'
- */
-    const logoutForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: logout.url(options),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Customer\Auth\LoginController::logout
- * @see app/Http/Controllers/Customer/Auth/LoginController.php:103
- * @route '/customer/logout'
- */
-        logoutForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: logout.url(options),
-            method: 'post',
-        })
-    
-    logout.form = logoutForm
 /**
 * @see \App\Http\Controllers\Customer\DashboardController::dashboard
  * @see app/Http/Controllers/Customer/DashboardController.php:13
@@ -328,41 +205,6 @@ dashboard.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
-    /**
-* @see \App\Http\Controllers\Customer\DashboardController::dashboard
- * @see app/Http/Controllers/Customer/DashboardController.php:13
- * @route '/customer/dashboard'
- */
-    const dashboardForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: dashboard.url(options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\Customer\DashboardController::dashboard
- * @see app/Http/Controllers/Customer/DashboardController.php:13
- * @route '/customer/dashboard'
- */
-        dashboardForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: dashboard.url(options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\Customer\DashboardController::dashboard
- * @see app/Http/Controllers/Customer/DashboardController.php:13
- * @route '/customer/dashboard'
- */
-        dashboardForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: dashboard.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    dashboard.form = dashboardForm
 /**
 * @see \App\Http\Controllers\Admin\ImpersonateController::stopImpersonation
  * @see app/Http/Controllers/Admin/ImpersonateController.php:29
@@ -396,28 +238,6 @@ stopImpersonation.post = (options?: RouteQueryOptions): RouteDefinition<'post'> 
     url: stopImpersonation.url(options),
     method: 'post',
 })
-
-    /**
-* @see \App\Http\Controllers\Admin\ImpersonateController::stopImpersonation
- * @see app/Http/Controllers/Admin/ImpersonateController.php:29
- * @route '/customer/stop-impersonation'
- */
-    const stopImpersonationForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: stopImpersonation.url(options),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\ImpersonateController::stopImpersonation
- * @see app/Http/Controllers/Admin/ImpersonateController.php:29
- * @route '/customer/stop-impersonation'
- */
-        stopImpersonationForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: stopImpersonation.url(options),
-            method: 'post',
-        })
-    
-    stopImpersonation.form = stopImpersonationForm
 const customer = {
     login: Object.assign(login, login),
 register: Object.assign(register, register),

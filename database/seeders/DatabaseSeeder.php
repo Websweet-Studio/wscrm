@@ -49,6 +49,7 @@ class DatabaseSeeder extends Seeder
             BankSeeder::class,
             ExpenseSeeder::class,
             TaskSeeder::class,
+            DemoWebsiteSeeder::class,
         ]);
     }
 }
