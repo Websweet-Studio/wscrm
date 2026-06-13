@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::bulkMarkPaid
  * @see app/Http/Controllers/Admin/InvoiceController.php:221
@@ -33,6 +33,37 @@ bulkMarkPaid.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => 
     method: 'patch',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\InvoiceController::bulkMarkPaid
+ * @see app/Http/Controllers/Admin/InvoiceController.php:221
+ * @route '/admin/invoices/bulk/mark-paid'
+ */
+    const bulkMarkPaidForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: bulkMarkPaid.url({
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PATCH',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\InvoiceController::bulkMarkPaid
+ * @see app/Http/Controllers/Admin/InvoiceController.php:221
+ * @route '/admin/invoices/bulk/mark-paid'
+ */
+        bulkMarkPaidForm.patch = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: bulkMarkPaid.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    bulkMarkPaid.form = bulkMarkPaidForm
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::bulkDestroy
  * @see app/Http/Controllers/Admin/InvoiceController.php:247
@@ -67,6 +98,37 @@ bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
     method: 'delete',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\InvoiceController::bulkDestroy
+ * @see app/Http/Controllers/Admin/InvoiceController.php:247
+ * @route '/admin/invoices/bulk'
+ */
+    const bulkDestroyForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: bulkDestroy.url({
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'DELETE',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\InvoiceController::bulkDestroy
+ * @see app/Http/Controllers/Admin/InvoiceController.php:247
+ * @route '/admin/invoices/bulk'
+ */
+        bulkDestroyForm.delete = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: bulkDestroy.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'DELETE',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    bulkDestroy.form = bulkDestroyForm
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::index
  * @see app/Http/Controllers/Admin/InvoiceController.php:18
@@ -110,6 +172,41 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\InvoiceController::index
+ * @see app/Http/Controllers/Admin/InvoiceController.php:18
+ * @route '/admin/invoices'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\InvoiceController::index
+ * @see app/Http/Controllers/Admin/InvoiceController.php:18
+ * @route '/admin/invoices'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\InvoiceController::index
+ * @see app/Http/Controllers/Admin/InvoiceController.php:18
+ * @route '/admin/invoices'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::store
  * @see app/Http/Controllers/Admin/InvoiceController.php:107
@@ -144,6 +241,27 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\InvoiceController::store
+ * @see app/Http/Controllers/Admin/InvoiceController.php:107
+ * @route '/admin/invoices'
+ */
+    const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: store.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\InvoiceController::store
+ * @see app/Http/Controllers/Admin/InvoiceController.php:107
+ * @route '/admin/invoices'
+ */
+        storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: store.url(options),
+            method: 'post',
+        })
+    
+    store.form = storeForm
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::show
  * @see app/Http/Controllers/Admin/InvoiceController.php:139
@@ -211,6 +329,41 @@ show.head = (args: { invoice: number | { id: number } } | [invoice: number | { i
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\InvoiceController::show
+ * @see app/Http/Controllers/Admin/InvoiceController.php:139
+ * @route '/admin/invoices/{invoice}'
+ */
+    const showForm = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: show.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\InvoiceController::show
+ * @see app/Http/Controllers/Admin/InvoiceController.php:139
+ * @route '/admin/invoices/{invoice}'
+ */
+        showForm.get = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\InvoiceController::show
+ * @see app/Http/Controllers/Admin/InvoiceController.php:139
+ * @route '/admin/invoices/{invoice}'
+ */
+        showForm.head = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    show.form = showForm
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::update
  * @see app/Http/Controllers/Admin/InvoiceController.php:148
@@ -278,6 +431,51 @@ update.patch = (args: { invoice: number | { id: number } } | [invoice: number | 
     method: 'patch',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\InvoiceController::update
+ * @see app/Http/Controllers/Admin/InvoiceController.php:148
+ * @route '/admin/invoices/{invoice}'
+ */
+    const updateForm = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: update.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PUT',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\InvoiceController::update
+ * @see app/Http/Controllers/Admin/InvoiceController.php:148
+ * @route '/admin/invoices/{invoice}'
+ */
+        updateForm.put = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PUT',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\InvoiceController::update
+ * @see app/Http/Controllers/Admin/InvoiceController.php:148
+ * @route '/admin/invoices/{invoice}'
+ */
+        updateForm.patch = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::destroy
  * @see app/Http/Controllers/Admin/InvoiceController.php:166
@@ -336,6 +534,37 @@ destroy.delete = (args: { invoice: number | { id: number } } | [invoice: number 
     method: 'delete',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\InvoiceController::destroy
+ * @see app/Http/Controllers/Admin/InvoiceController.php:166
+ * @route '/admin/invoices/{invoice}'
+ */
+    const destroyForm = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: destroy.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'DELETE',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\InvoiceController::destroy
+ * @see app/Http/Controllers/Admin/InvoiceController.php:166
+ * @route '/admin/invoices/{invoice}'
+ */
+        destroyForm.delete = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: destroy.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'DELETE',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    destroy.form = destroyForm
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::download
  * @see app/Http/Controllers/Admin/InvoiceController.php:184
@@ -403,6 +632,41 @@ download.head = (args: { invoice: number | { id: number } } | [invoice: number |
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\InvoiceController::download
+ * @see app/Http/Controllers/Admin/InvoiceController.php:184
+ * @route '/admin/invoices/{invoice}/download'
+ */
+    const downloadForm = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: download.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\InvoiceController::download
+ * @see app/Http/Controllers/Admin/InvoiceController.php:184
+ * @route '/admin/invoices/{invoice}/download'
+ */
+        downloadForm.get = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: download.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\InvoiceController::download
+ * @see app/Http/Controllers/Admin/InvoiceController.php:184
+ * @route '/admin/invoices/{invoice}/download'
+ */
+        downloadForm.head = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: download.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    download.form = downloadForm
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::markPaid
  * @see app/Http/Controllers/Admin/InvoiceController.php:206
@@ -461,6 +725,37 @@ markPaid.patch = (args: { invoice: number | { id: number } } | [invoice: number 
     method: 'patch',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\InvoiceController::markPaid
+ * @see app/Http/Controllers/Admin/InvoiceController.php:206
+ * @route '/admin/invoices/{invoice}/mark-paid'
+ */
+    const markPaidForm = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: markPaid.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PATCH',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\InvoiceController::markPaid
+ * @see app/Http/Controllers/Admin/InvoiceController.php:206
+ * @route '/admin/invoices/{invoice}/mark-paid'
+ */
+        markPaidForm.patch = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: markPaid.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    markPaid.form = markPaidForm
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::generateRenewals
  * @see app/Http/Controllers/Admin/InvoiceController.php:177
@@ -494,6 +789,28 @@ generateRenewals.post = (options?: RouteQueryOptions): RouteDefinition<'post'> =
     url: generateRenewals.url(options),
     method: 'post',
 })
+
+    /**
+* @see \App\Http\Controllers\Admin\InvoiceController::generateRenewals
+ * @see app/Http/Controllers/Admin/InvoiceController.php:177
+ * @route '/admin/invoices/generate-renewals'
+ */
+    const generateRenewalsForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: generateRenewals.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\InvoiceController::generateRenewals
+ * @see app/Http/Controllers/Admin/InvoiceController.php:177
+ * @route '/admin/invoices/generate-renewals'
+ */
+        generateRenewalsForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: generateRenewals.url(options),
+            method: 'post',
+        })
+    
+    generateRenewals.form = generateRenewalsForm
 const invoices = {
     bulkMarkPaid: Object.assign(bulkMarkPaid, bulkMarkPaid),
 bulkDestroy: Object.assign(bulkDestroy, bulkDestroy),

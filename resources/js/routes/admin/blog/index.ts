@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\BlogController::index
  * @see app/Http/Controllers/Admin/BlogController.php:19
@@ -42,6 +42,41 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\BlogController::index
+ * @see app/Http/Controllers/Admin/BlogController.php:19
+ * @route '/admin/blog'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\BlogController::index
+ * @see app/Http/Controllers/Admin/BlogController.php:19
+ * @route '/admin/blog'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\BlogController::index
+ * @see app/Http/Controllers/Admin/BlogController.php:19
+ * @route '/admin/blog'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\BlogController::create
  * @see app/Http/Controllers/Admin/BlogController.php:60
@@ -85,6 +120,41 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\BlogController::create
+ * @see app/Http/Controllers/Admin/BlogController.php:60
+ * @route '/admin/blog/create'
+ */
+    const createForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: create.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\BlogController::create
+ * @see app/Http/Controllers/Admin/BlogController.php:60
+ * @route '/admin/blog/create'
+ */
+        createForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\BlogController::create
+ * @see app/Http/Controllers/Admin/BlogController.php:60
+ * @route '/admin/blog/create'
+ */
+        createForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    create.form = createForm
 /**
 * @see \App\Http\Controllers\Admin\BlogController::store
  * @see app/Http/Controllers/Admin/BlogController.php:72
@@ -119,6 +189,27 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\BlogController::store
+ * @see app/Http/Controllers/Admin/BlogController.php:72
+ * @route '/admin/blog'
+ */
+    const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: store.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\BlogController::store
+ * @see app/Http/Controllers/Admin/BlogController.php:72
+ * @route '/admin/blog'
+ */
+        storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: store.url(options),
+            method: 'post',
+        })
+    
+    store.form = storeForm
 /**
 * @see \App\Http\Controllers\Admin\BlogController::show
  * @see app/Http/Controllers/Admin/BlogController.php:111
@@ -186,6 +277,41 @@ show.head = (args: { blog: number | { id: number } } | [blog: number | { id: num
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\BlogController::show
+ * @see app/Http/Controllers/Admin/BlogController.php:111
+ * @route '/admin/blog/{blog}'
+ */
+    const showForm = (args: { blog: number | { id: number } } | [blog: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: show.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\BlogController::show
+ * @see app/Http/Controllers/Admin/BlogController.php:111
+ * @route '/admin/blog/{blog}'
+ */
+        showForm.get = (args: { blog: number | { id: number } } | [blog: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\BlogController::show
+ * @see app/Http/Controllers/Admin/BlogController.php:111
+ * @route '/admin/blog/{blog}'
+ */
+        showForm.head = (args: { blog: number | { id: number } } | [blog: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    show.form = showForm
 /**
 * @see \App\Http\Controllers\Admin\BlogController::edit
  * @see app/Http/Controllers/Admin/BlogController.php:123
@@ -253,6 +379,41 @@ edit.head = (args: { blog: number | { id: number } } | [blog: number | { id: num
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\BlogController::edit
+ * @see app/Http/Controllers/Admin/BlogController.php:123
+ * @route '/admin/blog/{blog}/edit'
+ */
+    const editForm = (args: { blog: number | { id: number } } | [blog: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: edit.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\BlogController::edit
+ * @see app/Http/Controllers/Admin/BlogController.php:123
+ * @route '/admin/blog/{blog}/edit'
+ */
+        editForm.get = (args: { blog: number | { id: number } } | [blog: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\BlogController::edit
+ * @see app/Http/Controllers/Admin/BlogController.php:123
+ * @route '/admin/blog/{blog}/edit'
+ */
+        editForm.head = (args: { blog: number | { id: number } } | [blog: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    edit.form = editForm
 /**
 * @see \App\Http\Controllers\Admin\BlogController::update
  * @see app/Http/Controllers/Admin/BlogController.php:136
@@ -320,6 +481,51 @@ update.patch = (args: { blog: number | { id: number } } | [blog: number | { id: 
     method: 'patch',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\BlogController::update
+ * @see app/Http/Controllers/Admin/BlogController.php:136
+ * @route '/admin/blog/{blog}'
+ */
+    const updateForm = (args: { blog: number | { id: number } } | [blog: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: update.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PUT',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\BlogController::update
+ * @see app/Http/Controllers/Admin/BlogController.php:136
+ * @route '/admin/blog/{blog}'
+ */
+        updateForm.put = (args: { blog: number | { id: number } } | [blog: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PUT',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\BlogController::update
+ * @see app/Http/Controllers/Admin/BlogController.php:136
+ * @route '/admin/blog/{blog}'
+ */
+        updateForm.patch = (args: { blog: number | { id: number } } | [blog: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\BlogController::destroy
  * @see app/Http/Controllers/Admin/BlogController.php:176
@@ -378,6 +584,37 @@ destroy.delete = (args: { blog: number | { id: number } } | [blog: number | { id
     method: 'delete',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\BlogController::destroy
+ * @see app/Http/Controllers/Admin/BlogController.php:176
+ * @route '/admin/blog/{blog}'
+ */
+    const destroyForm = (args: { blog: number | { id: number } } | [blog: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: destroy.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'DELETE',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\BlogController::destroy
+ * @see app/Http/Controllers/Admin/BlogController.php:176
+ * @route '/admin/blog/{blog}'
+ */
+        destroyForm.delete = (args: { blog: number | { id: number } } | [blog: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: destroy.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'DELETE',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    destroy.form = destroyForm
 /**
 * @see \App\Http\Controllers\Admin\BlogController::toggleFeatured
  * @see app/Http/Controllers/Admin/BlogController.php:191
@@ -436,6 +673,37 @@ toggleFeatured.patch = (args: { blog: number | { id: number } } | [blog: number 
     method: 'patch',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\BlogController::toggleFeatured
+ * @see app/Http/Controllers/Admin/BlogController.php:191
+ * @route '/admin/blog/{blog}/toggle-featured'
+ */
+    const toggleFeaturedForm = (args: { blog: number | { id: number } } | [blog: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: toggleFeatured.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PATCH',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\BlogController::toggleFeatured
+ * @see app/Http/Controllers/Admin/BlogController.php:191
+ * @route '/admin/blog/{blog}/toggle-featured'
+ */
+        toggleFeaturedForm.patch = (args: { blog: number | { id: number } } | [blog: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: toggleFeatured.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    toggleFeatured.form = toggleFeaturedForm
 /**
 * @see \App\Http\Controllers\Admin\BlogController::togglePinned
  * @see app/Http/Controllers/Admin/BlogController.php:201
@@ -493,6 +761,38 @@ togglePinned.patch = (args: { blog: number | { id: number } } | [blog: number | 
     url: togglePinned.url(args, options),
     method: 'patch',
 })
+
+    /**
+* @see \App\Http\Controllers\Admin\BlogController::togglePinned
+ * @see app/Http/Controllers/Admin/BlogController.php:201
+ * @route '/admin/blog/{blog}/toggle-pinned'
+ */
+    const togglePinnedForm = (args: { blog: number | { id: number } } | [blog: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: togglePinned.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PATCH',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\BlogController::togglePinned
+ * @see app/Http/Controllers/Admin/BlogController.php:201
+ * @route '/admin/blog/{blog}/toggle-pinned'
+ */
+        togglePinnedForm.patch = (args: { blog: number | { id: number } } | [blog: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: togglePinned.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    togglePinned.form = togglePinnedForm
 const blog = {
     index: Object.assign(index, index),
 create: Object.assign(create, create),

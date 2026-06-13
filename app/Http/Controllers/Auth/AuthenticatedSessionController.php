@@ -68,11 +68,11 @@ class AuthenticatedSessionController extends Controller
 
         $customer = Customer::where('email', $login)->first();
         if ($customer && Hash::check($password, $customer->password) && $customer->isActive()) {
-            Auth::guard('customer')->login($customer, $remember);
             RateLimiter::clear($request->throttleKey());
 
             $request->session()->regenerate();
-            $request->session()->regenerateToken();
+
+            Auth::guard('customer')->login($customer, $remember);
 
             return redirect()->intended('/customer/dashboard');
         }

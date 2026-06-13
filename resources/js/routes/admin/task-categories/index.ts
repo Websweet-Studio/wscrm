@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\TaskCategoryController::index
  * @see app/Http/Controllers/Admin/TaskCategoryController.php:15
@@ -42,6 +42,41 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\TaskCategoryController::index
+ * @see app/Http/Controllers/Admin/TaskCategoryController.php:15
+ * @route '/admin/task-categories'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\TaskCategoryController::index
+ * @see app/Http/Controllers/Admin/TaskCategoryController.php:15
+ * @route '/admin/task-categories'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\TaskCategoryController::index
+ * @see app/Http/Controllers/Admin/TaskCategoryController.php:15
+ * @route '/admin/task-categories'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\TaskCategoryController::store
  * @see app/Http/Controllers/Admin/TaskCategoryController.php:26
@@ -76,6 +111,27 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\TaskCategoryController::store
+ * @see app/Http/Controllers/Admin/TaskCategoryController.php:26
+ * @route '/admin/task-categories'
+ */
+    const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: store.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\TaskCategoryController::store
+ * @see app/Http/Controllers/Admin/TaskCategoryController.php:26
+ * @route '/admin/task-categories'
+ */
+        storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: store.url(options),
+            method: 'post',
+        })
+    
+    store.form = storeForm
 /**
 * @see \App\Http\Controllers\Admin\TaskCategoryController::update
  * @see app/Http/Controllers/Admin/TaskCategoryController.php:43
@@ -143,6 +199,51 @@ update.patch = (args: { task_category: number | { id: number } } | [task_categor
     method: 'patch',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\TaskCategoryController::update
+ * @see app/Http/Controllers/Admin/TaskCategoryController.php:43
+ * @route '/admin/task-categories/{task_category}'
+ */
+    const updateForm = (args: { task_category: number | { id: number } } | [task_category: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: update.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PUT',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\TaskCategoryController::update
+ * @see app/Http/Controllers/Admin/TaskCategoryController.php:43
+ * @route '/admin/task-categories/{task_category}'
+ */
+        updateForm.put = (args: { task_category: number | { id: number } } | [task_category: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PUT',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\TaskCategoryController::update
+ * @see app/Http/Controllers/Admin/TaskCategoryController.php:43
+ * @route '/admin/task-categories/{task_category}'
+ */
+        updateForm.patch = (args: { task_category: number | { id: number } } | [task_category: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\TaskCategoryController::destroy
  * @see app/Http/Controllers/Admin/TaskCategoryController.php:60
@@ -200,6 +301,38 @@ destroy.delete = (args: { task_category: number | { id: number } } | [task_categ
     url: destroy.url(args, options),
     method: 'delete',
 })
+
+    /**
+* @see \App\Http\Controllers\Admin\TaskCategoryController::destroy
+ * @see app/Http/Controllers/Admin/TaskCategoryController.php:60
+ * @route '/admin/task-categories/{task_category}'
+ */
+    const destroyForm = (args: { task_category: number | { id: number } } | [task_category: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: destroy.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'DELETE',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\TaskCategoryController::destroy
+ * @see app/Http/Controllers/Admin/TaskCategoryController.php:60
+ * @route '/admin/task-categories/{task_category}'
+ */
+        destroyForm.delete = (args: { task_category: number | { id: number } } | [task_category: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: destroy.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'DELETE',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    destroy.form = destroyForm
 const taskCategories = {
     index: Object.assign(index, index),
 store: Object.assign(store, store),

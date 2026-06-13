@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
 import customers from './customers'
 import employees from './employees'
 import orders from './orders'
@@ -79,6 +79,27 @@ impersonate.post = (args: { customer: number | { id: number } } | [customer: num
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\ImpersonateController::impersonate
+ * @see app/Http/Controllers/Admin/ImpersonateController.php:11
+ * @route '/admin/impersonate/{customer}'
+ */
+    const impersonateForm = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: impersonate.url(args, options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\ImpersonateController::impersonate
+ * @see app/Http/Controllers/Admin/ImpersonateController.php:11
+ * @route '/admin/impersonate/{customer}'
+ */
+        impersonateForm.post = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: impersonate.url(args, options),
+            method: 'post',
+        })
+    
+    impersonate.form = impersonateForm
 /**
 * @see \App\Http\Controllers\Admin\ImpersonateController::stopImpersonation
  * @see app/Http/Controllers/Admin/ImpersonateController.php:29
@@ -112,6 +133,28 @@ stopImpersonation.post = (options?: RouteQueryOptions): RouteDefinition<'post'> 
     url: stopImpersonation.url(options),
     method: 'post',
 })
+
+    /**
+* @see \App\Http\Controllers\Admin\ImpersonateController::stopImpersonation
+ * @see app/Http/Controllers/Admin/ImpersonateController.php:29
+ * @route '/admin/stop-impersonation'
+ */
+    const stopImpersonationForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: stopImpersonation.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\ImpersonateController::stopImpersonation
+ * @see app/Http/Controllers/Admin/ImpersonateController.php:29
+ * @route '/admin/stop-impersonation'
+ */
+        stopImpersonationForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: stopImpersonation.url(options),
+            method: 'post',
+        })
+    
+    stopImpersonation.form = stopImpersonationForm
 const admin = {
     customers: Object.assign(customers, customers),
 employees: Object.assign(employees, employees),

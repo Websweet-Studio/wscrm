@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\ServicePlanController::show
  * @see app/Http/Controllers/ServicePlanController.php:30
@@ -65,6 +65,42 @@ show.head = (args: { servicePlan: number | { id: number } } | [servicePlan: numb
     url: show.url(args, options),
     method: 'head',
 })
+
+    /**
+* @see \App\Http\Controllers\ServicePlanController::show
+ * @see app/Http/Controllers/ServicePlanController.php:30
+ * @route '/services/{servicePlan}'
+ */
+    const showForm = (args: { servicePlan: number | { id: number } } | [servicePlan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: show.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\ServicePlanController::show
+ * @see app/Http/Controllers/ServicePlanController.php:30
+ * @route '/services/{servicePlan}'
+ */
+        showForm.get = (args: { servicePlan: number | { id: number } } | [servicePlan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\ServicePlanController::show
+ * @see app/Http/Controllers/ServicePlanController.php:30
+ * @route '/services/{servicePlan}'
+ */
+        showForm.head = (args: { servicePlan: number | { id: number } } | [servicePlan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    show.form = showForm
 const servicePlans = {
     show: Object.assign(show, show),
 }

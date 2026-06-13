@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\DemoCategoryController::index
  * @see app/Http/Controllers/Admin/DemoCategoryController.php:13
@@ -42,6 +42,41 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\DemoCategoryController::index
+ * @see app/Http/Controllers/Admin/DemoCategoryController.php:13
+ * @route '/admin/demo-categories'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\DemoCategoryController::index
+ * @see app/Http/Controllers/Admin/DemoCategoryController.php:13
+ * @route '/admin/demo-categories'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\DemoCategoryController::index
+ * @see app/Http/Controllers/Admin/DemoCategoryController.php:13
+ * @route '/admin/demo-categories'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\DemoCategoryController::store
  * @see app/Http/Controllers/Admin/DemoCategoryController.php:28
@@ -76,6 +111,27 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\DemoCategoryController::store
+ * @see app/Http/Controllers/Admin/DemoCategoryController.php:28
+ * @route '/admin/demo-categories'
+ */
+    const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: store.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\DemoCategoryController::store
+ * @see app/Http/Controllers/Admin/DemoCategoryController.php:28
+ * @route '/admin/demo-categories'
+ */
+        storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: store.url(options),
+            method: 'post',
+        })
+    
+    store.form = storeForm
 /**
 * @see \App\Http\Controllers\Admin\DemoCategoryController::update
  * @see app/Http/Controllers/Admin/DemoCategoryController.php:47
@@ -143,6 +199,51 @@ update.patch = (args: { demo_category: number | { id: number } } | [demo_categor
     method: 'patch',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\DemoCategoryController::update
+ * @see app/Http/Controllers/Admin/DemoCategoryController.php:47
+ * @route '/admin/demo-categories/{demo_category}'
+ */
+    const updateForm = (args: { demo_category: number | { id: number } } | [demo_category: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: update.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PUT',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\DemoCategoryController::update
+ * @see app/Http/Controllers/Admin/DemoCategoryController.php:47
+ * @route '/admin/demo-categories/{demo_category}'
+ */
+        updateForm.put = (args: { demo_category: number | { id: number } } | [demo_category: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PUT',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\DemoCategoryController::update
+ * @see app/Http/Controllers/Admin/DemoCategoryController.php:47
+ * @route '/admin/demo-categories/{demo_category}'
+ */
+        updateForm.patch = (args: { demo_category: number | { id: number } } | [demo_category: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\DemoCategoryController::destroy
  * @see app/Http/Controllers/Admin/DemoCategoryController.php:66
@@ -201,6 +302,37 @@ destroy.delete = (args: { demo_category: number | { id: number } } | [demo_categ
     method: 'delete',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\DemoCategoryController::destroy
+ * @see app/Http/Controllers/Admin/DemoCategoryController.php:66
+ * @route '/admin/demo-categories/{demo_category}'
+ */
+    const destroyForm = (args: { demo_category: number | { id: number } } | [demo_category: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: destroy.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'DELETE',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\DemoCategoryController::destroy
+ * @see app/Http/Controllers/Admin/DemoCategoryController.php:66
+ * @route '/admin/demo-categories/{demo_category}'
+ */
+        destroyForm.delete = (args: { demo_category: number | { id: number } } | [demo_category: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: destroy.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'DELETE',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    destroy.form = destroyForm
 /**
 * @see \App\Http\Controllers\Admin\DemoCategoryController::toggleStatus
  * @see app/Http/Controllers/Admin/DemoCategoryController.php:73
@@ -258,6 +390,38 @@ toggleStatus.patch = (args: { demoCategory: number | { id: number } } | [demoCat
     url: toggleStatus.url(args, options),
     method: 'patch',
 })
+
+    /**
+* @see \App\Http\Controllers\Admin\DemoCategoryController::toggleStatus
+ * @see app/Http/Controllers/Admin/DemoCategoryController.php:73
+ * @route '/admin/demo-categories/{demoCategory}/toggle-status'
+ */
+    const toggleStatusForm = (args: { demoCategory: number | { id: number } } | [demoCategory: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: toggleStatus.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PATCH',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\DemoCategoryController::toggleStatus
+ * @see app/Http/Controllers/Admin/DemoCategoryController.php:73
+ * @route '/admin/demo-categories/{demoCategory}/toggle-status'
+ */
+        toggleStatusForm.patch = (args: { demoCategory: number | { id: number } } | [demoCategory: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: toggleStatus.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    toggleStatus.form = toggleStatusForm
 const demoCategories = {
     index: Object.assign(index, index),
 store: Object.assign(store, store),

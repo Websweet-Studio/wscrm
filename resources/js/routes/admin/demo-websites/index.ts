@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::index
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:16
@@ -42,6 +42,41 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::index
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:16
+ * @route '/admin/demo-websites'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::index
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:16
+ * @route '/admin/demo-websites'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::index
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:16
+ * @route '/admin/demo-websites'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::store
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:49
@@ -76,6 +111,27 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::store
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:49
+ * @route '/admin/demo-websites'
+ */
+    const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: store.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::store
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:49
+ * @route '/admin/demo-websites'
+ */
+        storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: store.url(options),
+            method: 'post',
+        })
+    
+    store.form = storeForm
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::update
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:80
@@ -143,6 +199,51 @@ update.patch = (args: { demo_website: number | { id: number } } | [demo_website:
     method: 'patch',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::update
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:80
+ * @route '/admin/demo-websites/{demo_website}'
+ */
+    const updateForm = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: update.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PUT',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::update
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:80
+ * @route '/admin/demo-websites/{demo_website}'
+ */
+        updateForm.put = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PUT',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::update
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:80
+ * @route '/admin/demo-websites/{demo_website}'
+ */
+        updateForm.patch = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::destroy
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:114
@@ -201,6 +302,37 @@ destroy.delete = (args: { demo_website: number | { id: number } } | [demo_websit
     method: 'delete',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::destroy
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:114
+ * @route '/admin/demo-websites/{demo_website}'
+ */
+    const destroyForm = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: destroy.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'DELETE',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::destroy
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:114
+ * @route '/admin/demo-websites/{demo_website}'
+ */
+        destroyForm.delete = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: destroy.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'DELETE',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    destroy.form = destroyForm
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::toggleStatus
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:126
@@ -258,6 +390,38 @@ toggleStatus.patch = (args: { demoWebsite: number | { id: number } } | [demoWebs
     url: toggleStatus.url(args, options),
     method: 'patch',
 })
+
+    /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::toggleStatus
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:126
+ * @route '/admin/demo-websites/{demoWebsite}/toggle-status'
+ */
+    const toggleStatusForm = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: toggleStatus.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PATCH',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::toggleStatus
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:126
+ * @route '/admin/demo-websites/{demoWebsite}/toggle-status'
+ */
+        toggleStatusForm.patch = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: toggleStatus.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    toggleStatus.form = toggleStatusForm
 const demoWebsites = {
     index: Object.assign(index, index),
 store: Object.assign(store, store),

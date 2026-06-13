@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Customer\InvoiceController::index
  * @see app/Http/Controllers/Customer/InvoiceController.php:19
@@ -42,6 +42,41 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Customer\InvoiceController::index
+ * @see app/Http/Controllers/Customer/InvoiceController.php:19
+ * @route '/customer/invoices'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Customer\InvoiceController::index
+ * @see app/Http/Controllers/Customer/InvoiceController.php:19
+ * @route '/customer/invoices'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Customer\InvoiceController::index
+ * @see app/Http/Controllers/Customer/InvoiceController.php:19
+ * @route '/customer/invoices'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Customer\InvoiceController::show
  * @see app/Http/Controllers/Customer/InvoiceController.php:36
@@ -109,6 +144,41 @@ show.head = (args: { invoice: number | { id: number } } | [invoice: number | { i
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Customer\InvoiceController::show
+ * @see app/Http/Controllers/Customer/InvoiceController.php:36
+ * @route '/customer/invoices/{invoice}'
+ */
+    const showForm = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: show.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Customer\InvoiceController::show
+ * @see app/Http/Controllers/Customer/InvoiceController.php:36
+ * @route '/customer/invoices/{invoice}'
+ */
+        showForm.get = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Customer\InvoiceController::show
+ * @see app/Http/Controllers/Customer/InvoiceController.php:36
+ * @route '/customer/invoices/{invoice}'
+ */
+        showForm.head = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    show.form = showForm
 /**
 * @see \App\Http\Controllers\Customer\InvoiceController::payment
  * @see app/Http/Controllers/Customer/InvoiceController.php:50
@@ -176,6 +246,41 @@ payment.head = (args: { invoice: number | { id: number } } | [invoice: number | 
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Customer\InvoiceController::payment
+ * @see app/Http/Controllers/Customer/InvoiceController.php:50
+ * @route '/customer/invoices/{invoice}/payment'
+ */
+    const paymentForm = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: payment.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Customer\InvoiceController::payment
+ * @see app/Http/Controllers/Customer/InvoiceController.php:50
+ * @route '/customer/invoices/{invoice}/payment'
+ */
+        paymentForm.get = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: payment.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Customer\InvoiceController::payment
+ * @see app/Http/Controllers/Customer/InvoiceController.php:50
+ * @route '/customer/invoices/{invoice}/payment'
+ */
+        paymentForm.head = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: payment.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    payment.form = paymentForm
 /**
 * @see \App\Http\Controllers\Customer\InvoiceController::processPayment
  * @see app/Http/Controllers/Customer/InvoiceController.php:77
@@ -234,6 +339,27 @@ processPayment.post = (args: { invoice: number | { id: number } } | [invoice: nu
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\Customer\InvoiceController::processPayment
+ * @see app/Http/Controllers/Customer/InvoiceController.php:77
+ * @route '/customer/invoices/{invoice}/process-payment'
+ */
+    const processPaymentForm = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: processPayment.url(args, options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Customer\InvoiceController::processPayment
+ * @see app/Http/Controllers/Customer/InvoiceController.php:77
+ * @route '/customer/invoices/{invoice}/process-payment'
+ */
+        processPaymentForm.post = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: processPayment.url(args, options),
+            method: 'post',
+        })
+    
+    processPayment.form = processPaymentForm
 /**
 * @see \App\Http\Controllers\Customer\InvoiceController::confirmPayment
  * @see app/Http/Controllers/Customer/InvoiceController.php:112
@@ -291,6 +417,28 @@ confirmPayment.post = (args: { invoice: number | { id: number } } | [invoice: nu
     url: confirmPayment.url(args, options),
     method: 'post',
 })
+
+    /**
+* @see \App\Http\Controllers\Customer\InvoiceController::confirmPayment
+ * @see app/Http/Controllers/Customer/InvoiceController.php:112
+ * @route '/customer/invoices/{invoice}/confirm-payment'
+ */
+    const confirmPaymentForm = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: confirmPayment.url(args, options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Customer\InvoiceController::confirmPayment
+ * @see app/Http/Controllers/Customer/InvoiceController.php:112
+ * @route '/customer/invoices/{invoice}/confirm-payment'
+ */
+        confirmPaymentForm.post = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: confirmPayment.url(args, options),
+            method: 'post',
+        })
+    
+    confirmPayment.form = confirmPaymentForm
 const invoices = {
     index: Object.assign(index, index),
 show: Object.assign(show, show),

@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::index
  * @see app/Http/Controllers/Admin/BulkPricingController.php:19
@@ -42,6 +42,41 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\BulkPricingController::index
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:19
+ * @route '/admin/bulk-pricing'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\BulkPricingController::index
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:19
+ * @route '/admin/bulk-pricing'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\BulkPricingController::index
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:19
+ * @route '/admin/bulk-pricing'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::simulate
  * @see app/Http/Controllers/Admin/BulkPricingController.php:44
@@ -76,6 +111,27 @@ simulate.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\BulkPricingController::simulate
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:44
+ * @route '/admin/bulk-pricing/simulate'
+ */
+    const simulateForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: simulate.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\BulkPricingController::simulate
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:44
+ * @route '/admin/bulk-pricing/simulate'
+ */
+        simulateForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: simulate.url(options),
+            method: 'post',
+        })
+    
+    simulate.form = simulateForm
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::apply
  * @see app/Http/Controllers/Admin/BulkPricingController.php:81
@@ -110,6 +166,27 @@ apply.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\BulkPricingController::apply
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:81
+ * @route '/admin/bulk-pricing/apply'
+ */
+    const applyForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: apply.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\BulkPricingController::apply
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:81
+ * @route '/admin/bulk-pricing/apply'
+ */
+        applyForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: apply.url(options),
+            method: 'post',
+        })
+    
+    apply.form = applyForm
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::saveConfig
  * @see app/Http/Controllers/Admin/BulkPricingController.php:162
@@ -144,6 +221,27 @@ saveConfig.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\BulkPricingController::saveConfig
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:162
+ * @route '/admin/bulk-pricing/save-config'
+ */
+    const saveConfigForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: saveConfig.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\BulkPricingController::saveConfig
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:162
+ * @route '/admin/bulk-pricing/save-config'
+ */
+        saveConfigForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: saveConfig.url(options),
+            method: 'post',
+        })
+    
+    saveConfig.form = saveConfigForm
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::loadConfig
  * @see app/Http/Controllers/Admin/BulkPricingController.php:243
@@ -206,6 +304,41 @@ loadConfig.head = (args: { id: string | number } | [id: string | number ] | stri
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\BulkPricingController::loadConfig
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:243
+ * @route '/admin/bulk-pricing/load-config/{id}'
+ */
+    const loadConfigForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: loadConfig.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\BulkPricingController::loadConfig
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:243
+ * @route '/admin/bulk-pricing/load-config/{id}'
+ */
+        loadConfigForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: loadConfig.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\BulkPricingController::loadConfig
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:243
+ * @route '/admin/bulk-pricing/load-config/{id}'
+ */
+        loadConfigForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: loadConfig.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    loadConfig.form = loadConfigForm
 /**
 * @see \App\Http\Controllers\Admin\BulkPricingController::deleteConfig
  * @see app/Http/Controllers/Admin/BulkPricingController.php:255
@@ -258,6 +391,38 @@ deleteConfig.delete = (args: { id: string | number } | [id: string | number ] | 
     url: deleteConfig.url(args, options),
     method: 'delete',
 })
+
+    /**
+* @see \App\Http\Controllers\Admin\BulkPricingController::deleteConfig
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:255
+ * @route '/admin/bulk-pricing/delete-config/{id}'
+ */
+    const deleteConfigForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: deleteConfig.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'DELETE',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\BulkPricingController::deleteConfig
+ * @see app/Http/Controllers/Admin/BulkPricingController.php:255
+ * @route '/admin/bulk-pricing/delete-config/{id}'
+ */
+        deleteConfigForm.delete = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: deleteConfig.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'DELETE',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    deleteConfig.form = deleteConfigForm
 const bulkPricing = {
     index: Object.assign(index, index),
 simulate: Object.assign(simulate, simulate),

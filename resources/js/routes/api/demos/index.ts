@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::index
  * @see app/Http/Controllers/DemoWebsiteController.php:13
@@ -42,6 +42,41 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\DemoWebsiteController::index
+ * @see app/Http/Controllers/DemoWebsiteController.php:13
+ * @route '/api/demos'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\DemoWebsiteController::index
+ * @see app/Http/Controllers/DemoWebsiteController.php:13
+ * @route '/api/demos'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\DemoWebsiteController::index
+ * @see app/Http/Controllers/DemoWebsiteController.php:13
+ * @route '/api/demos'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::show
  * @see app/Http/Controllers/DemoWebsiteController.php:69
@@ -108,6 +143,42 @@ show.head = (args: { demoWebsite: number | { id: number } } | [demoWebsite: numb
     url: show.url(args, options),
     method: 'head',
 })
+
+    /**
+* @see \App\Http\Controllers\DemoWebsiteController::show
+ * @see app/Http/Controllers/DemoWebsiteController.php:69
+ * @route '/api/demos/{demoWebsite}'
+ */
+    const showForm = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: show.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\DemoWebsiteController::show
+ * @see app/Http/Controllers/DemoWebsiteController.php:69
+ * @route '/api/demos/{demoWebsite}'
+ */
+        showForm.get = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\DemoWebsiteController::show
+ * @see app/Http/Controllers/DemoWebsiteController.php:69
+ * @route '/api/demos/{demoWebsite}'
+ */
+        showForm.head = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    show.form = showForm
 const demos = {
     index: Object.assign(index, index),
 show: Object.assign(show, show),

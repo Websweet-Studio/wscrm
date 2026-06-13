@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\UserCredentialController::sendCredentials
  * @see app/Http/Controllers/Admin/UserCredentialController.php:12
@@ -56,6 +56,28 @@ sendCredentials.post = (args: { user: number | { id: number } } | [user: number 
     url: sendCredentials.url(args, options),
     method: 'post',
 })
+
+    /**
+* @see \App\Http\Controllers\Admin\UserCredentialController::sendCredentials
+ * @see app/Http/Controllers/Admin/UserCredentialController.php:12
+ * @route '/admin/users/{user}/send-credentials'
+ */
+    const sendCredentialsForm = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: sendCredentials.url(args, options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\UserCredentialController::sendCredentials
+ * @see app/Http/Controllers/Admin/UserCredentialController.php:12
+ * @route '/admin/users/{user}/send-credentials'
+ */
+        sendCredentialsForm.post = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: sendCredentials.url(args, options),
+            method: 'post',
+        })
+    
+    sendCredentials.form = sendCredentialsForm
 const users = {
     sendCredentials: Object.assign(sendCredentials, sendCredentials),
 }

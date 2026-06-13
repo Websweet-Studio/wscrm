@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\ServicePlanController::bulkDestroy
  * @see app/Http/Controllers/Admin/ServicePlanController.php:104
@@ -33,6 +33,37 @@ bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
     method: 'delete',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\ServicePlanController::bulkDestroy
+ * @see app/Http/Controllers/Admin/ServicePlanController.php:104
+ * @route '/admin/service-plans/bulk'
+ */
+    const bulkDestroyForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: bulkDestroy.url({
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'DELETE',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\ServicePlanController::bulkDestroy
+ * @see app/Http/Controllers/Admin/ServicePlanController.php:104
+ * @route '/admin/service-plans/bulk'
+ */
+        bulkDestroyForm.delete = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: bulkDestroy.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'DELETE',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    bulkDestroy.form = bulkDestroyForm
 /**
 * @see \App\Http\Controllers\Admin\ServicePlanController::index
  * @see app/Http/Controllers/Admin/ServicePlanController.php:15
@@ -76,6 +107,41 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\ServicePlanController::index
+ * @see app/Http/Controllers/Admin/ServicePlanController.php:15
+ * @route '/admin/service-plans'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\ServicePlanController::index
+ * @see app/Http/Controllers/Admin/ServicePlanController.php:15
+ * @route '/admin/service-plans'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\ServicePlanController::index
+ * @see app/Http/Controllers/Admin/ServicePlanController.php:15
+ * @route '/admin/service-plans'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\ServicePlanController::store
  * @see app/Http/Controllers/Admin/ServicePlanController.php:51
@@ -110,6 +176,27 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\ServicePlanController::store
+ * @see app/Http/Controllers/Admin/ServicePlanController.php:51
+ * @route '/admin/service-plans'
+ */
+    const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: store.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\ServicePlanController::store
+ * @see app/Http/Controllers/Admin/ServicePlanController.php:51
+ * @route '/admin/service-plans'
+ */
+        storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: store.url(options),
+            method: 'post',
+        })
+    
+    store.form = storeForm
 /**
 * @see \App\Http\Controllers\Admin\ServicePlanController::show
  * @see app/Http/Controllers/Admin/ServicePlanController.php:44
@@ -177,6 +264,41 @@ show.head = (args: { service_plan: number | { id: number } } | [service_plan: nu
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\ServicePlanController::show
+ * @see app/Http/Controllers/Admin/ServicePlanController.php:44
+ * @route '/admin/service-plans/{service_plan}'
+ */
+    const showForm = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: show.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\ServicePlanController::show
+ * @see app/Http/Controllers/Admin/ServicePlanController.php:44
+ * @route '/admin/service-plans/{service_plan}'
+ */
+        showForm.get = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\ServicePlanController::show
+ * @see app/Http/Controllers/Admin/ServicePlanController.php:44
+ * @route '/admin/service-plans/{service_plan}'
+ */
+        showForm.head = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    show.form = showForm
 /**
 * @see \App\Http\Controllers\Admin\ServicePlanController::update
  * @see app/Http/Controllers/Admin/ServicePlanController.php:74
@@ -244,6 +366,51 @@ update.patch = (args: { service_plan: number | { id: number } } | [service_plan:
     method: 'patch',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\ServicePlanController::update
+ * @see app/Http/Controllers/Admin/ServicePlanController.php:74
+ * @route '/admin/service-plans/{service_plan}'
+ */
+    const updateForm = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: update.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PUT',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\ServicePlanController::update
+ * @see app/Http/Controllers/Admin/ServicePlanController.php:74
+ * @route '/admin/service-plans/{service_plan}'
+ */
+        updateForm.put = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PUT',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\ServicePlanController::update
+ * @see app/Http/Controllers/Admin/ServicePlanController.php:74
+ * @route '/admin/service-plans/{service_plan}'
+ */
+        updateForm.patch = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\ServicePlanController::destroy
  * @see app/Http/Controllers/Admin/ServicePlanController.php:97
@@ -301,6 +468,38 @@ destroy.delete = (args: { service_plan: number | { id: number } } | [service_pla
     url: destroy.url(args, options),
     method: 'delete',
 })
+
+    /**
+* @see \App\Http\Controllers\Admin\ServicePlanController::destroy
+ * @see app/Http/Controllers/Admin/ServicePlanController.php:97
+ * @route '/admin/service-plans/{service_plan}'
+ */
+    const destroyForm = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: destroy.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'DELETE',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\ServicePlanController::destroy
+ * @see app/Http/Controllers/Admin/ServicePlanController.php:97
+ * @route '/admin/service-plans/{service_plan}'
+ */
+        destroyForm.delete = (args: { service_plan: number | { id: number } } | [service_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: destroy.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'DELETE',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    destroy.form = destroyForm
 const servicePlans = {
     bulkDestroy: Object.assign(bulkDestroy, bulkDestroy),
 index: Object.assign(index, index),
