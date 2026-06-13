@@ -27,6 +27,7 @@ Route::get('/domains', [App\Http\Controllers\DomainPriceController::class, 'publ
 Route::get('/domains/search', [App\Http\Controllers\DomainPriceController::class, 'publicSearch'])->name('public.domains.search');
 Route::get('/demo-web', [App\Http\Controllers\DemoWebsiteController::class, 'publicPage'])->name('public.demos.index');
 Route::get('/demo-web/embed', [App\Http\Controllers\DemoWebsiteController::class, 'embedListing'])->name('public.demos.embed');
+Route::get('/demo-web/embed.js', [App\Http\Controllers\DemoWebsiteController::class, 'embedJs'])->name('public.demos.embedJs');
 Route::get('/demo-web/embed/{id}', [App\Http\Controllers\DemoWebsiteController::class, 'embed'])->name('public.demos.embed-single');
 
 // Public demo website API

@@ -5,7 +5,7 @@ import username from './username'
 import customer from './customer'
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::oembed
- * @see app/Http/Controllers/DemoWebsiteController.php:249
+ * @see app/Http/Controllers/DemoWebsiteController.php:250
  * @route '/api/oembed'
  */
 export const oembed = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -20,7 +20,7 @@ oembed.definition = {
 
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::oembed
- * @see app/Http/Controllers/DemoWebsiteController.php:249
+ * @see app/Http/Controllers/DemoWebsiteController.php:250
  * @route '/api/oembed'
  */
 oembed.url = (options?: RouteQueryOptions) => {
@@ -29,7 +29,7 @@ oembed.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::oembed
- * @see app/Http/Controllers/DemoWebsiteController.php:249
+ * @see app/Http/Controllers/DemoWebsiteController.php:250
  * @route '/api/oembed'
  */
 oembed.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -38,7 +38,7 @@ oembed.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::oembed
- * @see app/Http/Controllers/DemoWebsiteController.php:249
+ * @see app/Http/Controllers/DemoWebsiteController.php:250
  * @route '/api/oembed'
  */
 oembed.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -48,7 +48,7 @@ oembed.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\DemoWebsiteController::oembed
- * @see app/Http/Controllers/DemoWebsiteController.php:249
+ * @see app/Http/Controllers/DemoWebsiteController.php:250
  * @route '/api/oembed'
  */
     const oembedForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -58,7 +58,7 @@ oembed.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\DemoWebsiteController::oembed
- * @see app/Http/Controllers/DemoWebsiteController.php:249
+ * @see app/Http/Controllers/DemoWebsiteController.php:250
  * @route '/api/oembed'
  */
         oembedForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -67,7 +67,7 @@ oembed.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\DemoWebsiteController::oembed
- * @see app/Http/Controllers/DemoWebsiteController.php:249
+ * @see app/Http/Controllers/DemoWebsiteController.php:250
  * @route '/api/oembed'
  */
         oembedForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
-import { ExternalLink, Filter, LayoutGrid, Monitor, Search, Code, Check, Copy } from 'lucide-vue-next';
+import { ExternalLink, Filter, LayoutGrid, Monitor, Search, Code, Check, Copy, Palette, LayoutList } from 'lucide-vue-next';
 import { router, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
@@ -112,9 +112,19 @@ const companyWhatsapp = computed(() => (page.props.brandingSettings as any)?.com
 const appUrl = window.location.origin;
 const copiedId = ref<string | null>(null);
 
-const fullEmbedIframeCode = `<iframe src="${appUrl}/demo-web/embed" width="100%" height="900" frameborder="0" allowfullscreen style="max-width:100%;border:1px solid #e8e6dc;border-radius:12px;overflow:hidden;"></iframe>`;
+// JS Embed Configurator
+const embedLimit = ref(6);
+const embedPrimary = ref('#c96442');
 
-const fullOembedUrl = `${appUrl}/api/oembed?url=${encodeURIComponent(appUrl + '/demo-web/embed')}&format=json`;
+const jsEmbedCode = computed(() => {
+    return `<div id="wss-demo-widget"
+  data-limit="${embedLimit.value}"
+  data-primary="${embedPrimary.value}"
+  data-title="Demo Website"
+  data-subtitle="Lihat contoh website yang bisa Anda miliki">
+</div>
+<script src="${appUrl}/demo-web/embed.js"><\/script>`;
+});
 
 const singleEmbedIframeCode = (demo: DemoItem) => {
     const embedUrl = `${appUrl}/demo-web/embed/${demo.id}`;
@@ -125,9 +135,7 @@ const copyToClipboard = async (text: string, id: string) => {
     try {
         await navigator.clipboard.writeText(text);
         copiedId.value = id;
-        setTimeout(() => {
-            copiedId.value = null;
-        }, 2000);
+        setTimeout(() => { copiedId.value = null; }, 2000);
     } catch {
         const textarea = document.createElement('textarea');
         textarea.value = text;
@@ -136,9 +144,7 @@ const copyToClipboard = async (text: string, id: string) => {
         document.execCommand('copy');
         document.body.removeChild(textarea);
         copiedId.value = id;
-        setTimeout(() => {
-            copiedId.value = null;
-        }, 2000);
+        setTimeout(() => { copiedId.value = null; }, 2000);
     }
 };
 </script>
@@ -351,100 +357,178 @@ const copyToClipboard = async (text: string, id: string) => {
                 </Button>
             </div>
 
-            <!-- Embed Code Section -->
+            <!-- Embed Code Section - JS Widget -->
             <div class="mt-12">
                 <Card style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px">
                     <CardContent class="pt-6">
-                        <div class="mb-4 flex items-center gap-3">
+                        <div class="mb-6 flex items-center gap-3">
                             <div class="rounded-full p-2" style="background-color: #e8e6dc">
                                 <Code class="h-5 w-5" style="color: #c96442" />
                             </div>
                             <div>
-                                <h3 class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif">Embed Demo Website</h3>
-                                <p class="text-sm" style="color: #5e5d59">Sematkan halaman demo lengkap (filter, pagination & preview) di website klien/reseller Anda</p>
+                                <h3 class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif">Embed di Website Anda</h3>
+                                <p class="text-sm" style="color: #5e5d59">Widget JS yang menyatu langsung dengan website klien/reseller (tanpa iframe)</p>
                             </div>
                         </div>
 
-                        <!-- Full listing embed -->
-                        <div class="rounded-xl p-4 mb-4" style="background-color: #ffffff; border: 1px solid #f0eee6">
-                            <h4 class="mb-2 text-sm font-medium" style="color: #141413">Embed Halaman Penuh</h4>
-                            <p class="mb-3 text-xs" style="color: #5e5d59">
-                                Menampilkan seluruh listing demo website lengkap dengan filter, pagination, dan preview modal. Cocok untuk website reseller/klien.
-                            </p>
-                            <div class="overflow-x-auto rounded-lg p-3 text-xs" style="background-color: #141413; color: #b0aea5; font-family: monospace">
-                                {{ fullEmbedIframeCode }}
-                            </div>
-                            <div class="mt-3 flex gap-2">
-                                <Button
-                                    size="sm"
-                                    @click="copyToClipboard(fullEmbedIframeCode, 'full-iframe')"
-                                    style="background-color: #c96442; color: #faf9f5; border-radius: 8px"
-                                >
-                                    <component :is="copiedId === 'full-iframe' ? Check : Copy" class="mr-1 h-3.5 w-3.5" />
-                                    {{ copiedId === 'full-iframe' ? 'Tersalin!' : 'Salin Iframe' }}
-                                </Button>
-                            </div>
+                        <div class="grid gap-6 lg:grid-cols-2">
+                            <!-- Left: Configurator -->
+                            <div class="space-y-4">
+                                <div class="rounded-xl p-4" style="background-color: #ffffff; border: 1px solid #f0eee6">
+                                    <h4 class="mb-3 text-sm font-medium" style="color: #141413">Pengaturan Widget</h4>
 
-                            <!-- Live preview -->
-                            <div class="mt-4">
-                                <p class="mb-2 text-xs font-medium" style="color: #4d4c48">Preview:</p>
-                                <div class="overflow-hidden rounded-xl" style="border: 1px solid #e8e6dc">
-                                    <iframe
-                                        :src="`${appUrl}/demo-web/embed`"
-                                        width="100%"
-                                        height="500"
-                                        frameborder="0"
-                                        allowfullscreen
-                                        style="max-width: 100%"
-                                    ></iframe>
+                                    <!-- Limit -->
+                                    <div class="mb-4">
+                                        <label class="mb-1.5 flex items-center gap-2 text-xs font-medium" style="color: #4d4c48">
+                                            <LayoutList class="h-3.5 w-3.5" style="color: #87867f" />
+                                            Jumlah Demo
+                                        </label>
+                                        <input
+                                            v-model.number="embedLimit"
+                                            type="range"
+                                            min="1"
+                                            :max="demos.total || 12"
+                                            class="w-full accent-[#c96442]"
+                                        />
+                                        <div class="mt-1 flex justify-between text-xs" style="color: #87867f">
+                                            <span>1</span>
+                                            <span class="font-medium" style="color: #141413">{{ embedLimit }} demo</span>
+                                            <span>{{ demos.total || 12 }}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Color palette -->
+                                    <div>
+                                        <label class="mb-1.5 flex items-center gap-2 text-xs font-medium" style="color: #4d4c48">
+                                            <Palette class="h-3.5 w-3.5" style="color: #87867f" />
+                                            Warna Aksen
+                                        </label>
+                                        <div class="flex items-center gap-3">
+                                            <input
+                                                v-model="embedPrimary"
+                                                type="color"
+                                                class="h-8 w-8 cursor-pointer rounded-lg border"
+                                                style="border-color: #e8e6dc"
+                                            />
+                                            <div class="flex flex-wrap gap-2">
+                                                <button
+                                                    v-for="color in ['#c96442', '#2563eb', '#059669', '#7c3aed', '#db2777', '#ea580c', '#0891b2', '#4d4c48']"
+                                                    :key="color"
+                                                    class="h-6 w-6 rounded-full border-2 transition-transform hover:scale-110"
+                                                    :style="{
+                                                        backgroundColor: color,
+                                                        borderColor: embedPrimary === color ? '#141413' : 'transparent',
+                                                    }"
+                                                    @click="embedPrimary = color"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div class="mt-2 flex items-center gap-2">
+                                            <span class="text-xs" style="color: #87867f">Hex:</span>
+                                            <input
+                                                v-model="embedPrimary"
+                                                type="text"
+                                                class="w-24 rounded-lg border px-2 py-1 text-xs font-mono"
+                                                style="background-color: #faf9f5; border-color: #e8e6dc; color: #141413"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Code output -->
+                                <div class="rounded-xl p-4" style="background-color: #ffffff; border: 1px solid #f0eee6">
+                                    <h4 class="mb-3 text-sm font-medium" style="color: #141413">Kode Embed</h4>
+                                    <p class="mb-3 text-xs" style="color: #5e5d59">
+                                        Salin kode di bawah dan tempel di HTML website Anda. Widget akan langsung tampil menyatu dengan desain web.
+                                    </p>
+                                    <div class="overflow-x-auto rounded-lg p-3 text-xs leading-relaxed" style="background-color: #141413; color: #b0aea5; font-family: 'Fira Code', monospace">
+                                        <pre class="whitespace-pre-wrap break-all" style="color: #b0aea5; font-size: 12px; line-height: 1.7">{{ jsEmbedCode }}</pre>
+                                    </div>
+                                    <div class="mt-3 flex gap-2">
+                                        <Button
+                                            size="sm"
+                                            @click="copyToClipboard(jsEmbedCode, 'js-embed')"
+                                            style="background-color: #c96442; color: #faf9f5; border-radius: 8px"
+                                        >
+                                            <component :is="copiedId === 'js-embed' ? Check : Copy" class="mr-1 h-3.5 w-3.5" />
+                                            {{ copiedId === 'js-embed' ? 'Tersalin!' : 'Salin Kode' }}
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            style="border-color: #e8e6dc; color: #4d4c48; border-radius: 8px"
+                                            @click="copyToClipboard(appUrl + '/demo-web/embed.js', 'js-url')"
+                                        >
+                                            <component :is="copiedId === 'js-url' ? Check : Copy" class="mr-1 h-3.5 w-3.5" />
+                                            {{ copiedId === 'js-url' ? 'Tersalin!' : 'Salin URL Script' }}
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                <!-- Attributes guide -->
+                                <div class="rounded-xl p-4" style="background-color: #e8e6dc40; border: 1px solid #e8e6dc">
+                                    <h4 class="mb-2 text-xs font-medium" style="color: #141413">Opsi Konfigurasi (data-attributes)</h4>
+                                    <div class="space-y-1 text-xs" style="color: #5e5d59">
+                                        <p><code style="color: #c96442">data-limit</code> — Jumlah demo ditampilkan (default: 6)</p>
+                                        <p><code style="color: #c96442">data-primary</code> — Warna aksen (hex)</p>
+                                        <p><code style="color: #c96442">data-title</code> — Judul widget</p>
+                                        <p><code style="color: #c96442">data-subtitle</code> — Subjudul widget</p>
+                                        <p><code style="color: #c96442">data-bg</code> — Warna background</p>
+                                        <p><code style="color: #c96442">data-card-bg</code> — Warna background kartu</p>
+                                        <p><code style="color: #c96442">data-text</code> — Warna teks utama</p>
+                                        <p><code style="color: #c96442">data-text-secondary</code> — Warna teks sekunder</p>
+                                        <p><code style="color: #c96442">data-border</code> — Warna border</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Single embed -->
-                        <div class="rounded-xl p-4 mb-4" style="background-color: #ffffff; border: 1px solid #f0eee6">
-                            <h4 class="mb-2 text-sm font-medium" style="color: #141413">Embed Demo Individual</h4>
-                            <p class="mb-3 text-xs" style="color: #5e5d59">
-                                Salin kode embed untuk masing-masing demo website. Klik tombol copy <Copy class="inline h-3 w-3" /> di kartu demo di atas.
-                            </p>
-                            <div v-if="demos.data.length > 0" class="space-y-2">
-                                <div v-for="demo in demos.data.slice(0, 5)" :key="'embed-single-' + demo.id" class="flex items-center justify-between gap-3 rounded-lg px-3 py-2" style="background-color: #faf9f5">
-                                    <span class="truncate text-sm" style="color: #141413">{{ demo.title }}</span>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        style="border-color: #e8e6dc; color: #4d4c48; border-radius: 8px"
-                                        @click="copyToClipboard(singleEmbedIframeCode(demo), 'single-' + demo.id)"
-                                    >
-                                        <component :is="copiedId === 'single-' + demo.id ? Check : Copy" class="mr-1 h-3.5 w-3.5" />
-                                        {{ copiedId === 'single-' + demo.id ? 'Tersalin!' : 'Salin' }}
-                                    </Button>
+                            <!-- Right: Live Preview -->
+                            <div>
+                                <div class="sticky top-4 rounded-xl overflow-hidden" style="background-color: #ffffff; border: 1px solid #f0eee6">
+                                    <div class="px-4 py-3 flex items-center justify-between" style="border-bottom: 1px solid #f0eee6">
+                                        <h4 class="text-sm font-medium" style="color: #141413">Live Preview</h4>
+                                        <div class="flex gap-1.5">
+                                            <span class="h-3 w-3 rounded-full" style="background-color: #f87171"></span>
+                                            <span class="h-3 w-3 rounded-full" style="background-color: #fbbf24"></span>
+                                            <span class="h-3 w-3 rounded-full" style="background-color: #34d399"></span>
+                                        </div>
+                                    </div>
+                                    <div class="p-4" style="min-height: 400px; max-height: 600px; overflow-y: auto;">
+                                        <div class="text-center mb-4">
+                                            <h2 class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif">Demo Website</h2>
+                                            <p class="text-xs" style="color: #5e5d59">Lihat contoh website yang bisa Anda miliki</p>
+                                        </div>
+                                        <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))">
+                                            <div
+                                                v-for="demo in demos.data.slice(0, embedLimit)"
+                                                :key="'preview-' + demo.id"
+                                                class="rounded-lg overflow-hidden transition-shadow hover:shadow-md"
+                                                style="background-color: #ffffff; border: 1px solid #f0eee6"
+                                            >
+                                                <div class="relative aspect-video" style="background-color: #e8e6dc">
+                                                    <img v-if="demo.featured_image" :src="demo.featured_image" :alt="demo.title" class="h-full w-full object-cover" loading="lazy" />
+                                                    <div v-else class="flex h-full w-full items-center justify-center">
+                                                        <Monitor class="h-8 w-8" style="color: #b0aea5" />
+                                                    </div>
+                                                    <span v-if="demo.category" class="absolute top-1.5 left-1.5 rounded px-1.5 py-0.5 text-[10px] font-semibold text-white" :style="{ backgroundColor: embedPrimary }">
+                                                        {{ demo.category }}
+                                                    </span>
+                                                </div>
+                                                <div class="p-2.5">
+                                                    <h3 class="text-xs font-semibold truncate" style="color: #141413">{{ demo.title }}</h3>
+                                                    <a
+                                                        :href="demo.url"
+                                                        target="_blank"
+                                                        class="mt-1.5 flex w-full items-center justify-center gap-1 rounded-md px-2 py-1.5 text-[10px] font-medium text-white transition-opacity hover:opacity-90"
+                                                        :style="{ backgroundColor: embedPrimary }"
+                                                    >
+                                                        Lihat Demo
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <p v-if="demos.total > 5" class="text-xs text-center" style="color: #87867f">
-                                    + {{ demos.total - 5 }} demo lainnya tersedia
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- oEmbed -->
-                        <div class="rounded-xl p-4" style="background-color: #e8e6dc40; border: 1px solid #e8e6dc">
-                            <h4 class="mb-2 text-sm font-medium" style="color: #141413">oEmbed Support</h4>
-                            <p class="mb-2 text-xs" style="color: #5e5d59">
-                                Untuk platform yang mendukung oEmbed (WordPress, dll), gunakan endpoint berikut:
-                            </p>
-                            <div class="overflow-x-auto rounded-lg p-3 text-xs" style="background-color: #141413; color: #b0aea5; font-family: monospace">
-                                {{ fullOembedUrl }}
-                            </div>
-                            <div class="mt-2 flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    style="border-color: #e8e6dc; color: #4d4c48; border-radius: 8px"
-                                    @click="copyToClipboard(fullOembedUrl, 'oembed')"
-                                >
-                                    <component :is="copiedId === 'oembed' ? Check : Copy" class="mr-1 h-3.5 w-3.5" />
-                                    {{ copiedId === 'oembed' ? 'Tersalin!' : 'Salin oEmbed URL' }}
-                                </Button>
                             </div>
                         </div>
                     </CardContent>
