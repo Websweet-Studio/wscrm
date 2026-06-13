@@ -110,19 +110,18 @@ const page = usePage();
 const companyWhatsapp = computed(() => (page.props.brandingSettings as any)?.company_whatsapp || '6281234567890');
 
 const appUrl = window.location.origin;
-const copiedId = ref<number | null>(null);
+const copiedId = ref<string | null>(null);
 
-const generateIframeCode = (demo: DemoItem) => {
+const fullEmbedIframeCode = `<iframe src="${appUrl}/demo-web/embed" width="100%" height="900" frameborder="0" allowfullscreen style="max-width:100%;border:1px solid #e8e6dc;border-radius:12px;overflow:hidden;"></iframe>`;
+
+const fullOembedUrl = `${appUrl}/api/oembed?url=${encodeURIComponent(appUrl + '/demo-web/embed')}&format=json`;
+
+const singleEmbedIframeCode = (demo: DemoItem) => {
     const embedUrl = `${appUrl}/demo-web/embed/${demo.id}`;
     return `<iframe src="${embedUrl}" width="800" height="600" frameborder="0" allowfullscreen style="max-width:100%;border:1px solid #e8e6dc;border-radius:12px;overflow:hidden;"></iframe>`;
 };
 
-const generateOembedLink = (demo: DemoItem) => {
-    const embedUrl = `${appUrl}/demo-web/embed/${demo.id}`;
-    return `<link rel="alternate" type="application/json+oembed" href="${appUrl}/api/oembed?url=${encodeURIComponent(embedUrl)}&format=json" title="${demo.title}" />`;
-};
-
-const copyToClipboard = async (text: string, id: number) => {
+const copyToClipboard = async (text: string, id: string) => {
     try {
         await navigator.clipboard.writeText(text);
         copiedId.value = id;
@@ -284,9 +283,9 @@ const copyToClipboard = async (text: string, id: number) => {
                                 size="sm"
                                 class="flex-shrink-0"
                                 style="border-color: #e8e6dc; color: #4d4c48; border-radius: 12px"
-                                @click="copyToClipboard(generateIframeCode(demo), demo.id)"
+                                @click="copyToClipboard(singleEmbedIframeCode(demo), 'card-' + demo.id)"
                             >
-                                <component :is="copiedId === demo.id ? Check : Copy" class="h-4 w-4" />
+                                <component :is="copiedId === 'card-' + demo.id ? Check : Copy" class="h-4 w-4" />
                             </Button>
                         </div>
                     </CardContent>
@@ -353,7 +352,7 @@ const copyToClipboard = async (text: string, id: number) => {
             </div>
 
             <!-- Embed Code Section -->
-            <div v-if="demos.data.length > 0" class="mt-12">
+            <div class="mt-12">
                 <Card style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px">
                     <CardContent class="pt-6">
                         <div class="mb-4 flex items-center gap-3">
@@ -361,61 +360,91 @@ const copyToClipboard = async (text: string, id: number) => {
                                 <Code class="h-5 w-5" style="color: #c96442" />
                             </div>
                             <div>
-                                <h3 class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif">Embed di Website Anda</h3>
-                                <p class="text-sm" style="color: #5e5d59">Salin kode embed untuk menampilkan demo website di situs Anda</p>
+                                <h3 class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif">Embed Demo Website</h3>
+                                <p class="text-sm" style="color: #5e5d59">Sematkan halaman demo lengkap (filter, pagination & preview) di website klien/reseller Anda</p>
                             </div>
                         </div>
 
-                        <div class="space-y-4">
-                            <div v-for="demo in demos.data.slice(0, 3)" :key="'embed-' + demo.id" class="rounded-xl p-4" style="background-color: #ffffff; border: 1px solid #f0eee6">
-                                <div class="flex items-center justify-between gap-4">
-                                    <div class="min-w-0 flex-1">
-                                        <h4 class="text-sm font-medium" style="color: #141413">{{ demo.title }}</h4>
-                                        <p v-if="demo.category" class="text-xs" style="color: #87867f">{{ demo.category }}</p>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            style="border-color: #e8e6dc; color: #4d4c48; border-radius: 8px"
-                                            @click="copyToClipboard(generateIframeCode(demo), demo.id + 1000)"
-                                        >
-                                            <component :is="copiedId === demo.id + 1000 ? Check : Copy" class="mr-1 h-3.5 w-3.5" />
-                                            Iframe
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            style="border-color: #e8e6dc; color: #4d4c48; border-radius: 8px"
-                                            @click="copyToClipboard(generateOembedLink(demo), demo.id + 2000)"
-                                        >
-                                            <component :is="copiedId === demo.id + 2000 ? Check : Copy" class="mr-1 h-3.5 w-3.5" />
-                                            oEmbed
-                                        </Button>
-                                    </div>
-                                </div>
-                                <div class="mt-3 overflow-x-auto rounded-lg p-3 text-xs" style="background-color: #141413; color: #b0aea5; font-family: monospace">
-                                    {{ generateIframeCode(demo) }}
-                                </div>
+                        <!-- Full listing embed -->
+                        <div class="rounded-xl p-4 mb-4" style="background-color: #ffffff; border: 1px solid #f0eee6">
+                            <h4 class="mb-2 text-sm font-medium" style="color: #141413">Embed Halaman Penuh</h4>
+                            <p class="mb-3 text-xs" style="color: #5e5d59">
+                                Menampilkan seluruh listing demo website lengkap dengan filter, pagination, dan preview modal. Cocok untuk website reseller/klien.
+                            </p>
+                            <div class="overflow-x-auto rounded-lg p-3 text-xs" style="background-color: #141413; color: #b0aea5; font-family: monospace">
+                                {{ fullEmbedIframeCode }}
+                            </div>
+                            <div class="mt-3 flex gap-2">
+                                <Button
+                                    size="sm"
+                                    @click="copyToClipboard(fullEmbedIframeCode, 'full-iframe')"
+                                    style="background-color: #c96442; color: #faf9f5; border-radius: 8px"
+                                >
+                                    <component :is="copiedId === 'full-iframe' ? Check : Copy" class="mr-1 h-3.5 w-3.5" />
+                                    {{ copiedId === 'full-iframe' ? 'Tersalin!' : 'Salin Iframe' }}
+                                </Button>
                             </div>
 
-                            <div v-if="demos.data.length > 3" class="text-center">
-                                <p class="text-xs" style="color: #87867f">
-                                    Salin iframe embed dari tombol copy di setiap kartu demo di atas
+                            <!-- Live preview -->
+                            <div class="mt-4">
+                                <p class="mb-2 text-xs font-medium" style="color: #4d4c48">Preview:</p>
+                                <div class="overflow-hidden rounded-xl" style="border: 1px solid #e8e6dc">
+                                    <iframe
+                                        :src="`${appUrl}/demo-web/embed`"
+                                        width="100%"
+                                        height="500"
+                                        frameborder="0"
+                                        allowfullscreen
+                                        style="max-width: 100%"
+                                    ></iframe>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Single embed -->
+                        <div class="rounded-xl p-4 mb-4" style="background-color: #ffffff; border: 1px solid #f0eee6">
+                            <h4 class="mb-2 text-sm font-medium" style="color: #141413">Embed Demo Individual</h4>
+                            <p class="mb-3 text-xs" style="color: #5e5d59">
+                                Salin kode embed untuk masing-masing demo website. Klik tombol copy <Copy class="inline h-3 w-3" /> di kartu demo di atas.
+                            </p>
+                            <div v-if="demos.data.length > 0" class="space-y-2">
+                                <div v-for="demo in demos.data.slice(0, 5)" :key="'embed-single-' + demo.id" class="flex items-center justify-between gap-3 rounded-lg px-3 py-2" style="background-color: #faf9f5">
+                                    <span class="truncate text-sm" style="color: #141413">{{ demo.title }}</span>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        style="border-color: #e8e6dc; color: #4d4c48; border-radius: 8px"
+                                        @click="copyToClipboard(singleEmbedIframeCode(demo), 'single-' + demo.id)"
+                                    >
+                                        <component :is="copiedId === 'single-' + demo.id ? Check : Copy" class="mr-1 h-3.5 w-3.5" />
+                                        {{ copiedId === 'single-' + demo.id ? 'Tersalin!' : 'Salin' }}
+                                    </Button>
+                                </div>
+                                <p v-if="demos.total > 5" class="text-xs text-center" style="color: #87867f">
+                                    + {{ demos.total - 5 }} demo lainnya tersedia
                                 </p>
                             </div>
+                        </div>
 
-                            <div class="rounded-xl p-4" style="background-color: #e8e6dc40; border: 1px solid #e8e6dc">
-                                <h4 class="mb-2 text-sm font-medium" style="color: #141413">oEmbed Support</h4>
-                                <p class="mb-2 text-xs" style="color: #5e5d59">
-                                    Untuk platform yang mendukung oEmbed, gunakan endpoint berikut:
-                                </p>
-                                <div class="overflow-x-auto rounded-lg p-3 text-xs" style="background-color: #141413; color: #b0aea5; font-family: monospace">
-                                    {{ appUrl }}/api/oembed?url={{ appUrl }}/demo-web/embed/{id}
-                                </div>
-                                <p class="mt-2 text-xs" style="color: #87867f">
-                                    Ganti <code style="color: #c96442">{id}</code> dengan ID demo website yang tersedia di setiap kartu demo.
-                                </p>
+                        <!-- oEmbed -->
+                        <div class="rounded-xl p-4" style="background-color: #e8e6dc40; border: 1px solid #e8e6dc">
+                            <h4 class="mb-2 text-sm font-medium" style="color: #141413">oEmbed Support</h4>
+                            <p class="mb-2 text-xs" style="color: #5e5d59">
+                                Untuk platform yang mendukung oEmbed (WordPress, dll), gunakan endpoint berikut:
+                            </p>
+                            <div class="overflow-x-auto rounded-lg p-3 text-xs" style="background-color: #141413; color: #b0aea5; font-family: monospace">
+                                {{ fullOembedUrl }}
+                            </div>
+                            <div class="mt-2 flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    style="border-color: #e8e6dc; color: #4d4c48; border-radius: 8px"
+                                    @click="copyToClipboard(fullOembedUrl, 'oembed')"
+                                >
+                                    <component :is="copiedId === 'oembed' ? Check : Copy" class="mr-1 h-3.5 w-3.5" />
+                                    {{ copiedId === 'oembed' ? 'Tersalin!' : 'Salin oEmbed URL' }}
+                                </Button>
                             </div>
                         </div>
                     </CardContent>

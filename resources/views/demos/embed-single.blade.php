@@ -31,23 +31,9 @@
         }
         .embed-header a:hover { background: #c96442; color: #faf9f5; }
         .embed-iframe-wrapper { flex: 1; position: relative; }
-        .embed-iframe-wrapper iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        .embed-badges {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
-        .embed-badge {
-            background: #30302e;
-            color: #b0aea5;
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 6px;
-        }
+        .embed-iframe-wrapper iframe { width: 100%; height: 100%; border: none; }
+        .embed-badges { display: flex; gap: 6px; align-items: center; }
+        .embed-badge { background: #30302e; color: #b0aea5; font-size: 10px; padding: 2px 8px; border-radius: 6px; }
     </style>
 </head>
 <body>
