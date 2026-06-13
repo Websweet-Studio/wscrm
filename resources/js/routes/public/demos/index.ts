@@ -157,7 +157,7 @@ embed.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     embed.form = embedForm
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::embedJs
- * @see app/Http/Controllers/DemoWebsiteController.php:276
+ * @see app/Http/Controllers/DemoWebsiteController.php:277
  * @route '/demo-web/embed.js'
  */
 export const embedJs = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -172,7 +172,7 @@ embedJs.definition = {
 
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::embedJs
- * @see app/Http/Controllers/DemoWebsiteController.php:276
+ * @see app/Http/Controllers/DemoWebsiteController.php:277
  * @route '/demo-web/embed.js'
  */
 embedJs.url = (options?: RouteQueryOptions) => {
@@ -181,7 +181,7 @@ embedJs.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::embedJs
- * @see app/Http/Controllers/DemoWebsiteController.php:276
+ * @see app/Http/Controllers/DemoWebsiteController.php:277
  * @route '/demo-web/embed.js'
  */
 embedJs.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -190,7 +190,7 @@ embedJs.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::embedJs
- * @see app/Http/Controllers/DemoWebsiteController.php:276
+ * @see app/Http/Controllers/DemoWebsiteController.php:277
  * @route '/demo-web/embed.js'
  */
 embedJs.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -200,7 +200,7 @@ embedJs.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\DemoWebsiteController::embedJs
- * @see app/Http/Controllers/DemoWebsiteController.php:276
+ * @see app/Http/Controllers/DemoWebsiteController.php:277
  * @route '/demo-web/embed.js'
  */
     const embedJsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -210,7 +210,7 @@ embedJs.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\DemoWebsiteController::embedJs
- * @see app/Http/Controllers/DemoWebsiteController.php:276
+ * @see app/Http/Controllers/DemoWebsiteController.php:277
  * @route '/demo-web/embed.js'
  */
         embedJsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -219,7 +219,7 @@ embedJs.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\DemoWebsiteController::embedJs
- * @see app/Http/Controllers/DemoWebsiteController.php:276
+ * @see app/Http/Controllers/DemoWebsiteController.php:277
  * @route '/demo-web/embed.js'
  */
         embedJsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

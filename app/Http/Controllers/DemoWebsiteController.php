@@ -272,13 +272,14 @@ class DemoWebsiteController extends Controller
     /**
      * Serve the embed JS widget that client/reseller can paste on their website.
      * Data is rendered server-side into the JS output (no CORS/XHR needed).
+     * Supports pagination via data-per-page attribute.
      */
     public function embedJs(Request $request)
     {
         $demosData = DemoWebsite::active()
             ->with(['demoCategory', 'demoPackages'])
             ->ordered()
-            ->limit(50)
+            ->limit(100)
             ->get()
             ->map(fn($demo) => [
                 'title' => $demo->title,
@@ -295,99 +296,297 @@ class DemoWebsiteController extends Controller
 (function() {
     'use strict';
 
-    var WSS_DEMOS = DEMOS_JSON_PLACEHOLDER;
+    var ALL_DEMOS = DEMOS_JSON_PLACEHOLDER;
 
-    var CONTAINER = document.getElementById('wss-demo-widget');
-    if (!CONTAINER) return;
+    var C = document.getElementById('wss-demo-widget');
+    if (!C) return;
 
-    var LIMIT = parseInt(CONTAINER.getAttribute('data-limit')) || 6;
-    var PRIMARY = CONTAINER.getAttribute('data-primary') || '#c96442';
-    var BG = CONTAINER.getAttribute('data-bg') || '#faf9f5';
-    var CARD_BG = CONTAINER.getAttribute('data-card-bg') || '#ffffff';
-    var TEXT = CONTAINER.getAttribute('data-text') || '#141413';
-    var TEXT_SEC = CONTAINER.getAttribute('data-text-secondary') || '#5e5d59';
-    var BORDER = CONTAINER.getAttribute('data-border') || '#f0eee6';
+    var LIMIT = parseInt(C.getAttribute('data-limit')) || 0;
+    var PER_PAGE = parseInt(C.getAttribute('data-per-page')) || 6;
+    var PRIMARY = C.getAttribute('data-primary') || '#c96442';
+    var BG = C.getAttribute('data-bg') || '#faf9f5';
+    var CARD_BG = C.getAttribute('data-card-bg') || '#ffffff';
+    var TEXT = C.getAttribute('data-text') || '#141413';
+    var TEXT2 = C.getAttribute('data-text-secondary') || '#5e5d59';
+    var BDR = C.getAttribute('data-border') || '#f0eee6';
+    var WHATSAPP = C.getAttribute('data-whatsapp') || '';
 
-    var style = document.createElement('style');
-    style.textContent =
-        '#wss-demo-widget *{margin:0;padding:0;box-sizing:border-box}'+
-        '#wss-demo-widget{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}'+
-        '.wss-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}'+
-        '.wss-card{background:'+CARD_BG+';border:1px solid '+BORDER+';border-radius:14px;overflow:hidden;transition:box-shadow .2s}'+
-        '.wss-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08)}'+
-        '.wss-card-img{position:relative;aspect-ratio:16/9;background:#e8e6dc;overflow:hidden}'+
-        '.wss-card-img img{width:100%;height:100%;object-fit:cover}'+
-        '.wss-card-img .wss-ph{display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#b0aea5;font-size:32px}'+
-        '.wss-badge{position:absolute;top:8px;left:8px;background:'+PRIMARY+';color:#fff;padding:2px 10px;border-radius:6px;font-size:11px;font-weight:600}'+
-        '.wss-card-body{padding:14px}'+
-        '.wss-card-body h3{font-size:15px;font-weight:600;font-family:Georgia,serif;color:'+TEXT+';margin-bottom:6px}'+
-        '.wss-card-body p{font-size:12px;color:'+TEXT_SEC+';margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}'+
-        '.wss-pkg{display:inline-block;border:1px solid '+BORDER+';color:'+TEXT_SEC+';padding:1px 7px;border-radius:5px;font-size:10px;margin:2px}'+
-        '.wss-action{display:flex;gap:8px;margin-top:10px}'+
-        '.wss-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:7px 14px;border-radius:10px;font-size:13px;font-weight:500;text-decoration:none;transition:all .2s;border:none;cursor:pointer}'+
-        '.wss-btn-p{background:'+PRIMARY+';color:#fff;flex:1}'+
-        '.wss-btn-p:hover{filter:brightness(.9)}'+
-        '.wss-header{margin-bottom:16px;text-align:center}'+
-        '.wss-header h2{font-size:24px;font-weight:600;font-family:Georgia,serif;color:'+TEXT+';margin-bottom:8px}'+
-        '.wss-header p{font-size:14px;color:'+TEXT_SEC+'}'+
-        '.wss-empty{text-align:center;padding:48px 20px;color:'+TEXT_SEC+'}'+
-        '.wss-empty-icon{font-size:40px;color:#b0aea5;margin-bottom:12px}';
+    var demos = LIMIT > 0 ? ALL_DEMOS.slice(0, LIMIT) : ALL_DEMOS;
+    var totalPages = Math.ceil(demos.length / PER_PAGE);
+    var currentPage = 1;
 
-    document.head.appendChild(style);
+    // Inject styles
+    var s = document.createElement('style');
+    s.textContent =
+    /* Reset & Base */
+    '#wss-demo-widget{box-sizing:border-box}' +
+    '#wss-demo-widget{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;line-height:1.6;color:'+TEXT+'}' +
 
-    // Title
-    var title = CONTAINER.getAttribute('data-title');
+    /* Header */
+    '.wss-hdr{text-align:center;margin-bottom:28px;padding:0 16px}' +
+    '.wss-hdr h2{font-size:28px;font-weight:700;font-family:Georgia,"Times New Roman",serif;color:'+TEXT+';margin-bottom:10px;letter-spacing:-.02em}' +
+    '.wss-hdr p{font-size:15px;color:'+TEXT2+';max-width:540px;margin:0 auto;line-height:1.7}' +
+
+    /* Grid */
+    '.wss-grd{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:22px;padding:0 4px}' +
+
+    /* Card */
+    '.wss-crd{background:'+CARD_BG+';border:1px solid '+BDR+';border-radius:16px;overflow:hidden;transition:transform .25s ease,box-shadow .25s ease;display:flex;flex-direction:column}' +
+    '.wss-crd:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(0,0,0,.08)}' +
+
+    /* Card image */
+    '.wss-cimg{position:relative;aspect-ratio:16/10;background:#eae8df;overflow:hidden}' +
+    '.wss-cimg img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}' +
+    '.wss-crd:hover .wss-cimg img{transform:scale(1.05)}' +
+    '.wss-cimg .wss-ph{display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#c8c5bb}' +
+
+    /* Badge */
+    '.wss-bdg{position:absolute;top:12px;left:12px;background:'+PRIMARY+';color:#fff;padding:4px 12px;border-radius:8px;font-size:11px;font-weight:600;letter-spacing:.03em;box-shadow:0 2px 8px rgba(0,0,0,.12)}' +
+
+    /* Card body */
+    '.wss-cbdy{padding:18px 20px 20px;display:flex;flex-direction:column;flex:1;gap:0}' +
+    '.wss-cbdy h3{font-size:17px;font-weight:700;font-family:Georgia,serif;color:'+TEXT+';margin-bottom:8px;line-height:1.4;letter-spacing:-.01em;padding:0}' +
+    '.wss-cbdy>p{font-size:13px;color:'+TEXT2+';margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:0;line-height:1.65}' +
+
+    /* Packages */
+    '.wss-pkgs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}' +
+    '.wss-pkg{display:inline-flex;align-items:center;border:1px solid '+BDR+';color:'+TEXT2+';padding:3px 10px;border-radius:6px;font-size:11px;font-weight:500;letter-spacing:.01em}' +
+
+    /* Button area */
+    '.wss-act{margin-top:auto;display:flex;gap:8px;padding-top:4px}' +
+
+    /* Button base */
+    '.wss-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none;transition:all .2s ease;border:none;cursor:pointer;flex:1;line-height:1.4}' +
+
+    /* Primary button */
+    '.wss-bp{background:'+PRIMARY+';color:#fff;padding:12px 20px;}' +
+    '.wss-bp:hover{filter:brightness(1.08);box-shadow:0 6px 20px rgba(0,0,0,.15)}' +
+    '.wss-bp:active{transform:scale(0.98);filter:brightness(0.95)}' +
+    '.wss-bp svg{width:14px;height:14px;flex-shrink:0}' +
+
+    /* Info text */
+    '.wss-info{text-align:center;margin-top:14px;font-size:13px;color:'+TEXT2+';opacity:.75}' +
+
+    /* Pagination */
+    '.wss-pag{text-align:center;margin-top:28px;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}' +
+    '.wss-pag a,.wss-pag span{display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:40px;padding:0 12px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;border:1px solid '+BDR+';color:'+TEXT+';background:'+CARD_BG+';transition:all .2s ease;cursor:pointer;-webkit-user-select:none;user-select:none;gap:4px;line-height:1}' +
+    '.wss-pag a:hover{background:'+BDR+';border-color:#d5d3ca}' +
+    '.wss-pag .wss-act-pg{background:'+PRIMARY+';color:#fff;border-color:'+PRIMARY+';cursor:default;box-shadow:0 2px 10px rgba(0,0,0,.1)}' +
+    '.wss-pag .wss-dsb{opacity:.35;cursor:default;pointer-events:none}' +
+
+    /* Empty */
+    '.wss-empty{text-align:center;padding:64px 24px;color:'+TEXT2+'}' +
+    '.wss-empty svg{width:48px;height:48px;color:#c8c5bb;margin-bottom:14px}' +
+    '.wss-empty h3{font-size:18px;font-weight:600;font-family:Georgia,serif;color:'+TEXT+';margin-bottom:8px}' +
+    '.wss-empty p{font-size:14px;line-height:1.6}' +
+
+    /* Fullscreen overlay */
+    '.wss-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:999999;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:stretch}' +
+    '.wss-overlay-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#111;flex-shrink:0;gap:10px}' +
+    '.wss-overlay-title{color:#fff;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}' +
+    '.wss-overlay-actions{display:flex;gap:8px;flex-shrink:0}' +
+    '.wss-ov-close{background:rgba(255,255,255,.15);color:#fff;border:none;width:36px;height:36px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:20px;transition:background .2s;line-height:1}' +
+    '.wss-ov-close:hover{background:rgba(255,255,255,.3)}' +
+    '.wss-ov-wa{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;background:#25D366;color:#fff;font-size:13px;font-weight:600;text-decoration:none;border:none;cursor:pointer;transition:filter .2s;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}' +
+    '.wss-ov-wa:hover{filter:brightness(1.1)}' +
+    '.wss-ov-wa svg{width:16px;height:16px;flex-shrink:0}' +
+    '.wss-overlay iframe{flex:1;border:none;width:100%;height:100%;background:#fff}' +
+
+    /* Responsive */
+'@media(max-width:640px){' +
+      '.wss-grd{grid-template-columns:1fr;gap:16px}' +
+      '.wss-hdr h2{font-size:22px}' +
+      '.wss-hdr p{font-size:13px}' +
+      '.wss-cbdy{padding:14px 16px 16px}' +
+      '.wss-cbdy h3{font-size:15px}' +
+      '.wss-btn{padding:10px 16px;font-size:13px}' +
+      '.wss-pag{gap:4px}' +
+      '.wss-pag a,.wss-pag span{min-width:36px;height:36px;font-size:12px}' +
+    '}';
+
+    document.head.appendChild(s);
+
+    // Header
+    var title = C.getAttribute('data-title');
     if (title) {
         var hdr = document.createElement('div');
-        hdr.className = 'wss-header';
-        hdr.innerHTML = '<h2>' + title + '</h2>' + (CONTAINER.getAttribute('data-subtitle') ? '<p>' + CONTAINER.getAttribute('data-subtitle') + '</p>' : '');
-        CONTAINER.appendChild(hdr);
+        hdr.className = 'wss-hdr';
+        hdr.innerHTML = '<h2>' + esc(title) + '</h2>' + (C.getAttribute('data-subtitle') ? '<p>' + esc(C.getAttribute('data-subtitle')) + '</p>' : '');
+        C.appendChild(hdr);
     }
 
-    var demos = WSS_DEMOS.slice(0, LIMIT);
     if (demos.length === 0) {
-        var empty = document.createElement('div');
-        empty.className = 'wss-empty';
-        empty.innerHTML = '<div class="wss-empty-icon">&#128187;</div><p>Belum ada demo tersedia.</p>';
-        CONTAINER.appendChild(empty);
+        C.innerHTML += '<div class="wss-empty"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><h3>Belum Ada Demo</h3><p>Belum ada demo website yang tersedia saat ini.</p></div>';
         return;
     }
 
     var grid = document.createElement('div');
-    grid.className = 'wss-grid';
+    grid.className = 'wss-grd';
+    C.appendChild(grid);
 
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#b0aea5" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
-
-    demos.forEach(function(d) {
-        var card = document.createElement('div');
-        card.className = 'wss-card';
-
-        var img = d.featured_image
-            ? '<img src="' + d.featured_image + '" alt="' + d.title + '" loading="lazy">'
-            : '<div class="wss-ph">' + svg + '</div>';
-
-        var badge = d.category ? '<span class="wss-badge">' + d.category + '</span>' : '';
-        var pkgs = '';
-        if (d.packages) {
-            d.packages.forEach(function(p) { pkgs += '<span class="wss-pkg">' + p.name + '</span>'; });
-        }
-        var desc = d.description ? '<p>' + d.description + '</p>' : '';
-
-        card.innerHTML =
-            '<div class="wss-card-img">' + img + badge + '</div>' +
-            '<div class="wss-card-body">' +
-                '<h3>' + d.title + '</h3>' +
-                desc +
-                '<div>' + pkgs + '</div>' +
-                '<div class="wss-action">' +
-                    '<a href="' + d.url + '" target="_blank" class="wss-btn wss-btn-p">Lihat Demo</a>' +
-                '</div>' +
-            '</div>';
-
-        grid.appendChild(card);
+    grid.addEventListener('click', function(e) {
+        var btn = e.target.closest('.wss-open-demo');
+        if (!btn) return;
+        e.preventDefault();
+        openDemo(btn.getAttribute('data-url'), btn.getAttribute('data-title'));
     });
 
-    CONTAINER.appendChild(grid);
+    var info = document.createElement('div');
+    info.className = 'wss-info';
+    C.appendChild(info);
+
+    var pag = document.createElement('div');
+    pag.className = 'wss-pag';
+    C.appendChild(pag);
+
+    var extSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+    var phSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
+    var leftSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
+    var rightSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+
+    function esc(str) {
+        var d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+    }
+
+    function truncate(str, limit) {
+        if (!str) return '';
+        if (str.length <= limit) return str;
+        return str.substring(0, limit) + '...';
+    }
+
+    var waSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>';
+
+    function openDemo(url, title) {
+        var overlay = document.createElement('div');
+        overlay.className = 'wss-overlay';
+
+        var waNumber = WHATSAPP.replace(/^0/, '62').replace(/[^0-9]/g, '');
+        var waMsg = encodeURIComponent('Halo, saya tertarik dengan desain website "' + title + '". Bisa info lebih lanjut?');
+        var waUrl = 'https://wa.me/' + waNumber + '?text=' + waMsg;
+
+        overlay.innerHTML =
+            '<div class="wss-overlay-bar">' +
+                '<span class="wss-overlay-title">' + esc(title) + '</span>' +
+                '<div class="wss-overlay-actions">' +
+                    (WHATSAPP ? '<a href="' + waUrl + '" target="_blank" rel="noopener" class="wss-ov-wa">' + waSvg + ' Order Desain Ini</a>' : '') +
+                    '<button class="wss-ov-close" title="Tutup">&times;</button>' +
+                '</div>' +
+            '</div>' +
+            '<iframe src="' + esc(url) + '" allowfullscreen></iframe>';
+
+        document.body.appendChild(overlay);
+        document.body.style.overflow = 'hidden';
+
+        function closeOverlay() {
+            overlay.remove();
+            document.body.style.overflow = '';
+            document.removeEventListener('keydown', onKey);
+        }
+
+        function onKey(e) { if (e.key === 'Escape') closeOverlay(); }
+        document.addEventListener('keydown', onKey);
+
+        overlay.querySelector('.wss-ov-close').onclick = closeOverlay;
+    }
+
+    function render() {
+        var start = (currentPage - 1) * PER_PAGE;
+        var end = start + PER_PAGE;
+        var pageDemos = demos.slice(start, end);
+
+        // Info
+        info.textContent = 'Menampilkan ' + (start + 1) + '-' + Math.min(end, demos.length) + ' dari ' + demos.length + ' demo';
+
+        // Grid
+        grid.innerHTML = '';
+        pageDemos.forEach(function(d) {
+            var img = d.featured_image
+                ? '<img src="' + esc(d.featured_image) + '" alt="' + esc(d.title) + '" loading="lazy">'
+                : '<div class="wss-ph">' + phSvg + '</div>';
+
+            var badge = d.category ? '<span class="wss-bdg">' + esc(d.category) + '</span>' : '';
+
+            var pkgs = '';
+            if (d.packages && d.packages.length) {
+                d.packages.forEach(function(p) { pkgs += '<span class="wss-pkg">' + esc(p.name) + '</span>'; });
+            }
+
+            var desc = d.description ? '<p>' + esc(d.description) + '</p>' : '';
+
+            grid.innerHTML +=
+                '<div class="wss-crd">' +
+                    '<div class="wss-cimg">' + img + badge + '</div>' +
+                    '<div class="wss-cbdy">' +
+                        '<h3>' + esc(truncate(d.title, 30)) + '</h3>' +
+                        (pkgs ? '<div class="wss-pkgs">' + pkgs + '</div>' : '') +
+                        '<div class="wss-act">' +
+                            '<a href="javascript:void(0)" class="wss-btn wss-bp wss-open-demo" data-url="' + esc(d.url) + '" data-title="' + esc(d.title) + '">' + extSvg + ' Lihat Demo</a>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+        });
+
+        // Pagination
+        pag.innerHTML = '';
+        if (totalPages <= 1) return;
+
+        // Prev
+        var prev = document.createElement(currentPage === 1 ? 'span' : 'a');
+        prev.innerHTML = leftSvg + ' Prev';
+        if (currentPage === 1) { prev.className = 'wss-dsb'; }
+        else {
+            prev.href = 'javascript:void(0)';
+            prev.onclick = function() { goTo(currentPage - 1); };
+        }
+        prev.style.display = 'inline-flex';
+        prev.style.gap = '4px';
+        prev.style.fontSize = '12px';
+        pag.appendChild(prev);
+
+        // Page numbers
+        for (var i = 1; i <= totalPages; i++) {
+            if (totalPages <= 7 || i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+                var el = document.createElement(i === currentPage ? 'span' : 'a');
+                el.textContent = i;
+                if (i === currentPage) { el.className = 'wss-act-pg'; }
+                else {
+                    el.href = 'javascript:void(0)';
+                    el.onclick = (function(page) { return function() { goTo(page); }; })(i);
+                }
+                pag.appendChild(el);
+            } else if (totalPages > 7 && (i === currentPage - 2 || i === currentPage + 2)) {
+                var dots = document.createElement('span');
+                dots.textContent = '...';
+                dots.style.border = 'none';
+                dots.style.cursor = 'default';
+                dots.style.color = TEXT2;
+                pag.appendChild(dots);
+            }
+        }
+
+        // Next
+        var next = document.createElement(currentPage === totalPages ? 'span' : 'a');
+        next.innerHTML = 'Next ' + rightSvg;
+        if (currentPage === totalPages) { next.className = 'wss-dsb'; }
+        else {
+            next.href = 'javascript:void(0)';
+            next.onclick = function() { goTo(currentPage + 1); };
+        }
+        next.style.display = 'inline-flex';
+        next.style.gap = '4px';
+        next.style.fontSize = '12px';
+        pag.appendChild(next);
+    }
+
+    function goTo(page) {
+        currentPage = page;
+        render();
+        C.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    render();
 })();
 JS;
 

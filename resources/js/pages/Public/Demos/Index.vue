@@ -113,12 +113,16 @@ const appUrl = window.location.origin;
 const copiedId = ref<string | null>(null);
 
 // JS Embed Configurator
-const embedLimit = ref(6);
+const embedLimit = ref(0); // 0 = all
+const embedPerPage = ref(6);
 const embedPrimary = ref('#c96442');
+const embedWhatsapp = ref('');
 
 const jsEmbedCode = computed(() => {
-    return `<div id="wss-demo-widget"
-  data-limit="${embedLimit.value}"
+    const limitAttr = embedLimit.value > 0 ? `\n  data-limit="${embedLimit.value}"` : '';
+    const whatsappAttr = embedWhatsapp.value ? `\n  data-whatsapp="${embedWhatsapp.value}"` : '';
+    return `<div id="wss-demo-widget"${limitAttr}${whatsappAttr}
+  data-per-page="${embedPerPage.value}"
   data-primary="${embedPrimary.value}"
   data-title="Demo Website"
   data-subtitle="Lihat contoh website yang bisa Anda miliki">
@@ -130,6 +134,28 @@ const singleEmbedIframeCode = (demo: DemoItem) => {
     const embedUrl = `${appUrl}/demo-web/embed/${demo.id}`;
     return `<iframe src="${embedUrl}" width="800" height="600" frameborder="0" allowfullscreen style="max-width:100%;border:1px solid #e8e6dc;border-radius:12px;overflow:hidden;"></iframe>`;
 };
+
+// Preview pagination
+const previewPage = ref(1);
+
+const previewLimitDemos = computed(() => {
+    const all = props.demos?.data || [];
+    return embedLimit.value > 0 ? all.slice(0, embedLimit.value) : all;
+});
+
+const previewTotalPages = computed(() => {
+    return Math.ceil(previewLimitDemos.value.length / embedPerPage.value);
+});
+
+const previewDemos = computed(() => {
+    const start = (previewPage.value - 1) * embedPerPage.value;
+    return previewLimitDemos.value.slice(start, start + embedPerPage.value);
+});
+
+// Reset preview page when settings change
+watch([embedLimit, embedPerPage], () => {
+    previewPage.value = 1;
+});
 
 const copyToClipboard = async (text: string, id: string) => {
     try {
@@ -377,23 +403,44 @@ const copyToClipboard = async (text: string, id: string) => {
                                 <div class="rounded-xl p-4" style="background-color: #ffffff; border: 1px solid #f0eee6">
                                     <h4 class="mb-3 text-sm font-medium" style="color: #141413">Pengaturan Widget</h4>
 
-                                    <!-- Limit -->
+                                    <!-- Total Limit -->
                                     <div class="mb-4">
                                         <label class="mb-1.5 flex items-center gap-2 text-xs font-medium" style="color: #4d4c48">
                                             <LayoutList class="h-3.5 w-3.5" style="color: #87867f" />
-                                            Jumlah Demo
+                                            Total Demo Ditampilkan
                                         </label>
                                         <input
                                             v-model.number="embedLimit"
                                             type="range"
-                                            min="1"
+                                            min="0"
                                             :max="demos.total || 12"
                                             class="w-full accent-[#c96442]"
                                         />
                                         <div class="mt-1 flex justify-between text-xs" style="color: #87867f">
-                                            <span>1</span>
-                                            <span class="font-medium" style="color: #141413">{{ embedLimit }} demo</span>
+                                            <span>Semua</span>
+                                            <span class="font-medium" style="color: #141413">{{ embedLimit === 0 ? 'Semua' : embedLimit + ' demo' }}</span>
                                             <span>{{ demos.total || 12 }}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Per Page -->
+                                    <div class="mb-4">
+                                        <label class="mb-1.5 flex items-center gap-2 text-xs font-medium" style="color: #4d4c48">
+                                            <LayoutGrid class="h-3.5 w-3.5" style="color: #87867f" />
+                                            Demo Per Halaman (Pagination)
+                                        </label>
+                                        <input
+                                            v-model.number="embedPerPage"
+                                            type="range"
+                                            min="3"
+                                            max="12"
+                                            step="3"
+                                            class="w-full accent-[#c96442]"
+                                        />
+                                        <div class="mt-1 flex justify-between text-xs" style="color: #87867f">
+                                            <span>3</span>
+                                            <span class="font-medium" style="color: #141413">{{ embedPerPage }} per halaman</span>
+                                            <span>12</span>
                                         </div>
                                     </div>
 
@@ -433,6 +480,22 @@ const copyToClipboard = async (text: string, id: string) => {
                                             />
                                         </div>
                                     </div>
+
+                                    <!-- WhatsApp -->
+                                    <div class="mt-4">
+                                        <label class="mb-1.5 flex items-center gap-2 text-xs font-medium" style="color: #4d4c48">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" style="color: #25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                                            No. WhatsApp
+                                        </label>
+                                        <input
+                                            v-model="embedWhatsapp"
+                                            type="text"
+                                            placeholder="081234567890"
+                                            class="w-full rounded-lg border px-3 py-2 text-sm"
+                                            style="background-color: #faf9f5; border-color: #e8e6dc; color: #141413"
+                                        />
+                                        <p class="mt-1 text-xs" style="color: #87867f">Tombol "Order Desain Ini" akan muncul di overlay demo</p>
+                                    </div>
                                 </div>
 
                                 <!-- Code output -->
@@ -469,7 +532,8 @@ const copyToClipboard = async (text: string, id: string) => {
                                 <div class="rounded-xl p-4" style="background-color: #e8e6dc40; border: 1px solid #e8e6dc">
                                     <h4 class="mb-2 text-xs font-medium" style="color: #141413">Opsi Konfigurasi (data-attributes)</h4>
                                     <div class="space-y-1 text-xs" style="color: #5e5d59">
-                                        <p><code style="color: #c96442">data-limit</code> — Jumlah demo ditampilkan (default: 6)</p>
+                                        <p><code style="color: #c96442">data-limit</code> — Total demo (0 = semua)</p>
+                                        <p><code style="color: #c96442">data-per-page</code> — Demo per halaman (default: 6)</p>
                                         <p><code style="color: #c96442">data-primary</code> — Warna aksen (hex)</p>
                                         <p><code style="color: #c96442">data-title</code> — Judul widget</p>
                                         <p><code style="color: #c96442">data-subtitle</code> — Subjudul widget</p>
@@ -478,6 +542,7 @@ const copyToClipboard = async (text: string, id: string) => {
                                         <p><code style="color: #c96442">data-text</code> — Warna teks utama</p>
                                         <p><code style="color: #c96442">data-text-secondary</code> — Warna teks sekunder</p>
                                         <p><code style="color: #c96442">data-border</code> — Warna border</p>
+                                        <p><code style="color: #c96442">data-whatsapp</code> — No. WhatsApp untuk tombol order</p>
                                     </div>
                                 </div>
                             </div>
@@ -500,7 +565,7 @@ const copyToClipboard = async (text: string, id: string) => {
                                         </div>
                                         <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))">
                                             <div
-                                                v-for="demo in demos.data.slice(0, embedLimit)"
+                                                v-for="demo in previewDemos"
                                                 :key="'preview-' + demo.id"
                                                 class="rounded-lg overflow-hidden transition-shadow hover:shadow-md"
                                                 style="background-color: #ffffff; border: 1px solid #f0eee6"
@@ -526,6 +591,36 @@ const copyToClipboard = async (text: string, id: string) => {
                                                     </a>
                                                 </div>
                                             </div>
+                                        </div>
+                                        <!-- Preview pagination -->
+                                        <div v-if="previewTotalPages > 1" class="mt-4 flex items-center justify-center gap-1">
+                                            <button
+                                                class="rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors"
+                                                :style="{ borderColor: '#e8e6dc', color: '#4d4c48', backgroundColor: '#ffffff' }"
+                                                :disabled="previewPage <= 1"
+                                                :class="{ 'opacity-35': previewPage <= 1 }"
+                                                @click="previewPage--"
+                                            >
+                                                &lsaquo; Prev
+                                            </button>
+                                            <button
+                                                v-for="p in previewTotalPages"
+                                                :key="'pp-' + p"
+                                                class="rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors"
+                                                :style="p === previewPage ? { backgroundColor: embedPrimary, color: '#ffffff', borderColor: embedPrimary } : { borderColor: '#e8e6dc', color: '#4d4c48', backgroundColor: '#ffffff' }"
+                                                @click="previewPage = p"
+                                            >
+                                                {{ p }}
+                                            </button>
+                                            <button
+                                                class="rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors"
+                                                :style="{ borderColor: '#e8e6dc', color: '#4d4c48', backgroundColor: '#ffffff' }"
+                                                :disabled="previewPage >= previewTotalPages"
+                                                :class="{ 'opacity-35': previewPage >= previewTotalPages }"
+                                                @click="previewPage++"
+                                            >
+                                                Next &rsaquo;
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
