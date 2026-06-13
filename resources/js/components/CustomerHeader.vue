@@ -44,6 +44,9 @@ const handleLogout = () => {
                         <Link href="/domains">Domain</Link>
                     </Button>
                     <Button variant="ghost" size="sm" asChild>
+                        <Link href="/demo-web">Demo Web</Link>
+                    </Button>
+                    <Button variant="ghost" size="sm" asChild>
                         <Link href="/blog">Blog</Link>
                     </Button>
                     <template v-if="isAdmin">
@@ -122,6 +125,9 @@ const handleLogout = () => {
                                 </Button>
                                 <Button variant="ghost" class="w-full justify-start" asChild>
                                     <Link href="/domains" @click="mobileMenuOpen = false">Domain</Link>
+                                </Button>
+                                <Button variant="ghost" class="w-full justify-start" asChild>
+                                    <Link href="/demo-web" @click="mobileMenuOpen = false">Demo Web</Link>
                                 </Button>
                                 <Button variant="ghost" class="w-full justify-start" asChild>
                                     <Link href="/blog" @click="mobileMenuOpen = false">Blog</Link>

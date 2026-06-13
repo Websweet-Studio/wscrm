@@ -25,6 +25,13 @@ Route::get('/', function () {
 Route::get('/hosting', [App\Http\Controllers\HostingPlanController::class, 'publicIndex'])->name('public.hosting.index');
 Route::get('/domains', [App\Http\Controllers\DomainPriceController::class, 'publicIndex'])->name('public.domains.index');
 Route::get('/domains/search', [App\Http\Controllers\DomainPriceController::class, 'publicSearch'])->name('public.domains.search');
+Route::get('/demo-web', [App\Http\Controllers\DemoWebsiteController::class, 'publicPage'])->name('public.demos.index');
+Route::get('/demo-web/embed/{id}', [App\Http\Controllers\DemoWebsiteController::class, 'embed'])->name('public.demos.embed');
+
+// Public demo website API
+Route::get('/api/demos', [App\Http\Controllers\DemoWebsiteController::class, 'publicIndex'])->name('api.demos.index');
+Route::get('/api/demos/{demoWebsite}', [App\Http\Controllers\DemoWebsiteController::class, 'publicShow'])->name('api.demos.show');
+Route::get('/api/oembed', [App\Http\Controllers\DemoWebsiteController::class, 'oembed'])->name('api.oembed');
 
 // Public blog pages (accessible without login)
 Route::get('/blog', [App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
@@ -46,10 +53,6 @@ Route::get('/api/username/check', [App\Http\Controllers\Api\UsernameController::
 
 Route::get('/api/customer/username/check', [App\Http\Controllers\Api\CustomerUsernameController::class, 'checkAvailability'])
     ->name('api.customer.username.check');
-
-// Public demo website API
-Route::get('/api/demos', [App\Http\Controllers\DemoWebsiteController::class, 'publicIndex'])->name('api.demos.index');
-Route::get('/api/demos/{demoWebsite}', [App\Http\Controllers\DemoWebsiteController::class, 'publicShow'])->name('api.demos.show');
 
 Route::get('dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth'])

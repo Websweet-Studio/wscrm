@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
 import { Link } from '@inertiajs/vue3';
-import { Calculator, Globe, Server, Shield, Users } from 'lucide-vue-next';
+import { Calculator, Globe, Monitor, Server, Shield, Users } from 'lucide-vue-next';
 import { usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { getHostingPlanFinalPrice } from '@/lib/utils';
@@ -66,6 +66,11 @@ const features = [
         icon: Globe,
         title: 'Registrasi Domain',
         description: 'Daftarkan domain sempurna Anda dengan harga terbaik',
+    },
+    {
+        icon: Monitor,
+        title: 'Demo Website',
+        description: 'Lihat contoh website profesional yang bisa Anda miliki',
     },
     {
         icon: Shield,
@@ -207,6 +212,9 @@ const getWhatsAppUrl = () => {
                     </Button>
                     <Button asChild variant="outline" class="text-lg px-6 py-4" style="background-color: #faf9f5; color: #4d4c48; border: 1px solid #e8e6dc; border-radius: 12px;">
                         <Link href="/domains">Cari Domain</Link>
+                    </Button>
+                    <Button asChild variant="outline" class="text-lg px-6 py-4" style="background-color: #faf9f5; color: #4d4c48; border: 1px solid #e8e6dc; border-radius: 12px;">
+                        <Link href="/demo-web">Demo Website</Link>
                     </Button>
                 </div>
             </div>
@@ -368,7 +376,7 @@ const getWhatsAppUrl = () => {
             </div>
 
             <!-- Features Grid -->
-            <div class="mb-12 grid gap-4 sm:grid-cols-2 sm:gap-6 lg:mb-16 lg:grid-cols-4">
+            <div class="mb-12 grid gap-4 sm:grid-cols-2 sm:gap-6 lg:mb-16 lg:grid-cols-5">
                 <Card v-for="feature in features" :key="feature.title" class="text-center transition-all" style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 12px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
                     <CardHeader class="pb-4">
                         <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg" style="background-color: #e8e6dc;">
