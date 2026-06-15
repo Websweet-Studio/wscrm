@@ -103,6 +103,7 @@
         .invoice-label {
             color: #4b5563;
             font-size: 14px;
+            margin-right: 8px;
         }
         .invoice-value {
             font-weight: 600;
@@ -112,13 +113,6 @@
         .invoice-value.highlight {
             font-size: 18px;
             color: #4338ca;
-        }
-        .invoice-value.mono {
-            font-family: 'Courier New', monospace;
-            background-color: #ffffff;
-            padding: 4px 10px;
-            border-radius: 4px;
-            border: 1px solid #e5e7eb;
         }
         .status-badge {
             display: inline-block;
@@ -132,6 +126,97 @@
         .status-pending {
             background-color: #fef3c7;
             color: #92400e;
+        }
+        .items-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #4b5563;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 12px;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin: 0 0 24px;
+        }
+        .items-table th {
+            text-align: left;
+            padding: 8px 0;
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .items-table th:last-child {
+            text-align: right;
+        }
+        .items-table td {
+            padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+            vertical-align: top;
+        }
+        .items-table td:last-child {
+            text-align: right;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .items-table tr:last-child td {
+            border-bottom: none;
+        }
+        .item-type-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 6px;
+        }
+        .badge-hosting {
+            background-color: #dbeafe;
+            color: #1d4ed8;
+        }
+        .badge-domain {
+            background-color: #ede9fe;
+            color: #7c3aed;
+        }
+        .badge-service {
+            background-color: #d1fae5;
+            color: #047857;
+        }
+        .item-desc {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+        .item-qty {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 400;
+        }
+        .total-box {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 0 0 24px;
+        }
+        .total-label {
+            color: #4b5563;
+            font-size: 14px;
+        }
+        .total-amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: #059669;
+        }
+        .total-detail {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 8px;
         }
         .cta-section {
             text-align: center;
@@ -148,7 +233,7 @@
             font-size: 15px;
             letter-spacing: 0.3px;
             box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow  0.2s;
         }
         .cta-button:hover {
             transform: translateY(-1px);
@@ -219,7 +304,7 @@
                     <p class="invoice-box-title">Detail Tagihan</p>
                     <div class="invoice-item">
                         <span class="invoice-label">No. Tagihan</span>
-                        <span class="invoice-value mono">{{ $invoice->invoice_number }}</span>
+                        <span class="invoice-value">{{ $invoice->invoice_number }}</span>
                     </div>
                     <div class="invoice-item">
                         <span class="invoice-label">Jenis</span>
@@ -257,20 +342,65 @@
                     </div>
                 </div>
 
+                {{-- Order Items --}}
+                @if($orderItems->count() > 0)
+                <p class="items-title">Item Pesanan</p>
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>Layanan</th>
+                            <th>Harga</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($orderItems as $item)
+                        <tr>
+                            <td>
+                                @if($item->item_type === 'hosting')
+                                    <span class="item-type-badge badge-hosting">Hosting</span>
+                                    @if($item->hostingPlan)
+                                        <strong>{{ $item->hostingPlan->plan_name }}</strong>
+                                        <div class="item-desc">{{ $item->hostingPlan->storage_gb }}GB SSD · {{ $item->hostingPlan->cpu_cores }} Core CPU · {{ $item->hostingPlan->ram_gb }}GB RAM</div>
+                                    @else
+                                        <strong>Hosting</strong>
+                                    @endif
+                                @elseif($item->item_type === 'domain')
+                                    <span class="item-type-badge badge-domain">Domain</span>
+                                    <strong>{{ $item->domain_name ?? $invoice->order?->domain_name ?? '-' }}</strong>
+                                @else
+                                    <span class="item-type-badge badge-service">Layanan</span>
+                                    @if($item->servicePlan)
+                                        <strong>{{ $item->servicePlan->name }}</strong>
+                                    @else
+                                        <strong>{{ ucfirst($item->item_type) }}</strong>
+                                    @endif
+                                @endif
+                                @if($item->quantity > 1)
+                                    <span class="item-qty"> · {{ $item->quantity }}x</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($item->quantity > 1)
+                                <div class="item-qty">Rp {{ number_format($item->price, 0, ',', '.') }}/item</div>
+                                @endif
+                                Rp {{ number_format($item->price * $item->quantity, 0, ',', '.') }}
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                @endif
+
                 {{-- Total Box --}}
-                <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 0 0 24px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: #4b5563; font-size: 14px;">Total yang harus dibayar</span>
-                        <span style="font-size: 24px; font-weight: 700; color: #059669;">
-                            Rp {{ number_format($invoice->amount - $invoice->discount, 0, ',', '.') }}
-                        </span>
+                <div class="total-box">
+                    <div style="align-items: center;">
+                        <span class="total-label">Total yang harus dibayar</span>
+                        <span class="total-amount">Rp {{ number_format($invoice->amount - $invoice->discount, 0, ',', '.') }}</span>
                     </div>
                     @if($invoice->discount > 0)
-                    <div style="margin-top: 8px; text-align: right;">
-                        <span style="font-size: 13px; color: #6b7280;">
-                            Subtotal: Rp {{ number_format($invoice->amount, 0, ',', '.') }}
-                            · Diskon: -Rp {{ number_format($invoice->discount, 0, ',', '.') }}
-                        </span>
+                    <div class="total-detail" style="text-align: right;">
+                        Subtotal: Rp {{ number_format($invoice->amount, 0, ',', '.') }}
+                        · Diskon: -Rp {{ number_format($invoice->discount, 0, ',', '.') }}
                     </div>
                     @endif
                 </div>

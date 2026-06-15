@@ -28,6 +28,9 @@ class InvoiceEmail extends Mailable
   {
     return new Content(
       view: 'emails.invoices.invoice-email',
+      with: [
+        'orderItems' => $this->invoice->order?->orderItems()->with(['hostingPlan', 'domainPrice', 'servicePlan'])->get() ?? collect(),
+      ],
     );
   }
 
