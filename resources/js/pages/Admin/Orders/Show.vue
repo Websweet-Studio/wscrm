@@ -327,6 +327,20 @@ const sendInvoiceToEmail = () => {
         },
     );
 };
+
+const createAndSendInvoice = () => {
+    isSendingInvoice.value = true;
+    router.post(
+        `/admin/orders/${props.order.id}/create-and-send-invoice`,
+        {},
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                isSendingInvoice.value = false;
+            },
+        },
+    );
+};
 </script>
 
 <template>
@@ -629,6 +643,18 @@ const sendInvoiceToEmail = () => {
                             <Send v-else class="h-3.5 w-3.5" />
                             {{ isSendingInvoice ? 'Mengirim...' : 'Kirim Tagihan' }}
                         </Button>
+                        <Button
+                            v-else
+                            size="sm"
+                            variant="default"
+                            class="flex cursor-pointer items-center gap-1.5 text-xs"
+                            :disabled="isSendingInvoice"
+                            @click="createAndSendInvoice"
+                        >
+                            <Loader2 v-if="isSendingInvoice" class="h-3.5 w-3.5 animate-spin" />
+                            <Send v-else class="h-3.5 w-3.5" />
+                            {{ isSendingInvoice ? 'Membuat & Mengirim...' : 'Buat & Kirim Tagihan' }}
+                        </Button>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -646,8 +672,12 @@ const sendInvoiceToEmail = () => {
                             Jatuh tempo: {{ formatDate(order.invoice.due_date) }}
                         </div>
                     </template>
-                    <div v-else class="text-sm text-muted-foreground">
-                        Belum ada faktur.
+                    <div v-else class="flex items-center gap-3 rounded-lg border border-dashed border-border bg-muted/30 px-4 py-6 text-center">
+                        <div class="flex-1">
+                            <FileText class="mx-auto mb-2 h-8 w-8 text-muted-foreground/50" />
+                            <p class="text-sm text-muted-foreground">Belum ada faktur untuk order ini.</p>
+                            <p class="mt-1 text-xs text-muted-foreground">Klik tombol "Buat & Kirim Tagihan" untuk membuat dan mengirim faktur ke email pelanggan.</p>
+                        </div>
                     </div>
                 </CardContent>
             </Card>

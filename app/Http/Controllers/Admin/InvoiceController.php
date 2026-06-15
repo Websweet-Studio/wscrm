@@ -214,6 +214,43 @@ class InvoiceController extends Controller
     }
 
     /**
+     * Create invoice from order and send it via email
+     */
+    public function createAndSendInvoice(Order $order, InvoiceGeneratorService $generator)
+    {
+        // Check if order already has an invoice
+        if ($order->invoices()->exists()) {
+            $invoice = $order->invoices()->first();
+            Mail::to($invoice->customer->email)->send(new \App\Mail\InvoiceEmail($invoice));
+
+            return back()->with('success', 'Tagihan sudah ada dan berhasil dikirim ke email ' . $invoice->customer->email);
+        }
+
+        // Calculate due date: 7 days from now
+        $dueDate = now()->addDays(7);
+
+        // Create invoice from order data
+        $invoice = Invoice::create([
+            'invoice_number' => $generator->generateInvoiceNumber(),
+            'invoice_type' => $order->isService() ? 'renewal' : 'setup',
+            'customer_id' => $order->customer_id,
+            'order_id' => $order->id,
+            'amount' => $order->total_amount,
+            'discount' => $order->discount_amount ?? 0,
+            'issue_date' => now()->toDateString(),
+            'due_date' => $dueDate->toDateString(),
+            'status' => 'pending',
+            'billing_cycle' => $order->billing_cycle,
+            'notes' => 'Tagihan untuk ' . ($order->domain_name ?: 'Order #' . $order->id),
+        ]);
+
+        // Send the invoice email
+        Mail::to($order->customer->email)->send(new \App\Mail\InvoiceEmail($invoice));
+
+        return back()->with('success', 'Tagihan berhasil dibuat dan dikirim ke email ' . $order->customer->email);
+    }
+
+    /**
      * Mark invoice as paid
      */
     public function markAsPaid(Invoice $invoice)

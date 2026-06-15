@@ -45,6 +45,7 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::resource('invoices', InvoiceController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
     Route::get('invoices/{invoice}/download', [InvoiceController::class, 'downloadPdf'])->name('invoices.download');
     Route::post('invoices/{invoice}/send', [InvoiceController::class, 'sendInvoice'])->name('invoices.send');
+    Route::post('orders/{order}/create-and-send-invoice', [InvoiceController::class, 'createAndSendInvoice'])->name('orders.create-and-send-invoice');
     Route::patch('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markAsPaid'])->name('invoices.mark-paid');
     Route::post('invoices/generate-renewals', [InvoiceController::class, 'generateRenewalInvoices'])->name('invoices.generate-renewals');
     Route::delete('domain-prices/bulk', [DomainPriceController::class, 'bulkDestroy'])->name('domain-prices.bulk-destroy');
@@ -57,7 +58,7 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::post('bulk-pricing/save-config', [BulkPricingController::class, 'saveConfig'])->name('bulk-pricing.save-config');
     Route::get('bulk-pricing/load-config/{id}', [BulkPricingController::class, 'loadConfig'])->name('bulk-pricing.load-config');
     Route::delete('bulk-pricing/delete-config/{id}', [BulkPricingController::class, 'deleteConfig'])->name('bulk-pricing.delete-config');
-    Route::get('banks', fn () => redirect()->route('admin.payments.index'))->name('banks.redirect');
+    Route::get('banks', fn() => redirect()->route('admin.payments.index'))->name('banks.redirect');
 
     Route::get('payments', [PaymentAccountController::class, 'index'])->name('payments.index');
     Route::post('payments', [PaymentAccountController::class, 'store'])->name('payments.store');

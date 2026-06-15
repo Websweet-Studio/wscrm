@@ -658,6 +658,85 @@ processUpgradeDowngrade.post = (args: { order: number | { id: number } } | [orde
         })
     
     processUpgradeDowngrade.form = processUpgradeDowngradeForm
+/**
+* @see \App\Http\Controllers\Admin\InvoiceController::createAndSendInvoice
+ * @see app/Http/Controllers/Admin/InvoiceController.php:219
+ * @route '/admin/orders/{order}/create-and-send-invoice'
+ */
+export const createAndSendInvoice = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: createAndSendInvoice.url(args, options),
+    method: 'post',
+})
+
+createAndSendInvoice.definition = {
+    methods: ["post"],
+    url: '/admin/orders/{order}/create-and-send-invoice',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\Admin\InvoiceController::createAndSendInvoice
+ * @see app/Http/Controllers/Admin/InvoiceController.php:219
+ * @route '/admin/orders/{order}/create-and-send-invoice'
+ */
+createAndSendInvoice.url = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { order: args }
+    }
+
+            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+            args = { order: args.id }
+        }
+    
+    if (Array.isArray(args)) {
+        args = {
+                    order: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        order: typeof args.order === 'object'
+                ? args.order.id
+                : args.order,
+                }
+
+    return createAndSendInvoice.definition.url
+            .replace('{order}', parsedArgs.order.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Admin\InvoiceController::createAndSendInvoice
+ * @see app/Http/Controllers/Admin/InvoiceController.php:219
+ * @route '/admin/orders/{order}/create-and-send-invoice'
+ */
+createAndSendInvoice.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: createAndSendInvoice.url(args, options),
+    method: 'post',
+})
+
+    /**
+* @see \App\Http\Controllers\Admin\InvoiceController::createAndSendInvoice
+ * @see app/Http/Controllers/Admin/InvoiceController.php:219
+ * @route '/admin/orders/{order}/create-and-send-invoice'
+ */
+    const createAndSendInvoiceForm = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: createAndSendInvoice.url(args, options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\InvoiceController::createAndSendInvoice
+ * @see app/Http/Controllers/Admin/InvoiceController.php:219
+ * @route '/admin/orders/{order}/create-and-send-invoice'
+ */
+        createAndSendInvoiceForm.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: createAndSendInvoice.url(args, options),
+            method: 'post',
+        })
+    
+    createAndSendInvoice.form = createAndSendInvoiceForm
 const orders = {
     bulkDestroy: Object.assign(bulkDestroy, bulkDestroy),
 index: Object.assign(index, index),
@@ -667,6 +746,7 @@ update: Object.assign(update, update),
 destroy: Object.assign(destroy, destroy),
 simulateUpgradeDowngrade: Object.assign(simulateUpgradeDowngrade, simulateUpgradeDowngrade),
 processUpgradeDowngrade: Object.assign(processUpgradeDowngrade, processUpgradeDowngrade),
+createAndSendInvoice: Object.assign(createAndSendInvoice, createAndSendInvoice),
 }
 
 export default orders
