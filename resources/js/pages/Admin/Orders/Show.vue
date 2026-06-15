@@ -1,13 +1,14 @@
 <script setup lang="ts">
+import OrderFormModal from '@/components/OrderFormModal.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
-import { AlertTriangle, ArrowUpDown, Calendar, FileText, Loader2, Mail, MapPin, Package, Phone, ShoppingCart } from 'lucide-vue-next';
+import { ArrowUpDown, Edit, FileText, Loader2, Mail, MapPin, Package, Phone, ShoppingCart } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface Customer {
@@ -87,9 +88,34 @@ interface Order {
 interface Props {
     order: Order;
     availablePlans: HostingPlan[];
+    hostingPlans: HostingPlan[];
+    customers: Customer[];
+    domainPrices: DomainPrice[];
+    servicePlans: ServicePlan[];
 }
 
 const props = defineProps<Props>();
+
+// Edit Modal State
+const showEditModal = ref(false);
+
+const openEditModal = () => {
+    showEditModal.value = true;
+};
+
+const closeEditModal = () => {
+    showEditModal.value = false;
+};
+
+const handleEditSubmit = (data: any) => {
+    router.put(`/admin/orders/${props.order.id}`, data, {
+        preserveState: false,
+        preserveScroll: true,
+        onSuccess: () => {
+            closeEditModal();
+        },
+    });
+};
 
 // Upgrade/Downgrade Modal State
 const showUpgradeModal = ref(false);
@@ -285,6 +311,10 @@ const processUpgradeDowngrade = () => {
                     <p class="text-muted-foreground">Order details and customer information</p>
                 </div>
                 <div class="flex gap-3">
+                    <Button variant="outline" @click="openEditModal" class="flex cursor-pointer items-center gap-2">
+                        <Edit class="h-4 w-4" />
+                        Edit
+                    </Button>
                     <Button v-if="canUpgradeDowngrade" variant="outline" @click="openUpgradeModal" class="flex items-center gap-2">
                         <ArrowUpDown class="h-4 w-4" />
                         Upgrade/Downgrade
@@ -295,162 +325,116 @@ const processUpgradeDowngrade = () => {
                 </div>
             </div>
 
-            <!-- Expiry Warning for Services -->
-            <Card
-                v-if="order.expires_at && ['active', 'suspended'].includes(order.status)"
-                :class="getDaysUntilExpiry(order.expires_at) <= 30 ? 'border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950' : ''"
-            >
-                <CardHeader>
-                    <CardTitle
-                        class="flex items-center gap-2"
-                        :class="getDaysUntilExpiry(order.expires_at) <= 30 ? 'text-orange-800 dark:text-orange-200' : ''"
-                    >
-                        <AlertTriangle v-if="getDaysUntilExpiry(order.expires_at) <= 30" class="h-5 w-5" />
-                        <Calendar v-else class="h-5 w-5" />
-                        Informasi Masa Aktif
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="text-sm text-muted-foreground">Berakhir pada</div>
-                            <div class="font-medium">{{ formatDate(order.expires_at) }}</div>
-                            <div v-if="order.auto_renew" class="mt-1 text-xs text-green-600 dark:text-green-400">✓ Perpanjangan otomatis aktif</div>
-                        </div>
-                        <div class="text-right">
-                            <Badge :class="getExpiryBadgeClass(getDaysUntilExpiry(order.expires_at))" class="mb-2">
-                                <template v-if="getDaysUntilExpiry(order.expires_at) <= 0"> Sudah Berakhir </template>
-                                <template v-else> {{ getDaysUntilExpiry(order.expires_at) }} hari lagi </template>
-                            </Badge>
-                            <div
-                                v-if="getDaysUntilExpiry(order.expires_at) <= 15 && getDaysUntilExpiry(order.expires_at) > 0"
-                                class="text-xs text-red-600 dark:text-red-400"
-                            >
-                                ⚠️ Segera perpanjang
-                            </div>
-                            <div
-                                v-else-if="getDaysUntilExpiry(order.expires_at) <= 30 && getDaysUntilExpiry(order.expires_at) > 15"
-                                class="text-xs text-orange-600 dark:text-orange-400"
-                            >
-                                🔔 Persiapkan perpanjangan
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
             <!-- Order Overview -->
             <div class="grid gap-6 md:grid-cols-2">
                 <!-- Order Information -->
-                <Card>
-                    <CardHeader>
-                        <CardTitle class="flex items-center gap-2">
-                            <ShoppingCart class="h-5 w-5" />
-                            Order Information
+                <Card
+                    :class="order.expires_at && ['active', 'suspended'].includes(order.status) && getDaysUntilExpiry(order.expires_at) <= 30 ? 'border-orange-200 dark:border-orange-800' : ''"
+                >
+                    <CardHeader class="pb-3">
+                        <CardTitle class="flex items-center gap-2 text-base">
+                            <ShoppingCart class="h-4 w-4" />
+                            Informasi Order
                         </CardTitle>
                     </CardHeader>
-                    <CardContent class="space-y-4">
+                    <CardContent class="space-y-3 text-sm">
+                        <!-- Status + Expiry inline -->
                         <div class="flex items-center justify-between">
-                            <span class="text-sm font-medium">Status</span>
-                            <Badge :class="getStatusClass(order.status)">
-                                {{ getStatusText(order.status) }}
-                            </Badge>
+                            <span class="text-muted-foreground">Status</span>
+                            <div class="flex items-center gap-2">
+                                <Badge :class="getStatusClass(order.status)" class="text-xs">
+                                    {{ getStatusText(order.status) }}
+                                </Badge>
+                                <Badge
+                                    v-if="order.expires_at && ['active', 'suspended'].includes(order.status)"
+                                    :class="getExpiryBadgeClass(getDaysUntilExpiry(order.expires_at))"
+                                    class="text-xs"
+                                >
+                                    <template v-if="getDaysUntilExpiry(order.expires_at) <= 0">Berakhir</template>
+                                    <template v-else>{{ getDaysUntilExpiry(order.expires_at) }}h</template>
+                                </Badge>
+                            </div>
                         </div>
 
-                        <div class="space-y-3">
-                            <div v-if="order.domain_name" class="flex items-center justify-between">
-                                <span class="text-sm text-muted-foreground">Domain</span>
-                                <span class="text-sm font-medium">{{ order.domain_name }}</span>
+                        <!-- Expiry detail (compact) -->
+                        <div
+                            v-if="order.expires_at && ['active', 'suspended'].includes(order.status)"
+                            class="flex items-center justify-between rounded-md px-2 py-1.5"
+                            :class="getDaysUntilExpiry(order.expires_at) <= 30 ? 'bg-orange-50 dark:bg-orange-950' : 'bg-muted'"
+                        >
+                            <span class="text-muted-foreground">Berakhir</span>
+                            <div class="text-right">
+                                <span class="font-medium">{{ formatDate(order.expires_at) }}</span>
+                                <span v-if="order.auto_renew" class="ml-1 text-xs text-green-600 dark:text-green-400">· Auto</span>
                             </div>
+                        </div>
 
-                            <div v-if="currentHostingPlan" class="flex items-center justify-between">
-                                <span class="text-sm text-muted-foreground">Kapasitas Hosting</span>
-                                <span class="text-sm font-medium">
-                                    {{ currentHostingPlan.storage_gb }}GB Storage · {{ currentHostingPlan.cpu_cores }} Core · {{ currentHostingPlan.ram_gb }}GB RAM
-                                </span>
-                            </div>
+                        <div v-if="order.domain_name" class="flex items-center justify-between">
+                            <span class="text-muted-foreground">Domain</span>
+                            <span class="font-medium">{{ order.domain_name }}</span>
+                        </div>
 
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-muted-foreground">Siklus Tagihan</span>
-                                <span class="text-sm font-medium">{{ getBillingCycleText(order.billing_cycle) }}</span>
-                            </div>
+                        <div v-if="currentHostingPlan" class="flex items-center justify-between">
+                            <span class="text-muted-foreground">Plan</span>
+                            <span class="font-medium">{{ currentHostingPlan.plan_name }}</span>
+                        </div>
 
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-muted-foreground">Total Harga</span>
-                                <div class="text-right">
-                                    <template v-if="order.discount_amount && order.discount_amount > 0">
-                                        <div class="text-xs text-muted-foreground line-through">
-                                            {{ formatPrice(totalItemsAmount) }}
-                                        </div>
-                                        <div class="text-lg font-bold text-green-600 dark:text-green-400">
-                                            {{ formatPrice(totalItemsAmount - Number(order.discount_amount)) }}
-                                        </div>
-                                        <div class="text-xs text-green-600 dark:text-green-400">Hemat: {{ formatPrice(order.discount_amount) }}</div>
-                                    </template>
-                                    <template v-else>
-                                        <div class="text-lg font-bold">{{ formatPrice(order.total_amount) }}</div>
-                                    </template>
-                                </div>
-                            </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-muted-foreground">Siklus</span>
+                            <span>{{ getBillingCycleText(order.billing_cycle) }}</span>
+                        </div>
 
-                            <div v-if="order.expires_at" class="flex items-center justify-between">
-                                <span class="text-sm text-muted-foreground">Berakhir</span>
-                                <span class="text-sm">{{ formatDate(order.expires_at) }}</span>
+                        <div class="flex items-center justify-between">
+                            <span class="text-muted-foreground">Total</span>
+                            <div class="text-right">
+                                <template v-if="order.discount_amount && order.discount_amount > 0">
+                                    <span class="text-xs text-muted-foreground line-through">{{ formatPrice(totalItemsAmount) }}</span>
+                                    <span class="ml-1 font-bold text-green-600 dark:text-green-400">{{ formatPrice(totalItemsAmount - Number(order.discount_amount)) }}</span>
+                                    <div class="text-xs text-green-600 dark:text-green-400">Hemat {{ formatPrice(order.discount_amount) }}</div>
+                                </template>
+                                <template v-else>
+                                    <span class="font-bold">{{ formatPrice(order.total_amount) }}</span>
+                                </template>
                             </div>
+                        </div>
 
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-muted-foreground">Dibuat</span>
-                                <span class="text-sm">{{ formatDate(order.created_at) }}</span>
-                            </div>
-
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-muted-foreground">Terakhir Diperbarui</span>
-                                <span class="text-sm">{{ formatDate(order.updated_at) }}</span>
-                            </div>
+                        <div class="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Dibuat {{ formatDate(order.created_at) }}</span>
                         </div>
                     </CardContent>
                 </Card>
 
                 <!-- Customer Information -->
                 <Card>
-                    <CardHeader>
-                        <CardTitle class="flex items-center gap-2">
-                            <Mail class="h-5 w-5" />
-                            Informasi Pelanggan
+                    <CardHeader class="pb-3">
+                        <CardTitle class="flex items-center justify-between text-base">
+                            <span class="flex items-center gap-2">
+                                <Mail class="h-4 w-4" />
+                                Pelanggan
+                            </span>
+                            <Button size="sm" variant="ghost" asChild class="text-xs">
+                                <Link :href="`/admin/customers/${order.customer.id}`">Detail →</Link>
+                            </Button>
                         </CardTitle>
                     </CardHeader>
-                    <CardContent class="space-y-4">
-                        <div class="space-y-3">
-                            <div>
-                                <span class="text-sm font-medium">{{ order.customer.name }}</span>
-                                <div class="text-sm text-muted-foreground">Customer ID: #{{ order.customer.id }}</div>
-                            </div>
-
-                            <div class="flex items-center gap-3">
-                                <Mail class="h-4 w-4 text-muted-foreground" />
-                                <span class="text-sm">{{ order.customer.email }}</span>
-                            </div>
-
-                            <div v-if="order.customer.phone" class="flex items-center gap-3">
-                                <Phone class="h-4 w-4 text-muted-foreground" />
-                                <span class="text-sm">{{ order.customer.phone }}</span>
-                            </div>
-
-                            <div v-if="order.customer.address || order.customer.city || order.customer.country" class="flex items-start gap-3">
-                                <MapPin class="mt-0.5 h-4 w-4 text-muted-foreground" />
-                                <div class="text-sm">
-                                    <div v-if="order.customer.address">{{ order.customer.address }}</div>
-                                    <div>
-                                        {{ [order.customer.city, order.customer.country].filter(Boolean).join(', ') }}
-                                    </div>
-                                </div>
-                            </div>
+                    <CardContent class="space-y-2 text-sm">
+                        <div>
+                            <span class="font-medium">{{ order.customer.name }}</span>
+                            <span class="ml-1 text-xs text-muted-foreground">#{{ order.customer.id }}</span>
                         </div>
-
-                        <div class="border-t pt-3">
-                            <Button size="sm" variant="outline" asChild>
-                                <Link :href="`/admin/customers/${order.customer.id}`"> Lihat Detail Pelanggan </Link>
-                            </Button>
+                        <div class="flex items-center gap-2 text-muted-foreground">
+                            <Mail class="h-3.5 w-3.5" />
+                            <span>{{ order.customer.email }}</span>
+                        </div>
+                        <div v-if="order.customer.phone" class="flex items-center gap-2 text-muted-foreground">
+                            <Phone class="h-3.5 w-3.5" />
+                            <span>{{ order.customer.phone }}</span>
+                        </div>
+                        <div v-if="order.customer.address || order.customer.city || order.customer.country" class="flex items-start gap-2 text-muted-foreground">
+                            <MapPin class="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                            <span>
+                                {{ [order.customer.address, order.customer.city, order.customer.country].filter(Boolean).join(', ') }}
+                            </span>
                         </div>
                     </CardContent>
                 </Card>
@@ -458,22 +442,24 @@ const processUpgradeDowngrade = () => {
 
             <!-- Order Items -->
             <Card>
-                <CardHeader>
-                    <CardTitle class="flex items-center gap-2">
-                        <Package class="h-5 w-5" />
-                        Item Pesanan
+                <CardHeader class="pb-3">
+                    <CardTitle class="flex items-center justify-between text-base">
+                        <span class="flex items-center gap-2">
+                            <Package class="h-4 w-4" />
+                            Item Pesanan
+                        </span>
+                        <span class="text-sm font-normal text-muted-foreground">{{ order.order_items.length }} item</span>
                     </CardTitle>
-                    <CardDescription>Item yang termasuk dalam pesanan ini</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Tipe Item</TableHead>
+                                <TableHead>Tipe</TableHead>
                                 <TableHead>Detail</TableHead>
-                                <TableHead>Jumlah</TableHead>
-                                <TableHead>Harga Satuan</TableHead>
-                                <TableHead>Total</TableHead>
+                                <TableHead class="text-right">Qty</TableHead>
+                                <TableHead class="text-right">Harga</TableHead>
+                                <TableHead class="text-right">Total</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -481,85 +467,85 @@ const processUpgradeDowngrade = () => {
                                 <TableCell class="font-medium capitalize">{{ item.item_type }}</TableCell>
                                 <TableCell>
                                     <template v-if="item.item_type === 'hosting' && item.hosting_plan">
-                                        <div class="font-medium">{{ item.hosting_plan.plan_name }}</div>
-                                        <div class="text-sm text-muted-foreground">
-                                            {{ item.hosting_plan.storage_gb }}GB · {{ item.hosting_plan.cpu_cores }} Core · {{ item.hosting_plan.ram_gb }}GB RAM
-                                        </div>
+                                        <span>{{ item.hosting_plan.plan_name }}</span>
                                     </template>
                                     <template v-else-if="item.item_type === 'domain'">
-                                        <div class="font-medium">{{ item.domain_name || order.domain_name || '-' }}</div>
-                                        <div class="text-sm text-muted-foreground">
-                                            Ekstensi: {{ item.domain_price?.extension ? `.${item.domain_price.extension}` : '-' }}
-                                        </div>
+                                        <span>{{ item.domain_name || order.domain_name || '-' }}</span>
                                     </template>
                                     <template v-else-if="item.service_plan">
-                                        <div class="font-medium">{{ item.service_plan.name }}</div>
-                                        <div class="text-sm text-muted-foreground capitalize">{{ item.item_type.replace('_', ' ') }}</div>
+                                        <span>{{ item.service_plan.name }}</span>
                                     </template>
                                     <template v-else>
-                                        <div v-if="item.domain_name" class="font-medium">{{ item.domain_name }}</div>
-                                        <div class="text-sm text-muted-foreground">Item ID: #{{ item.item_id }}</div>
+                                        <span v-if="item.domain_name">{{ item.domain_name }}</span>
+                                        <span v-else class="text-muted-foreground">-</span>
                                     </template>
                                 </TableCell>
-                                <TableCell>{{ item.quantity }}</TableCell>
-                                <TableCell>{{ formatPrice(item.price) }}</TableCell>
-                                <TableCell class="font-medium">{{ formatPrice(item.price * item.quantity) }}</TableCell>
+                                <TableCell class="text-right">{{ item.quantity }}</TableCell>
+                                <TableCell class="text-right">
+                                    <template v-if="item.item_type === 'hosting' && item.hosting_plan && !item.hosting_plan.use_bulk_pricing && item.hosting_plan.discount_percent > 0">
+                                        <div class="text-xs text-muted-foreground line-through">{{ formatPrice(item.hosting_plan.selling_price) }}</div>
+                                        <div class="font-medium">{{ formatPrice(item.price) }}</div>
+                                        <div class="text-xs text-green-600 dark:text-green-400">-{{ item.hosting_plan.discount_percent }}%</div>
+                                    </template>
+                                    <template v-else>
+                                        {{ formatPrice(item.price) }}
+                                    </template>
+                                </TableCell>
+                                <TableCell class="text-right font-medium">
+                                    <template v-if="item.item_type === 'hosting' && item.hosting_plan && !item.hosting_plan.use_bulk_pricing && item.hosting_plan.discount_percent > 0">
+                                        <div class="text-xs text-muted-foreground line-through">{{ formatPrice(item.hosting_plan.selling_price * item.quantity) }}</div>
+                                        <div>{{ formatPrice(item.price * item.quantity) }}</div>
+                                    </template>
+                                    <template v-else>
+                                        {{ formatPrice(item.price * item.quantity) }}
+                                    </template>
+                                </TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
 
-                    <div class="flex items-center justify-between border-t pt-4">
-                        <span class="text-sm text-muted-foreground">Total ({{ order.order_items.length }} item)</span>
-                        <span class="text-xl font-bold">{{ formatPrice(totalItemsAmount) }}</span>
+                    <div class="space-y-1.5 border-t p-3 text-sm">
+                        <div class="flex items-center justify-between">
+                            <span class="text-muted-foreground">Subtotal</span>
+                            <span>{{ formatPrice(totalItemsAmount) }}</span>
+                        </div>
+                        <div v-if="order.discount_amount && order.discount_amount > 0" class="flex items-center justify-between text-green-600 dark:text-green-400">
+                            <span>Diskon</span>
+                            <span>-{{ formatPrice(order.discount_amount) }}</span>
+                        </div>
+                        <div class="flex items-center justify-between border-t pt-1.5 font-bold">
+                            <span>Total</span>
+                            <span>{{ formatPrice(order.total_amount) }}</span>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
 
             <!-- Invoice Information -->
-            <Card v-if="order.invoice">
-                <CardHeader>
-                    <CardTitle class="flex items-center gap-2">
-                        <FileText class="h-5 w-5" />
-                        Informasi Faktur
+            <Card>
+                <CardHeader class="pb-3">
+                    <CardTitle class="flex items-center gap-2 text-base">
+                        <FileText class="h-4 w-4" />
+                        Faktur
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
-                        <div>
-                            <div class="text-sm text-muted-foreground">Nomor Faktur</div>
-                            <div class="font-medium">{{ order.invoice.invoice_number }}</div>
+                    <template v-if="order.invoice">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-muted-foreground">{{ order.invoice.invoice_number }}</span>
+                            <div class="flex items-center gap-3">
+                                <span class="font-bold">{{ formatPrice(order.invoice.total_amount) }}</span>
+                                <Badge :class="getStatusClass(order.invoice.status)" class="text-xs">
+                                    {{ order.invoice.status }}
+                                </Badge>
+                            </div>
                         </div>
-                        <div>
-                            <div class="text-sm text-muted-foreground">Jumlah</div>
-                            <div class="font-medium">{{ formatPrice(order.invoice.total_amount) }}</div>
+                        <div class="mt-1 text-xs text-muted-foreground">
+                            Jatuh tempo: {{ formatDate(order.invoice.due_date) }}
                         </div>
-                        <div>
-                            <div class="text-sm text-muted-foreground">Status</div>
-                            <Badge :class="getStatusClass(order.invoice.status)">
-                                {{ order.invoice.status }}
-                            </Badge>
-                        </div>
-                        <div>
-                            <div class="text-sm text-muted-foreground">Tanggal Jatuh Tempo</div>
-                            <div class="font-medium">{{ formatDate(order.invoice.due_date) }}</div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <!-- No Invoice State -->
-            <Card v-else>
-                <CardHeader>
-                    <CardTitle class="flex items-center gap-2">
-                        <FileText class="h-5 w-5" />
-                        Informasi Faktur
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div class="py-8 text-center text-muted-foreground">
-                        <FileText class="mx-auto h-12 w-12 text-muted-foreground/40" />
-                        <h3 class="mt-2 text-sm font-semibold">Belum Ada Faktur</h3>
-                        <p class="mt-1 text-sm">Faktur akan dibuat ketika pesanan diproses.</p>
+                    </template>
+                    <div v-else class="text-sm text-muted-foreground">
+                        Belum ada faktur.
                     </div>
                 </CardContent>
             </Card>
@@ -733,6 +719,19 @@ const processUpgradeDowngrade = () => {
                     </div>
                 </div>
             </div>
+
+            <!-- Edit Order Modal -->
+            <OrderFormModal
+                :show="showEditModal"
+                mode="edit"
+                :order="order"
+                :customers="customers"
+                :hosting-plans="hostingPlans"
+                :domain-prices="domainPrices"
+                :service-plans="servicePlans"
+                @close="closeEditModal"
+                @submit="handleEditSubmit"
+            />
         </div>
     </AppLayout>
 </template>

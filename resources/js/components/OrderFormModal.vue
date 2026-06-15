@@ -449,8 +449,16 @@ watch(
 );
 
 const submit = () => {
-    // Simply emit the form data, let parent handle submission
-    emit('submit', formData.value);
+    // Calculate prices for each item before submitting
+    const dataToSubmit = {
+        ...formData.value,
+        items: formData.value.items.map((item) => ({
+            ...item,
+            item_id: Number(item.item_id),
+            price: calculateItemTotal(item),
+        })),
+    };
+    emit('submit', dataToSubmit);
 };
 
 const close = () => {
@@ -803,8 +811,8 @@ const extendExpiryOneYear = () => {
 
                 <!-- Actions -->
                 <div class="flex flex-col-reverse gap-2 pt-6 sm:flex-row sm:justify-end sm:gap-3">
-                    <Button type="button" variant="outline" class="w-full sm:w-auto" @click="close"> Batal </Button>
-                    <Button type="submit" class="w-full sm:w-auto" :disabled="processing">
+                    <Button type="button" variant="outline" class="w-full cursor-pointer sm:w-auto" @click="close"> Batal </Button>
+                    <Button type="submit" class="w-full cursor-pointer sm:w-auto" :disabled="processing">
                         {{ processing ? 'Menyimpan...' : isEditMode ? 'Perbarui Pesanan' : 'Buat Pesanan' }}
                     </Button>
                 </div>

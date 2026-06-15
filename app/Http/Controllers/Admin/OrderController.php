@@ -130,9 +130,18 @@ class OrderController extends Controller
             })
             ->get();
 
+        $customers = Customer::select('id', 'name', 'email')->get();
+        $hostingPlans = HostingPlan::active()->get();
+        $domainPrices = DomainPrice::where('is_active', true)->get();
+        $servicePlans = ServicePlan::where('is_active', true)->get();
+
         return Inertia::render('Admin/Orders/Show', [
             'order' => $order,
             'availablePlans' => $availablePlans,
+            'hostingPlans' => $hostingPlans,
+            'customers' => $customers,
+            'domainPrices' => $domainPrices,
+            'servicePlans' => $servicePlans,
         ]);
     }
 
@@ -199,7 +208,7 @@ class OrderController extends Controller
                 'customer_id' => $request->customer_id,
                 'order_type' => 'hosting',
                 'domain_name' => $request->domain_name,
-                'total_amount' => $totalAmount,
+                'total_amount' => max(0, $totalAmount - ($request->discount_amount ?? 0)),
                 'status' => $request->status,
                 'billing_cycle' => $request->billing_cycle,
                 'expires_at' => $request->expires_at,
@@ -335,8 +344,8 @@ class OrderController extends Controller
                 OrderItem::create($attributes);
             }
 
-            // Update total amount
-            $order->update(['total_amount' => $totalAmount]);
+            // Update total amount (subtract discount)
+            $order->update(['total_amount' => max(0, $totalAmount - ($request->discount_amount ?? 0))]);
         });
 
         return redirect()->back()->with('success', 'Pesanan berhasil diperbarui!');
