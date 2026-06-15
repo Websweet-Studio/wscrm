@@ -213,26 +213,6 @@
             color: #111827;
             font-size: 13px;
         }
-        .item-type-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-left: 6px;
-        }
-        .badge-hosting {
-            background-color: #dbeafe;
-            color: #1d4ed8;
-        }
-        .badge-domain {
-            background-color: #ede9fe;
-            color: #7c3aed;
-        }
-        .badge-service {
-            background-color: #d1fae5;
-            color: #047857;
-        }
         .item-desc {
             font-size: 12px;
             color: #6b7280;
@@ -267,6 +247,36 @@
         }
         .summary-table .row-discount td {
             border-top: 1px solid #e5e7eb;
+        }
+        .discount-box {
+            background-color: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 8px 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .discount-box-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #047857;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .discount-box-label svg {
+            width: 18px;
+            height: 18px;
+            stroke: #047857;
+        }
+        .discount-box-value {
+            font-weight: 700;
+            color: #059669;
+            font-size: 16px;
+            white-space: nowrap;
         }
         .summary-table .row-total td {
             border-top: 2px solid #111827;
@@ -411,80 +421,126 @@
                 @if($orderItems->count() > 0)
                 @php
                     $subtotal = $orderItems->sum(fn($item) => $item->price * $item->quantity);
-                    $finalTotal = $subtotal - $invoice->discount;
+                    $discountAmount = $invoice->discount > 0 ? $invoice->discount : ($invoice->order?->discount_amount ?? 0);
+                    $finalTotal = $subtotal - $discountAmount;
                     if ($finalTotal < 0) $finalTotal = 0;
                 @endphp
-                <p class="items-title">Item Pesanan</p>
+                <p class="items-title">
+                    Item Pesanan
+                    <span class="items-count">({{ $orderItems->count() }} item)</span>
+                </p>
                 <table class="items-table">
                     <thead>
                         <tr>
+                            <th class="row-num">#</th>
                             <th>Layanan</th>
-                            <th>Harga</th>
+                            <th>Deskripsi</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-right">Harga Satuan</th>
+                            <th class="text-right">Total</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($orderItems as $item)
+                        @foreach($orderItems as $index => $item)
                         <tr>
+                            <td class="row-num">{{ $index + 1 }}</td>
                             <td>
                                 @if($item->item_type === 'hosting')
-                                    <span class="item-type-badge badge-hosting">Hosting</span>
-                                    @if($item->hostingPlan)
-                                        <strong>{{ $item->hostingPlan->plan_name }}</strong>
-                                        <div class="item-desc">{{ $item->hostingPlan->storage_gb }}GB SSD · {{ $item->hostingPlan->cpu_cores }} Core CPU · {{ $item->hostingPlan->ram_gb }}GB RAM</div>
-                                    @else
-                                        <strong>Hosting</strong>
-                                    @endif
+                                    <span class="service-icon icon-hosting">H</span>
                                 @elseif($item->item_type === 'domain')
-                                    <span class="item-type-badge badge-domain">Domain</span>
-                                    <strong>{{ $item->domain_name ?? $invoice->order?->domain_name ?? '-' }}</strong>
+                                    <span class="service-icon icon-domain">D</span>
                                 @else
-                                    <span class="item-type-badge badge-service">Layanan</span>
-                                    @if($item->servicePlan)
-                                        <strong>{{ $item->servicePlan->name }}</strong>
-                                    @else
-                                        <strong>{{ ucfirst($item->item_type) }}</strong>
-                                    @endif
-                                @endif
-                                @if($item->quantity > 1)
-                                    <span class="item-qty"> · {{ $item->quantity }}x</span>
+                                    <span class="service-icon icon-service">L</span>
                                 @endif
                             </td>
                             <td>
-                                @if($item->quantity > 1)
-                                <div class="item-qty">Rp {{ number_format($item->price, 0, ',', '.') }}/item</div>
+                                <span class="service-name">
+                                    @if($item->item_type === 'hosting' && $item->hostingPlan)
+                                        {{ $item->hostingPlan->plan_name }}
+                                    @elseif($item->item_type === 'domain')
+                                        {{ $item->domain_name ?? $invoice->order?->domain_name ?? '-' }}
+                                    @elseif($item->servicePlan)
+                                        {{ $item->servicePlan->name }}
+                                    @else
+                                        {{ ucfirst($item->item_type) }}
+                                    @endif
+                                </span>
+                                @if($item->item_type === 'hosting' && $item->hostingPlan)
+                                <div class="item-desc">{{ $item->hostingPlan->storage_gb }}GB SSD · {{ $item->hostingPlan->cpu_cores }} Core CPU · {{ $item->hostingPlan->ram_gb }}GB RAM</div>
                                 @endif
-                                Rp {{ number_format($item->price * $item->quantity, 0, ',', '.') }}
                             </td>
+                            <td class="text-center">{{ $item->quantity }}</td>
+                            <td class="text-right">Rp {{ number_format($item->price, 0, ',', '.') }}</td>
+                            <td class="text-right">Rp {{ number_format($item->price * $item->quantity, 0, ',', '.') }}</td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
 
-                {{-- Total Box --}}
-                <div class="total-box">
-                    <div class="total-row">
-                        <span class="total-label">Subtotal</span>
-                        <span class="total-value">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
-                    </div>
-                    @if($invoice->discount > 0)
-                    <div class="total-row total-row-discount">
-                        <span class="total-label">Diskon</span>
-                        <span class="total-value">-Rp {{ number_format($invoice->discount, 0, ',', '.') }}</span>
-                    </div>
-                    @endif
-                    <div class="total-row total-row-final">
-                        <span class="total-label">Total yang harus dibayar</span>
-                        <span class="total-amount">Rp {{ number_format($finalTotal, 0, ',', '.') }}</span>
-                    </div>
-                </div>
+                {{-- Summary / Total --}}
+                <table class="summary-table">
+                    <tbody>
+                        <tr>
+                            <td class="label" style="width: 80%;">Subtotal</td>
+                            <td class="value">Rp {{ number_format($subtotal, 0, ',', '.') }}</td>
+                        </tr>
+                        @if($discountAmount > 0)
+                        <tr>
+                            <td colspan="2">
+                                <div class="discount-box">
+                                    <span class="discount-box-label">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"></path>
+                                            <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                                        </svg>
+                                        Diskon
+                                    </span>
+                                    <span class="discount-box-value">-Rp {{ number_format($discountAmount, 0, ',', '.') }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        @endif
+                        <tr class="row-total">
+                            <td class="total-label">Total</td>
+                            <td class="total-value">Rp {{ number_format($finalTotal, 0, ',', '.') }}</td>
+                        </tr>
+                    </tbody>
+                </table>
                 @else
                 {{-- No items - show simple total --}}
-                <div class="total-box">
-                    <div class="total-row total-row-final">
-                        <span class="total-label">Total yang harus dibayar</span>
-                        <span class="total-amount">Rp {{ number_format($invoice->amount - $invoice->discount, 0, ',', '.') }}</span>
-                    </div>
-                </div>
+                @php
+                    $discountAmount = $invoice->discount > 0 ? $invoice->discount : ($invoice->order?->discount_amount ?? 0);
+                    $finalTotal = $invoice->amount - $discountAmount;
+                    if ($finalTotal < 0) $finalTotal = 0;
+                @endphp
+                <table class="summary-table">
+                    <tbody>
+                        @if($discountAmount > 0)
+                        <tr>
+                            <td class="label" style="width: 80%;">Subtotal</td>
+                            <td class="value">Rp {{ number_format($invoice->amount, 0, ',', '.') }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <div class="discount-box">
+                                    <span class="discount-box-label">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"></path>
+                                            <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                                        </svg>
+                                        Diskon
+                                    </span>
+                                    <span class="discount-box-value">-Rp {{ number_format($discountAmount, 0, ',', '.') }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        @endif
+                        <tr class="row-total">
+                            <td class="total-label">Total</td>
+                            <td class="total-value">Rp {{ number_format($finalTotal, 0, ',', '.') }}</td>
+                        </tr>
+                    </tbody>
+                </table>
                 @endif
 
                 <div class="cta-section">
