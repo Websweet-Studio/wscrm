@@ -143,7 +143,7 @@ const handleLogout = () => {
                                         variant="ghost"
                                         class="w-full justify-start text-red-600 hover:text-red-700"
                                         @click="
-                                            handleLogout;
+                                            handleLogout();
                                             mobileMenuOpen = false;
                                         "
                                     >
@@ -162,7 +162,7 @@ const handleLogout = () => {
                                         variant="ghost"
                                         class="w-full justify-start text-red-600 hover:text-red-700"
                                         @click="
-                                            handleLogout;
+                                            handleLogout();
                                             mobileMenuOpen = false;
                                         "
                                     >

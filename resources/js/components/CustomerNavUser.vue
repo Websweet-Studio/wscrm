@@ -25,7 +25,7 @@ const page = usePage();
 const user = page.props.auth.customer;
 
 const handleLogout = () => {
-    router.flushAll();
+    router.post('/customer/logout');
 };
 </script>
 
@@ -62,10 +62,10 @@ const handleLogout = () => {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem :as-child="true">
-                <Link class="block w-full cursor-pointer" :href="customer.logout().url" @click="handleLogout" as="button">
+                <button class="block w-full cursor-pointer" @click="handleLogout">
                     <LogOut class="mr-2 size-4" />
                     Log out
-                </Link>
+                </button>
             </DropdownMenuItem>
         </DropdownMenuContent>
     </DropdownMenu>

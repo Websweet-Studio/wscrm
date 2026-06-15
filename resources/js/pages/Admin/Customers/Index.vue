@@ -58,8 +58,13 @@ const status = ref(props.filters?.status || '');
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
+const showWelcomeEmailModal = ref(false);
+const showResendPasswordModal = ref(false);
 const selectedCustomer = ref<Customer | null>(null);
 const customerToDelete = ref<Customer | null>(null);
+const customerToEmail = ref<Customer | null>(null);
+const isSendingEmail = ref(false);
+const isSendingPassword = ref(false);
 
 const selectedCustomerIds = ref<number[]>([]);
 const pageCustomerIds = computed(() => (props.customers?.data || []).map((customer) => customer.id));
@@ -164,33 +169,55 @@ const handleSearch = () => {
 };
 
 const sendWelcomeEmail = (customer: Customer) => {
-    if (confirm(`Kirim welcome email ke ${customer.name}?`)) {
-        router.post(
-            `/admin/customers/${customer.id}/welcome-email`,
-            {},
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    // Handled by flash message
-                },
+    customerToEmail.value = customer;
+    showWelcomeEmailModal.value = true;
+};
+
+const confirmSendWelcomeEmail = () => {
+    if (!customerToEmail.value) return;
+
+    isSendingEmail.value = true;
+    router.post(
+        `/admin/customers/${customerToEmail.value.id}/welcome-email`,
+        {},
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                showWelcomeEmailModal.value = false;
+                customerToEmail.value = null;
+                isSendingEmail.value = false;
             },
-        );
-    }
+            onError: () => {
+                isSendingEmail.value = false;
+            },
+        },
+    );
 };
 
 const resendNewPassword = (customer: Customer) => {
-    if (confirm(`Reset password untuk ${customer.name} dan kirim via email?`)) {
-        router.post(
-            `/admin/customers/${customer.id}/resend-password`,
-            {},
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    // Handled by flash message
-                },
+    customerToEmail.value = customer;
+    showResendPasswordModal.value = true;
+};
+
+const confirmResendPassword = () => {
+    if (!customerToEmail.value) return;
+
+    isSendingPassword.value = true;
+    router.post(
+        `/admin/customers/${customerToEmail.value.id}/resend-password`,
+        {},
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                showResendPasswordModal.value = false;
+                customerToEmail.value = null;
+                isSendingPassword.value = false;
             },
-        );
-    }
+            onError: () => {
+                isSendingPassword.value = false;
+            },
+        },
+    );
 };
 
 const getStatusClass = (status: string) => {

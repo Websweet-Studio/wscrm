@@ -75,10 +75,13 @@ const getStatusVariant = (status: string) => {
     }
 };
 
+const subtotal = computed(() => {
+    return props.order.order_items.reduce((sum, item) => sum + Number(item.price || 0), 0);
+});
+
 const payableAmount = computed(() => {
-    const total = Number(props.order.total_amount || 0);
     const discount = Number(props.order.discount_amount || 0);
-    return discount > 0 ? total - discount : total;
+    return discount > 0 ? subtotal.value - discount : subtotal.value;
 });
 
 const deleteOrder = () => {
@@ -140,12 +143,12 @@ const deleteOrder = () => {
                             </div>
                             <div class="rounded-lg border border-border/60 bg-background/60 p-3 text-right">
                                 <template v-if="order.discount_amount && order.discount_amount > 0">
-                                    <div class="text-xs text-muted-foreground line-through">{{ formatPrice(order.total_amount) }}</div>
+                                    <div class="text-xs text-muted-foreground line-through">{{ formatPrice(subtotal) }}</div>
                                     <div class="font-serif text-xl font-medium text-emerald-700 dark:text-green-400">{{ formatPrice(payableAmount) }}</div>
                                     <div class="text-xs text-muted-foreground">Diskon: {{ formatPrice(order.discount_amount) }}</div>
                                 </template>
                                 <template v-else>
-                                    <div class="font-serif text-xl font-medium text-emerald-700 dark:text-green-400">{{ formatPrice(order.total_amount) }}</div>
+                                    <div class="font-serif text-xl font-medium text-emerald-700 dark:text-green-400">{{ formatPrice(subtotal) }}</div>
                                 </template>
                             </div>
                             <Button asChild variant="outline" size="sm" class="w-full justify-between">
@@ -203,7 +206,7 @@ const deleteOrder = () => {
                     <CardContent class="space-y-3">
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-muted-foreground">Subtotal</span>
-                            <span class="text-sm font-medium">{{ formatPrice(order.total_amount) }}</span>
+                            <span class="text-sm font-medium">{{ formatPrice(subtotal) }}</span>
                         </div>
                         <div v-if="order.discount_amount && order.discount_amount > 0" class="flex items-center justify-between">
                             <span class="text-sm text-muted-foreground">Diskon</span>

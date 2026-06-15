@@ -41,6 +41,8 @@ interface OrderItem {
     domain_name?: string;
     quantity: number;
     price: number;
+    expires_at?: string;
+    status?: string;
     hosting_plan?: HostingPlan;
     domain_price?: DomainPrice;
     service_plan?: ServicePlan;
@@ -137,6 +139,14 @@ const formatDate = (dateString: string) => {
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
+    });
+};
+
+const formatDateOnly = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
     });
 };
 
@@ -376,7 +386,12 @@ const processUpgradeDowngrade = () => {
 
                         <div v-if="currentHostingPlan" class="flex items-center justify-between">
                             <span class="text-muted-foreground">Plan</span>
-                            <span class="font-medium">{{ currentHostingPlan.plan_name }}</span>
+                            <div class="text-right">
+                                <span class="font-medium">{{ currentHostingPlan.plan_name }}</span>
+                                <div class="text-xs text-muted-foreground">
+                                    {{ currentHostingPlan.storage_gb }}GB SSD | {{ currentHostingPlan.cpu_cores }} Core CPU | {{ currentHostingPlan.ram_gb }}GB RAM
+                                </div>
+                            </div>
                         </div>
 
                         <div class="flex items-center justify-between">
@@ -441,81 +456,135 @@ const processUpgradeDowngrade = () => {
             </div>
 
             <!-- Order Items -->
-            <Card>
-                <CardHeader class="pb-3">
-                    <CardTitle class="flex items-center justify-between text-base">
-                        <span class="flex items-center gap-2">
-                            <Package class="h-4 w-4" />
-                            Item Pesanan
-                        </span>
-                        <span class="text-sm font-normal text-muted-foreground">{{ order.order_items.length }} item</span>
-                    </CardTitle>
+            <Card class="overflow-hidden">
+                <CardHeader class="border-b border-border/50 bg-muted/30 pb-4 pt-5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <CardTitle class="flex items-center gap-2 text-base">
+                                <Package class="h-4 w-4" />
+                                Item Pesanan
+                            </CardTitle>
+                            <p class="mt-1 text-xs text-muted-foreground">
+                                {{ order.order_items.length }} item
+                                <template v-if="order.expires_at">
+                                    <span class="mx-1">·</span>
+                                    Kadaluarsa:
+                                    <span
+                                        class="font-medium"
+                                        :class="getDaysUntilExpiry(order.expires_at) <= 0
+                                            ? 'text-red-600 dark:text-red-400'
+                                            : getDaysUntilExpiry(order.expires_at) <= 30
+                                                ? 'text-orange-600 dark:text-orange-400'
+                                                : getDaysUntilExpiry(order.expires_at) <= 90
+                                                    ? 'text-yellow-600 dark:text-yellow-400'
+                                                    : ''"
+                                    >
+                                        {{ formatDateOnly(order.expires_at) }}
+                                        <template v-if="getDaysUntilExpiry(order.expires_at) <= 0"> · Berakhir</template>
+                                        <template v-else-if="getDaysUntilExpiry(order.expires_at) <= 90"> · {{ getDaysUntilExpiry(order.expires_at) }} hari lagi</template>
+                                    </span>
+                                </template>
+                            </p>
+                        </div>
+                    </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent class="p-0">
                     <Table>
                         <TableHeader>
-                            <TableRow>
-                                <TableHead>Tipe</TableHead>
-                                <TableHead>Detail</TableHead>
-                                <TableHead class="text-right">Qty</TableHead>
-                                <TableHead class="text-right">Harga</TableHead>
-                                <TableHead class="text-right">Total</TableHead>
+                            <TableRow class="border-b-border/50 hover:bg-transparent">
+                                <TableHead class="w-8 pl-5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</TableHead>
+                                <TableHead class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Layanan</TableHead>
+                                <TableHead class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Deskripsi</TableHead>
+                                <TableHead class="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Qty</TableHead>
+                                <TableHead class="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Harga Satuan</TableHead>
+                                <TableHead class="text-right pr-5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            <TableRow v-for="item in order.order_items" :key="item.id">
-                                <TableCell class="font-medium capitalize">{{ item.item_type }}</TableCell>
+                            <TableRow
+                                v-for="(item, index) in order.order_items"
+                                :key="item.id"
+                                class="border-b-border/30 group"
+                                :class="index % 2 === 0 ? 'bg-muted/10' : ''"
+                            >
+                                <TableCell class="w-8 pl-5 text-xs text-muted-foreground">{{ index + 1 }}</TableCell>
+                                <TableCell>
+                                    <div class="flex items-center gap-2.5">
+                                        <div
+                                            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-xs font-bold uppercase"
+                                            :class="item.item_type === 'hosting'
+                                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                                                : item.item_type === 'domain'
+                                                    ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
+                                                    : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'"
+                                        >
+                                            {{ item.item_type === 'hosting' ? 'H' : item.item_type === 'domain' ? 'D' : 'S' }}
+                                        </div>
+                                        <div>
+                                            <span class="text-sm font-semibold capitalize">{{ item.item_type }}</span>
+                                        </div>
+                                    </div>
+                                </TableCell>
                                 <TableCell>
                                     <template v-if="item.item_type === 'hosting' && item.hosting_plan">
-                                        <span>{{ item.hosting_plan.plan_name }}</span>
+                                        <div>
+                                            <span class="text-sm font-medium">{{ item.hosting_plan.plan_name }}</span>
+                                            <div class="mt-0.5 text-xs text-muted-foreground">
+                                                {{ item.hosting_plan.storage_gb }}GB SSD · {{ item.hosting_plan.cpu_cores }} Core CPU · {{ item.hosting_plan.ram_gb }}GB RAM
+                                            </div>
+                                        </div>
                                     </template>
                                     <template v-else-if="item.item_type === 'domain'">
-                                        <span>{{ item.domain_name || order.domain_name || '-' }}</span>
+                                        <span class="text-sm font-medium">{{ item.domain_name || order.domain_name || '-' }}</span>
                                     </template>
                                     <template v-else-if="item.service_plan">
-                                        <span>{{ item.service_plan.name }}</span>
+                                        <span class="text-sm font-medium">{{ item.service_plan.name }}</span>
                                     </template>
                                     <template v-else>
-                                        <span v-if="item.domain_name">{{ item.domain_name }}</span>
-                                        <span v-else class="text-muted-foreground">-</span>
+                                        <span class="text-sm font-medium" v-if="item.domain_name">{{ item.domain_name }}</span>
+                                        <span v-else class="text-sm text-muted-foreground">-</span>
                                     </template>
                                 </TableCell>
-                                <TableCell class="text-right">{{ item.quantity }}</TableCell>
+                                <TableCell class="text-right text-sm">{{ item.quantity }}</TableCell>
                                 <TableCell class="text-right">
                                     <template v-if="item.item_type === 'hosting' && item.hosting_plan && !item.hosting_plan.use_bulk_pricing && item.hosting_plan.discount_percent > 0">
                                         <div class="text-xs text-muted-foreground line-through">{{ formatPrice(item.hosting_plan.selling_price) }}</div>
-                                        <div class="font-medium">{{ formatPrice(item.price) }}</div>
-                                        <div class="text-xs text-green-600 dark:text-green-400">-{{ item.hosting_plan.discount_percent }}%</div>
+                                        <div class="text-sm font-medium">{{ formatPrice(item.price) }}</div>
                                     </template>
                                     <template v-else>
-                                        {{ formatPrice(item.price) }}
+                                        <span class="text-sm">{{ formatPrice(item.price) }}</span>
                                     </template>
                                 </TableCell>
-                                <TableCell class="text-right font-medium">
+                                <TableCell class="text-right pr-5">
                                     <template v-if="item.item_type === 'hosting' && item.hosting_plan && !item.hosting_plan.use_bulk_pricing && item.hosting_plan.discount_percent > 0">
                                         <div class="text-xs text-muted-foreground line-through">{{ formatPrice(item.hosting_plan.selling_price * item.quantity) }}</div>
-                                        <div>{{ formatPrice(item.price * item.quantity) }}</div>
+                                        <div class="text-sm font-semibold">{{ formatPrice(item.price * item.quantity) }}</div>
                                     </template>
                                     <template v-else>
-                                        {{ formatPrice(item.price * item.quantity) }}
+                                        <span class="text-sm font-semibold">{{ formatPrice(item.price * item.quantity) }}</span>
                                     </template>
                                 </TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
 
-                    <div class="space-y-1.5 border-t p-3 text-sm">
-                        <div class="flex items-center justify-between">
-                            <span class="text-muted-foreground">Subtotal</span>
-                            <span>{{ formatPrice(totalItemsAmount) }}</span>
-                        </div>
-                        <div v-if="order.discount_amount && order.discount_amount > 0" class="flex items-center justify-between text-green-600 dark:text-green-400">
-                            <span>Diskon</span>
-                            <span>-{{ formatPrice(order.discount_amount) }}</span>
-                        </div>
-                        <div class="flex items-center justify-between border-t pt-1.5 font-bold">
-                            <span>Total</span>
-                            <span>{{ formatPrice(order.total_amount) }}</span>
+                    <!-- Summary -->
+                    <div class="border-t border-border/50 bg-muted/20 px-5 py-4">
+                        <div class="ml-auto w-full max-w-xs space-y-2">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-muted-foreground">Subtotal</span>
+                                <span>{{ formatPrice(totalItemsAmount) }}</span>
+                            </div>
+                            <div v-if="order.discount_amount && order.discount_amount > 0" class="flex items-center justify-between text-sm">
+                                <span class="text-green-600 dark:text-green-400">Diskon</span>
+                                <span class="font-medium text-green-600 dark:text-green-400">-{{ formatPrice(order.discount_amount) }}</span>
+                            </div>
+                            <div class="border-t border-border/80 pt-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-bold uppercase tracking-wider">Total</span>
+                                    <span class="text-lg font-bold">{{ formatPrice(order.total_amount) }}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </CardContent>
