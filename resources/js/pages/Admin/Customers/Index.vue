@@ -1082,5 +1082,124 @@ const getSortIcon = (field: string) => {
                 </div>
             </div>
         </div>
+
+        <!-- Welcome Email Confirmation Modal -->
+        <div v-if="showWelcomeEmailModal" class="fixed inset-0 z-50 flex items-center justify-center">
+            <!-- Overlay -->
+            <div class="fixed inset-0 bg-black/50" @click="showWelcomeEmailModal = false"></div>
+
+            <!-- Modal Content -->
+            <div class="relative mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
+                <!-- Header -->
+                <div class="mb-4 flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-emerald-600">Kirim Welcome Email</h2>
+                    <button @click="showWelcomeEmailModal = false" class="cursor-pointer text-gray-500 hover:text-gray-700">
+                        <X class="h-4 w-4" />
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-900/20">
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0">
+                                <Mail class="h-5 w-5 text-emerald-500" />
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <h3 class="text-sm font-medium text-emerald-800 dark:text-emerald-200">Kirim email selamat datang</h3>
+                                <div class="mt-2 text-sm text-emerald-700 dark:text-emerald-300">
+                                    <p>
+                                        Anda akan mengirimkan welcome email ke <strong>{{ customerToEmail?.name }}</strong
+                                        >.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            <strong>Pelanggan:</strong> {{ customerToEmail?.name }}<br />
+                            <strong>Email:</strong> {{ customerToEmail?.email }}<br />
+                            <strong>ID:</strong> #{{ customerToEmail?.id }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="mt-6 flex justify-end gap-2">
+                    <Button type="button" variant="outline" @click="showWelcomeEmailModal = false" class="cursor-pointer" :disabled="isSendingEmail">
+                        Batal
+                    </Button>
+                    <Button
+                        type="button"
+                        class="cursor-pointer bg-emerald-600 text-white hover:bg-emerald-700"
+                        @click="confirmSendWelcomeEmail"
+                        :disabled="isSendingEmail"
+                    >
+                        <Mail class="mr-2 h-4 w-4" />
+                        {{ isSendingEmail ? 'Mengirim...' : 'Kirim Welcome Email' }}
+                    </Button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resend Password Confirmation Modal -->
+        <div v-if="showResendPasswordModal" class="fixed inset-0 z-50 flex items-center justify-center">
+            <!-- Overlay -->
+            <div class="fixed inset-0 bg-black/50" @click="showResendPasswordModal = false"></div>
+
+            <!-- Modal Content -->
+            <div class="relative mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
+                <!-- Header -->
+                <div class="mb-4 flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-amber-600">Resend New Password</h2>
+                    <button @click="showResendPasswordModal = false" class="cursor-pointer text-gray-500 hover:text-gray-700">
+                        <X class="h-4 w-4" />
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0">
+                                <Key class="h-5 w-5 text-amber-500" />
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <h3 class="text-sm font-medium text-amber-800 dark:text-amber-200">Reset password dan kirim via email</h3>
+                                <div class="mt-2 text-sm text-amber-700 dark:text-amber-300">
+                                    <p>
+                                        Password untuk <strong>{{ customerToEmail?.name }}</strong> akan di-reset dan password baru akan dikirim melalui email.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            <strong>Pelanggan:</strong> {{ customerToEmail?.name }}<br />
+                            <strong>Email:</strong> {{ customerToEmail?.email }}<br />
+                            <strong>ID:</strong> #{{ customerToEmail?.id }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="mt-6 flex justify-end gap-2">
+                    <Button type="button" variant="outline" @click="showResendPasswordModal = false" class="cursor-pointer" :disabled="isSendingPassword">
+                        Batal
+                    </Button>
+                    <Button
+                        type="button"
+                        class="cursor-pointer bg-amber-600 text-white hover:bg-amber-700"
+                        @click="confirmResendPassword"
+                        :disabled="isSendingPassword"
+                    >
+                        <Key class="mr-2 h-4 w-4" />
+                        {{ isSendingPassword ? 'Mengirim...' : 'Ya, Reset & Kirim' }}
+                    </Button>
+                </div>
+            </div>
+        </div>
     </AppLayout>
 </template>
