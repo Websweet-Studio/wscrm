@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::bulkMarkPaid
- * @see app/Http/Controllers/Admin/InvoiceController.php:271
+ * @see app/Http/Controllers/Admin/InvoiceController.php:286
  * @route '/admin/invoices/bulk/mark-paid'
  */
 export const bulkMarkPaid = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -16,7 +16,7 @@ bulkMarkPaid.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::bulkMarkPaid
- * @see app/Http/Controllers/Admin/InvoiceController.php:271
+ * @see app/Http/Controllers/Admin/InvoiceController.php:286
  * @route '/admin/invoices/bulk/mark-paid'
  */
 bulkMarkPaid.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ bulkMarkPaid.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::bulkMarkPaid
- * @see app/Http/Controllers/Admin/InvoiceController.php:271
+ * @see app/Http/Controllers/Admin/InvoiceController.php:286
  * @route '/admin/invoices/bulk/mark-paid'
  */
 bulkMarkPaid.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -35,7 +35,7 @@ bulkMarkPaid.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => 
 
     /**
 * @see \App\Http\Controllers\Admin\InvoiceController::bulkMarkPaid
- * @see app/Http/Controllers/Admin/InvoiceController.php:271
+ * @see app/Http/Controllers/Admin/InvoiceController.php:286
  * @route '/admin/invoices/bulk/mark-paid'
  */
     const bulkMarkPaidForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -50,7 +50,7 @@ bulkMarkPaid.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => 
 
             /**
 * @see \App\Http\Controllers\Admin\InvoiceController::bulkMarkPaid
- * @see app/Http/Controllers/Admin/InvoiceController.php:271
+ * @see app/Http/Controllers/Admin/InvoiceController.php:286
  * @route '/admin/invoices/bulk/mark-paid'
  */
         bulkMarkPaidForm.patch = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -66,7 +66,7 @@ bulkMarkPaid.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => 
     bulkMarkPaid.form = bulkMarkPaidForm
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::bulkDestroy
- * @see app/Http/Controllers/Admin/InvoiceController.php:297
+ * @see app/Http/Controllers/Admin/InvoiceController.php:312
  * @route '/admin/invoices/bulk'
  */
 export const bulkDestroy = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -81,7 +81,7 @@ bulkDestroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::bulkDestroy
- * @see app/Http/Controllers/Admin/InvoiceController.php:297
+ * @see app/Http/Controllers/Admin/InvoiceController.php:312
  * @route '/admin/invoices/bulk'
  */
 bulkDestroy.url = (options?: RouteQueryOptions) => {
@@ -90,7 +90,7 @@ bulkDestroy.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::bulkDestroy
- * @see app/Http/Controllers/Admin/InvoiceController.php:297
+ * @see app/Http/Controllers/Admin/InvoiceController.php:312
  * @route '/admin/invoices/bulk'
  */
 bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -100,7 +100,7 @@ bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
 
     /**
 * @see \App\Http\Controllers\Admin\InvoiceController::bulkDestroy
- * @see app/Http/Controllers/Admin/InvoiceController.php:297
+ * @see app/Http/Controllers/Admin/InvoiceController.php:312
  * @route '/admin/invoices/bulk'
  */
     const bulkDestroyForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -115,7 +115,7 @@ bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
 
             /**
 * @see \App\Http\Controllers\Admin\InvoiceController::bulkDestroy
- * @see app/Http/Controllers/Admin/InvoiceController.php:297
+ * @see app/Http/Controllers/Admin/InvoiceController.php:312
  * @route '/admin/invoices/bulk'
  */
         bulkDestroyForm.delete = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -748,7 +748,7 @@ send.post = (args: { invoice: number | { id: number } } | [invoice: number | { i
     send.form = sendForm
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::markPaid
- * @see app/Http/Controllers/Admin/InvoiceController.php:256
+ * @see app/Http/Controllers/Admin/InvoiceController.php:271
  * @route '/admin/invoices/{invoice}/mark-paid'
  */
 export const markPaid = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -763,7 +763,7 @@ markPaid.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::markPaid
- * @see app/Http/Controllers/Admin/InvoiceController.php:256
+ * @see app/Http/Controllers/Admin/InvoiceController.php:271
  * @route '/admin/invoices/{invoice}/mark-paid'
  */
 markPaid.url = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -796,7 +796,7 @@ markPaid.url = (args: { invoice: number | { id: number } } | [invoice: number | 
 
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::markPaid
- * @see app/Http/Controllers/Admin/InvoiceController.php:256
+ * @see app/Http/Controllers/Admin/InvoiceController.php:271
  * @route '/admin/invoices/{invoice}/mark-paid'
  */
 markPaid.patch = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -806,7 +806,7 @@ markPaid.patch = (args: { invoice: number | { id: number } } | [invoice: number 
 
     /**
 * @see \App\Http\Controllers\Admin\InvoiceController::markPaid
- * @see app/Http/Controllers/Admin/InvoiceController.php:256
+ * @see app/Http/Controllers/Admin/InvoiceController.php:271
  * @route '/admin/invoices/{invoice}/mark-paid'
  */
     const markPaidForm = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -821,7 +821,7 @@ markPaid.patch = (args: { invoice: number | { id: number } } | [invoice: number 
 
             /**
 * @see \App\Http\Controllers\Admin\InvoiceController::markPaid
- * @see app/Http/Controllers/Admin/InvoiceController.php:256
+ * @see app/Http/Controllers/Admin/InvoiceController.php:271
  * @route '/admin/invoices/{invoice}/mark-paid'
  */
         markPaidForm.patch = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

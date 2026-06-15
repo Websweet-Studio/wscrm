@@ -135,31 +135,42 @@
             letter-spacing: 0.5px;
             margin: 0 0 12px;
         }
+        .items-count {
+            font-weight: 400;
+            color: #9ca3af;
+        }
         .items-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 14px;
-            margin: 0 0 24px;
+            font-size: 13px;
+            margin: 0 0 16px;
         }
         .items-table th {
             text-align: left;
-            padding: 8px 0;
+            padding: 8px 6px;
             color: #6b7280;
             font-weight: 600;
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             border-bottom: 2px solid #e5e7eb;
+            white-space: nowrap;
         }
-        .items-table th:last-child {
+        .items-table th.text-center {
+            text-align: center;
+        }
+        .items-table th.text-right {
             text-align: right;
         }
         .items-table td {
-            padding: 10px 0;
+            padding: 10px 6px;
             border-bottom: 1px solid #f3f4f6;
-            vertical-align: top;
+            vertical-align: middle;
         }
-        .items-table td:last-child {
+        .items-table td.text-center {
+            text-align: center;
+        }
+        .items-table td.text-right {
             text-align: right;
             font-weight: 600;
             white-space: nowrap;
@@ -167,13 +178,48 @@
         .items-table tr:last-child td {
             border-bottom: none;
         }
+        .row-num {
+            width: 30px;
+            color: #6b7280;
+            font-size: 12px;
+        }
+        .service-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-right: 8px;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+        .icon-hosting {
+            background-color: #dbeafe;
+            color: #1d4ed8;
+        }
+        .icon-domain {
+            background-color: #ede9fe;
+            color: #7c3aed;
+        }
+        .icon-service {
+            background-color: #d1fae5;
+            color: #047857;
+        }
+        .service-name {
+            font-weight: 600;
+            color: #111827;
+            font-size: 13px;
+        }
         .item-type-badge {
             display: inline-block;
             padding: 2px 8px;
             border-radius: 4px;
             font-size: 11px;
             font-weight: 600;
-            margin-right: 6px;
+            margin-left: 6px;
         }
         .badge-hosting {
             background-color: #dbeafe;
@@ -192,31 +238,50 @@
             color: #6b7280;
             margin-top: 2px;
         }
-        .item-qty {
-            font-size: 12px;
-            color: #6b7280;
-            font-weight: 400;
-        }
-        .total-box {
-            background-color: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 0 0 24px;
-        }
-        .total-label {
-            color: #4b5563;
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
             font-size: 14px;
+            margin: 0;
         }
-        .total-amount {
-            font-size: 24px;
-            font-weight: 700;
+        .summary-table td {
+            padding: 8px 6px;
+        }
+        .summary-table .label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .summary-table .label-discount {
+            color: #059669;
+            font-weight: 500;
+        }
+        .summary-table .value {
+            text-align: right;
+            font-weight: 600;
+            color: #111827;
+        }
+        .summary-table .value-discount {
+            text-align: right;
+            font-weight: 600;
             color: #059669;
         }
-        .total-detail {
-            font-size: 13px;
-            color: #6b7280;
-            margin-top: 8px;
+        .summary-table .row-discount td {
+            border-top: 1px solid #e5e7eb;
+        }
+        .summary-table .row-total td {
+            border-top: 2px solid #111827;
+            padding-top: 12px;
+        }
+        .summary-table .total-label {
+            font-weight: 700;
+            font-size: 16px;
+            color: #111827;
+        }
+        .summary-table .total-value {
+            text-align: right;
+            font-weight: 700;
+            font-size: 18px;
+            color: #059669;
         }
         .cta-section {
             text-align: center;
@@ -233,7 +298,7 @@
             font-size: 15px;
             letter-spacing: 0.3px;
             box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
-            transition: transform 0.2s, box-shadow  0.2s;
+            transition: transform 0.2s, box-shadow: 0.2s;
         }
         .cta-button:hover {
             transform: translateY(-1px);
@@ -344,6 +409,11 @@
 
                 {{-- Order Items --}}
                 @if($orderItems->count() > 0)
+                @php
+                    $subtotal = $orderItems->sum(fn($item) => $item->price * $item->quantity);
+                    $finalTotal = $subtotal - $invoice->discount;
+                    if ($finalTotal < 0) $finalTotal = 0;
+                @endphp
                 <p class="items-title">Item Pesanan</p>
                 <table class="items-table">
                     <thead>
@@ -389,21 +459,33 @@
                         @endforeach
                     </tbody>
                 </table>
-                @endif
 
                 {{-- Total Box --}}
                 <div class="total-box">
-                    <div style="align-items: center;">
+                    <div class="total-row">
+                        <span class="total-label">Subtotal</span>
+                        <span class="total-value">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
+                    </div>
+                    @if($invoice->discount > 0)
+                    <div class="total-row total-row-discount">
+                        <span class="total-label">Diskon</span>
+                        <span class="total-value">-Rp {{ number_format($invoice->discount, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
+                    <div class="total-row total-row-final">
+                        <span class="total-label">Total yang harus dibayar</span>
+                        <span class="total-amount">Rp {{ number_format($finalTotal, 0, ',', '.') }}</span>
+                    </div>
+                </div>
+                @else
+                {{-- No items - show simple total --}}
+                <div class="total-box">
+                    <div class="total-row total-row-final">
                         <span class="total-label">Total yang harus dibayar</span>
                         <span class="total-amount">Rp {{ number_format($invoice->amount - $invoice->discount, 0, ',', '.') }}</span>
                     </div>
-                    @if($invoice->discount > 0)
-                    <div class="total-detail" style="text-align: right;">
-                        Subtotal: Rp {{ number_format($invoice->amount, 0, ',', '.') }}
-                        · Diskon: -Rp {{ number_format($invoice->discount, 0, ',', '.') }}
-                    </div>
-                    @endif
                 </div>
+                @endif
 
                 <div class="cta-section">
                     <a href="{{ url('/customer/invoices/' . $invoice->id) }}" class="cta-button">Lihat & Bayar Tagihan</a>

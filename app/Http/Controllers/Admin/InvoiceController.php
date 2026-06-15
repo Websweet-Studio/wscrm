@@ -206,7 +206,9 @@ class InvoiceController extends Controller
      */
     public function sendInvoice(Invoice $invoice)
     {
-        $invoice->load(['customer', 'order']);
+        $invoice->load(['customer', 'order.orderItems' => function ($q) {
+            $q->with(['hostingPlan', 'domainPrice', 'servicePlan']);
+        }]);
 
         Mail::to($invoice->customer->email)->send(new \App\Mail\InvoiceEmail($invoice));
 
@@ -221,10 +223,18 @@ class InvoiceController extends Controller
         // Check if order already has an invoice
         if ($order->invoices()->exists()) {
             $invoice = $order->invoices()->first();
+            $invoice->load(['customer', 'order.orderItems' => function ($q) {
+                $q->with(['hostingPlan', 'domainPrice', 'servicePlan']);
+            }]);
             Mail::to($invoice->customer->email)->send(new \App\Mail\InvoiceEmail($invoice));
 
             return back()->with('success', 'Tagihan sudah ada dan berhasil dikirim ke email ' . $invoice->customer->email);
         }
+
+        // Calculate subtotal from order items
+        $orderItems = $order->orderItems()->with(['hostingPlan', 'domainPrice', 'servicePlan'])->get();
+        $subtotal = $orderItems->sum(fn ($item) => $item->price * $item->quantity);
+        $discountAmount = $order->discount_amount ?? 0;
 
         // Calculate due date: 7 days from now
         $dueDate = now()->addDays(7);
@@ -235,14 +245,19 @@ class InvoiceController extends Controller
             'invoice_type' => $order->isService() ? 'renewal' : 'setup',
             'customer_id' => $order->customer_id,
             'order_id' => $order->id,
-            'amount' => $order->total_amount,
-            'discount' => $order->discount_amount ?? 0,
+            'amount' => $subtotal,
+            'discount' => $discountAmount,
             'issue_date' => now()->toDateString(),
             'due_date' => $dueDate->toDateString(),
             'status' => 'pending',
             'billing_cycle' => $order->billing_cycle,
             'notes' => 'Tagihan untuk ' . ($order->domain_name ?: 'Order #' . $order->id),
         ]);
+
+        // Pre-load all relationships for the email
+        $invoice->load(['customer', 'order.orderItems' => function ($q) {
+            $q->with(['hostingPlan', 'domainPrice', 'servicePlan']);
+        }]);
 
         // Send the invoice email
         Mail::to($order->customer->email)->send(new \App\Mail\InvoiceEmail($invoice));

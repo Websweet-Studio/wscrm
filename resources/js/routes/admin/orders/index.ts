@@ -660,7 +660,7 @@ processUpgradeDowngrade.post = (args: { order: number | { id: number } } | [orde
     processUpgradeDowngrade.form = processUpgradeDowngradeForm
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::createAndSendInvoice
- * @see app/Http/Controllers/Admin/InvoiceController.php:219
+ * @see app/Http/Controllers/Admin/InvoiceController.php:221
  * @route '/admin/orders/{order}/create-and-send-invoice'
  */
 export const createAndSendInvoice = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -675,7 +675,7 @@ createAndSendInvoice.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::createAndSendInvoice
- * @see app/Http/Controllers/Admin/InvoiceController.php:219
+ * @see app/Http/Controllers/Admin/InvoiceController.php:221
  * @route '/admin/orders/{order}/create-and-send-invoice'
  */
 createAndSendInvoice.url = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -708,7 +708,7 @@ createAndSendInvoice.url = (args: { order: number | { id: number } } | [order: n
 
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::createAndSendInvoice
- * @see app/Http/Controllers/Admin/InvoiceController.php:219
+ * @see app/Http/Controllers/Admin/InvoiceController.php:221
  * @route '/admin/orders/{order}/create-and-send-invoice'
  */
 createAndSendInvoice.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -718,7 +718,7 @@ createAndSendInvoice.post = (args: { order: number | { id: number } } | [order: 
 
     /**
 * @see \App\Http\Controllers\Admin\InvoiceController::createAndSendInvoice
- * @see app/Http/Controllers/Admin/InvoiceController.php:219
+ * @see app/Http/Controllers/Admin/InvoiceController.php:221
  * @route '/admin/orders/{order}/create-and-send-invoice'
  */
     const createAndSendInvoiceForm = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -728,7 +728,7 @@ createAndSendInvoice.post = (args: { order: number | { id: number } } | [order: 
 
             /**
 * @see \App\Http\Controllers\Admin\InvoiceController::createAndSendInvoice
- * @see app/Http/Controllers/Admin/InvoiceController.php:219
+ * @see app/Http/Controllers/Admin/InvoiceController.php:221
  * @route '/admin/orders/{order}/create-and-send-invoice'
  */
         createAndSendInvoiceForm.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
