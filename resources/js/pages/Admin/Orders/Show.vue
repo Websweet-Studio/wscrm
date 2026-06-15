@@ -8,7 +8,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
-import { ArrowUpDown, Edit, FileText, Loader2, Mail, MapPin, Package, Phone, ShoppingCart } from 'lucide-vue-next';
+import { ArrowUpDown, Edit, FileText, Loader2, Mail, MapPin, Package, Phone, Send, ShoppingCart } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface Customer {
@@ -308,6 +308,25 @@ const processUpgradeDowngrade = () => {
         },
     );
 };
+
+// Send Invoice Email
+const isSendingInvoice = ref(false);
+
+const sendInvoiceToEmail = () => {
+    if (!props.order.invoice) return;
+
+    isSendingInvoice.value = true;
+    router.post(
+        `/admin/invoices/${props.order.invoice.id}/send`,
+        {},
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                isSendingInvoice.value = false;
+            },
+        },
+    );
+};
 </script>
 
 <template>
@@ -593,9 +612,23 @@ const processUpgradeDowngrade = () => {
             <!-- Invoice Information -->
             <Card>
                 <CardHeader class="pb-3">
-                    <CardTitle class="flex items-center gap-2 text-base">
-                        <FileText class="h-4 w-4" />
-                        Faktur
+                    <CardTitle class="flex items-center justify-between text-base">
+                        <span class="flex items-center gap-2">
+                            <FileText class="h-4 w-4" />
+                            Faktur
+                        </span>
+                        <Button
+                            v-if="order.invoice"
+                            size="sm"
+                            variant="outline"
+                            class="flex cursor-pointer items-center gap-1.5 text-xs"
+                            :disabled="isSendingInvoice"
+                            @click="sendInvoiceToEmail"
+                        >
+                            <Loader2 v-if="isSendingInvoice" class="h-3.5 w-3.5 animate-spin" />
+                            <Send v-else class="h-3.5 w-3.5" />
+                            {{ isSendingInvoice ? 'Mengirim...' : 'Kirim Tagihan' }}
+                        </Button>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>

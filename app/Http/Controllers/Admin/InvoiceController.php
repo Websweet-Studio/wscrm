@@ -10,6 +10,7 @@ use App\Services\InvoiceGeneratorService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -198,6 +199,18 @@ class InvoiceController extends Controller
 
             return back()->with('error', 'Gagal menggenerate PDF: '.$e->getMessage());
         }
+    }
+
+    /**
+     * Send invoice email to customer
+     */
+    public function sendInvoice(Invoice $invoice)
+    {
+        $invoice->load(['customer', 'order']);
+
+        Mail::to($invoice->customer->email)->send(new \App\Mail\InvoiceEmail($invoice));
+
+        return back()->with('success', 'Tagihan berhasil dikirim ke email ' . $invoice->customer->email);
     }
 
     /**
