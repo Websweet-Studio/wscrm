@@ -370,6 +370,12 @@ $toolGroups = [
                 'variant' => 'success',
                 'commands' => ['php artisan db:seed --class="Database\\Seeders\\HostingPlanSeeder" --force --no-interaction'],
             ],
+            'db_seed_demo' => [
+                'label' => 'Seed Demo Websites',
+                'description' => 'Seed demo website dari API eksternal',
+                'variant' => 'success',
+                'commands' => ['php artisan db:seed --class="Database\\Seeders\\DemoWebsiteSeeder" --force --no-interaction'],
+            ],
             'migrate_fresh' => [
                 'label' => 'Fresh Migration',
                 'description' => 'Drop all tables and re-migrate',
@@ -963,11 +969,6 @@ function showLoginForm()
 
             <div class="alert alert-warning">
                 <strong>Warning:</strong> This is an emergency admin tool. Remove this file in production.
-            </div>
-
-            <div class="alert alert-info">
-                <strong>Info:</strong> Password is automatically retrieved from Laravel .env DB_PASSWORD.<br>
-                <small>Fallback to 'admin123' if .env file not found or DB_PASSWORD empty.</small>
             </div>
 
             <form method="post">

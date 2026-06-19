@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('payment_accounts')) {
+            return;
+        }
+
         Schema::create('payment_accounts', function (Blueprint $table) {
             $table->id();
             $table->enum('type', ['bank', 'ewallet', 'qris']);
