@@ -32,7 +32,7 @@ class BuildPackage extends Command
         $this->performSafetyChecks();
 
         if (! File::exists(base_path('vendor/autoload.php'))) {
-            $this->error('❌ Folder vendor tidak ditemukan. Jalankan "composer install --no-dev" terlebih dahulu sebelum build package.');
+            $this->error('❌ Folder vendor tidak ditemukan. Jalankan "composer run build:production" yang akan otomatis menjalankan "composer install --no-dev" terlebih dahulu.');
 
             return self::FAILURE;
         }
@@ -86,7 +86,7 @@ class BuildPackage extends Command
 
         $this->info('📦 Building frontend assets...');
         try {
-            $this->executeCommand('npm run build:clean');
+            $this->executeCommand('npm run build');
         } catch (\Throwable $e) {
             $this->error('❌ Build frontend assets gagal: ' . $e->getMessage());
             return self::FAILURE;
@@ -398,7 +398,7 @@ class BuildPackage extends Command
     private function copyWscrmFiles(string $tempDir, string $wscrmDir): void
     {
         $backendDirs = ['app', 'bootstrap', 'config', 'database', 'resources', 'routes', 'storage', 'vendor'];
-        $backendFiles = ['artisan', '.env.example', 'composer.json', 'composer.lock'];
+        $backendFiles = ['artisan', '.env.example', 'composer.json'];
 
         // Recreate public directory in wscrm dengan build assets
         $this->createWscrmPublicDirectory($tempDir, $wscrmDir);
@@ -640,7 +640,16 @@ Generated: ' . date('Y-m-d H:i:s');
 
             $target = $dest . DIRECTORY_SEPARATOR . $relativePath;
 
-            if ($item->isDir()) {
+            // Skip non-file, non-directory (Windows junctions/symlinks reported as neither)
+            if (! $item->isFile() && ! $item->isDir()) {
+                $this->line("  ⚠️  Skipping non-regular entry: {$relativePath}");
+                continue;
+            }
+
+            // is_dir() fallback untuk Windows junction edge case
+            $isDir = $item->isDir() || is_dir($itemPath);
+
+            if ($isDir) {
                 if (! File::exists($target)) {
                     File::makeDirectory($target, 0755, true);
                 }
@@ -658,6 +667,10 @@ Generated: ' . date('Y-m-d H:i:s');
     {
         // Always use PHP ZipArchive to ensure ZIP entry paths use forward slashes (/).
         // Some hosting extractors (DirectAdmin/cPanel) treat backslashes as literal characters, causing files like "vendor\monolog\..." instead of folders.
+        // Naikkan memory limit untuk handle large package dalam satu pass
+        $memoryLimit = ini_get('memory_limit');
+        ini_set('memory_limit', '1G');
+
         $zip = new ZipArchive;
 
         if ($zip->open($outputPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
@@ -668,7 +681,6 @@ Generated: ' . date('Y-m-d H:i:s');
                 RecursiveIteratorIterator::SELF_FIRST
             );
 
-            $fileCount = 0;
             foreach ($files as $file) {
                 $filePath = $file->getRealPath();
                 if (! $filePath) {
@@ -690,12 +702,6 @@ Generated: ' . date('Y-m-d H:i:s');
 
                 if ($file->isFile() && file_exists($filePath)) {
                     $zip->addFile($filePath, $relativePath);
-                    $fileCount++;
-
-                    if ($fileCount % 1000 === 0) {
-                        $zip->close();
-                        $zip->open($outputPath, ZipArchive::CREATE);
-                    }
                 }
             }
 
@@ -704,6 +710,9 @@ Generated: ' . date('Y-m-d H:i:s');
         } else {
             $this->error('Failed to create zip package');
         }
+
+        // Restore original memory limit
+        ini_set('memory_limit', $memoryLimit);
     }
 
     protected function executeCommand(string $command): void

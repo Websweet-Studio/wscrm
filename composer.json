@@ -70,7 +70,9 @@
             "@php artisan test"
         ],
         "build:production": [
-            "@php artisan build:package --output=dist/wscrm.{version}.zip --force --no-interaction"
+            "composer install --no-dev --optimize-autoloader --no-interaction",
+            "@php artisan build:package --output=dist/wscrm.{version}.zip --force --no-interaction",
+            "composer install --no-interaction"
         ],
         "build:package": [
             "@php artisan build:package --no-interaction"
