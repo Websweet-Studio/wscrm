@@ -1,14 +1,10 @@
-<script setup lang="ts">
-import { Badge } from '@/components/ui/badge';
+ <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
 import { getHostingPlanFinalPrice } from '@/lib/utils';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { Check, Cpu, Filter, HardDrive, MemoryStick, Search, Server, ShoppingCart, Wifi } from 'lucide-vue-next';
+import { Check, Search, Server, ShoppingCart } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface HostingPlan {
@@ -39,7 +35,7 @@ const isCustomer = page.props.auth?.customer !== null;
 const isAdmin = page.props.auth?.user !== null;
 
 const search = ref(props.filters.search || '');
-const activeTab = ref('basic');
+const activeTab = ref('all');
 
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -47,24 +43,6 @@ const formatPrice = (price: number) => {
         currency: 'IDR',
         minimumFractionDigits: 0,
     }).format(price);
-};
-
-const getActionUrl = () => {
-    if (isCustomer) {
-        return '/customer/hosting';
-    } else if (isAdmin) {
-        return '/dashboard';
-    } else {
-        return '/customer/register';
-    }
-};
-
-const getSecondaryActionUrl = () => {
-    if (isCustomer || isAdmin) {
-        return '/customer/hosting';
-    } else {
-        return '/customer/login';
-    }
 };
 
 const companyWhatsapp = computed(() => {
@@ -121,13 +99,19 @@ const filteredPlans = computed(() => {
         );
     }
 
-    return plans.sort((a, b) => getHostingPlanFinalPrice(a) - getHostingPlanFinalPrice(b));
+    return plans
+        .map((plan) => ({
+            ...plan,
+            features: typeof plan.features === 'string' ? JSON.parse(plan.features) : Array.isArray(plan.features) ? plan.features : [],
+        }))
+        .sort((a, b) => getHostingPlanFinalPrice(a) - getHostingPlanFinalPrice(b));
 });
 </script>
 
 <template>
     <CustomerPublicLayout title="Paket Hosting Web Profesional">
         <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:py-20">
+            <!-- Hero -->
             <div class="mb-12 text-center sm:mb-16">
                 <h1 class="mb-4 text-4xl leading-tight font-medium sm:text-5xl md:text-6xl" style="color: #141413; line-height: 1.1; font-family: Georgia, serif;">
                     Paket Hosting Web Profesional
@@ -137,248 +121,175 @@ const filteredPlans = computed(() => {
                 </p>
             </div>
 
-            <div class="mb-12">
-                <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
-                    <CardHeader>
-                        <div class="flex items-center gap-3">
-                            <div class="rounded-full p-2" style="background-color: #e8e6dc;">
-                                <Search class="h-6 w-6" style="color: var(--primary);" />
-                            </div>
-                            <div>
-                                <CardTitle class="text-xl font-medium" style="color: #141413; font-family: Georgia, serif;">Cari Paket Hosting</CardTitle>
-                                <CardDescription style="color: #5e5d59;">Temukan paket yang sesuai dengan kebutuhan Anda</CardDescription>
-                            </div>
+            <!-- Search + Filter -->
+            <div class="mb-12 rounded-2xl bg-white p-6" style="border: 1px solid #dadad3;">
+                <div class="mb-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="rounded-full p-2" style="background-color: var(--secondary);">
+                            <Search class="h-5 w-5" style="color: var(--primary);" />
                         </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div class="flex gap-2">
-                            <div class="relative flex-1">
-                                <Search class="absolute top-2.5 left-3 h-5 w-5" style="color: #87867f;" />
-                                <Input v-model="search" placeholder="Cari paket hosting..." class="pl-10" style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;" @keyup.enter="handleSearch" />
-                            </div>
-                            <Button @click="handleSearch" style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;">Cari</Button>
+                        <div>
+                            <div class="text-base font-semibold" style="color: #000000;">Cari & Filter Paket</div>
+                            <div class="text-sm" style="color: #62625b;">Temukan paket yang sesuai dengan kebutuhan Anda</div>
                         </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <div class="mb-12">
-                <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
-                    <CardHeader>
-                        <div class="flex items-center gap-3">
-                            <div class="rounded-full p-2" style="background-color: #e8e6dc;">
-                                <Filter class="h-6 w-6" style="color: var(--primary);" />
-                            </div>
-                            <div>
-                                <CardTitle class="text-xl font-medium" style="color: #141413; font-family: Georgia, serif;">Kategori Paket</CardTitle>
-                                <CardDescription style="color: #5e5d59;">Pilih kategori paket yang sesuai</CardDescription>
-                            </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="relative flex-1">
+                            <Search class="absolute top-2.5 left-3 h-4 w-4" style="color: #91918c;" />
+                            <Input v-model="search" placeholder="Cari paket..." class="pl-8" style="background-color: #ffffff; border: 1px solid #c8c8c1; color: #000000; border-radius: 16px;" @keyup.enter="handleSearch" />
                         </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-center sm:gap-2">
-                            <Button
-                                @click="activeTab = 'basic'"
-                                size="sm"
-                                class="flex-1 px-3 py-2 text-sm"
-                                :style="activeTab === 'basic' ? 'background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;' : 'background-color: #e8e6dc; color: #4d4c48; border-radius: 12px;'"
-                            >
-                                <Server class="mr-2 h-4 w-4" />
-                                Dasar
-                            </Button>
-                            <Button
-                                @click="activeTab = 'lite'"
-                                size="sm"
-                                class="flex-1 px-3 py-2 text-sm"
-                                :style="activeTab === 'lite' ? 'background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;' : 'background-color: #e8e6dc; color: #4d4c48; border-radius: 12px;'"
-                            >
-                                <Server class="mr-2 h-4 w-4" />
-                                Lite
-                            </Button>
-                            <Button
-                                @click="activeTab = 'premium'"
-                                size="sm"
-                                class="flex-1 px-3 py-2 text-sm"
-                                :style="activeTab === 'premium' ? 'background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;' : 'background-color: #e8e6dc; color: #4d4c48; border-radius: 12px;'"
-                            >
-                                <Check class="mr-2 h-4 w-4" />
-                                Premium
-                            </Button>
-                            <Button
-                                @click="activeTab = 'all'"
-                                size="sm"
-                                class="flex-1 px-3 py-2 text-sm"
-                                :style="activeTab === 'all' ? 'background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;' : 'background-color: #e8e6dc; color: #4d4c48; border-radius: 12px;'"
-                            >
-                                Semua
-                            </Button>
-                        </div>
+                        <Button @click="handleSearch" style="background-color: var(--secondary); color: #000000; border-radius: 16px;">Filter</Button>
+                    </div>
+                </div>
 
-                        <div class="mt-4 space-y-2 text-center">
-                            <p class="text-sm" style="color: #5e5d59;">
-                                <span v-if="activeTab === 'basic'">
-                                    Menampilkan paket hosting Dasar & Standar - sempurna untuk website pribadi
-                                </span>
-                                <span v-else-if="activeTab === 'lite'">
-                                    Menampilkan paket hosting Lite & Minimal - bagus untuk proyek kecil
-                                </span>
-                                <span v-else-if="activeTab === 'premium'">
-                                    Menampilkan paket hosting Premium & Pro - ideal untuk website bisnis
-                                </span>
-                                <span v-else>
-                                    Menampilkan semua paket hosting yang tersedia
-                                </span>
-                            </p>
-                            <p class="text-sm" style="color: #87867f;">{{ filteredPlans.length }} paket tersedia</p>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+                <div class="flex flex-wrap gap-2">
+                    <button
+                        @click="activeTab = 'all'"
+                        class="rounded-full px-4 py-2 text-sm font-bold transition-colors"
+                        :style="activeTab === 'all' ? 'background-color: #000000; color: #ffffff;' : 'background-color: var(--secondary); color: #000000;'"
+                    >Semua</button>
+                    <button
+                        @click="activeTab = 'basic'"
+                        class="rounded-full px-4 py-2 text-sm font-bold transition-colors"
+                        :style="activeTab === 'basic' ? 'background-color: #000000; color: #ffffff;' : 'background-color: var(--secondary); color: #000000;'"
+                    >
+                        <Server class="mr-1 inline h-4 w-4" />Dasar
+                    </button>
+                    <button
+                        @click="activeTab = 'lite'"
+                        class="rounded-full px-4 py-2 text-sm font-bold transition-colors"
+                        :style="activeTab === 'lite' ? 'background-color: #000000; color: #ffffff;' : 'background-color: var(--secondary); color: #000000;'"
+                    >Lite</button>
+                    <button
+                        @click="activeTab = 'premium'"
+                        class="rounded-full px-4 py-2 text-sm font-bold transition-colors"
+                        :style="activeTab === 'premium' ? 'background-color: #000000; color: #ffffff;' : 'background-color: var(--secondary); color: #000000;'"
+                    >
+                        <Check class="mr-1 inline h-4 w-4" />Premium
+                    </button>
+                </div>
 
-            <div class="mb-12">
-                <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
-                    <CardHeader>
-                        <CardTitle class="text-center text-xl font-medium" style="color: #141413; font-family: Georgia, serif;">
-                            Bandingkan Paket Hosting
-                        </CardTitle>
-                        <CardDescription class="text-center" style="color: #5e5d59;">
-                            Pilih paket yang sempurna untuk kebutuhan Anda
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            <Card v-for="plan in filteredPlans" :key="plan.id" class="relative transition-all hover:shadow-lg" style="background-color: #ffffff; border: 1px solid #f0eee6; border-radius: 16px;">
-                                <CardHeader>
-                                    <div class="flex items-start justify-between">
-                                        <div class="flex items-center gap-3">
-                                            <div class="rounded-full p-2" style="background-color: #e8e6dc;">
-                                                <Server class="h-5 w-5" style="color: var(--primary);" />
-                                            </div>
-                                            <div>
-                                                <CardTitle class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif;">{{ plan.plan_name }}</CardTitle>
-                                            </div>
-                                        </div>
-                                        <Badge
-                                            v-if="!plan.use_bulk_pricing && plan.discount_percent > 0"
-                                        style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 8px;"
-                                        >
-                                            {{ plan.discount_percent }}% OFF
-                                        </Badge>
-                                    </div>
-                                </CardHeader>
-
-                                <CardContent class="space-y-4">
-                                    <div class="text-center">
-                                        <div v-if="!plan.use_bulk_pricing && plan.discount_percent > 0" class="text-sm line-through" style="color: #87867f;">
-                                            {{ formatPrice(plan.selling_price) }}
-                                        </div>
-                                        <div class="text-3xl font-bold" style="color: var(--primary);">
-                                            {{ formatPrice(getHostingPlanFinalPrice(plan)) }}
-                                        </div>
-                                        <div class="text-sm" style="color: #5e5d59;">/tahun</div>
-                                        <div v-if="!plan.use_bulk_pricing && plan.discount_percent > 0" class="mt-1 text-xs font-medium" style="color: #4d4c48;">
-                                            Hemat {{ formatPrice(plan.selling_price - getHostingPlanFinalPrice(plan)) }}/tahun
-                                        </div>
-                                    </div>
-
-                                    <Separator style="background-color: #f0eee6;" />
-
-                                    <div class="space-y-3 text-sm">
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center gap-2">
-                                                <HardDrive class="h-4 w-4" style="color: #87867f;" />
-                                                <span style="color: #5e5d59;">Penyimpanan</span>
-                                            </div>
-                                            <span class="font-medium" style="color: #4d4c48;">{{ plan.storage_gb }}GB SSD</span>
-                                        </div>
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center gap-2">
-                                                <Cpu class="h-4 w-4" style="color: #87867f;" />
-                                                <span style="color: #5e5d59;">CPU Core</span>
-                                            </div>
-                                            <span class="font-medium" style="color: #4d4c48;">{{ plan.cpu_cores }} vCPU</span>
-                                        </div>
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center gap-2">
-                                                <MemoryStick class="h-4 w-4" style="color: #87867f;" />
-                                                <span style="color: #5e5d59;">Memori</span>
-                                            </div>
-                                            <span class="font-medium" style="color: #4d4c48;">{{ plan.ram_gb }}GB RAM</span>
-                                        </div>
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center gap-2">
-                                                <Wifi class="h-4 w-4" style="color: #87867f;" />
-                                                <span style="color: #5e5d59;">Bandwidth</span>
-                                            </div>
-                                            <span class="font-medium" style="color: #4d4c48;">{{ plan.bandwidth }}</span>
-                                        </div>
-                                    </div>
-
-                                    <Separator style="background-color: #f0eee6;" />
-
-                                    <div v-if="plan.features && plan.features.length > 0" class="space-y-2">
-                                        <Label class="text-sm font-medium" style="color: #4d4c48;">Fitur</Label>
-                                        <div class="space-y-1 text-sm">
-                                            <div v-for="(feature, index) in plan.features" :key="index" class="flex items-center gap-2">
-                                                <Check class="h-4 w-4" style="color: var(--primary);" />
-                                                <span style="color: #5e5d59;">{{ feature }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </CardContent>
-
-                                <div class="px-6 pb-6">
-                                    <Button asChild class="w-full" size="lg" style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;">
-                                        <a
-                                            :href="getWhatsappLink(`Halo, saya ingin beli Hosting ${plan.plan_name}.`)"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            <ShoppingCart class="mr-2 h-4 w-4" />
-                                            Beli via WhatsApp
-                                        </a>
-                                    </Button>
-                                </div>
-                            </Card>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <div v-if="filteredPlans.length === 0" class="py-12 text-center">
-                <Server class="mx-auto mb-4 h-12 w-12" style="color: #87867f;" />
-                <h3 class="mb-2 text-xl font-medium" style="color: #141413; font-family: Georgia, serif;">Tidak ada paket hosting ditemukan</h3>
-                <p style="color: #5e5d59;">
-                    {{
-                        search
-                            ? 'Coba sesuaikan kriteria pencarian Anda atau beralih ke kategori lain.'
-                            : `Tidak ada paket hosting ${activeTab === 'all' ? '' : activeTab + ' '}yang tersedia saat ini.`
-                    }}
-                </p>
-                <div class="mt-4">
-                    <Button @click="activeTab = 'all'" v-if="activeTab !== 'all'" style="background-color: #e8e6dc; color: #4d4c48; border-radius: 12px;">Lihat Semua Paket</Button>
+                <div class="mt-3 text-sm" style="color: #62625b;">
+                    <span v-if="activeTab === 'all'">Menampilkan semua paket hosting</span>
+                    <span v-else-if="activeTab === 'basic'">Paket hosting Dasar & Standar &mdash; sempurna untuk website pribadi</span>
+                    <span v-else-if="activeTab === 'lite'">Paket hosting Lite & Minimal &mdash; bagus untuk proyek kecil</span>
+                    <span v-else-if="activeTab === 'premium'">Paket hosting Premium & Pro &mdash; ideal untuk website bisnis</span>
+                    &middot; {{ filteredPlans.length }} paket
                 </div>
             </div>
 
+            <!-- Table: Daftar Paket Hosting -->
+            <div class="mb-12">
+                <div class="overflow-hidden rounded-2xl" style="border: 1px solid #dadad3;">
+                    <div class="overflow-x-auto">
+                        <table class="w-full" style="background-color: #ffffff;">
+                            <thead>
+                                <tr style="background-color: var(--secondary);">
+                                    <th class="px-4 py-3 text-left text-sm font-bold" style="color: #33332e;">Paket</th>
+                                    <th class="px-4 py-3 text-left text-sm font-bold" style="color: #33332e;">Storage</th>
+                                    <th class="px-4 py-3 text-left text-sm font-bold" style="color: #33332e;">CPU</th>
+                                    <th class="px-4 py-3 text-left text-sm font-bold" style="color: #33332e;">RAM</th>
+                                    <th class="px-4 py-3 text-left text-sm font-bold" style="color: #33332e;">Bandwidth</th>
+                                    <th class="px-4 py-3 text-left text-sm font-bold" style="color: #33332e;">Fitur</th>
+                                    <th class="px-4 py-3 text-right text-sm font-bold" style="color: #33332e;">Harga</th>
+                                    <th class="px-4 py-3 text-center text-sm font-bold" style="color: #33332e;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    v-for="plan in filteredPlans"
+                                    :key="plan.id"
+                                    class="transition-colors hover:bg-[#f6f6f3]"
+                                    style="border-top: 1px solid #e5e5e0;"
+                                >
+                                    <td class="px-4 py-4">
+                                        <div class="flex items-center gap-2">
+                                            <div class="rounded-full p-1.5" style="background-color: var(--secondary);">
+                                                <Server class="h-4 w-4" style="color: var(--primary);" />
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-semibold" style="color: #000000;">{{ plan.plan_name }}</div>
+                                                <div v-if="!plan.use_bulk_pricing && plan.discount_percent > 0" class="text-xs" style="color: var(--primary);">Diskon {{ plan.discount_percent }}%</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-4 text-sm" style="color: #33332e;">{{ plan.storage_gb }} GB SSD</td>
+                                    <td class="px-4 py-4 text-sm" style="color: #33332e;">{{ plan.cpu_cores }} vCPU</td>
+                                    <td class="px-4 py-4 text-sm" style="color: #33332e;">{{ plan.ram_gb }} GB</td>
+                                    <td class="px-4 py-4 text-sm" style="color: #33332e;">{{ plan.bandwidth }}</td>
+                                    <td class="px-4 py-4">
+                                        <div class="flex max-w-[200px] flex-wrap gap-1">
+                                            <span
+                                                v-for="(feature, i) in (plan.features || []).slice(0, 3)"
+                                                :key="i"
+                                                class="inline-flex items-center gap-0.5 rounded-full bg-[#f6f6f3] px-2 py-0.5 text-xs"
+                                                style="color: #62625b;"
+                                            >
+                                                <Check class="h-3 w-3" style="color: var(--primary);" />
+                                                {{ feature }}
+                                            </span>
+                                            <span v-if="(plan.features || []).length > 3" class="text-xs" style="color: #91918c;">+{{ (plan.features || []).length - 3 }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-4 text-right">
+                                        <div v-if="!plan.use_bulk_pricing && plan.discount_percent > 0" class="text-xs line-through" style="color: #91918c;">
+                                            {{ formatPrice(plan.selling_price) }}
+                                        </div>
+                                        <div class="text-base font-bold" style="color: var(--primary);">
+                                            {{ formatPrice(getHostingPlanFinalPrice(plan)) }}
+                                        </div>
+                                        <div class="text-xs" style="color: #62625b;">/tahun</div>
+                                    </td>
+                                    <td class="px-4 py-4 text-center">
+                                        <Button
+                                            asChild
+                                            size="sm"
+                                            style="background-color: var(--primary); color: #ffffff; border-radius: 16px;"
+                                        >
+                                            <a
+                                                :href="getWhatsappLink(`Halo, saya ingin beli Hosting ${plan.plan_name}.`)"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                <ShoppingCart class="mr-1 h-3 w-3" />
+                                                Beli
+                                            </a>
+                                        </Button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div v-if="filteredPlans.length === 0" class="py-12 text-center">
+                <Server class="mx-auto mb-4 h-12 w-12" style="color: #91918c;" />
+                <h3 class="mb-2 text-xl font-semibold" style="color: #000000;">Tidak ada paket hosting ditemukan</h3>
+                <p class="text-sm" style="color: #62625b;">
+                    {{ search ? 'Coba sesuaikan kriteria pencarian Anda.' : 'Tidak ada paket hosting yang tersedia saat ini.' }}
+                </p>
+            </div>
+
+            <!-- CTA -->
             <div v-if="!isCustomer && !isAdmin" class="mt-12 pt-16 text-center">
-                <Card style="background-color: #141413; border: 1px solid #30302e; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
-                    <CardContent class="py-12">
-                        <h2 class="mb-4 text-3xl font-medium" style="color: var(--primary-foreground); line-height: 1.2; font-family: Georgia, serif;">
-                            Siap untuk Memulai?
-                        </h2>
-                        <p class="mx-auto mb-8 max-w-2xl text-base sm:text-lg" style="color: #b0aea5; line-height: 1.6;">
-                            Bergabunglah dengan ribuan pelanggan yang puas yang mempercayai kebutuhan hosting mereka kepada kami.
-                        </p>
-                        <div class="flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4">
-                            <Button asChild size="lg" class="text-lg px-6 py-4" style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;">
-                                <Link href="/customer/register">Buat Akun</Link>
-                            </Button>
-                            <Button asChild variant="outline" size="lg" class="text-lg px-6 py-4" style="background-color: #ffffff; color: #141413; border: 1px solid #30302e; border-radius: 12px;">
-                                <Link href="/domains">Jelajahi Domain</Link>
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+                <div class="rounded-2xl bg-[#262622] px-8 py-12" style="border: 1px solid #30302e;">
+                    <h2 class="mb-4 text-3xl font-semibold" style="color: #ffffff; line-height: 1.2;">
+                        Siap untuk Memulai?
+                    </h2>
+                    <p class="mx-auto mb-8 max-w-2xl text-base sm:text-lg" style="color: #b0aea5; line-height: 1.6;">
+                        Bergabunglah dengan ribuan pelanggan yang puas yang mempercayai kebutuhan hosting mereka kepada kami.
+                    </p>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4">
+                        <Button asChild size="lg" class="text-lg px-6 py-4" style="background-color: var(--primary); color: #ffffff; border-radius: 16px;">
+                            <Link href="/customer/register">Buat Akun</Link>
+                        </Button>
+                        <Button asChild variant="outline" size="lg" class="text-lg px-6 py-4" style="background-color: #ffffff; color: #000000; border: 1px solid #30302e; border-radius: 16px;">
+                            <Link href="/domains">Jelajahi Domain</Link>
+                        </Button>
+                    </div>
+                </div>
             </div>
         </section>
     </CustomerPublicLayout>

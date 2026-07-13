@@ -9,10 +9,11 @@ Reference: `g:\warungmember\DESIGN.md` — authoritative source. This skill summ
 
 ## Colors
 
-| Token | Hex | Role |
+| Token | Hex / Var | Role |
 |---|---|---|
-| `primary` | `#e60023` | Pinterest Red — CTA only. Never decorative. |
-| `primary-pressed` | `#cc001f` | Pressed primary |
+| `primary` | `var(--primary)` or `#e60023` fallback | CTA — use branding `primary_color` when available |
+| `primary-pressed` | darken by 10% | Pressed primary |
+| `secondary` | `var(--secondary)` or `#e5e5e0` fallback | Secondary bg, table headers — use branding `secondary_color` |
 | `ink` | `#000000` | Headlines, button text, nav links |
 | `ink-soft` | `#211922` | Inline body links only |
 | `body` | `#33332e` | Default paragraph |
@@ -22,7 +23,7 @@ Reference: `g:\warungmember\DESIGN.md` — authoritative source. This skill summ
 | `canvas` | `#ffffff` | True white — nav, modals, feature cards |
 | `surface-soft` | `#fbfbf9` | Page body wash |
 | `surface-card` | `#f6f6f3` | Warm-cream card/pin-tile bg |
-| `secondary-bg` | `#e5e5e0` | Secondary button fill |
+| `secondary-bg` | `var(--secondary)` or `#e5e5e0` fallback | Secondary button fill |
 | `secondary-pressed` | `#c8c8c1` | Pressed secondary |
 | `surface-dark` | `#262622` | Dark CTA strip |
 | `hairline` | `#dadad3` | 1px dividers |
@@ -33,7 +34,21 @@ Reference: `g:\warungmember\DESIGN.md` — authoritative source. This skill summ
 | `success-deep` | `#103c25` | Success messaging |
 | `success-pale` | `#c7f0da` | Success pill bg |
 
-## Typography
+### Dynamic Branding Colors
+
+App branding settings (`/admin/branding`) override the primary/secondary palette:
+
+| Setting Key | CSS Variable | Default |
+|---|---|---|
+| `primary_color` | `--primary` | `#c96442` |
+| `secondary_color` | `--secondary` | `#64748b` |
+| `accent_color` | `--accent` | `#10b981` |
+
+Usage:
+- **CTA buttons, prices, badges** → `style="background-color: var(--primary)"` or `style="color: var(--primary)"`
+- **Secondary surfaces, table headers** → `style="background-color: var(--secondary)"`
+- **Access via script**: `const primary = (page.props.brandingSettings as any)?.primary_color || '#e60023'`
+- Non-primary/secondary tokens (ink, body, mute, ash, stone, etc.) are fixed Pinterest neutrals — do not replace with branding colors.
 
 Font: **Inter** (substitute for Pin Sans). Weights: 400, 500, 600, 700.
 
@@ -80,8 +95,8 @@ Font: **Inter** (substitute for Pin Sans). Weights: 400, 500, 600, 700.
 ## Key Components
 
 ### Buttons
-- **primary**: `bg-[#e60023] text-white` rounded-2xl (16px), h-10, px-3.5 py-1.5, text-sm font-bold. Pressed: `bg-[#cc001f]`.
-- **secondary**: `bg-[#e5e5e0] text-black` rounded-2xl, h-10. Pressed: `bg-[#c8c8c1]`.
+- **primary**: `bg-[var(--primary)] text-white` rounded-2xl (16px), h-10, px-3.5 py-1.5, text-sm font-bold. Pressed: darken 10%.
+- **secondary**: `bg-[var(--secondary)] text-black` rounded-2xl, h-10. Pressed: `bg-[#c8c8c1]`.
 - **tertiary**: transparent, `text-black`, rounded-2xl.
 - **icon-circular**: `bg-[#f6f6f3]` rounded-full, 40×40.
 - **pill-on-image**: `bg-white text-black` rounded-full, px-3.5 py-2, text-sm font-bold.
@@ -113,7 +128,7 @@ Font: **Inter** (substitute for Pin Sans). Weights: 400, 500, 600, 700.
 ## Rules (Do's and Don'ts)
 
 ### Do
-- Reserve `#e60023` for primary CTAs and active indicators only. Never decorative.
+- Reserve `var(--primary)` for CTAs and active indicators. Never decorative.
 - Use `rounded-2xl` (16px) on every interactive element and card. `rounded-3xl` (32px) only for large cards/modals. `rounded-full` for circular.
 - Pin cards have zero internal padding — image is full-bleed.
 - Section rhythm: 64px vertical gaps. Pin grid gutters: 8px.

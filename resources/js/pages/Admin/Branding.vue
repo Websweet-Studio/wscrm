@@ -171,6 +171,45 @@
                             </div>
                         </div>
 
+                        <!-- Preset Warna -->
+                        <div class="space-y-4">
+                            <div>
+                                <h3 class="text-base font-medium" style="font-family: Georgia, serif;">Preset Rekomendasi</h3>
+                                <p class="text-sm text-muted-foreground">Klik preset untuk mengisi warna secara otomatis</p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                                <button
+                                    v-for="preset in colorPresets"
+                                    :key="preset.name"
+                                    type="button"
+                                    @click="applyPreset(preset)"
+                                    class="group rounded-lg border border-border p-3 text-left transition-all hover:border-ring hover:shadow-sm"
+                                >
+                                    <div class="mb-2 flex gap-1">
+                                        <span
+                                            class="h-6 w-6 rounded-full ring-1 ring-black/10"
+                                            :style="{ backgroundColor: preset.primary }"
+                                            :title="'Primary: ' + preset.primary"
+                                        ></span>
+                                        <span
+                                            class="h-6 w-6 rounded-full ring-1 ring-black/10"
+                                            :style="{ backgroundColor: preset.secondary }"
+                                            :title="'Secondary: ' + preset.secondary"
+                                        ></span>
+                                        <span
+                                            class="h-6 w-6 rounded-full ring-1 ring-black/10"
+                                            :style="{ backgroundColor: preset.accent }"
+                                            :title="'Accent: ' + preset.accent"
+                                        ></span>
+                                    </div>
+                                    <div class="text-xs font-medium text-foreground group-hover:text-primary">{{ preset.name }}</div>
+                                    <div class="mt-0.5 text-[10px] text-muted-foreground">
+                                        {{ preset.primary }} / {{ preset.secondary }}
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
 
                         <div class="mt-8 flex justify-end gap-2 border-t pt-6">
@@ -271,6 +310,32 @@ const settingLabels: Record<string, string> = {
 const getSettingLabel = (key: string): string => {
     return settingLabels[key] || key;
 };
+
+interface ColorPreset {
+    name: string;
+    primary: string;
+    secondary: string;
+    accent: string;
+}
+
+const colorPresets: ColorPreset[] = [
+    { name: 'Warm Natural',   primary: '#c96442', secondary: '#a8a29e', accent: '#65a30d' },
+    { name: 'Ocean Blue',     primary: '#0891b2', secondary: '#6b7280', accent: '#10b981' },
+    { name: 'Classic Navy',   primary: '#2563eb', secondary: '#64748b', accent: '#06b6d4' },
+    { name: 'Elegant Rose',   primary: '#e11d48', secondary: '#a1a1aa', accent: '#d946ef' },
+    { name: 'Sunset Orange',  primary: '#ea580c', secondary: '#78716c', accent: '#eab308' },
+    { name: 'Modern Indigo',  primary: '#6366f1', secondary: '#334155', accent: '#22d3ee' },
+    { name: 'Forest Green',   primary: '#16a34a', secondary: '#737373', accent: '#06b6d4' },
+    { name: 'Minimalist',     primary: '#18181b', secondary: '#d4d4d8', accent: '#a1a1aa' },
+];
+
+function applyPreset(preset: ColorPreset) {
+    props.settings.color?.forEach((setting) => {
+        if (setting.key === 'primary_color') form.settings[setting.key] = preset.primary;
+        else if (setting.key === 'secondary_color') form.settings[setting.key] = preset.secondary;
+        else if (setting.key === 'accent_color') form.settings[setting.key] = preset.accent;
+    });
+}
 
 const handleImageError = (event: Event) => {
     const img = event.target as HTMLImageElement;
