@@ -39,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth' => \App\Http\Middleware\Authenticate::class,
             'admin' => EnsureAdmin::class,
             'admin.auth' => \App\Http\Middleware\AdminAuthorization::class,
+            'agent.auth' => \App\Http\Middleware\AgentTokenAuth::class,
             'super_admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
             'no.cache' => NoCacheMiddleware::class,
         ]);

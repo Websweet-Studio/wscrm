@@ -40,4 +40,8 @@ return [
         'base_url' => env('RNA_BASE_URL', 'https://api.rdash.id/v1'),
     ],
 
+    'agent' => [
+        'token' => env('AGENT_API_TOKEN'),
+    ],
+
 ];

@@ -40,6 +40,10 @@ Route::get('/blog', [App\Http\Controllers\BlogController::class, 'index'])->name
 Route::get('/blog/{blogPost:slug}', [App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
 Route::get('/blog/category/{category:slug}', [App\Http\Controllers\BlogController::class, 'category'])->name('blog.category');
 
+// Agent AI endpoint — insert blog post via Bearer token
+Route::post('/api/agent/blog', [App\Http\Controllers\Api\AgentBlogController::class, 'store'])
+    ->middleware('agent.auth');
+
 // Services catalog (require authentication)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/services', [App\Http\Controllers\ServicePlanController::class, 'index'])->name('services.index');
