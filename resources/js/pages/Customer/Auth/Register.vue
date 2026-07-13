@@ -30,13 +30,13 @@ const submit = () => {
 
     <AuthCardLayout>
         <div class="space-y-6">
-            <div class="space-y-3 text-center">
-                <h2 class="text-2xl font-medium" style="color: #141413; line-height: 1.2; font-family: Georgia, serif;">Buat Akun</h2>
-                <p style="color: #5e5d59;">Bergabung hari ini dan dapatkan akses fitur eksklusif</p>
+            <div class="space-y-2 text-center animate-in fade-in slide-in-from-bottom-3 duration-600 ease-out fill-mode-both">
+                <h2 class="text-2xl font-medium tracking-tight" style="color: #141413; line-height: 1.2; font-family: Georgia, serif;">Buat Akun</h2>
+                <p class="text-sm" style="color: #5e5d59;">Bergabung hari ini dan dapatkan akses fitur eksklusif</p>
             </div>
 
             <form @submit.prevent="submit" class="space-y-5">
-                <div class="space-y-4">
+                <div class="space-y-4 animate-in fade-in slide-in-from-bottom-3 duration-600 delay-100 ease-out fill-mode-both">
                     <div class="flex items-center gap-2">
                         <svg class="h-4 w-4" style="color: var(--primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
@@ -92,7 +92,7 @@ const submit = () => {
 
                 <Separator style="background-color: #f0eee6;" />
 
-                <div class="space-y-4">
+                <div class="space-y-4 animate-in fade-in slide-in-from-bottom-3 duration-600 delay-200 ease-out fill-mode-both">
                     <div class="flex items-center gap-2">
                         <svg class="h-4 w-4" style="color: var(--primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
@@ -135,7 +135,7 @@ const submit = () => {
 
                 <Separator style="background-color: #f0eee6;" />
 
-                <div class="space-y-4">
+                <div class="space-y-4 animate-in fade-in slide-in-from-bottom-3 duration-600 delay-300 ease-out fill-mode-both">
                     <div class="flex items-center gap-2">
                         <svg class="h-4 w-4" style="color: var(--primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
@@ -188,31 +188,38 @@ const submit = () => {
                     </div>
                 </div>
 
-                <Button
-                    type="submit"
-                    class="w-full"
-                    size="lg"
-                    style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;"
-                    :disabled="form.processing"
-                >
-                    <span v-if="!form.processing">Buat Akun</span>
-                    <span v-else class="flex items-center justify-center gap-2">
-                        <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path
-                                class="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                        </svg>
-                        Membuat akun...
-                    </span>
-                </Button>
+                <div class="animate-in fade-in slide-in-from-bottom-3 duration-600 delay-400 ease-out fill-mode-both">
+                    <Button
+                        type="submit"
+                        class="w-full h-12 text-sm font-medium transition-all duration-200 active:scale-[0.98]"
+                        size="lg"
+                        style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;"
+                        :disabled="form.processing"
+                    >
+                        <span v-if="!form.processing" class="flex items-center justify-center gap-2">
+                            Buat Akun
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                            </svg>
+                        </span>
+                        <span v-else class="flex items-center justify-center gap-2">
+                            <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path
+                                    class="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                            </svg>
+                            Membuat akun...
+                        </span>
+                    </Button>
+                </div>
             </form>
 
             <Separator style="background-color: #f0eee6;" />
 
-            <div class="space-y-4 text-center">
+            <div class="space-y-4 text-center animate-in fade-in slide-in-from-bottom-3 duration-600 delay-500 ease-out fill-mode-both">
                 <div class="text-sm">
                     <span style="color: #5e5d59;">Sudah punya akun? </span>
                     <TextLink href="/customer/login" class="font-medium" style="color: var(--primary);">
