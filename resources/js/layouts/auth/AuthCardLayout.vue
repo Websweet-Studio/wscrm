@@ -16,7 +16,7 @@ defineProps<{
             <div class="text-center">
                 <Link :href="home()" class="group inline-flex items-center justify-center">
                     <div class="flex h-12 w-12 items-center justify-center rounded-full" style="background-color: #e8e6dc;">
-                        <AppLogoIcon class="h-8 w-8" style="color: #c96442;" />
+                        <AppLogoIcon class="h-8 w-8" style="color: var(--primary);" />
                     </div>
                 </Link>
             </div>

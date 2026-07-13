@@ -114,11 +114,11 @@ const getWhatsappLink = (text: string) => {
             </div>
 
             <div class="mb-12">
-                <Card style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
+                <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
                     <CardHeader>
                         <div class="flex items-center gap-3">
                             <div class="rounded-full p-2" style="background-color: #e8e6dc;">
-                                <Globe class="h-6 w-6" style="color: #c96442;" />
+                                <Globe class="h-6 w-6" style="color: var(--primary);" />
                             </div>
                             <div>
                                 <CardTitle class="text-xl font-medium" style="color: #141413; font-family: Georgia, serif;">Cari Domain</CardTitle>
@@ -138,29 +138,29 @@ const getWhatsappLink = (text: string) => {
                                     @keyup.enter="searchDomain"
                                 />
                             </div>
-                            <Button @click="searchDomain" style="background-color: #c96442; color: #faf9f5; border-radius: 12px;">
+                            <Button @click="searchDomain" style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;">
                                 <Search class="mr-2 h-4 w-4" />
                                 Cari
                             </Button>
                         </div>
                         <div class="mt-3 flex flex-wrap justify-center gap-2 text-sm" style="color: #5e5d59;">
                             <span>Pencarian populer:</span>
-                            <button class="font-medium" style="color: #c96442;">.com</button>
+                            <button class="font-medium" style="color: var(--primary);">.com</button>
                             <span>•</span>
-                            <button class="font-medium" style="color: #c96442;">.id</button>
+                            <button class="font-medium" style="color: var(--primary);">.id</button>
                             <span>•</span>
-                            <button class="font-medium" style="color: #c96442;">.my.id</button>
+                            <button class="font-medium" style="color: var(--primary);">.my.id</button>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
             <div class="mb-12">
-                <Card style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
+                <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
                     <CardHeader>
                         <div class="flex items-center gap-3">
                             <div class="rounded-full p-2" style="background-color: #e8e6dc;">
-                                <Star class="h-6 w-6" style="color: #c96442;" />
+                                <Star class="h-6 w-6" style="color: var(--primary);" />
                             </div>
                             <div>
                                 <CardTitle class="text-xl font-medium" style="color: #141413; font-family: Georgia, serif;">Ekstensi Domain Populer</CardTitle>
@@ -177,7 +177,7 @@ const getWhatsappLink = (text: string) => {
                                 style="background-color: #ffffff; border: 1px solid #f0eee6; border-radius: 16px;"
                             >
                                 <div v-if="isPremium(domain.extension)" class="absolute top-3 right-3 z-10">
-                                    <Badge style="background-color: #c96442; color: #faf9f5; border-radius: 8px;">
+                                    <Badge style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 8px;">
                                         <Crown class="mr-1 h-3 w-3" />
                                         Premium
                                     </Badge>
@@ -185,14 +185,14 @@ const getWhatsappLink = (text: string) => {
 
                                 <CardContent class="space-y-4 pt-6 text-center">
                                     <div class="space-y-1">
-                                        <div class="text-3xl font-bold" style="color: #c96442;">.{{ domain.extension }}</div>
+                                        <div class="text-3xl font-bold" style="color: var(--primary);">.{{ domain.extension }}</div>
                                         <div class="text-xs tracking-wider uppercase" style="color: #87867f;">Ekstensi Domain</div>
                                     </div>
 
-                                    <div class="space-y-2 rounded-lg p-4" style="background-color: #faf9f5;">
+                                    <div class="space-y-2 rounded-lg p-4" style="background-color: var(--primary-foreground);">
                                         <div class="space-y-1">
                                             <div class="text-xs font-medium" style="color: #5e5d59;">Tahun Pertama</div>
-                                            <div class="text-2xl font-bold" style="color: #c96442;">{{ formatPrice(domain.selling_price) }}</div>
+                                            <div class="text-2xl font-bold" style="color: var(--primary);">{{ formatPrice(domain.selling_price) }}</div>
                                         </div>
 
                                         <Separator style="background-color: #f0eee6;" />
@@ -208,7 +208,7 @@ const getWhatsappLink = (text: string) => {
                                         asChild
                                         class="w-full"
                                         size="lg"
-                                        style="background-color: #c96442; color: #faf9f5; border-radius: 12px;"
+                                        style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;"
                                     >
                                         <a
                                             :href="getWhatsappLink(`Halo, saya ingin beli Domain .${domain.extension}.`)"
@@ -227,7 +227,7 @@ const getWhatsappLink = (text: string) => {
             </div>
 
             <div class="mb-12">
-                <Card style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
+                <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
                     <CardHeader>
                         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                             <div>
@@ -264,7 +264,7 @@ const getWhatsappLink = (text: string) => {
                                             <div class="text-xl font-bold" style="color: #141413;">.{{ domain.extension }}</div>
                                             <Badge
                                                 v-if="isPremium(domain.extension)"
-                                                style="background-color: #c96442; color: #faf9f5; border-radius: 6px;"
+                                                style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 6px;"
                                             >
                                                 <Crown class="mr-1 h-3 w-3" />
                                                 Premium
@@ -277,7 +277,7 @@ const getWhatsappLink = (text: string) => {
                                     <div class="space-y-3">
                                         <div class="flex justify-between items-center">
                                             <span style="color: #5e5d59;">Registrasi</span>
-                                            <span class="font-bold text-lg" style="color: #c96442;">{{ formatPrice(domain.selling_price) }}</span>
+                                            <span class="font-bold text-lg" style="color: var(--primary);">{{ formatPrice(domain.selling_price) }}</span>
                                         </div>
                                         <div class="flex justify-between items-center">
                                             <span style="color: #5e5d59;">Perpanjangan</span>
@@ -290,7 +290,7 @@ const getWhatsappLink = (text: string) => {
                                     <Button
                                         asChild
                                         class="w-full"
-                                        style="background-color: #c96442; color: #faf9f5; border-radius: 12px;"
+                                        style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;"
                                     >
                                         <a
                                             :href="getWhatsappLink(`Halo, saya ingin beli Domain .${domain.extension}.`)"
@@ -309,7 +309,7 @@ const getWhatsappLink = (text: string) => {
             </div>
 
             <div class="mb-12">
-                <Card style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
+                <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
                     <CardHeader>
                         <div class="text-center">
                             <CardTitle class="text-xl font-medium" style="color: #141413; font-family: Georgia, serif;">Mengapa Pilih Registrasi Domain Kami?</CardTitle>
@@ -319,7 +319,7 @@ const getWhatsappLink = (text: string) => {
                         <div class="grid gap-6 md:grid-cols-3">
                             <div class="text-center">
                                 <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full" style="background-color: #e8e6dc;">
-                                    <Globe class="h-6 w-6" style="color: #c96442;" />
+                                    <Globe class="h-6 w-6" style="color: var(--primary);" />
                                 </div>
                                 <h3 class="mb-2 text-base font-medium" style="color: #141413; font-family: Georgia, serif;">Pengelolaan Mudah</h3>
                                 <p style="color: #5e5d59;">
@@ -329,7 +329,7 @@ const getWhatsappLink = (text: string) => {
 
                             <div class="text-center">
                                 <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full" style="background-color: #e8e6dc;">
-                                    <TrendingUp class="h-6 w-6" style="color: #c96442;" />
+                                    <TrendingUp class="h-6 w-6" style="color: var(--primary);" />
                                 </div>
                                 <h3 class="mb-2 text-base font-medium" style="color: #141413; font-family: Georgia, serif;">Harga Kompetitif</h3>
                                 <p style="color: #5e5d59;">
@@ -339,7 +339,7 @@ const getWhatsappLink = (text: string) => {
 
                             <div class="text-center">
                                 <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full" style="background-color: #e8e6dc;">
-                                    <Star class="h-6 w-6" style="color: #c96442;" />
+                                    <Star class="h-6 w-6" style="color: var(--primary);" />
                                 </div>
                                 <h3 class="mb-2 text-base font-medium" style="color: #141413; font-family: Georgia, serif;">Dukungan 24/7</h3>
                                 <p style="color: #5e5d59;">Tim dukungan ahli siap membantu dengan masalah domain</p>
@@ -360,14 +360,14 @@ const getWhatsappLink = (text: string) => {
             <div class="mt-12 pt-16 text-center">
                 <Card style="background-color: #141413; border: 1px solid #30302e; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
                     <CardContent class="py-12">
-                        <h2 class="mb-4 text-3xl font-medium" style="color: #faf9f5; line-height: 1.2; font-family: Georgia, serif;">
+                        <h2 class="mb-4 text-3xl font-medium" style="color: var(--primary-foreground); line-height: 1.2; font-family: Georgia, serif;">
                             Siap untuk Memulai?
                         </h2>
                         <p class="mx-auto mb-8 max-w-2xl text-base sm:text-lg" style="color: #b0aea5; line-height: 1.6;">
                             Bergabunglah dengan ribuan pelanggan yang puas yang mempercayai kebutuhan domain dan hosting mereka kepada kami.
                         </p>
                         <div class="flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4">
-                            <Button asChild size="lg" class="text-lg px-6 py-4" style="background-color: #c96442; color: #faf9f5; border-radius: 12px;">
+                            <Button asChild size="lg" class="text-lg px-6 py-4" style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;">
                                 <Link href="/customer/register">Buat Akun</Link>
                             </Button>
                             <Button asChild variant="outline" size="lg" class="text-lg px-6 py-4" style="background-color: #ffffff; color: #141413; border: 1px solid #30302e; border-radius: 12px;">

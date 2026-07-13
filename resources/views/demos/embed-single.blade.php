@@ -6,6 +6,10 @@
     <meta name="robots" content="noindex, nofollow">
     <title>{{ $demo->title }} - Demo</title>
     <style>
+        :root {
+            --primary: #c96442;
+            --primary-foreground: #faf9f5;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f4ed; }
         .embed-container { width: 100%; height: 100vh; display: flex; flex-direction: column; }
@@ -20,16 +24,16 @@
         }
         .embed-header h1 { font-size: 14px; font-weight: 600; font-family: Georgia, serif; }
         .embed-header a {
-            color: #c96442;
+            color: var(--primary);
             text-decoration: none;
             font-size: 12px;
             font-weight: 500;
-            border: 1px solid #c96442;
+            border: 1px solid var(--primary);
             padding: 4px 12px;
             border-radius: 8px;
             transition: all 0.2s;
         }
-        .embed-header a:hover { background: #c96442; color: #faf9f5; }
+        .embed-header a:hover { background: var(--primary); color: var(--primary-foreground); }
         .embed-iframe-wrapper { flex: 1; position: relative; }
         .embed-iframe-wrapper iframe { width: 100%; height: 100%; border: none; }
         .embed-badges { display: flex; gap: 6px; align-items: center; }

@@ -38,7 +38,7 @@ const submit = () => {
             <form @submit.prevent="submit" class="space-y-5">
                 <div class="space-y-4">
                     <div class="flex items-center gap-2">
-                        <svg class="h-4 w-4" style="color: #c96442;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-4 w-4" style="color: var(--primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
@@ -94,7 +94,7 @@ const submit = () => {
 
                 <div class="space-y-4">
                     <div class="flex items-center gap-2">
-                        <svg class="h-4 w-4" style="color: #c96442;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-4 w-4" style="color: var(--primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
@@ -137,7 +137,7 @@ const submit = () => {
 
                 <div class="space-y-4">
                     <div class="flex items-center gap-2">
-                        <svg class="h-4 w-4" style="color: #c96442;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-4 w-4" style="color: var(--primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
@@ -192,7 +192,7 @@ const submit = () => {
                     type="submit"
                     class="w-full"
                     size="lg"
-                    style="background-color: #c96442; color: #faf9f5; border-radius: 12px;"
+                    style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;"
                     :disabled="form.processing"
                 >
                     <span v-if="!form.processing">Buat Akun</span>
@@ -215,7 +215,7 @@ const submit = () => {
             <div class="space-y-4 text-center">
                 <div class="text-sm">
                     <span style="color: #5e5d59;">Sudah punya akun? </span>
-                    <TextLink href="/customer/login" class="font-medium" style="color: #c96442;">
+                    <TextLink href="/customer/login" class="font-medium" style="color: var(--primary);">
                         Masuk
                     </TextLink>
                 </div>

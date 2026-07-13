@@ -115,7 +115,7 @@ const copiedId = ref<string | null>(null);
 // JS Embed Configurator
 const embedCategory = ref<string | null>(null);
 const embedPerPage = ref(6);
-const embedPrimary = ref('#c96442');
+const embedPrimary = ref(document.documentElement.style.getPropertyValue('--primary').trim() || '#c96442');
 const embedWhatsapp = ref('');
 
 const jsEmbedCode = computed(() => {
@@ -192,7 +192,7 @@ const copyToClipboard = async (text: string, id: string) => {
 
             <!-- Search & Filters -->
             <div class="mb-8">
-                <Card style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px">
+                <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px">
                     <CardContent class="pt-6">
                         <div class="flex flex-col gap-4 md:flex-row md:items-center">
                             <!-- Search -->
@@ -234,7 +234,7 @@ const copyToClipboard = async (text: string, id: string) => {
                             </div>
 
                             <!-- Clear -->
-                            <Button v-if="hasActiveFilters()" variant="ghost" size="sm" @click="clearFilters" style="color: #c96442">
+                            <Button v-if="hasActiveFilters()" variant="ghost" size="sm" @click="clearFilters" style="color: var(--primary)">
                                 Reset Filter
                             </Button>
                         </div>
@@ -270,7 +270,7 @@ const copyToClipboard = async (text: string, id: string) => {
                         </div>
                         <!-- Category Badge -->
                         <div v-if="demo.category" class="absolute top-3 left-3">
-                            <Badge style="background-color: #c96442; color: #faf9f5; border-radius: 8px">
+                            <Badge style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 8px">
                                 {{ demo.category }}
                             </Badge>
                         </div>
@@ -302,7 +302,7 @@ const copyToClipboard = async (text: string, id: string) => {
                             <Button
                                 asChild
                                 class="flex-1"
-                                style="background-color: #c96442; color: #faf9f5; border-radius: 12px"
+                                style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px"
                             >
                                 <a :href="demo.url" target="_blank" rel="noopener noreferrer">
                                     <ExternalLink class="mr-2 h-4 w-4" />
@@ -356,7 +356,7 @@ const copyToClipboard = async (text: string, id: string) => {
                             :variant="page === demos.current_page ? 'default' : 'outline'"
                             size="sm"
                             class="min-w-[36px]"
-                            :style="page === demos.current_page ? 'background-color: #c96442; color: #faf9f5; border-radius: 8px' : 'border-color: #e8e6dc; color: #4d4c48'"
+                            :style="page === demos.current_page ? 'background-color: var(--primary); color: var(--primary-foreground); border-radius: 8px' : 'border-color: #e8e6dc; color: #4d4c48'"
                             @click="applyFilters(page)"
                         >
                             {{ page }}
@@ -384,11 +384,11 @@ const copyToClipboard = async (text: string, id: string) => {
 
             <!-- Embed Code Section - JS Widget -->
             <div class="mt-12">
-                <Card style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px">
+                <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px">
                     <CardContent class="pt-6">
                         <div class="mb-6 flex items-center gap-3">
                             <div class="rounded-full p-2" style="background-color: #e8e6dc">
-                                <Code class="h-5 w-5" style="color: #c96442" />
+                                <Code class="h-5 w-5" style="color: var(--primary)" />
                             </div>
                             <div>
                                 <h3 class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif">Embed di Website Anda</h3>
@@ -409,7 +409,7 @@ const copyToClipboard = async (text: string, id: string) => {
                                         <select
                                             v-model="embedCategory"
                                             class="w-full rounded-lg border px-3 py-2 text-sm"
-                                            style="background-color: #faf9f5; border-color: #e8e6dc; color: #141413"
+                                            style="background-color: var(--primary-foreground); border-color: #e8e6dc; color: #141413"
                                         >
                                             <option :value="null">Semua Kategori</option>
                                             <option v-for="cat in categories" :key="cat.id" :value="cat.slug">{{ cat.name }}</option>
@@ -428,7 +428,7 @@ const copyToClipboard = async (text: string, id: string) => {
                                             min="3"
                                             max="12"
                                             step="3"
-                                            class="w-full accent-[#c96442]"
+                                            class="w-full accent-[var(--primary)]"
                                         />
                                         <div class="mt-1 flex justify-between text-xs" style="color: #87867f">
                                             <span>3</span>
@@ -469,7 +469,7 @@ const copyToClipboard = async (text: string, id: string) => {
                                                 v-model="embedPrimary"
                                                 type="text"
                                                 class="w-24 rounded-lg border px-2 py-1 text-xs font-mono"
-                                                style="background-color: #faf9f5; border-color: #e8e6dc; color: #141413"
+                                                style="background-color: var(--primary-foreground); border-color: #e8e6dc; color: #141413"
                                             />
                                         </div>
                                     </div>
@@ -485,7 +485,7 @@ const copyToClipboard = async (text: string, id: string) => {
                                             type="text"
                                             placeholder="081234567890"
                                             class="w-full rounded-lg border px-3 py-2 text-sm"
-                                            style="background-color: #faf9f5; border-color: #e8e6dc; color: #141413"
+                                            style="background-color: var(--primary-foreground); border-color: #e8e6dc; color: #141413"
                                         />
                                         <p class="mt-1 text-xs" style="color: #87867f">Tombol "Order Desain Ini" akan muncul di overlay demo</p>
                                     </div>
@@ -504,7 +504,7 @@ const copyToClipboard = async (text: string, id: string) => {
                                         <Button
                                             size="sm"
                                             @click="copyToClipboard(jsEmbedCode, 'js-embed')"
-                                            style="background-color: #c96442; color: #faf9f5; border-radius: 8px"
+                                            style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 8px"
                                         >
                                             <component :is="copiedId === 'js-embed' ? Check : Copy" class="mr-1 h-3.5 w-3.5" />
                                             {{ copiedId === 'js-embed' ? 'Tersalin!' : 'Salin Kode' }}
@@ -525,15 +525,15 @@ const copyToClipboard = async (text: string, id: string) => {
                                 <div class="rounded-xl p-4" style="background-color: #e8e6dc40; border: 1px solid #e8e6dc">
                                     <h4 class="mb-2 text-xs font-medium" style="color: #141413">Opsi Konfigurasi (data-attributes)</h4>
                                     <div class="space-y-1 text-xs" style="color: #5e5d59">
-                                        <p><code style="color: #c96442">data-category</code> — Filter kategori (slug)</p>
-                                        <p><code style="color: #c96442">data-per-page</code> — Demo per halaman (default: 6)</p>
-                                        <p><code style="color: #c96442">data-primary</code> — Warna aksen (hex)</p>
-                                        <p><code style="color: #c96442">data-bg</code> — Warna background</p>
-                                        <p><code style="color: #c96442">data-card-bg</code> — Warna background kartu</p>
-                                        <p><code style="color: #c96442">data-text</code> — Warna teks utama</p>
-                                        <p><code style="color: #c96442">data-text-secondary</code> — Warna teks sekunder</p>
-                                        <p><code style="color: #c96442">data-border</code> — Warna border</p>
-                                        <p><code style="color: #c96442">data-whatsapp</code> — No. WhatsApp untuk tombol order</p>
+                                        <p><code style="color: var(--primary)">data-category</code> — Filter kategori (slug)</p>
+                                        <p><code style="color: var(--primary)">data-per-page</code> — Demo per halaman (default: 6)</p>
+                                        <p><code style="color: var(--primary)">data-primary</code> — Warna aksen (hex)</p>
+                                        <p><code style="color: var(--primary)">data-bg</code> — Warna background</p>
+                                        <p><code style="color: var(--primary)">data-card-bg</code> — Warna background kartu</p>
+                                        <p><code style="color: var(--primary)">data-text</code> — Warna teks utama</p>
+                                        <p><code style="color: var(--primary)">data-text-secondary</code> — Warna teks sekunder</p>
+                                        <p><code style="color: var(--primary)">data-border</code> — Warna border</p>
+                                        <p><code style="color: var(--primary)">data-whatsapp</code> — No. WhatsApp untuk tombol order</p>
                                     </div>
                                 </div>
                             </div>
@@ -621,14 +621,14 @@ const copyToClipboard = async (text: string, id: string) => {
             <div class="mt-16 text-center">
                 <Card style="background-color: #141413; border: 1px solid #30302e; border-radius: 16px; box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px">
                     <CardContent class="py-12">
-                        <h2 class="mb-4 text-3xl font-medium" style="color: #faf9f5; line-height: 1.2; font-family: Georgia, serif">
+                        <h2 class="mb-4 text-3xl font-medium" style="color: var(--primary-foreground); line-height: 1.2; font-family: Georgia, serif">
                             Tertarik dengan Salah satu Demo?
                         </h2>
                         <p class="mx-auto mb-8 max-w-2xl text-base sm:text-lg" style="color: #b0aea5; line-height: 1.6">
                             Hubungi kami untuk memulai website impian Anda berdasarkan template yang Anda pilih.
                         </p>
                         <div class="flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4">
-                            <Button asChild size="lg" class="text-lg px-6 py-4" style="background-color: #c96442; color: #faf9f5; border-radius: 12px">
+                            <Button asChild size="lg" class="text-lg px-6 py-4" style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px">
                                 <a
                                     :href="`https://wa.me/${companyWhatsapp}?text=${encodeURIComponent('Halo, saya tertarik dengan demo website di WebSweetStudio!')}`"
                                     target="_blank"

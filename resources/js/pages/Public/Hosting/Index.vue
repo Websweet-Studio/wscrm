@@ -138,11 +138,11 @@ const filteredPlans = computed(() => {
             </div>
 
             <div class="mb-12">
-                <Card style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
+                <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
                     <CardHeader>
                         <div class="flex items-center gap-3">
                             <div class="rounded-full p-2" style="background-color: #e8e6dc;">
-                                <Search class="h-6 w-6" style="color: #c96442;" />
+                                <Search class="h-6 w-6" style="color: var(--primary);" />
                             </div>
                             <div>
                                 <CardTitle class="text-xl font-medium" style="color: #141413; font-family: Georgia, serif;">Cari Paket Hosting</CardTitle>
@@ -156,18 +156,18 @@ const filteredPlans = computed(() => {
                                 <Search class="absolute top-2.5 left-3 h-5 w-5" style="color: #87867f;" />
                                 <Input v-model="search" placeholder="Cari paket hosting..." class="pl-10" style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;" @keyup.enter="handleSearch" />
                             </div>
-                            <Button @click="handleSearch" style="background-color: #c96442; color: #faf9f5; border-radius: 12px;">Cari</Button>
+                            <Button @click="handleSearch" style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;">Cari</Button>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
             <div class="mb-12">
-                <Card style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
+                <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
                     <CardHeader>
                         <div class="flex items-center gap-3">
                             <div class="rounded-full p-2" style="background-color: #e8e6dc;">
-                                <Filter class="h-6 w-6" style="color: #c96442;" />
+                                <Filter class="h-6 w-6" style="color: var(--primary);" />
                             </div>
                             <div>
                                 <CardTitle class="text-xl font-medium" style="color: #141413; font-family: Georgia, serif;">Kategori Paket</CardTitle>
@@ -181,7 +181,7 @@ const filteredPlans = computed(() => {
                                 @click="activeTab = 'basic'"
                                 size="sm"
                                 class="flex-1 px-3 py-2 text-sm"
-                                :style="activeTab === 'basic' ? 'background-color: #c96442; color: #faf9f5; border-radius: 12px;' : 'background-color: #e8e6dc; color: #4d4c48; border-radius: 12px;'"
+                                :style="activeTab === 'basic' ? 'background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;' : 'background-color: #e8e6dc; color: #4d4c48; border-radius: 12px;'"
                             >
                                 <Server class="mr-2 h-4 w-4" />
                                 Dasar
@@ -190,7 +190,7 @@ const filteredPlans = computed(() => {
                                 @click="activeTab = 'lite'"
                                 size="sm"
                                 class="flex-1 px-3 py-2 text-sm"
-                                :style="activeTab === 'lite' ? 'background-color: #c96442; color: #faf9f5; border-radius: 12px;' : 'background-color: #e8e6dc; color: #4d4c48; border-radius: 12px;'"
+                                :style="activeTab === 'lite' ? 'background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;' : 'background-color: #e8e6dc; color: #4d4c48; border-radius: 12px;'"
                             >
                                 <Server class="mr-2 h-4 w-4" />
                                 Lite
@@ -199,7 +199,7 @@ const filteredPlans = computed(() => {
                                 @click="activeTab = 'premium'"
                                 size="sm"
                                 class="flex-1 px-3 py-2 text-sm"
-                                :style="activeTab === 'premium' ? 'background-color: #c96442; color: #faf9f5; border-radius: 12px;' : 'background-color: #e8e6dc; color: #4d4c48; border-radius: 12px;'"
+                                :style="activeTab === 'premium' ? 'background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;' : 'background-color: #e8e6dc; color: #4d4c48; border-radius: 12px;'"
                             >
                                 <Check class="mr-2 h-4 w-4" />
                                 Premium
@@ -208,7 +208,7 @@ const filteredPlans = computed(() => {
                                 @click="activeTab = 'all'"
                                 size="sm"
                                 class="flex-1 px-3 py-2 text-sm"
-                                :style="activeTab === 'all' ? 'background-color: #c96442; color: #faf9f5; border-radius: 12px;' : 'background-color: #e8e6dc; color: #4d4c48; border-radius: 12px;'"
+                                :style="activeTab === 'all' ? 'background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;' : 'background-color: #e8e6dc; color: #4d4c48; border-radius: 12px;'"
                             >
                                 Semua
                             </Button>
@@ -236,7 +236,7 @@ const filteredPlans = computed(() => {
             </div>
 
             <div class="mb-12">
-                <Card style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
+                <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
                     <CardHeader>
                         <CardTitle class="text-center text-xl font-medium" style="color: #141413; font-family: Georgia, serif;">
                             Bandingkan Paket Hosting
@@ -252,7 +252,7 @@ const filteredPlans = computed(() => {
                                     <div class="flex items-start justify-between">
                                         <div class="flex items-center gap-3">
                                             <div class="rounded-full p-2" style="background-color: #e8e6dc;">
-                                                <Server class="h-5 w-5" style="color: #c96442;" />
+                                                <Server class="h-5 w-5" style="color: var(--primary);" />
                                             </div>
                                             <div>
                                                 <CardTitle class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif;">{{ plan.plan_name }}</CardTitle>
@@ -260,7 +260,7 @@ const filteredPlans = computed(() => {
                                         </div>
                                         <Badge
                                             v-if="!plan.use_bulk_pricing && plan.discount_percent > 0"
-                                            style="background-color: #c96442; color: #faf9f5; border-radius: 8px;"
+                                        style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 8px;"
                                         >
                                             {{ plan.discount_percent }}% OFF
                                         </Badge>
@@ -272,7 +272,7 @@ const filteredPlans = computed(() => {
                                         <div v-if="!plan.use_bulk_pricing && plan.discount_percent > 0" class="text-sm line-through" style="color: #87867f;">
                                             {{ formatPrice(plan.selling_price) }}
                                         </div>
-                                        <div class="text-3xl font-bold" style="color: #c96442;">
+                                        <div class="text-3xl font-bold" style="color: var(--primary);">
                                             {{ formatPrice(getHostingPlanFinalPrice(plan)) }}
                                         </div>
                                         <div class="text-sm" style="color: #5e5d59;">/tahun</div>
@@ -320,7 +320,7 @@ const filteredPlans = computed(() => {
                                         <Label class="text-sm font-medium" style="color: #4d4c48;">Fitur</Label>
                                         <div class="space-y-1 text-sm">
                                             <div v-for="(feature, index) in plan.features" :key="index" class="flex items-center gap-2">
-                                                <Check class="h-4 w-4" style="color: #c96442;" />
+                                                <Check class="h-4 w-4" style="color: var(--primary);" />
                                                 <span style="color: #5e5d59;">{{ feature }}</span>
                                             </div>
                                         </div>
@@ -328,7 +328,7 @@ const filteredPlans = computed(() => {
                                 </CardContent>
 
                                 <div class="px-6 pb-6">
-                                    <Button asChild class="w-full" size="lg" style="background-color: #c96442; color: #faf9f5; border-radius: 12px;">
+                                    <Button asChild class="w-full" size="lg" style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;">
                                         <a
                                             :href="getWhatsappLink(`Halo, saya ingin beli Hosting ${plan.plan_name}.`)"
                                             target="_blank"
@@ -363,14 +363,14 @@ const filteredPlans = computed(() => {
             <div v-if="!isCustomer && !isAdmin" class="mt-12 pt-16 text-center">
                 <Card style="background-color: #141413; border: 1px solid #30302e; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
                     <CardContent class="py-12">
-                        <h2 class="mb-4 text-3xl font-medium" style="color: #faf9f5; line-height: 1.2; font-family: Georgia, serif;">
+                        <h2 class="mb-4 text-3xl font-medium" style="color: var(--primary-foreground); line-height: 1.2; font-family: Georgia, serif;">
                             Siap untuk Memulai?
                         </h2>
                         <p class="mx-auto mb-8 max-w-2xl text-base sm:text-lg" style="color: #b0aea5; line-height: 1.6;">
                             Bergabunglah dengan ribuan pelanggan yang puas yang mempercayai kebutuhan hosting mereka kepada kami.
                         </p>
                         <div class="flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4">
-                            <Button asChild size="lg" class="text-lg px-6 py-4" style="background-color: #c96442; color: #faf9f5; border-radius: 12px;">
+                            <Button asChild size="lg" class="text-lg px-6 py-4" style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;">
                                 <Link href="/customer/register">Buat Akun</Link>
                             </Button>
                             <Button asChild variant="outline" size="lg" class="text-lg px-6 py-4" style="background-color: #ffffff; color: #141413; border: 1px solid #30302e; border-radius: 12px;">

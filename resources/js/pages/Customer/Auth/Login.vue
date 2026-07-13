@@ -72,7 +72,7 @@ const submit = () => {
                     type="submit"
                     class="w-full"
                     size="lg"
-                    style="background-color: #c96442; color: #faf9f5; border-radius: 12px;"
+                    style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;"
                     :disabled="form.processing"
                 >
                     <span v-if="!form.processing">Masuk</span>
@@ -95,7 +95,7 @@ const submit = () => {
             <div class="space-y-4 text-center">
                 <div class="text-sm">
                     <span style="color: #5e5d59;">Tidak punya akun? </span>
-                    <TextLink href="/customer/register" class="font-medium" style="color: #c96442;">
+                    <TextLink href="/customer/register" class="font-medium" style="color: var(--primary);">
                         Buat akun
                     </TextLink>
                 </div>

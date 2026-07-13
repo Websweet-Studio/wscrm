@@ -13,6 +13,8 @@ import { Pencil, Trash2, Plus, X } from 'lucide-vue-next';
 import { useToast } from '@/composables/useToast';
 import { type BreadcrumbItem } from '@/types';
 
+const getDefaultPrimary = () => document.documentElement.style.getPropertyValue('--primary').trim() || '#c96442';
+
 interface TaskCategory {
     id: number;
     name: string;
@@ -34,7 +36,7 @@ const newQcItem = ref('');
 
 const form = useForm({
     name: '',
-    color: '#c96442',
+    color: 'var(--primary)',
     description: '',
     qc_checklist: [] as string[],
 });
@@ -55,7 +57,7 @@ const removeQcItem = (index: number) => {
 
 const openCreate = () => {
     form.reset();
-    form.color = '#c96442';
+    form.color = getDefaultPrimary();
     form.qc_checklist = [];
     newQcItem.value = '';
     isCreateOpen.value = true;
@@ -64,7 +66,7 @@ const openCreate = () => {
 const openEdit = (category: TaskCategory) => {
     editingCategory.value = category;
     form.name = category.name;
-    form.color = category.color || '#c96442';
+    form.color = category.color || getDefaultPrimary();
     form.description = category.description || '';
     form.qc_checklist = category.qc_checklist ? [...category.qc_checklist] : [];
     newQcItem.value = '';

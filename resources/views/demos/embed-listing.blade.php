@@ -6,6 +6,10 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Demo Website</title>
     <style>
+        :root {
+            --primary: #c96442;
+            --primary-foreground: #faf9f5;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
@@ -43,7 +47,7 @@
         .filters .clear-btn {
             background: none;
             border: none;
-            color: #c96442;
+            color: var(--primary);
             font-size: 12px;
             cursor: pointer;
             padding: 4px 8px;
@@ -87,8 +91,8 @@
             position: absolute;
             top: 8px;
             left: 8px;
-            background: #c96442;
-            color: #faf9f5;
+            background: var(--primary);
+            color: var(--primary-foreground);
             padding: 2px 8px;
             border-radius: 6px;
             font-size: 11px;
@@ -134,8 +138,8 @@
             border: none;
             transition: all 0.2s;
         }
-        .btn-primary { background: #c96442; color: #faf9f5; flex: 1; }
-        .btn-primary:hover { background: #b5573a; }
+        .btn-primary { background: var(--primary); color: var(--primary-foreground); flex: 1; }
+        .btn-primary:hover { background: color-mix(in srgb, var(--primary) 85%, #000); }
         .btn-outline { background: #faf9f5; color: #4d4c48; border: 1px solid #e8e6dc; }
         .btn-outline:hover { background: #e8e6dc; }
 
@@ -173,9 +177,9 @@
         }
         .pagination a:hover { background: #f0eee6; }
         .pagination .active {
-            background: #c96442;
-            color: #faf9f5;
-            border-color: #c96442;
+            background: var(--primary);
+            color: var(--primary-foreground);
+            border-color: var(--primary);
         }
         .pagination .disabled {
             opacity: 0.4;
@@ -223,17 +227,17 @@
         }
         .preview-close:hover { background: #333; }
         .preview-header a {
-            color: #c96442;
+            color: var(--primary);
             text-decoration: none;
             font-size: 12px;
             font-weight: 500;
-            border: 1px solid #c96442;
+            border: 1px solid var(--primary);
             padding: 4px 12px;
             border-radius: 8px;
             white-space: nowrap;
             flex-shrink: 0;
         }
-        .preview-header a:hover { background: #c96442; color: #faf9f5; }
+        .preview-header a:hover { background: var(--primary); color: var(--primary-foreground); }
         .preview-iframe { flex: 1; border: none; width: 100%; background: #fff; }
     </style>
 </head>

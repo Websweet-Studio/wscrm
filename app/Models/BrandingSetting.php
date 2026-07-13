@@ -191,7 +191,7 @@ class BrandingSetting extends Model
 
     public static function getActivePaymentMethods(): array
     {
-        return array_values(array_filter(static::getPaymentMethods(), fn (array $method) => (bool) ($method['enabled'] ?? false)));
+        return array_values(array_filter(static::getPaymentMethods(), fn(array $method) => (bool) ($method['enabled'] ?? false)));
     }
 
     public static function normalizePaymentMethods(mixed $raw, ?array $fallback = null): array
@@ -262,6 +262,71 @@ class BrandingSetting extends Model
         });
 
         return $normalized;
+    }
+
+    /**
+     * Calculate relative luminance of a hex color (WCAG formula).
+     * Returns value between 0 (dark) and 1 (light).
+     */
+    private static function luminance(string $hex): float
+    {
+        $hex = ltrim($hex, '#');
+        if (strlen($hex) === 3) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+        if (strlen($hex) !== 6) {
+            return 0.5;
+        }
+
+        $r = hexdec(substr($hex, 0, 2)) / 255;
+        $g = hexdec(substr($hex, 2, 2)) / 255;
+        $b = hexdec(substr($hex, 4, 2)) / 255;
+
+        // Linearize sRGB
+        $r = $r <= 0.03928 ? $r / 12.92 : pow(($r + 0.055) / 1.055, 2.4);
+        $g = $g <= 0.03928 ? $g / 12.92 : pow(($g + 0.055) / 1.055, 2.4);
+        $b = $b <= 0.03928 ? $b / 12.92 : pow(($b + 0.055) / 1.055, 2.4);
+
+        return 0.2126 * $r + 0.7152 * $g + 0.0722 * $b;
+    }
+
+    /**
+     * Choose light or dark foreground based on background luminance.
+     */
+    private static function contrastForeground(string $hex): string
+    {
+        return self::luminance($hex) > 0.5 ? '#141413' : '#faf9f5';
+    }
+
+    /**
+     * Generate CSS custom properties as an array keyed by variable name.
+     * Falls back to hardcoded defaults if settings are missing.
+     */
+    public static function getCssVariableMap(): array
+    {
+        $primary = self::getValue('primary_color', '#c96442');
+        $secondary = self::getValue('secondary_color', '#64748b');
+        $accent = self::getValue('accent_color', '#10b981');
+
+        $primaryFg = self::contrastForeground($primary);
+        $secondaryFg = self::contrastForeground($secondary);
+        $accentFg = self::contrastForeground($accent);
+
+        return [
+            '--primary' => $primary,
+            '--primary-foreground' => $primaryFg,
+            '--secondary' => $secondary,
+            '--secondary-foreground' => $secondaryFg,
+            '--accent' => $accent,
+            '--accent-foreground' => $accentFg,
+            '--sidebar-primary' => $primary,
+            '--sidebar-primary-foreground' => $primaryFg,
+            '--sidebar-ring' => $primary,
+            '--sidebar-accent' => $secondary,
+            '--sidebar-accent-foreground' => $secondaryFg,
+            '--chart-1' => $primary,
+            '--chart-2' => $secondary,
+        ];
     }
 
     private static function defaultPaymentMethods(): array

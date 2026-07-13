@@ -20,17 +20,6 @@
             })();
         </script>
 
-        {{-- Inline style to set the HTML background color based on our theme in app.css --}}
-        <style>
-            html {
-                background-color: oklch(1 0 0);
-            }
-
-            html.dark {
-                background-color: oklch(0.145 0 0);
-            }
-        </style>
-
         <title inertia>{{ $brandingSettings['app_name'] ?? config('app.name', 'WSCRM') }}</title>
 
         <script>
@@ -47,6 +36,29 @@
 
         @vite(['resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
         @inertiaHead
+
+        {{-- Dynamic CSS variables from branding settings — overrides hardcoded colors in app.css --}}
+        <style>
+            html {
+                background-color: oklch(1 0 0);
+            }
+
+            html.dark {
+                background-color: oklch(0.145 0 0);
+            }
+        </style>
+
+        <script>
+            (function() {
+                var vars = @json(\App\Models\BrandingSetting::getCssVariableMap());
+                var root = document.documentElement;
+                for (var key in vars) {
+                    if (vars.hasOwnProperty(key)) {
+                        root.style.setProperty(key, vars[key]);
+                    }
+                }
+            })();
+        </script>
     </head>
     <body class="font-sans antialiased">
         @inertia

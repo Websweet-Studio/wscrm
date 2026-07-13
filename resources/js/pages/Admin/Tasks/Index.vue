@@ -822,7 +822,7 @@ const getTaskIcon = (status: Task['status']) => {
                                     :checked="localQcResults.includes(item)"
                                     @change="toggleQcItem(item)"
                                     class="h-4 w-4 rounded border-border text-primary focus:ring-ring"
-                                    style="accent-color: #c96442;"
+                                    style="accent-color: var(--primary);"
                                 />
                                 <Label :for="'qc_' + index" class="font-normal cursor-pointer">{{ item }}</Label>
                             </div>

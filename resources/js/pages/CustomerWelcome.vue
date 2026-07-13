@@ -207,13 +207,13 @@ const getWhatsAppUrl = () => {
                     Dapatkan layanan hosting web terpercaya dan registrasi domain dengan dukungan ahli. Sempurna untuk bisnis, developer, dan website pribadi.
                 </p>
                 <div class="flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4">
-                    <Button asChild class="text-lg px-6 py-4" style="background-color: #c96442; color: #faf9f5; border-radius: 12px;">
+                    <Button asChild class="text-lg px-6 py-4" style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;">
                         <Link href="/hosting">Lihat Paket Hosting</Link>
                     </Button>
-                    <Button asChild variant="outline" class="text-lg px-6 py-4" style="background-color: #faf9f5; color: #4d4c48; border: 1px solid #e8e6dc; border-radius: 12px;">
+                    <Button asChild variant="outline" class="text-lg px-6 py-4" style="background-color: var(--primary-foreground); color: #4d4c48; border: 1px solid #e8e6dc; border-radius: 12px;">
                         <Link href="/domains">Cari Domain</Link>
                     </Button>
-                    <Button asChild variant="outline" class="text-lg px-6 py-4" style="background-color: #faf9f5; color: #4d4c48; border: 1px solid #e8e6dc; border-radius: 12px;">
+                    <Button asChild variant="outline" class="text-lg px-6 py-4" style="background-color: var(--primary-foreground); color: #4d4c48; border: 1px solid #e8e6dc; border-radius: 12px;">
                         <Link href="/demo-web">Demo Website</Link>
                     </Button>
                 </div>
@@ -222,11 +222,11 @@ const getWhatsAppUrl = () => {
             <!-- Simulation Section -->
             <div class="mb-12">
                 <template v-if="isLoggedIn">
-                    <Card style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
+                    <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
                         <CardHeader>
                             <div class="flex items-center gap-3">
                                 <div class="rounded-full p-2" style="background-color: #e8e6dc;">
-                                    <Calculator class="h-6 w-6" style="color: #c96442;" />
+                                    <Calculator class="h-6 w-6" style="color: var(--primary);" />
                                 </div>
                                 <div>
                                     <CardTitle class="text-xl font-medium" style="color: #141413; font-family: Georgia, serif;">Simulasi Harga</CardTitle>
@@ -280,7 +280,7 @@ const getWhatsAppUrl = () => {
                                                 :checked="selectedServices.includes(service.id)"
                                                 @change="toggleService(service.id)"
                                                 class="h-4 w-4 rounded"
-                                                style="border-color: #e8e6dc; accent-color: #c96442;"
+                                                style="border-color: #e8e6dc; accent-color: var(--primary);"
                                             />
                                             <label v-if="service" :for="'service-' + service.id" class="font-normal cursor-pointer" style="color: #5e5d59;">
                                                 {{ service.name }} ({{ formatPrice(getServicePrice(service)) }}/tahun)
@@ -314,7 +314,7 @@ const getWhatsAppUrl = () => {
                                                 <span class="font-medium" style="color: #4d4c48;">{{ formatPrice(getServicePrice(service)) }}</span>
                                             </div>
                                             <Separator style="background-color: #f0eee6;" />
-                                            <div class="flex justify-between text-xl font-bold" style="color: #c96442;">
+                                            <div class="flex justify-between text-xl font-bold" style="color: var(--primary);">
                                                 <span>Total Tahunan</span>
                                                 <span>{{ formatPrice(calculateTotal) }}</span>
                                             </div>
@@ -324,7 +324,7 @@ const getWhatsAppUrl = () => {
                                                     class="w-full"
                                                     size="lg"
                                                     :disabled="!selectedDomain || !selectedHosting"
-                                                    style="background-color: #c96442; color: #faf9f5; border-radius: 12px;"
+                                                    style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;"
                                                 >
                                                     <a :href="getWhatsAppUrl()" target="_blank" rel="noopener noreferrer">
                                                         <Calculator class="mr-2 h-4 w-4" />
@@ -340,11 +340,11 @@ const getWhatsAppUrl = () => {
                     </Card>
                 </template>
                 <template v-else>
-                    <Card style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
+                    <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
                         <CardHeader>
                             <div class="flex items-center gap-3">
                                 <div class="rounded-full p-2" style="background-color: #e8e6dc;">
-                                    <Calculator class="h-6 w-6" style="color: #c96442;" />
+                                    <Calculator class="h-6 w-6" style="color: var(--primary);" />
                                 </div>
                                 <div>
                                     <CardTitle class="text-xl font-medium" style="color: #141413; font-family: Georgia, serif;">Simulasi Harga</CardTitle>
@@ -355,17 +355,17 @@ const getWhatsAppUrl = () => {
                         <CardContent>
                             <div class="flex flex-col items-center justify-center py-12 text-center">
                                 <div class="mb-6 rounded-full p-4" style="background-color: #e8e6dc;">
-                                    <Users class="h-8 w-8" style="color: #c96442;" />
+                                    <Users class="h-8 w-8" style="color: var(--primary);" />
                                 </div>
                                 <h3 class="mb-2 text-lg font-medium" style="color: #141413; font-family: Georgia, serif;">Login untuk Membuka Simulasi Harga</h3>
                                 <p class="mb-6 max-w-md" style="color: #5e5d59;">
                                     Dapatkan akses penuh ke simulasi harga, pilih paket sesuai kebutuhan, dan langsung menghubungi kami via WhatsApp
                                 </p>
                                 <div class="flex flex-col gap-3 sm:flex-row">
-                                    <Button asChild class="text-base px-6 py-3" style="background-color: #c96442; color: #faf9f5; border-radius: 12px;">
+                                    <Button asChild class="text-base px-6 py-3" style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;">
                                         <Link href="/customer/login">Masuk</Link>
                                     </Button>
-                                    <Button asChild variant="outline" class="text-base px-6 py-3" style="background-color: #faf9f5; color: #4d4c48; border: 1px solid #e8e6dc; border-radius: 12px;">
+                                    <Button asChild variant="outline" class="text-base px-6 py-3" style="background-color: var(--primary-foreground); color: #4d4c48; border: 1px solid #e8e6dc; border-radius: 12px;">
                                         <Link href="/customer/register">Daftar</Link>
                                     </Button>
                                 </div>
@@ -377,10 +377,10 @@ const getWhatsAppUrl = () => {
 
             <!-- Features Grid -->
             <div class="mb-12 grid gap-4 sm:grid-cols-2 sm:gap-6 lg:mb-16 lg:grid-cols-5">
-                <Card v-for="feature in features" :key="feature.title" class="text-center transition-all" style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 12px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
+                <Card v-for="feature in features" :key="feature.title" class="text-center transition-all" style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 12px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
                     <CardHeader class="pb-4">
                         <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg" style="background-color: #e8e6dc;">
-                            <component :is="feature.icon" class="h-6 w-6" style="color: #c96442;" />
+                            <component :is="feature.icon" class="h-6 w-6" style="color: var(--primary);" />
                         </div>
                         <CardTitle class="text-base sm:text-lg font-medium" style="color: #141413; font-family: Georgia, serif;">{{ feature.title }}</CardTitle>
                     </CardHeader>
