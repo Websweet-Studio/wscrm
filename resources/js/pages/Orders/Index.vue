@@ -195,7 +195,7 @@ const getStatusText = (status: string) => {
                                 <ReceiptText class="h-3.5 w-3.5 text-emerald-600 dark:text-green-400" />
                                 <span>Riwayat transaksi</span>
                             </div>
-                            <h1 class="font-serif text-2xl font-medium tracking-tight sm:text-3xl">Pesanan Saya</h1>
+                            <h1 class="font-heading text-2xl font-medium tracking-tight sm:text-3xl">Pesanan Saya</h1>
                             <p class="mt-1 text-sm text-muted-foreground sm:text-base">Lihat status dan detail pesanan layanan Anda</p>
                         </div>
                         <div class="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[240px]">

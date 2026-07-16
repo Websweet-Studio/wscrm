@@ -31,7 +31,7 @@ const submit = () => {
     <AuthCardLayout>
         <div class="space-y-6">
             <div class="space-y-2 text-center animate-in fade-in slide-in-from-bottom-3 duration-600 ease-out fill-mode-both">
-                <h2 class="text-2xl font-medium tracking-tight" style="color: #141413; line-height: 1.2; font-family: Georgia, serif;">Buat Akun</h2>
+                <h2 class="font-heading text-2xl font-medium tracking-tight" style="color: #141413; line-height: 1.2;">Buat Akun</h2>
                 <p class="text-sm" style="color: #5e5d59;">Bergabung hari ini dan dapatkan akses fitur eksklusif</p>
             </div>
 

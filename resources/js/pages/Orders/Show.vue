@@ -127,7 +127,7 @@ const deleteOrder = () => {
                                     </Link>
                                 </Button>
                                 <div class="min-w-0">
-                                    <h1 class="font-serif text-2xl font-medium leading-tight tracking-tight sm:text-3xl">
+                                    <h1 class="font-heading text-2xl font-medium leading-tight tracking-tight sm:text-3xl">
                                         Order <span class="font-mono">#{{ order.id }}</span>
                                     </h1>
                                     <p class="mt-1 text-sm text-muted-foreground">Dibuat {{ formatDate(order.created_at) }}</p>

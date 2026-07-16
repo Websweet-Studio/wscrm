@@ -29,7 +29,11 @@ onMounted(() => {
         <CustomerSidebar />
         <AppContent variant="sidebar" class="overflow-x-hidden">
             <AppSidebarHeader :breadcrumbs="breadcrumbs" :show-appearance-tabs="false" />
-            <slot />
+            <main class="flex-1 overflow-hidden">
+                <div class="h-full overflow-y-auto">
+                    <slot />
+                </div>
+            </main>
         </AppContent>
     </AppShell>
 </template>

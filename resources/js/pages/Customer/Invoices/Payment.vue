@@ -156,7 +156,7 @@ if (props.invoice.payment_account_id) {
                                 <ShieldCheck class="h-3.5 w-3.5 text-emerald-600 dark:text-green-400" />
                                 <span>Pembayaran</span>
                             </div>
-                            <h1 class="font-serif text-2xl font-medium leading-tight tracking-tight sm:text-3xl">
+                            <h1 class="font-heading text-2xl font-medium leading-tight tracking-tight sm:text-3xl">
                                 Invoice <span class="font-mono">{{ invoice.invoice_number }}</span>
                             </h1>
                             <div class="mt-2 flex flex-wrap items-center gap-2">

@@ -502,7 +502,7 @@ const deletePost = () => {
             <!-- Modal Content -->
             <div class="relative mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
                 <div class="mb-4">
-                    <h3 class="text-2xl font-serif font-medium leading-[1.20]">Konfirmasi Hapus</h3>
+                    <h3 class="font-heading text-2xl font-medium leading-[1.20]">Konfirmasi Hapus</h3>
                     <p class="text-base text-muted-foreground mt-2">
                         Apakah Anda yakin ingin menghapus artikel "{{ postToDelete?.title }}"? Tindakan ini tidak dapat dibatalkan.
                     </p>

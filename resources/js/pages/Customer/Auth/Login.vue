@@ -31,8 +31,8 @@ const submit = () => {
             <!-- Header -->
             <div class="space-y-2 text-center">
                 <h1
-                    class="text-2xl font-medium tracking-tight animate-in fade-in slide-in-from-bottom-3 duration-600 ease-out fill-mode-both"
-                    style="color: #141413; font-family: Georgia, serif; line-height: 1.25;"
+                    class="font-heading text-2xl font-medium tracking-tight animate-in fade-in slide-in-from-bottom-3 duration-600 ease-out fill-mode-both"
+                    style="color: #141413; line-height: 1.25;"
                 >
                     Selamat datang kembali
                 </h1>

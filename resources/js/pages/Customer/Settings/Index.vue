@@ -70,7 +70,7 @@ const submitPassword = () => {
                                 <ShieldCheck class="h-3.5 w-3.5 text-emerald-600 dark:text-green-400" />
                                 <span>Pengaturan Akun</span>
                             </div>
-                            <h1 class="font-serif text-2xl font-medium leading-tight tracking-tight sm:text-3xl">Settings</h1>
+                            <h1 class="font-heading text-2xl font-medium leading-tight tracking-tight sm:text-3xl">Settings</h1>
                             <p class="mt-1 text-sm text-muted-foreground sm:text-base">Kelola informasi profil dan keamanan akun Anda</p>
                         </div>
                         <div class="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[260px]">
@@ -92,7 +92,7 @@ const submitPassword = () => {
                 <!-- Profile Settings -->
                 <Card class="rounded-lg border-border/60 shadow-sm lg:col-span-3">
                     <CardHeader>
-                        <CardTitle class="flex items-center gap-2 font-serif font-medium tracking-tight">
+                        <CardTitle class="flex items-center gap-2 font-heading font-medium tracking-tight">
                             <UserRound class="h-5 w-5 text-emerald-600 dark:text-green-400" />
                             Informasi Profil
                         </CardTitle>
@@ -199,7 +199,7 @@ const submitPassword = () => {
                 <!-- Password Settings -->
                 <Card class="rounded-lg border-border/60 shadow-sm lg:col-span-2">
                     <CardHeader>
-                        <CardTitle class="flex items-center gap-2 font-serif font-medium tracking-tight">
+                        <CardTitle class="flex items-center gap-2 font-heading font-medium tracking-tight">
                             <KeyRound class="h-5 w-5 text-emerald-600 dark:text-green-400" />
                             Ubah Password
                         </CardTitle>

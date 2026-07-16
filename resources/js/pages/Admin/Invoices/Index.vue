@@ -656,7 +656,7 @@ const markAsPaid = (invoice: Invoice) => {
                 <!-- Header -->
                 <div class="mb-4 flex items-center justify-between">
                     <div>
-                        <h2 class="text-2xl font-serif font-medium leading-[1.20]">Create New Invoice</h2>
+                        <h2 class="font-heading text-2xl font-medium leading-[1.20]">Create New Invoice</h2>
                         <p class="text-base text-muted-foreground mt-2">Create a new invoice for customer billing</p>
                     </div>
                     <button @click="showCreateModal = false" class="text-gray-500 hover:text-gray-700">
@@ -783,7 +783,7 @@ const markAsPaid = (invoice: Invoice) => {
                 <!-- Header -->
                 <div class="mb-4 flex items-center justify-between">
                     <div>
-                        <h2 class="text-2xl font-serif font-medium leading-[1.20]">Edit Invoice</h2>
+                        <h2 class="font-heading text-2xl font-medium leading-[1.20]">Edit Invoice</h2>
                         <p class="text-base text-muted-foreground mt-2">Update invoice status and payment details</p>
                     </div>
                     <button @click="showEditModal = false" class="text-gray-500 hover:text-gray-700">

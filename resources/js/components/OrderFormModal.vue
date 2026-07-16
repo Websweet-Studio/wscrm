@@ -758,7 +758,7 @@ const extendExpiryOneYear = () => {
 
                 <!-- Price Summary -->
                 <div v-if="!isEditMode" class="rounded-lg border border-border bg-secondary/40 p-4">
-                    <h3 class="mb-4 font-serif text-lg font-medium tracking-tight">Ringkasan Harga</h3>
+                    <h3 class="font-heading mb-4 text-lg font-medium tracking-tight">Ringkasan Harga</h3>
 
                     <!-- Individual Item Prices -->
                     <div class="mb-4 space-y-2">

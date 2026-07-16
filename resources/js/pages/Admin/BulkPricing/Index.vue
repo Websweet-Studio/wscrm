@@ -363,7 +363,7 @@ const deleteConfig = (configId: number, configName: string) => {
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-serif font-medium leading-[1.10]">Bulk Pricing Simulator</h1>
+                    <h1 class="font-heading text-3xl font-medium leading-[1.10]">Bulk Pricing Simulator</h1>
                     <p class="text-muted-foreground">Simulasi harga hosting dengan tier discount dan analisis keuntungan</p>
                 </div>
             </div>
@@ -588,7 +588,7 @@ const deleteConfig = (configId: number, configName: string) => {
                             </div>
                             <div v-else class="space-y-6">
                                 <div v-for="(planData, planType) in filteredSimulation" :key="planType">
-                                    <h3 class="mb-4 text-xl font-serif font-medium capitalize leading-[1.20]">{{ planType }} Plan</h3>
+                                    <h3 class="font-heading mb-4 text-xl font-medium capitalize leading-[1.20]">{{ planType }} Plan</h3>
                                     <div class="overflow-x-auto">
                                         <Table>
                                             <TableHeader>
