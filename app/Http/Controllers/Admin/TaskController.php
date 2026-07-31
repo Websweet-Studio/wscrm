@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
+use App\Models\Order;
 use App\Models\Task;
 use App\Models\TaskCategory;
 use App\Models\User;
@@ -27,11 +28,12 @@ class TaskController extends Controller
 
         $scope = $request->get('scope'); // all | assigned | created
 
-        $query = Task::with(['assignedUser.employee', 'creator', 'category'])
+        $query = Task::with(['assignedUser.employee', 'creator', 'category', 'order.customer'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('category'), fn ($q) => $q->where('task_category_id', $request->category))
             ->when($request->filled('assigned_department'), fn ($q) => $q->where('assigned_department', $request->assigned_department))
             ->when($request->filled('assigned_user_id'), fn ($q) => $q->where('assigned_user_id', $request->assigned_user_id))
+            ->when($request->filled('order_id'), fn ($q) => $q->where('order_id', $request->order_id))
             ->orderBy('due_date', 'asc')
             ->orderBy('created_at', 'desc');
 
@@ -66,6 +68,7 @@ class TaskController extends Controller
             ->whereNotNull('department')
             ->get()
             ->pluck('department', 'user_id');
+        $services = Order::services()->with('customer')->orderBy('domain_name')->get(['id', 'domain_name', 'service_type', 'customer_id']);
 
         $editingTask = null;
         if ($request->filled('edit')) {
@@ -78,7 +81,8 @@ class TaskController extends Controller
             'categories' => $categories,
             'users' => $users,
             'userDepartments' => $userDepartments,
-            'filters' => $request->only(['status', 'category', 'assigned_user_id', 'assigned_department', 'view_mode', 'calendar_date', 'scope']),
+            'services' => $services,
+            'filters' => $request->only(['status', 'category', 'assigned_user_id', 'assigned_department', 'order_id', 'view_mode', 'calendar_date', 'scope']),
             'editingTask' => $editingTask,
         ]);
     }
@@ -89,6 +93,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'task_category_id' => 'nullable|exists:task_categories,id',
+            'order_id' => 'nullable|exists:orders,id',
             'description' => 'nullable|string|max:5000',
             'status' => 'nullable|in:todo,in_progress,done,cancelled',
             'priority' => 'nullable|in:low,medium,high',
@@ -120,6 +125,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
             'task_category_id' => 'nullable|exists:task_categories,id',
+            'order_id' => 'nullable|exists:orders,id',
             'description' => 'nullable|string|max:5000',
             'status' => 'nullable|in:todo,in_progress,done,cancelled',
             'priority' => 'nullable|in:low,medium,high',

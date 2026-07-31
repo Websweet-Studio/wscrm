@@ -41,13 +41,24 @@ interface Task {
     assigned_user_id?: number | null;
     assigned_department?: string | null;
     task_category_id?: number | null;
+    order_id?: number | null;
     category?: TaskCategory | null;
+    order?: OrderService | null;
     created_by_user_id: number;
     created_at: string;
     updated_at: string;
     assigned_user?: User | null;
     creator?: User | null;
     qc_results?: string[] | null;
+}
+
+interface OrderService {
+    id: number;
+    domain_name?: string;
+    service_type?: string;
+    customer?: {
+        name: string;
+    };
 }
 
 interface Props {
@@ -62,12 +73,14 @@ interface Props {
     departments: string[];
     users: User[];
     categories: TaskCategory[];
+    services: OrderService[];
     userDepartments: Record<number, string>;
     filters?: {
         status?: string;
         category?: string; // id
         assigned_user_id?: number;
         assigned_department?: string;
+        order_id?: string;
         view_mode?: 'list' | 'calendar';
         calendar_date?: string;
         scope?: 'all' | 'assigned' | 'created';
@@ -94,6 +107,7 @@ const statusFilter = ref(props.filters?.status || '');
 const categoryFilter = ref(props.filters?.category || '');
 const assignedUserId = ref(props.filters?.assigned_user_id || '');
 const assignedDepartment = ref(props.filters?.assigned_department || '');
+const orderFilter = ref(props.filters?.order_id || '');
 const viewMode = ref(props.filters?.view_mode || 'list');
 const currentDate = ref(props.filters?.calendar_date ? parseISO(props.filters.calendar_date) : new Date());
 const scopeFilter = ref(props.filters?.scope || 'assigned');
@@ -123,6 +137,7 @@ const createForm = useForm({
     assigned_user_id: '' as number | '' | null,
     assigned_department: '' as string | '',
     task_category_id: '' as number | '' | null,
+    order_id: '' as number | '' | null,
 });
 
 const editForm = useForm({
@@ -135,6 +150,7 @@ const editForm = useForm({
     assigned_user_id: '' as number | '' | null,
     assigned_department: '' as string | '',
     task_category_id: '' as number | '' | null,
+    order_id: '' as number | '' | null,
     qc_results: [] as string[],
 });
 
@@ -144,6 +160,7 @@ const handleSearch = () => {
         category: categoryFilter.value || undefined,
         assigned_user_id: assignedUserId.value || undefined,
         assigned_department: assignedDepartment.value || undefined,
+        order_id: orderFilter.value || undefined,
         view_mode: viewMode.value,
         calendar_date: viewMode.value === 'calendar' ? format(currentDate.value, 'yyyy-MM-dd') : undefined,
         scope: scopeFilter.value || undefined,
@@ -183,6 +200,7 @@ const submitCreate = () => {
         assigned_user_id: createForm.assigned_user_id || undefined,
         assigned_department: createForm.assigned_department || undefined,
         task_category_id: createForm.task_category_id || undefined,
+        order_id: createForm.order_id || undefined,
     };
     createForm.post('/admin/tasks', {
         data: payload,
@@ -215,6 +233,7 @@ const openEditModal = (task: Task) => {
     editForm.assigned_user_id = task.assigned_user_id || '';
     editForm.assigned_department = task.assigned_department || '';
     editForm.task_category_id = task.task_category_id || '';
+    editForm.order_id = task.order_id || '';
     editForm.qc_results = task.qc_results ? [...task.qc_results] : [];
     localQcResults.value = task.qc_results ? [...task.qc_results] : [];
     if (typeof editForm.assigned_user_id === 'number' && props.userDepartments[editForm.assigned_user_id]) {
@@ -344,6 +363,7 @@ const submitEdit = () => {
     const payload: any = {
         title: editForm.title,
         task_category_id: editForm.task_category_id || undefined,
+        order_id: editForm.order_id || undefined,
         description: editForm.description || undefined,
         status: editForm.status,
         priority: editForm.priority,
@@ -463,7 +483,7 @@ const getTaskIcon = (status: Task['status']) => {
                             @click="scopeFilter = 'created'; handleSearch();"
                         >Dibuat oleh Saya</Button>
                     </div>
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-5">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-6">
                         <div>
                             <select id="statusFilter" v-model="statusFilter" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
                                 <option value="">Semua Status</option>
@@ -477,6 +497,14 @@ const getTaskIcon = (status: Task['status']) => {
                             <select id="categoryFilter" v-model="categoryFilter" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
                                 <option value="">Semua Kategori</option>
                                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select id="orderFilter" v-model="orderFilter" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
+                                <option value="">Semua Layanan</option>
+                                <option v-for="svc in services" :key="svc.id" :value="svc.id">
+                                    {{ svc.domain_name || 'Order #' + svc.id }} ({{ svc.customer?.name || '-' }})
+                                </option>
                             </select>
                         </div>
                         <div>
@@ -584,6 +612,7 @@ const getTaskIcon = (status: Task['status']) => {
                                     <TableHead>Prioritas</TableHead>
                                     <TableHead>Jatuh Tempo</TableHead>
                                     <TableHead>Assigned To</TableHead>
+                                    <TableHead>Layanan</TableHead>
                                     <TableHead class="text-right">Aksi</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -642,6 +671,13 @@ const getTaskIcon = (status: Task['status']) => {
                                         <div v-else-if="task.assigned_department" class="flex items-center gap-1 text-xs">
                                             <Clock class="h-3 w-3" /> Dept: {{ task.assigned_department }}
                                         </div>
+                                        <span v-else class="text-muted-foreground text-xs">-</span>
+                                    </TableCell>
+                                    <TableCell>
+                                        <span v-if="task.order" class="text-xs">
+                                            {{ task.order.domain_name || 'Order #' + task.order.id }}
+                                            <span class="text-muted-foreground">({{ task.order.customer?.name || '-' }})</span>
+                                        </span>
                                         <span v-else class="text-muted-foreground text-xs">-</span>
                                     </TableCell>
                                     <TableCell class="text-right">
@@ -717,6 +753,15 @@ const getTaskIcon = (status: Task['status']) => {
                             <select id="category" v-model="createForm.task_category_id" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
                                 <option value="">— Pilih Kategori —</option>
                                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <Label for="order_id" class="mb-2 block">Layanan (Opsional)</Label>
+                            <select id="order_id" v-model="createForm.order_id" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
+                                <option value="">— Tanpa Layanan —</option>
+                                <option v-for="svc in services" :key="svc.id" :value="svc.id">
+                                    {{ svc.domain_name || 'Order #' + svc.id }} ({{ svc.customer?.name || '-' }})
+                                </option>
                             </select>
                         </div>
                         <div>
@@ -800,6 +845,15 @@ const getTaskIcon = (status: Task['status']) => {
                             <select id="edit_category" v-model="editForm.task_category_id" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
                                 <option value="">— Pilih Kategori —</option>
                                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <Label for="edit_order_id" class="mb-2 block">Layanan (Opsional)</Label>
+                            <select id="edit_order_id" v-model="editForm.order_id" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
+                                <option value="">— Tanpa Layanan —</option>
+                                <option v-for="svc in services" :key="svc.id" :value="svc.id">
+                                    {{ svc.domain_name || 'Order #' + svc.id }} ({{ svc.customer?.name || '-' }})
+                                </option>
                             </select>
                         </div>
                         <div>

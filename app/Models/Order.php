@@ -68,6 +68,11 @@ class Order extends Model
         return $this->hasMany(Invoice::class);
     }
 
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
     // Scopes for different use cases
     public function scopeOrders($query)
     {
