@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
-import { Edit, Eye, Globe, Power, Plus, Search, X } from 'lucide-vue-next';
+import { Edit, Eye, Globe, Power, Plus, Search, Trash2, X } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface DemoCategory {
@@ -67,6 +67,8 @@ const statusFilter = ref(props.filters.status || '');
 const showPreviewImage = ref(false);
 const previewImageUrl = ref('');
 const previewImageTitle = ref('');
+const showDeleteConfirm = ref(false);
+const deleteTarget = ref<DemoWebsite | null>(null);
 
 const openImagePreview = (url: string, title: string) => {
     previewImageUrl.value = url;
@@ -110,6 +112,22 @@ const getPackageNames = (demo: DemoWebsite) => {
         return demo.demo_packages.map((p: DemoPackage) => p.name);
     }
     return [];
+};
+
+const confirmDelete = (demo: DemoWebsite) => {
+    deleteTarget.value = demo;
+    showDeleteConfirm.value = true;
+};
+
+const handleDelete = () => {
+    if (!deleteTarget.value) return;
+    router.delete(`/admin/demo-websites/${deleteTarget.value.id}`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            showDeleteConfirm.value = false;
+            deleteTarget.value = null;
+        },
+    });
 };
 </script>
 
@@ -219,8 +237,11 @@ const getPackageNames = (demo: DemoWebsite) => {
                                             <Button size="sm" variant="outline" @click="toggleStatus(demo)" class="cursor-pointer" :title="demo.is_active ? 'Nonaktifkan' : 'Aktifkan'">
                                                 <Power class="h-3.5 w-3.5" :class="demo.is_active ? 'text-green-600' : 'text-gray-400'" />
                                             </Button>
-                                            <Button size="sm" variant="outline" @click="router.visit(`/admin/demo-websites/${demo.id}/edit`)" class="cursor-pointer" title="Edit & Hapus">
+                                            <Button size="sm" variant="outline" @click="router.visit(`/admin/demo-websites/${demo.id}/edit`)" class="cursor-pointer" title="Edit">
                                                 <Edit class="h-3.5 w-3.5" />
+                                            </Button>
+                                            <Button size="sm" variant="outline" @click="confirmDelete(demo)" class="cursor-pointer text-destructive hover:bg-destructive/10" title="Hapus">
+                                                <Trash2 class="h-3.5 w-3.5" />
                                             </Button>
                                         </div>
                                     </TableCell>
@@ -258,6 +279,21 @@ const getPackageNames = (demo: DemoWebsite) => {
                 </button>
                 <img :src="previewImageUrl" :alt="previewImageTitle" class="max-h-[85vh] max-w-[90vw] rounded-lg object-contain" />
                 <p class="mt-2 text-center text-sm text-white">{{ previewImageTitle }}</p>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div v-if="showDeleteConfirm" class="fixed inset-0 z-[60] flex items-center justify-center">
+            <div class="fixed inset-0 bg-black/50" @click="showDeleteConfirm = false"></div>
+            <div class="relative mx-4 max-w-sm rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
+                <h3 class="text-lg font-semibold">Hapus Demo Website?</h3>
+                <p class="mt-2 text-sm text-muted-foreground">
+                    Yakin ingin menghapus "<strong>{{ deleteTarget?.title }}</strong>"? Tindakan ini tidak dapat dibatalkan.
+                </p>
+                <div class="mt-4 flex justify-end gap-2">
+                    <Button variant="outline" @click="showDeleteConfirm = false" class="cursor-pointer">Batal</Button>
+                    <Button variant="destructive" @click="handleDelete" class="cursor-pointer">Hapus</Button>
+                </div>
             </div>
         </div>
 
