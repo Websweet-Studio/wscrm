@@ -78,8 +78,86 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     
     index.form = indexForm
 /**
-* @see \App\Http\Controllers\Admin\DemoWebsiteController::store
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::create
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:49
+ * @route '/admin/demo-websites/create'
+ */
+export const create = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: create.url(options),
+    method: 'get',
+})
+
+create.definition = {
+    methods: ["get","head"],
+    url: '/admin/demo-websites/create',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::create
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:49
+ * @route '/admin/demo-websites/create'
+ */
+create.url = (options?: RouteQueryOptions) => {
+    return create.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::create
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:49
+ * @route '/admin/demo-websites/create'
+ */
+create.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: create.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::create
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:49
+ * @route '/admin/demo-websites/create'
+ */
+create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: create.url(options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::create
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:49
+ * @route '/admin/demo-websites/create'
+ */
+    const createForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: create.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::create
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:49
+ * @route '/admin/demo-websites/create'
+ */
+        createForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::create
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:49
+ * @route '/admin/demo-websites/create'
+ */
+        createForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    create.form = createForm
+/**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::store
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:60
  * @route '/admin/demo-websites'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -94,7 +172,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::store
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:49
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:60
  * @route '/admin/demo-websites'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -103,7 +181,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::store
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:49
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:60
  * @route '/admin/demo-websites'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -113,7 +191,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::store
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:49
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:60
  * @route '/admin/demo-websites'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -123,7 +201,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::store
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:49
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:60
  * @route '/admin/demo-websites'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -133,8 +211,110 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     
     store.form = storeForm
 /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::edit
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:91
+ * @route '/admin/demo-websites/{demo_website}/edit'
+ */
+export const edit = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: edit.url(args, options),
+    method: 'get',
+})
+
+edit.definition = {
+    methods: ["get","head"],
+    url: '/admin/demo-websites/{demo_website}/edit',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::edit
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:91
+ * @route '/admin/demo-websites/{demo_website}/edit'
+ */
+edit.url = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { demo_website: args }
+    }
+
+            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+            args = { demo_website: args.id }
+        }
+    
+    if (Array.isArray(args)) {
+        args = {
+                    demo_website: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        demo_website: typeof args.demo_website === 'object'
+                ? args.demo_website.id
+                : args.demo_website,
+                }
+
+    return edit.definition.url
+            .replace('{demo_website}', parsedArgs.demo_website.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::edit
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:91
+ * @route '/admin/demo-websites/{demo_website}/edit'
+ */
+edit.get = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: edit.url(args, options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::edit
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:91
+ * @route '/admin/demo-websites/{demo_website}/edit'
+ */
+edit.head = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: edit.url(args, options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::edit
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:91
+ * @route '/admin/demo-websites/{demo_website}/edit'
+ */
+    const editForm = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: edit.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::edit
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:91
+ * @route '/admin/demo-websites/{demo_website}/edit'
+ */
+        editForm.get = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\DemoWebsiteController::edit
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:91
+ * @route '/admin/demo-websites/{demo_website}/edit'
+ */
+        editForm.head = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    edit.form = editForm
+/**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::update
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:80
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:105
  * @route '/admin/demo-websites/{demo_website}'
  */
 export const update = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -149,7 +329,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::update
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:80
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:105
  * @route '/admin/demo-websites/{demo_website}'
  */
 update.url = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -182,7 +362,7 @@ update.url = (args: { demo_website: number | { id: number } } | [demo_website: n
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::update
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:80
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:105
  * @route '/admin/demo-websites/{demo_website}'
  */
 update.put = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -191,7 +371,7 @@ update.put = (args: { demo_website: number | { id: number } } | [demo_website: n
 })
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::update
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:80
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:105
  * @route '/admin/demo-websites/{demo_website}'
  */
 update.patch = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -201,7 +381,7 @@ update.patch = (args: { demo_website: number | { id: number } } | [demo_website:
 
     /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::update
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:80
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:105
  * @route '/admin/demo-websites/{demo_website}'
  */
     const updateForm = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -216,7 +396,7 @@ update.patch = (args: { demo_website: number | { id: number } } | [demo_website:
 
             /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::update
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:80
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:105
  * @route '/admin/demo-websites/{demo_website}'
  */
         updateForm.put = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -230,7 +410,7 @@ update.patch = (args: { demo_website: number | { id: number } } | [demo_website:
         })
             /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::update
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:80
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:105
  * @route '/admin/demo-websites/{demo_website}'
  */
         updateForm.patch = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -246,7 +426,7 @@ update.patch = (args: { demo_website: number | { id: number } } | [demo_website:
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::destroy
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:114
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:141
  * @route '/admin/demo-websites/{demo_website}'
  */
 export const destroy = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -261,7 +441,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::destroy
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:114
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:141
  * @route '/admin/demo-websites/{demo_website}'
  */
 destroy.url = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -294,7 +474,7 @@ destroy.url = (args: { demo_website: number | { id: number } } | [demo_website: 
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::destroy
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:114
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:141
  * @route '/admin/demo-websites/{demo_website}'
  */
 destroy.delete = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -304,7 +484,7 @@ destroy.delete = (args: { demo_website: number | { id: number } } | [demo_websit
 
     /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::destroy
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:114
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:141
  * @route '/admin/demo-websites/{demo_website}'
  */
     const destroyForm = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -319,7 +499,7 @@ destroy.delete = (args: { demo_website: number | { id: number } } | [demo_websit
 
             /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::destroy
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:114
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:141
  * @route '/admin/demo-websites/{demo_website}'
  */
         destroyForm.delete = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -335,7 +515,7 @@ destroy.delete = (args: { demo_website: number | { id: number } } | [demo_websit
     destroy.form = destroyForm
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::toggleStatus
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:126
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:153
  * @route '/admin/demo-websites/{demoWebsite}/toggle-status'
  */
 export const toggleStatus = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -350,7 +530,7 @@ toggleStatus.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::toggleStatus
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:126
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:153
  * @route '/admin/demo-websites/{demoWebsite}/toggle-status'
  */
 toggleStatus.url = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -383,7 +563,7 @@ toggleStatus.url = (args: { demoWebsite: number | { id: number } } | [demoWebsit
 
 /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::toggleStatus
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:126
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:153
  * @route '/admin/demo-websites/{demoWebsite}/toggle-status'
  */
 toggleStatus.patch = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -393,7 +573,7 @@ toggleStatus.patch = (args: { demoWebsite: number | { id: number } } | [demoWebs
 
     /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::toggleStatus
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:126
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:153
  * @route '/admin/demo-websites/{demoWebsite}/toggle-status'
  */
     const toggleStatusForm = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -408,7 +588,7 @@ toggleStatus.patch = (args: { demoWebsite: number | { id: number } } | [demoWebs
 
             /**
 * @see \App\Http\Controllers\Admin\DemoWebsiteController::toggleStatus
- * @see app/Http/Controllers/Admin/DemoWebsiteController.php:126
+ * @see app/Http/Controllers/Admin/DemoWebsiteController.php:153
  * @route '/admin/demo-websites/{demoWebsite}/toggle-status'
  */
         toggleStatusForm.patch = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -424,7 +604,9 @@ toggleStatus.patch = (args: { demoWebsite: number | { id: number } } | [demoWebs
     toggleStatus.form = toggleStatusForm
 const demoWebsites = {
     index: Object.assign(index, index),
+create: Object.assign(create, create),
 store: Object.assign(store, store),
+edit: Object.assign(edit, edit),
 update: Object.assign(update, update),
 destroy: Object.assign(destroy, destroy),
 toggleStatus: Object.assign(toggleStatus, toggleStatus),

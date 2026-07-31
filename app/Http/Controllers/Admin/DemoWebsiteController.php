@@ -46,6 +46,17 @@ class DemoWebsiteController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        $categories = DemoCategory::active()->ordered()->get();
+        $packages = DemoPackage::active()->ordered()->get();
+
+        return Inertia::render('Admin/DemoWebsites/Create', [
+            'categories' => $categories,
+            'packages' => $packages,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -77,6 +88,20 @@ class DemoWebsiteController extends Controller
         return redirect()->route('admin.demo-websites.index')->with('success', 'Demo website berhasil ditambahkan!');
     }
 
+    public function edit(DemoWebsite $demoWebsite): Response
+    {
+        $demoWebsite->load(['demoCategory', 'demoPackages']);
+
+        $categories = DemoCategory::active()->ordered()->get();
+        $packages = DemoPackage::active()->ordered()->get();
+
+        return Inertia::render('Admin/DemoWebsites/Show', [
+            'demo' => $demoWebsite,
+            'categories' => $categories,
+            'packages' => $packages,
+        ]);
+    }
+
     public function update(Request $request, DemoWebsite $demoWebsite)
     {
         $validated = $request->validate([
@@ -99,6 +124,8 @@ class DemoWebsiteController extends Controller
                 Storage::disk('public')->delete($demoWebsite->featured_image);
             }
             $validated['featured_image'] = $request->file('featured_image')->store('demo-websites', 'public');
+        } else {
+            unset($validated['featured_image']);
         }
 
         // Sync the string field
