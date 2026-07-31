@@ -386,7 +386,7 @@ const getPackageNames = (demo: DemoWebsite) => {
                     <div>
                         <Label for="create-featured-image">Featured Image</Label>
                         <Input id="create-featured-image" type="file" accept="image/*" @input="createForm.featured_image = ($event.target as HTMLInputElement).files?.[0] || null" />
-                        <p class="mt-1 text-sm text-muted-foreground">Upload gambar screenshot demo (maks 2MB)</p>
+                        <p class="mt-1 text-sm text-muted-foreground">Upload gambar screenshot demo (maks 5MB)</p>
                         <p v-if="createForm.errors.featured_image" class="mt-1 text-xs text-red-500">{{ createForm.errors.featured_image }}</p>
                     </div>
 
@@ -430,6 +430,9 @@ const getPackageNames = (demo: DemoWebsite) => {
                     </button>
                 </div>
                 <form @submit.prevent="submitEdit" class="space-y-4">
+                    <div v-if="Object.keys(editForm.errors).length > 0 && !editForm.processing" class="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                        Gagal menyimpan. Periksa kembali isian yang ditandai merah.
+                    </div>
                     <div>
                         <Label for="edit-title">Judul *</Label>
                         <Input id="edit-title" v-model="editForm.title" required />
