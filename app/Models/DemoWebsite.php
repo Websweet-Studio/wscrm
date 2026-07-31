@@ -22,6 +22,8 @@ class DemoWebsite extends Model
         'category',
     ];
 
+    protected $appends = ['featured_image_url'];
+
     protected function casts(): array
     {
         return [

@@ -135,7 +135,7 @@ class DemoWebsiteController extends Controller
         $demoWebsite->update($validated);
         $demoWebsite->demoPackages()->sync($packages);
 
-        return redirect()->route('admin.demo-websites.index')->with('success', 'Demo website berhasil diperbarui!');
+        return back()->with('success', 'Demo website berhasil diperbarui!');
     }
 
     public function destroy(DemoWebsite $demoWebsite)
