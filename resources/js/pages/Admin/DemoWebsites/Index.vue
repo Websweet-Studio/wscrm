@@ -71,6 +71,15 @@ const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const selectedDemo = ref<DemoWebsite | null>(null);
 const demoToDelete = ref<DemoWebsite | null>(null);
+const showPreviewImage = ref(false);
+const previewImageUrl = ref('');
+const previewImageTitle = ref('');
+
+const openImagePreview = (url: string, title: string) => {
+    previewImageUrl.value = url;
+    previewImageTitle.value = title;
+    showPreviewImage.value = true;
+};
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -258,7 +267,7 @@ const getPackageNames = (demo: DemoWebsite) => {
                             <TableBody>
                                 <TableRow v-for="demo in demos.data" :key="demo.id">
                                     <TableCell>
-                                        <div v-if="demo.featured_image_url" class="h-12 w-12 overflow-hidden rounded-md">
+                                        <div v-if="demo.featured_image_url" class="h-12 w-12 overflow-hidden rounded-md cursor-pointer" @click="openImagePreview(demo.featured_image_url!, demo.title)">
                                             <img :src="demo.featured_image_url" :alt="demo.title" class="h-full w-full object-cover" />
                                         </div>
                                         <div v-else class="flex h-12 w-12 items-center justify-center rounded-md bg-muted">
@@ -364,7 +373,9 @@ const getPackageNames = (demo: DemoWebsite) => {
                     <div>
                         <Label>Paket (bisa lebih dari satu)</Label>
                         <div class="mt-2 flex flex-wrap gap-2">
-                            <label v-for="pkg in packages" :key="pkg.id" class="flex items-center gap-2 rounded-md border border-input px-3 py-2 cursor-pointer hover:bg-accent transition-colors" :class="createForm.demo_packages.includes(String(pkg.id)) ? 'bg-accent border-primary' : ''">
+                            <label v-for="pkg in packages" :key="pkg.id" class="flex items-center gap-2 rounded-md border px-3 py-2 cursor-pointer transition-colors"
+                                :class="createForm.demo_packages.includes(String(pkg.id)) ? 'border-primary bg-primary/10 text-primary' : 'border-input hover:bg-accent text-foreground'"
+                            >
                                 <input type="checkbox" :value="String(pkg.id)" v-model="createForm.demo_packages" class="rounded border border-input" />
                                 <span class="text-sm">{{ pkg.name }}</span>
                             </label>
@@ -443,7 +454,9 @@ const getPackageNames = (demo: DemoWebsite) => {
                     <div>
                         <Label>Paket (bisa lebih dari satu)</Label>
                         <div class="mt-2 flex flex-wrap gap-2">
-                            <label v-for="pkg in packages" :key="pkg.id" class="flex items-center gap-2 rounded-md border border-input px-3 py-2 cursor-pointer hover:bg-accent transition-colors" :class="editForm.demo_packages.includes(String(pkg.id)) ? 'bg-accent border-primary' : ''">
+                            <label v-for="pkg in packages" :key="pkg.id" class="flex items-center gap-2 rounded-md border px-3 py-2 cursor-pointer transition-colors"
+                                :class="editForm.demo_packages.includes(String(pkg.id)) ? 'border-primary bg-primary/10 text-primary' : 'border-input hover:bg-accent text-foreground'"
+                            >
                                 <input type="checkbox" :value="String(pkg.id)" v-model="editForm.demo_packages" class="rounded border border-input" />
                                 <span class="text-sm">{{ pkg.name }}</span>
                             </label>
@@ -525,5 +538,18 @@ const getPackageNames = (demo: DemoWebsite) => {
                 </div>
             </div>
         </div>
+
+        <!-- Image Preview Modal -->
+        <div v-if="showPreviewImage" class="fixed inset-0 z-[60] flex items-center justify-center" @click.self="showPreviewImage = false">
+            <div class="fixed inset-0 bg-black/80" @click="showPreviewImage = false"></div>
+            <div class="relative z-10 mx-4 max-h-[90vh] max-w-[90vw]">
+                <button @click="showPreviewImage = false" class="absolute -top-3 -right-3 cursor-pointer rounded-full bg-white p-1.5 shadow hover:bg-gray-100" title="Tutup">
+                    <X class="h-4 w-4" />
+                </button>
+                <img :src="previewImageUrl" :alt="previewImageTitle" class="max-h-[85vh] max-w-[90vw] rounded-lg object-contain" />
+                <p class="mt-2 text-center text-sm text-white">{{ previewImageTitle }}</p>
+            </div>
+        </div>
+
     </AppLayout>
 </template>
