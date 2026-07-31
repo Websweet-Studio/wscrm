@@ -2,568 +2,185 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tagihan {{ $invoice->invoice_number }} - {{ config('app.name') }}</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #1a1a1a;
-            background-color: #f1f5f9;
-            margin: 0;
-            padding: 0;
-        }
-        .wrapper {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-        .card {
-            background-color: #ffffff;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-        .header {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-            color: white;
-            padding: 40px 30px;
-            text-align: center;
-        }
-        .header-icon {
-            width: 64px;
-            height: 64px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 16px;
-        }
-        .header-icon svg {
-            width: 32px;
-            height: 32px;
-            fill: none;
-            stroke: white;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-        .header p {
-            margin: 8px 0 0;
-            font-size: 14px;
-            opacity: 0.9;
-        }
-        .content {
-            padding: 32px 30px;
-        }
-        .greeting {
-            font-size: 18px;
-            font-weight: 600;
-            color: #111827;
-            margin: 0 0 16px;
-        }
-        .message {
-            color: #4b5563;
-            margin: 0 0 24px;
-            font-size: 15px;
-        }
-        .invoice-box {
-            background-color: #eef2ff;
-            border: 1px solid #c7d2fe;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 24px 0;
-        }
-        .invoice-box-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #4338ca;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 0 0 12px;
-        }
-        .invoice-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #c7d2fe;
-            gap: 16px;
-        }
-        .invoice-item:last-child {
-            border-bottom: none;
-        }
-        .invoice-label {
-            color: #4b5563;
-            font-size: 14px;
-            margin-right: 8px;
-        }
-        .invoice-value {
-            font-weight: 600;
-            color: #111827;
-            font-size: 14px;
-        }
-        .invoice-value.highlight {
-            font-size: 18px;
-            color: #4338ca;
-        }
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-        .status-pending {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-        .items-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #4b5563;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 0 0 12px;
-        }
-        .items-count {
-            font-weight: 400;
-            color: #9ca3af;
-        }
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            margin: 0 0 16px;
-        }
-        .items-table th {
-            text-align: left;
-            padding: 8px 6px;
-            color: #6b7280;
-            font-weight: 600;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid #e5e7eb;
-            white-space: nowrap;
-        }
-        .items-table th.text-center {
-            text-align: center;
-        }
-        .items-table th.text-right {
-            text-align: right;
-        }
-        .items-table td {
-            padding: 10px 6px;
-            border-bottom: 1px solid #f3f4f6;
-            vertical-align: middle;
-        }
-        .items-table td.text-center {
-            text-align: center;
-        }
-        .items-table td.text-right {
-            text-align: right;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .items-table tr:last-child td {
-            border-bottom: none;
-        }
-        .row-num {
-            width: 30px;
-            color: #6b7280;
-            font-size: 12px;
-        }
-        .service-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 700;
-            margin-right: 8px;
-            vertical-align: middle;
-            flex-shrink: 0;
-        }
-        .icon-hosting {
-            background-color: #dbeafe;
-            color: #1d4ed8;
-        }
-        .icon-domain {
-            background-color: #ede9fe;
-            color: #7c3aed;
-        }
-        .icon-service {
-            background-color: #d1fae5;
-            color: #047857;
-        }
-        .service-name {
-            font-weight: 600;
-            color: #111827;
-            font-size: 13px;
-        }
-        .item-desc {
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 2px;
-        }
-        .summary-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-            margin: 0;
-        }
-        .summary-table td {
-            padding: 8px 6px;
-        }
-        .summary-table .label {
-            color: #6b7280;
-            font-weight: 500;
-        }
-        .summary-table .label-discount {
-            color: #059669;
-            font-weight: 500;
-        }
-        .summary-table .value {
-            text-align: right;
-            font-weight: 600;
-            color: #111827;
-        }
-        .summary-table .value-discount {
-            text-align: right;
-            font-weight: 600;
-            color: #059669;
-        }
-        .summary-table .row-discount td {
-            border-top: 1px solid #e5e7eb;
-        }
-        .discount-box {
-            background-color: #ecfdf5;
-            border: 1px solid #a7f3d0;
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin: 8px 0 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-        .discount-box-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: #047857;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        .discount-box-label svg {
-            width: 18px;
-            height: 18px;
-            stroke: #047857;
-        }
-        .discount-box-value {
-            font-weight: 700;
-            color: #059669;
-            font-size: 16px;
-            white-space: nowrap;
-        }
-        .summary-table .row-total td {
-            border-top: 2px solid #111827;
-            padding-top: 12px;
-        }
-        .summary-table .total-label {
-            font-weight: 700;
-            font-size: 16px;
-            color: #111827;
-        }
-        .summary-table .total-value {
-            text-align: right;
-            font-weight: 700;
-            font-size: 18px;
-            color: #059669;
-        }
-        .cta-section {
-            text-align: center;
-            margin: 28px 0;
-        }
-        .cta-button {
-            display: inline-block;
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-            color: white !important;
-            text-decoration: none;
-            padding: 14px 32px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 15px;
-            letter-spacing: 0.3px;
-            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
-            transition: transform 0.2s, box-shadow: 0.2s;
-        }
-        .cta-button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
-        }
-        .divider {
-            border: none;
-            border-top: 1px solid #e5e7eb;
-            margin: 28px 0;
-        }
-        .help-text {
-            color: #6b7280;
-            font-size: 14px;
-            text-align: center;
-            margin: 0;
-        }
-        .help-text a {
-            color: #4f46e5;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .help-text a:hover {
-            text-decoration: underline;
-        }
-        .signature {
-            color: #4b5563;
-            font-size: 14px;
-            margin: 24px 0 0;
-        }
-        .footer {
-            background-color: #f8fafc;
-            border-top: 1px solid #e5e7eb;
-            padding: 24px 30px;
-            text-align: center;
-        }
-        .footer p {
-            margin: 0;
-            color: #9ca3af;
-            font-size: 13px;
-        }
-    </style>
+    <title>Tagihan {{ $invoice->invoice_number }}</title>
 </head>
-<body>
-    <div class="wrapper">
-        <div class="card">
-            <div class="header">
-                <div class="header-icon">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
-                    </svg>
-                </div>
-                <h1>Tagihan Anda</h1>
-                <p>{{ $invoice->invoice_number }}</p>
-            </div>
+<body style="font-family: Arial, Helvetica, sans-serif; background-color: #e0e0e0; margin: 0; padding: 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td align="center" style="padding: 32px 16px;">
+                <table width="580" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border: 1px solid #cccccc;">
+                    {{-- Logo / App Name Header --}}
+                    <tr>
+                        <td style="padding: 24px 32px 16px; border-bottom: 3px solid #000000;">
+                            <span style="font-size: 20px; font-weight: 700; color: #000000;">{{ config('app.name') }}</span>
+                        </td>
+                    </tr>
 
-            <div class="content">
-                <p class="greeting">Halo, {{ $invoice->customer->name }} 👋</p>
+                    {{-- Title --}}
+                    <tr>
+                        <td style="padding: 24px 32px 12px;">
+                            <h1 style="font-size: 20px; font-weight: 700; color: #000000; margin: 0;">TAGIHAN</h1>
+                            <p style="font-size: 14px; color: #555555; margin: 4px 0 0;">{{ $invoice->invoice_number }}</p>
+                        </td>
+                    </tr>
 
-                <p class="message">
-                    Berikut adalah tagihan Anda dari {{ config('app.name') }}. Silakan lakukan pembayaran sebelum jatuh tempo.
-                </p>
+                    {{-- Greeting --}}
+                    <tr>
+                        <td style="padding: 8px 32px 16px;">
+                            <p style="font-size: 15px; color: #333333; margin: 0;">
+                                Kepada Yth. <strong style="color: #000000;">{{ $invoice->customer->name }}</strong>,
+                            </p>
+                            <p style="font-size: 14px; color: #555555; margin: 8px 0 0; line-height: 1.6;">
+                                Berikut adalah rincian tagihan Anda. Mohon lakukan pembayaran sebelum tanggal jatuh tempo.
+                            </p>
+                        </td>
+                    </tr>
 
-                <div class="invoice-box">
-                    <p class="invoice-box-title">Detail Tagihan</p>
-                    <div class="invoice-item">
-                        <span class="invoice-label">No. Tagihan</span>
-                        <span class="invoice-value">{{ $invoice->invoice_number }}</span>
-                    </div>
-                    <div class="invoice-item">
-                        <span class="invoice-label">Jenis</span>
-                        <span class="invoice-value">{{ $invoice->invoice_type === 'setup' ? 'Pembukaan' : 'Perpanjangan' }}</span>
-                    </div>
-                    <div class="invoice-item">
-                        <span class="invoice-label">Siklus</span>
-                        <span class="invoice-value">{{ match($invoice->billing_cycle) {
-                            'monthly' => 'Bulanan',
-                            'quarterly' => 'Triwulan',
-                            'semi_annually' => '6 Bulanan',
-                            'annually' => 'Tahunan',
-                            default => $invoice->billing_cycle,
-                        } }}</span>
-                    </div>
-                    @if($invoice->order)
-                    <div class="invoice-item">
-                        <span class="invoice-label">Layanan</span>
-                        <span class="invoice-value">{{ $invoice->order->domain_name ?? '-' }}</span>
-                    </div>
+                    {{-- Invoice Details --}}
+                    <tr>
+                        <td style="padding: 0 32px 24px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td style="width: 50%; vertical-align: top;">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td style="padding: 5px 0; font-size: 13px; color: #666666; width: 110px;">No. Tagihan</td><td style="padding: 5px 0; font-size: 13px; color: #000000;">: {{ $invoice->invoice_number }}</td></tr>
+                                            <tr><td style="padding: 5px 0; font-size: 13px; color: #666666;">Jenis</td><td style="padding: 5px 0; font-size: 13px; color: #000000;">: {{ $invoice->invoice_type === 'setup' ? 'Pembukaan' : 'Perpanjangan' }}</td></tr>
+                                            <tr><td style="padding: 5px 0; font-size: 13px; color: #666666;">Siklus</td><td style="padding: 5px 0; font-size: 13px; color: #000000;">: {{ match($invoice->billing_cycle) {
+                                                'monthly' => 'Bulanan',
+                                                'quarterly' => 'Triwulan',
+                                                'semi_annually' => '6 Bulanan',
+                                                'annually' => 'Tahunan',
+                                                default => $invoice->billing_cycle,
+                                            } }}</td></tr>
+                                            @if($invoice->order)
+                                            <tr><td style="padding: 5px 0; font-size: 13px; color: #666666;">Layanan</td><td style="padding: 5px 0; font-size: 13px; color: #000000;">: {{ $invoice->order->domain_name ?? '-' }}</td></tr>
+                                            @endif
+                                        </table>
+                                    </td>
+                                    <td style="width: 50%; vertical-align: top; text-align: right;">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td style="padding: 5px 0; font-size: 13px; color: #666666; width: 100px;">Tgl Terbit</td><td style="padding: 5px 0; font-size: 13px; color: #000000;">: {{ $invoice->issue_date->format('d M Y') }}</td></tr>
+                                            <tr><td style="padding: 5px 0; font-size: 13px; color: #666666;">Jatuh Tempo</td><td style="padding: 5px 0; font-size: 13px; color: #000000; font-weight: 700;">: {{ $invoice->due_date->format('d M Y') }}</td></tr>
+                                            <tr><td style="padding: 5px 0; font-size: 13px; color: #666666;">Status</td><td style="padding: 5px 0; font-size: 13px; color: #000000;">: <strong>BELUM DIBAYAR</strong></td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    {{-- Items Table --}}
+                    @if($orderItems->count() > 0)
+                        @php
+                            $subtotal = $orderItems->sum(fn($item) => $item->price * $item->quantity);
+                            $discountAmount = $invoice->discount > 0 ? $invoice->discount : ($invoice->order?->discount_amount ?? 0);
+                            $finalTotal = $subtotal - $discountAmount;
+                            if ($finalTotal < 0) $finalTotal = 0;
+                        @endphp
+                    <tr>
+                        <td style="padding: 0 32px 24px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td style="padding: 8px 10px; font-size: 12px; font-weight: 700; color: #000000; background-color: #f0f0f0; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">ITEM</td>
+                                    <td style="padding: 8px 10px; font-size: 12px; font-weight: 700; color: #000000; background-color: #f0f0f0; border-top: 2px solid #000000; border-bottom: 2px solid #000000; text-align: center; width: 50px;">QTY</td>
+                                    <td style="padding: 8px 10px; font-size: 12px; font-weight: 700; color: #000000; background-color: #f0f0f0; border-top: 2px solid #000000; border-bottom: 2px solid #000000; text-align: right; width: 120px;">HARGA</td>
+                                    <td style="padding: 8px 10px; font-size: 12px; font-weight: 700; color: #000000; background-color: #f0f0f0; border-top: 2px solid #000000; border-bottom: 2px solid #000000; text-align: right; width: 130px;">TOTAL</td>
+                                </tr>
+                                @foreach($orderItems as $item)
+                                <tr>
+                                    <td style="padding: 10px 10px; font-size: 13px; color: #000000; border-bottom: 1px solid #dddddd;">
+                                        <strong>
+                                            @if($item->item_type === 'hosting' && $item->hostingPlan)
+                                                {{ $item->hostingPlan->plan_name }}
+                                            @elseif($item->item_type === 'domain')
+                                                {{ $item->domain_name ?? $invoice->order?->domain_name ?? '-' }}
+                                            @elseif($item->servicePlan)
+                                                {{ $item->servicePlan->name }}
+                                            @else
+                                                {{ ucfirst($item->item_type) }}
+                                            @endif
+                                        </strong>
+                                        @if($item->item_type === 'hosting' && $item->hostingPlan)
+                                            <br><span style="font-size: 12px; color: #888888;">{{ $item->hostingPlan->storage_gb }}GB SSD &middot; {{ $item->hostingPlan->cpu_cores }} Core CPU &middot; {{ $item->hostingPlan->ram_gb }}GB RAM</span>
+                                        @endif
+                                    </td>
+                                    <td style="padding: 10px 10px; font-size: 13px; color: #000000; border-bottom: 1px solid #dddddd; text-align: center;">{{ $item->quantity }}</td>
+                                    <td style="padding: 10px 10px; font-size: 13px; color: #000000; border-bottom: 1px solid #dddddd; text-align: right;">Rp {{ number_format($item->price, 0, ',', '.') }}</td>
+                                    <td style="padding: 10px 10px; font-size: 13px; color: #000000; border-bottom: 1px solid #dddddd; text-align: right;">Rp {{ number_format($item->price * $item->quantity, 0, ',', '.') }}</td>
+                                </tr>
+                                @endforeach
+                            </table>
+
+                            {{-- Summary --}}
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 12px;">
+                                <tr>
+                                    <td style="padding: 6px 10px; font-size: 13px; color: #555555; text-align: right; width: 70%;">Subtotal</td>
+                                    <td style="padding: 6px 10px; font-size: 13px; color: #000000; font-weight: 600; text-align: right;">Rp {{ number_format($subtotal, 0, ',', '.') }}</td>
+                                </tr>
+                                @if($discountAmount > 0)
+                                <tr>
+                                    <td style="padding: 6px 10px; font-size: 13px; color: #555555; text-align: right;">Diskon</td>
+                                    <td style="padding: 6px 10px; font-size: 13px; color: #000000; font-weight: 600; text-align: right; border-bottom: 1px solid #cccccc;">-Rp {{ number_format($discountAmount, 0, ',', '.') }}</td>
+                                </tr>
+                                @endif
+                                <tr>
+                                    <td style="padding: 10px 10px; font-size: 16px; font-weight: 700; color: #000000; text-align: right; border-top: 2px solid #000000;">TOTAL</td>
+                                    <td style="padding: 10px 10px; font-size: 16px; font-weight: 700; color: #000000; text-align: right; border-top: 2px solid #000000;">Rp {{ number_format($finalTotal, 0, ',', '.') }}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    @else
+                        @php
+                            $discountAmount = $invoice->discount > 0 ? $invoice->discount : ($invoice->order?->discount_amount ?? 0);
+                            $finalTotal = $invoice->amount - $discountAmount;
+                            if ($finalTotal < 0) $finalTotal = 0;
+                        @endphp
+                    <tr>
+                        <td style="padding: 0 32px 24px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                @if($discountAmount > 0)
+                                <tr>
+                                    <td style="padding: 6px 10px; font-size: 13px; color: #555555; text-align: right;">Subtotal</td>
+                                    <td style="padding: 6px 10px; font-size: 13px; color: #000000; font-weight: 600; text-align: right;">Rp {{ number_format($invoice->amount, 0, ',', '.') }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 6px 10px; font-size: 13px; color: #555555; text-align: right;">Diskon</td>
+                                    <td style="padding: 6px 10px; font-size: 13px; color: #000000; font-weight: 600; text-align: right; border-bottom: 1px solid #cccccc;">-Rp {{ number_format($discountAmount, 0, ',', '.') }}</td>
+                                </tr>
+                                @endif
+                                <tr>
+                                    <td style="padding: 10px 10px; font-size: 16px; font-weight: 700; color: #000000; text-align: right; border-top: 2px solid #000000;">TOTAL</td>
+                                    <td style="padding: 10px 10px; font-size: 16px; font-weight: 700; color: #000000; text-align: right; border-top: 2px solid #000000;">Rp {{ number_format($finalTotal, 0, ',', '.') }}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
                     @endif
-                    <div class="invoice-item">
-                        <span class="invoice-label">Tanggal Terbit</span>
-                        <span class="invoice-value">{{ $invoice->issue_date->format('d M Y') }}</span>
-                    </div>
-                    <div class="invoice-item">
-                        <span class="invoice-label">Jatuh Tempo</span>
-                        <span class="invoice-value" style="color: #dc2626;">{{ $invoice->due_date->format('d M Y') }}</span>
-                    </div>
-                    <div class="invoice-item">
-                        <span class="invoice-label">Status</span>
-                        <span class="invoice-value">
-                            <span class="status-badge status-pending">Belum Dibayar</span>
-                        </span>
-                    </div>
-                </div>
 
-                {{-- Order Items --}}
-                @if($orderItems->count() > 0)
-                @php
-                    $subtotal = $orderItems->sum(fn($item) => $item->price * $item->quantity);
-                    $discountAmount = $invoice->discount > 0 ? $invoice->discount : ($invoice->order?->discount_amount ?? 0);
-                    $finalTotal = $subtotal - $discountAmount;
-                    if ($finalTotal < 0) $finalTotal = 0;
-                @endphp
-                <p class="items-title">
-                    Item Pesanan
-                    <span class="items-count">({{ $orderItems->count() }} item)</span>
-                </p>
-                <table class="items-table">
-                    <thead>
-                        <tr>
-                            <th class="row-num">#</th>
-                            <th>Layanan</th>
-                            <th>Deskripsi</th>
-                            <th class="text-center">Qty</th>
-                            <th class="text-right">Harga Satuan</th>
-                            <th class="text-right">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($orderItems as $index => $item)
-                        <tr>
-                            <td class="row-num">{{ $index + 1 }}</td>
-                            <td>
-                                @if($item->item_type === 'hosting')
-                                    <span class="service-icon icon-hosting">H</span>
-                                @elseif($item->item_type === 'domain')
-                                    <span class="service-icon icon-domain">D</span>
-                                @else
-                                    <span class="service-icon icon-service">L</span>
-                                @endif
-                            </td>
-                            <td>
-                                <span class="service-name">
-                                    @if($item->item_type === 'hosting' && $item->hostingPlan)
-                                        {{ $item->hostingPlan->plan_name }}
-                                    @elseif($item->item_type === 'domain')
-                                        {{ $item->domain_name ?? $invoice->order?->domain_name ?? '-' }}
-                                    @elseif($item->servicePlan)
-                                        {{ $item->servicePlan->name }}
-                                    @else
-                                        {{ ucfirst($item->item_type) }}
-                                    @endif
-                                </span>
-                                @if($item->item_type === 'hosting' && $item->hostingPlan)
-                                <div class="item-desc">{{ $item->hostingPlan->storage_gb }}GB SSD · {{ $item->hostingPlan->cpu_cores }} Core CPU · {{ $item->hostingPlan->ram_gb }}GB RAM</div>
-                                @endif
-                            </td>
-                            <td class="text-center">{{ $item->quantity }}</td>
-                            <td class="text-right">Rp {{ number_format($item->price, 0, ',', '.') }}</td>
-                            <td class="text-right">Rp {{ number_format($item->price * $item->quantity, 0, ',', '.') }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
+                    {{-- CTA --}}
+                    <tr>
+                        <td align="center" style="padding: 8px 32px 24px;">
+                            <a href="{{ url('/customer/invoices/' . $invoice->id) }}" style="display: inline-block; background-color: #000000; color: #ffffff; text-decoration: none; padding: 12px 36px; font-size: 14px; font-weight: 700;">
+                                BAYAR TAGIHAN
+                            </a>
+                        </td>
+                    </tr>
+
+                    {{-- Footer --}}
+                    <tr>
+                        <td style="padding: 20px 32px; background-color: #f5f5f5; border-top: 1px solid #dddddd;">
+                            <p style="font-size: 13px; color: #666666; margin: 0; line-height: 1.6;">
+                                Ada pertanyaan? Hubungi kami di <a href="mailto:{{ config('mail.from.address') }}" style="color: #000000;">{{ config('mail.from.address') }}</a>
+                            </p>
+                            <p style="font-size: 12px; color: #999999; margin: 16px 0 0;">
+                                {{ config('app.name') }} &mdash; {{ date('Y') }}
+                            </p>
+                        </td>
+                    </tr>
                 </table>
-
-                {{-- Summary / Total --}}
-                <table class="summary-table">
-                    <tbody>
-                        <tr>
-                            <td class="label" style="width: 80%;">Subtotal</td>
-                            <td class="value">Rp {{ number_format($subtotal, 0, ',', '.') }}</td>
-                        </tr>
-                        @if($discountAmount > 0)
-                        <tr>
-                            <td colspan="2">
-                                <div class="discount-box">
-                                    <span class="discount-box-label">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"></path>
-                                            <line x1="7" y1="7" x2="7.01" y2="7"></line>
-                                        </svg>
-                                        Diskon
-                                    </span>
-                                    <span class="discount-box-value">-Rp {{ number_format($discountAmount, 0, ',', '.') }}</span>
-                                </div>
-                            </td>
-                        </tr>
-                        @endif
-                        <tr class="row-total">
-                            <td class="total-label">Total</td>
-                            <td class="total-value">Rp {{ number_format($finalTotal, 0, ',', '.') }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                @else
-                {{-- No items - show simple total --}}
-                @php
-                    $discountAmount = $invoice->discount > 0 ? $invoice->discount : ($invoice->order?->discount_amount ?? 0);
-                    $finalTotal = $invoice->amount - $discountAmount;
-                    if ($finalTotal < 0) $finalTotal = 0;
-                @endphp
-                <table class="summary-table">
-                    <tbody>
-                        @if($discountAmount > 0)
-                        <tr>
-                            <td class="label" style="width: 80%;">Subtotal</td>
-                            <td class="value">Rp {{ number_format($invoice->amount, 0, ',', '.') }}</td>
-                        </tr>
-                        <tr>
-                            <td colspan="2">
-                                <div class="discount-box">
-                                    <span class="discount-box-label">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"></path>
-                                            <line x1="7" y1="7" x2="7.01" y2="7"></line>
-                                        </svg>
-                                        Diskon
-                                    </span>
-                                    <span class="discount-box-value">-Rp {{ number_format($discountAmount, 0, ',', '.') }}</span>
-                                </div>
-                            </td>
-                        </tr>
-                        @endif
-                        <tr class="row-total">
-                            <td class="total-label">Total</td>
-                            <td class="total-value">Rp {{ number_format($finalTotal, 0, ',', '.') }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                @endif
-
-                <div class="cta-section">
-                    <a href="{{ url('/customer/invoices/' . $invoice->id) }}" class="cta-button">Lihat & Bayar Tagihan</a>
-                </div>
-
-                <hr class="divider">
-
-                <p class="help-text">
-                    Ada pertanyaan? Hubungi kami kapan saja di
-                    <a href="mailto:{{ config('mail.from.address') }}">{{ config('mail.from.address') }}</a>
-                </p>
-
-                <p class="signature">
-                    Salam hangat,<br>
-                    <strong>Tim {{ config('app.name') }}</strong>
-                </p>
-            </div>
-
-            <div class="footer">
-                <p>&copy; {{ date('Y') }} {{ config('app.name') }}. Semua hak dilindungi.</p>
-            </div>
-        </div>
-    </div>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
