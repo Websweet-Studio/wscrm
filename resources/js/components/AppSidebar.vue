@@ -27,6 +27,9 @@ import {
     ShoppingCart,
     Tags,
     Users,
+    BarChart3,
+    BookText,
+    ClipboardList,
 } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
 import AppLogo from './AppLogo.vue';
@@ -122,6 +125,28 @@ const mainNavItems: NavItem[] = [
                 title: 'Kategori',
                 href: '/admin/task-categories',
                 icon: Tags,
+            },
+        ],
+    },
+    {
+        title: 'Website Klien',
+        href: '#',
+        icon: ClipboardList,
+        children: [
+            {
+                title: 'Website',
+                href: '/admin/websites',
+                icon: Globe,
+            },
+            {
+                title: 'Jurnal',
+                href: '/admin/journals',
+                icon: BookText,
+            },
+            {
+                title: 'Laporan',
+                href: '/admin/journals/report',
+                icon: BarChart3,
             },
         ],
     },
@@ -240,6 +265,11 @@ const mainNavItems: NavItem[] = [
                 title: 'Database',
                 href: '/admin/database',
                 icon: FileText,
+            },
+            {
+                title: 'Admin Tools',
+                href: '/admin-tools.php',
+                icon: Settings,
             },
         ],
     },

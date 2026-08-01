@@ -20,6 +20,8 @@ use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\TaskCategoryController;
 use App\Http\Controllers\Admin\ServicePlanController;
+use App\Http\Controllers\Admin\WebsiteClientController;
+use App\Http\Controllers\Admin\JournalEntryController;
 use App\Http\Controllers\Admin\UserCredentialController;
 use Illuminate\Support\Facades\Route;
 
@@ -84,6 +86,13 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     // Tasks Management
     Route::resource('tasks', TaskController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('task-categories', TaskCategoryController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    // Website Client & Journal Management
+    Route::resource('websites', WebsiteClientController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
+    Route::delete('websites/bulk', [WebsiteClientController::class, 'bulkDelete'])->name('websites.bulk-delete');
+    Route::resource('journals', JournalEntryController::class)->except(['show']);
+    Route::get('journals/report', [JournalEntryController::class, 'report'])->name('journals.report');
+    Route::get('journals/export', [JournalEntryController::class, 'export'])->name('journals.export');
 
     // Branding Settings
     Route::middleware('no.cache')->group(function () {
