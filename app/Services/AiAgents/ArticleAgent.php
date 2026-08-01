@@ -37,12 +37,15 @@ class ArticleAgent
 
         $this->emit($onEvent, $logs, 'Workflow artikel SEO dimulai', 'done', 'Orchestrator');
 
-        // 1. SEO Writer — judul artikel
+        // 1. SEO Writer — judul artikel + kata kunci gambar
         if (empty($content) && $hasAi) {
-            $this->emit($onEvent, $logs, "Men-generate judul artikel untuk {$website->name}...", 'loading', 'SEO Writer');
-            $title = $this->generateArticleTitle($title, $website, $keyword);
+            $this->emit($onEvent, $logs, "Men-generate judul artikel & kata kunci gambar untuk {$website->name}...", 'loading', 'SEO Writer');
+            $titleData = $this->generateTitleWithTags($title, $website, $keyword);
+            $title = $titleData['title'];
+            $imageTags = $titleData['tags'];
             $this->emit($onEvent, $logs, "Judul artikel: '{$title}'", 'done', 'SEO Writer');
         } else {
+            $imageTags = $keyword ? [$keyword] : ['website', 'business'];
             $this->emit($onEvent, $logs, 'Menggunakan judul yang sudah disediakan', 'done', 'SEO Writer');
         }
 
@@ -65,15 +68,15 @@ class ArticleAgent
 
         $html = $draft['html'] ?? '';
 
-        // 3. Media Agent — gambar inline
-        $this->emit($onEvent, $logs, 'Mencari 2 gambar relevan & mengunggah ke media WordPress...', 'loading', 'Media Agent');
-        $mediaResult = $this->embedImages($website, $html, 2);
+        // 3. Media Agent — gambar inline (relevan dengan topik)
+        $this->emit($onEvent, $logs, 'Mencari 2 gambar relevan dengan topik (' . implode(', ', $imageTags) . ')...', 'loading', 'Media Agent');
+        $mediaResult = $this->embedImages($website, $html, 2, $imageTags);
         $html = $mediaResult['html'];
         $this->emit($onEvent, $logs, count($mediaResult['images']) . ' gambar berhasil disisipkan ke artikel', 'done', 'Media Agent');
 
         // 4. Media Agent — featured image
-        $this->emit($onEvent, $logs, 'Membuat featured image untuk artikel...', 'loading', 'Media Agent');
-        $featuredMedia = $this->uploadMedia($website, 'wscrm-featured-' . now()->format('YmdHis'));
+        $this->emit($onEvent, $logs, 'Membuat featured image yang relevan dengan topik...', 'loading', 'Media Agent');
+        $featuredMedia = $this->uploadMedia($website, 'wscrm-featured-' . now()->format('YmdHis'), $imageTags);
         $featuredMediaId = $featuredMedia['id'] ?? null;
         $this->emit($onEvent, $logs, $featuredMediaId ? 'Featured image berhasil dibuat' : 'Featured image gagal dibuat (dilewati)', 'done', 'Media Agent');
 
@@ -99,7 +102,7 @@ class ArticleAgent
                 $html = $revision['html'];
 
                 $this->emit($onEvent, $logs, 'Menyisipkan ulang gambar untuk versi revisi...', 'loading', 'Media Agent');
-                $mediaResult = $this->embedImages($website, $html, 2);
+                $mediaResult = $this->embedImages($website, $html, 2, $imageTags);
                 $html = $mediaResult['html'];
 
                 $audit = $this->auditArticleContent($html, $title, $revision['meta_description'] ?? '', $keyword ?: ($revision['keywords'][0] ?? ''));
@@ -161,31 +164,43 @@ class ArticleAgent
     // === Sub-agent: SEO Writer ===
 
     /**
-     * Generate judul artikel dulu (call AI kecil) supaya user dapat feedback cepat.
+     * Generate judul artikel + kata kunci gambar (Flickr tags, bahasa Inggris) sekaligus.
+     * Call AI kecil supaya user dapat feedback cepat & gambar yang relevan.
      */
-    private function generateArticleTitle(string $topic, WebsiteClient $website, string $keyword = ''): string
+    private function generateTitleWithTags(string $topic, WebsiteClient $website, string $keyword = ''): array
     {
         $keywordLine = $keyword ? " Fokus keyword: \"{$keyword}\"." : '';
 
-        $prompt = "Kamu adalah SEO Writer profesional. Berikan SATU judul artikel SEO terbaik untuk website {$website->name} tentang topik: \"{$topic}\".{$keywordLine}
-Judul harus 30-65 karakter, menarik, dan mengandung keyword jika ada.
-Balas HANYA judul saja — tanpa tanda kutip, tanpa penjelasan, tanpa awalan.";
+        $prompt = "Kamu adalah SEO Writer profesional. Untuk website {$website->name} tentang topik: \"{$topic}\".{$keywordLine}
+Tentukan:
+1. SATU judul artikel SEO terbaik (30-65 karakter, menarik, mengandung keyword jika ada).
+2. 3-4 kata kunci GAMBAR dalam bahasa INGGRIS (Flickr tags) yang menggambarkan topik artikel, pisahkan koma.
+Output STRICT satu objek JSON (tanpa teks lain):
+{\"title\": \"judul artikel\", \"tags\": \"tag1,tag2,tag3\"}";
 
         try {
             $content = $this->aiClient->chat([
                 ['role' => 'system', 'content' => $prompt],
-                ['role' => 'user', 'content' => 'Judulnya apa?'],
-            ], 0.7, 300);
+                ['role' => 'user', 'content' => 'Judul dan tag gambarnya apa?'],
+            ], 0.7, 400);
 
-            $title = trim(trim($content), "\"'“” ");
-            if ($title !== '' && mb_strlen($title) <= 120) {
-                return $title;
+            $json = $this->extractJson($content);
+            if ($json && !empty($json['title'])) {
+                $tags = array_values(array_filter(array_map('trim', explode(',', $json['tags'] ?? ''))));
+                if (empty($tags)) {
+                    $tags = ['website', 'business'];
+                }
+
+                return [
+                    'title' => $json['title'],
+                    'tags' => array_slice($tags, 0, 4),
+                ];
             }
         } catch (\Exception $e) {
             // fallback ke topik asli
         }
 
-        return $topic;
+        return ['title' => $topic, 'tags' => ['website', 'business']];
     }
 
     private function generateArticleDraft(string $topic, WebsiteClient $website, string $keyword = '', string $feedback = ''): array
@@ -253,18 +268,21 @@ Output STRICT satu objek JSON (tanpa teks lain):
 
     // === Sub-agent: Media ===
 
-    private function embedImages(WebsiteClient $website, string $html, int $count = 2): array
+    private function embedImages(WebsiteClient $website, string $html, int $count = 2, array $tags = ['website', 'business']): array
     {
         $images = [];
+        $alts = [];
         for ($i = 0; $i < $count; $i++) {
-            $media = $this->uploadMedia($website, 'wscrm-' . now()->format('YmdHis') . '-' . $i);
+            $media = $this->uploadMedia($website, 'wscrm-' . now()->format('YmdHis') . '-' . $i, $tags);
             if ($media && !empty($media['source_url'])) {
                 $images[] = $media['source_url'];
+                $alts[] = $media['alt'] ?? '';
             }
         }
 
         foreach ($images as $idx => $url) {
-            $img = '<p><img src="' . $url . '" alt="Ilustrasi ' . ($idx + 1) . '" style="max-width:100%;height:auto;"></p>';
+            $altText = htmlspecialchars($alts[$idx] ?? '', ENT_QUOTES);
+            $img = '<p><img src="' . $url . '" alt="' . $altText . '" style="max-width:100%;height:auto;"></p>';
             if (preg_match_all('/<\/h2>/', $html, $m, PREG_OFFSET_CAPTURE)) {
                 $h2s = $m[0];
                 $target = min($idx, count($h2s) - 1);
@@ -278,10 +296,37 @@ Output STRICT satu objek JSON (tanpa teks lain):
         return ['html' => $html, 'images' => $images];
     }
 
-    private function uploadMedia(WebsiteClient $website, string $seed): ?array
+    /**
+     * Cari gambar relevan via Unsplash Search API berdasarkan tags (keyword topik artikel),
+     * unduh, lalu unggah ke media WordPress.
+     */
+    private function uploadMedia(WebsiteClient $website, string $seed, array $tags = ['website', 'business']): ?array
     {
         try {
-            $imageData = Http::timeout(20)->get('https://picsum.photos/seed/' . urlencode($seed) . '/800/450')->body();
+            $query = implode(' ', array_slice($tags, 0, 4));
+
+            $search = Http::timeout(20)
+                ->withHeaders(['Authorization' => 'Client-ID ' . config('services.unsplash.access_key', env('UNSPLASH_ACCESS_KEY', ''))])
+                ->get('https://api.unsplash.com/search/photos', [
+                    'query' => $query,
+                    'per_page' => 3,
+                    'orientation' => 'landscape',
+                ])
+                ->json();
+
+            $results = $search['results'] ?? [];
+            if (empty($results)) {
+                return null;
+            }
+
+            // seed berbeda → slot gambar berbeda (hindari gambar duplikat per artikel)
+            $photo = $results[abs(crc32($seed)) % count($results)];
+
+            $imageData = Http::timeout(30)
+                ->withOptions(['allow_redirects' => true])
+                ->get($photo['urls']['regular'] ?? '')
+                ->body();
+
             if (empty($imageData)) {
                 return null;
             }
@@ -303,6 +348,7 @@ Output STRICT satu objek JSON (tanpa teks lain):
                 return [
                     'id' => $media['id'] ?? null,
                     'source_url' => $media['source_url'] ?? ($media['guid']['rendered'] ?? null),
+                    'alt' => $photo['alt_description'] ?? null,
                 ];
             }
         } catch (\Exception $e) {
