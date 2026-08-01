@@ -1,4 +1,5 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../wayfinder'
+import chatB2e4da from './chat'
 import conversations from './conversations'
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::chat
@@ -56,7 +57,7 @@ chat.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     
     chat.form = chatForm
 const ai = {
-    chat: Object.assign(chat, chat),
+    chat: Object.assign(chat, chatB2e4da),
 conversations: Object.assign(conversations, conversations),
 }
 

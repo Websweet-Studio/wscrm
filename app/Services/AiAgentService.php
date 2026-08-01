@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Enums\ActivityType;
+use App\Models\JournalEntry;
 use App\Models\Order;
 use App\Models\WebsiteClient;
 use App\Services\AiAgents\ArticleAgent;
@@ -23,17 +25,22 @@ class AiAgentService
 
     /**
      * Process a user command and return the AI response + actions taken.
+     * $onEvent dipanggil tiap tahap workflow: fn(string $message, string $status, string $agent).
      */
-    public function process(string $userMessage): array
+    public function process(string $userMessage, ?callable $onEvent = null): array
     {
         // 1. Gather context: all websites & orders with their current state
         $context = $this->buildContext();
+
+        if ($onEvent) {
+            $onEvent('Menganalisis permintaan dan menyusun konteks data...', 'loading', 'Orchestrator');
+        }
 
         // 2. Send to AI to determine intent and required actions
         $aiResponse = $this->callAI($userMessage, $context);
 
         // 3. Parse & execute actions
-        $results = $this->executeActions($aiResponse);
+        $results = $this->executeActions($aiResponse, $onEvent);
 
         // 4. Lampirkan hasil eksekusi nyata ke pesan agar AI tidak mengklaim sukses sebelum aksi dijalankan
         $message = $aiResponse['message'] ?? '';
@@ -140,7 +147,7 @@ Kamu adalah AI Agent untuk mengelola aplikasi WSCRM (website WordPress, layanan 
 ## Aturan:
 - Selalu analisis data website & order terlebih dahulu
 - Jika user minta "cek update", gunakan aksi **check_updates** dan sebutkan website mana saja
-- Jika user menyebut website/domain tertentu (misal "cek demo1.sweet.web.id"), cari id website itu di data websites lalu sertakan **website_id** pada aksi check_updates — jangan cek semua website
+- Jika user menyebut website/domain tertentu (misal "cek demo1.sweet.web.id" atau "website 3"), cari id website itu di data websites lalu SERTAKAN **website_id** (atau **id**) pada SEMUA aksi yang membutuhkan website: check_updates, update_wp, update_plugins, audit_seo, dan create_article — jangan jalankan aksi website tanpa website_id
 - Jika user minta "update", jalankan aksi update
 - Jika user minta "buat artikel" (dengan/tanpa menyebut gambar, audit, publish), jalankan aksi **create_article** — sistem otomatis generate konten, sisipkan gambar, audit, dan publish jika skor lolos
 - Jika user tanya order yang akan mati/berakhir/kadaluarsa/habis masa aktif bulan ini, gunakan aksi **check_expiring_orders**
@@ -176,7 +183,7 @@ PROMPT;
         return ['message' => $content, 'actions' => []];
     }
 
-    private function executeActions(array $aiResponse): array
+    private function executeActions(array $aiResponse, ?callable $onEvent = null): array
     {
         $actions = $aiResponse['actions'] ?? [];
         $results = [];
@@ -195,17 +202,22 @@ PROMPT;
 
             try {
                 $result = match ($actionName) {
-                    'check_updates' => $this->websiteAgent->checkUpdates($params['website_id'] ?? $params['id'] ?? null),
-                    'update_wp' => $this->websiteAgent->updateWp($params['id'] ?? null),
-                    'update_plugins' => $this->websiteAgent->updatePlugins($params['id'] ?? null, $params['plugin_slugs'] ?? []),
-                    'audit_seo' => $this->websiteAgent->auditSeo($params['id'] ?? null, $params['url'] ?? ''),
-                    'create_article' => $this->articleAgent->createArticle($params['website_id'] ?? $params['id'] ?? null, $params['title'] ?? '', $params['content'] ?? '', $params['keyword'] ?? ''),
-                    'check_expiring_orders' => $this->orderAgent->checkExpiringOrders(),
-                    'renew_order' => $this->orderAgent->renewOrder($params['id'] ?? null, (int) ($params['months'] ?? 3), (bool) ($params['mark_paid'] ?? false)),
+                    'check_updates' => $this->websiteAgent->checkUpdates($params['website_id'] ?? $params['id'] ?? null, $onEvent),
+                    'update_wp' => $this->websiteAgent->updateWp($params['id'] ?? null, $onEvent),
+                    'update_plugins' => $this->websiteAgent->updatePlugins($params['id'] ?? null, $params['plugin_slugs'] ?? [], $onEvent),
+                    'audit_seo' => $this->websiteAgent->auditSeo($params['id'] ?? null, $params['url'] ?? '', $onEvent),
+                    'create_article' => $this->articleAgent->createArticle($params['website_id'] ?? $params['id'] ?? null, $params['title'] ?? '', $params['content'] ?? '', $params['keyword'] ?? '', $onEvent),
+                    'check_expiring_orders' => $this->orderAgent->checkExpiringOrders($onEvent),
+                    'renew_order' => $this->orderAgent->renewOrder($params['id'] ?? null, (int) ($params['months'] ?? 3), (bool) ($params['mark_paid'] ?? false), $onEvent),
                     default => ['error' => "Aksi tidak dikenal: {$actionName}"],
                 };
             } catch (\Exception $e) {
                 $result = ['error' => $e->getMessage()];
+            }
+
+            // Catat aktivitas AI yang sukses ke jurnal maintenance (untuk report)
+            if (!isset($result['error'])) {
+                $this->logJournal($actionName, $params, $result);
             }
 
             $results[] = [
@@ -216,5 +228,93 @@ PROMPT;
         }
 
         return $results;
+    }
+
+    /**
+     * Catat aktivitas AI ke jurnal maintenance (1 entry per website per hari, activity di-append).
+     * Hanya aksi yang berhubungan dengan website — aksi order (tanpa website) tidak masuk report.
+     */
+    private function logJournal(string $action, array $params, array $result): void
+    {
+        try {
+            $websiteActions = ['check_updates', 'update_wp', 'update_plugins', 'audit_seo', 'create_article'];
+            if (!in_array($action, $websiteActions, true)) {
+                return;
+            }
+
+            $websiteId = $params['website_id'] ?? $params['id'] ?? null;
+            if (!$websiteId || !WebsiteClient::whereKey($websiteId)->exists()) {
+                return;
+            }
+
+            $activity = $this->buildActivity($action, $params, $result);
+            if (!$activity) {
+                return;
+            }
+
+            $entry = JournalEntry::firstOrNew([
+                'website_client_id' => $websiteId,
+                'entry_date' => now()->toDateString(),
+            ]);
+            $entry->user_id = auth()->id();
+
+            // Hindari duplikat aktivitas identik di hari yang sama (mis. create_article diulang)
+            $activityKey = $activity['type'] . '|' . ($activity['title'] ?? $activity['plugin'] ?? $activity['description'] ?? '');
+            $activities = $entry->activities ?? [];
+            $exists = collect($activities)->contains(function ($a) use ($activityKey) {
+                return ($a['type'] ?? '') . '|' . ($a['title'] ?? $a['plugin'] ?? $a['description'] ?? '') === $activityKey;
+            });
+
+            if (!$exists) {
+                $activities[] = $activity;
+                $entry->activities = $activities;
+                $entry->summary = $activity['description'] ?? null;
+                $entry->save();
+            }
+        } catch (\Throwable $e) {
+            // Jangan gagalkan workflow hanya karena gagal mencatat jurnal
+            Log::warning('Gagal mencatat aktivitas AI ke jurnal: ' . $e->getMessage());
+        }
+    }
+
+    private function buildActivity(string $action, array $params, array $result): array
+    {
+        $common = ['source' => 'AI'];
+
+        return match ($action) {
+            'create_article' => [
+                'type' => ActivityType::ARTICLE->value,
+                'title' => $result['title'] ?? ($params['title'] ?? 'Artikel'),
+                'word_count' => $result['word_count'] ?? 0,
+                'url' => $result['post_url'] ?? null,
+                'description' => 'AI: artikel dipublikasikan (skor ' . ($result['score'] ?? '-') . '/100, '
+                    . ($result['word_count'] ?? 0) . ' kata)',
+            ] + $common,
+            'update_wp' => [
+                'type' => ActivityType::WP_UPDATE->value,
+                'description' => 'AI: ' . ($result['message'] ?? 'update WP core selesai'),
+            ] + $common,
+            'update_plugins' => [
+                'type' => ActivityType::PLUGIN_UPDATE->value,
+                'plugin' => implode(', ', $result['plugins'] ?? []),
+                'description' => 'AI: ' . ($result['message'] ?? 'update plugin selesai'),
+            ] + $common,
+            'audit_seo' => [
+                'type' => ActivityType::PAGE_OPTIMIZATION->value,
+                'page' => $result['url'] ?? ($result['website'] ?? '-'),
+                'detail' => 'Audit SEO skor ' . ($result['analysis']['score'] ?? '-') . '/100',
+                'description' => 'AI: audit SEO ' . ($result['url'] ?? '') . ' skor '
+                    . ($result['analysis']['score'] ?? '-') . '/100',
+            ] + $common,
+            'check_updates' => [
+                'type' => ActivityType::OTHER->value,
+                'description' => 'AI: cek update — '
+                    . count($result['websites_need_update'] ?? []) . ' website perlu update',
+            ] + $common,
+            default => [
+                'type' => ActivityType::OTHER->value,
+                'description' => 'AI: ' . $action . ' — ' . ($result['message'] ?? 'selesai'),
+            ] + $common,
+        };
     }
 }

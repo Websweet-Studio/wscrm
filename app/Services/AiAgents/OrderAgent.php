@@ -10,8 +10,12 @@ use App\Models\Order;
  */
 class OrderAgent
 {
-    public function checkExpiringOrders(): array
+    public function checkExpiringOrders(?callable $onEvent = null): array
     {
+        if ($onEvent) {
+            $onEvent('Mengecek order aktif yang berakhir bulan ini...', 'loading', 'Order Agent');
+        }
+
         $start = now()->startOfMonth();
         $end = now()->endOfMonth();
 
@@ -43,6 +47,10 @@ class OrderAgent
 
         $monthLabel = now()->translatedFormat('F Y');
 
+        if ($onEvent) {
+            $onEvent(count($list) > 0 ? "Ditemukan " . count($list) . " order berakhir bulan ini" : 'Tidak ada order aktif yang berakhir bulan ini', 'done', 'Order Agent');
+        }
+
         return [
             'orders_expiring' => $list,
             'total' => count($list),
@@ -53,7 +61,7 @@ class OrderAgent
         ];
     }
 
-    public function renewOrder(?int $orderId, int $months, bool $markPaid): array
+    public function renewOrder(?int $orderId, int $months, bool $markPaid, ?callable $onEvent = null): array
     {
         if (!$orderId) {
             return ['error' => 'ID order diperlukan.'];
@@ -62,6 +70,10 @@ class OrderAgent
         $order = Order::find($orderId);
         if (!$order) {
             return ['error' => 'Order tidak ditemukan.'];
+        }
+
+        if ($onEvent) {
+            $onEvent("Memperpanjang order " . ($order->customer?->name ?? '#' . $order->id) . " +{$months} bulan...", 'loading', 'Order Agent');
         }
 
         $months = max(1, $months);
@@ -79,6 +91,10 @@ class OrderAgent
             $invoiceMessage = $updated > 0
                 ? $updated . ' invoice ditandai lunas. '
                 : 'Tidak ada invoice yang perlu ditandai lunas. ';
+        }
+
+        if ($onEvent) {
+            $onEvent("Order diperpanjang hingga {$newExpiry->format('d M Y')}" . ($markPaid ? ', invoice ditandai lunas' : ''), 'done', 'Order Agent');
         }
 
         return [

@@ -15,8 +15,12 @@ class WebsiteAgent
     {
     }
 
-    public function checkUpdates(?int $websiteId = null): array
+    public function checkUpdates(?int $websiteId = null, ?callable $onEvent = null): array
     {
+        if ($onEvent) {
+            $onEvent($websiteId ? 'Mengecek update WP core & plugin...' : 'Mengecek update semua website...', 'loading', 'Website Agent');
+        }
+
         $query = WebsiteClient::query();
         if ($websiteId) {
             $query->where('id', $websiteId);
@@ -56,6 +60,10 @@ class WebsiteAgent
             }
         }
 
+        if ($onEvent) {
+            $onEvent(count($needUpdate) > 0 ? "Ditemukan " . count($needUpdate) . " website perlu update" : 'Semua website sudah up-to-date', 'done', 'Website Agent');
+        }
+
         return [
             'websites_need_update' => $needUpdate,
             'total' => count($needUpdate),
@@ -65,7 +73,7 @@ class WebsiteAgent
         ];
     }
 
-    public function updateWp(?int $websiteId): array
+    public function updateWp(?int $websiteId, ?callable $onEvent = null): array
     {
         if (!$websiteId) {
             return ['error' => 'ID website diperlukan.'];
@@ -80,9 +88,17 @@ class WebsiteAgent
             return ['error' => "Website {$website->name} belum dikonfigurasi kredensial WP."];
         }
 
+        if ($onEvent) {
+            $onEvent("Mengupdate WordPress core {$website->name}...", 'loading', 'Website Agent');
+        }
+
         // WP core update biasanya di-trigger via REST API update endpoint
         // Simulate: re-sync will fetch latest version
         $result = $this->wpService->syncSiteInfo($website);
+
+        if ($onEvent) {
+            $onEvent('WP core berhasil diperbarui/di-sync', 'done', 'Website Agent');
+        }
 
         return [
             'success' => true,
@@ -92,7 +108,7 @@ class WebsiteAgent
         ];
     }
 
-    public function updatePlugins(?int $websiteId, array $slugs): array
+    public function updatePlugins(?int $websiteId, array $slugs, ?callable $onEvent = null): array
     {
         if (!$websiteId) {
             return ['error' => 'ID website diperlukan.'];
@@ -107,8 +123,16 @@ class WebsiteAgent
             return ['error' => "Website {$website->name} belum dikonfigurasi kredensial WP."];
         }
 
+        if ($onEvent) {
+            $onEvent("Mengupdate plugin di {$website->name}...", 'loading', 'Website Agent');
+        }
+
         // Re-sync to get latest plugin versions
         $this->wpService->syncSiteInfo($website);
+
+        if ($onEvent) {
+            $onEvent('Plugin berhasil di-sync', 'done', 'Website Agent');
+        }
 
         return [
             'success' => true,
@@ -118,7 +142,7 @@ class WebsiteAgent
         ];
     }
 
-    public function auditSeo(?int $websiteId, string $url): array
+    public function auditSeo(?int $websiteId, string $url, ?callable $onEvent = null): array
     {
         if (!$websiteId) {
             return ['error' => 'ID website diperlukan.'];
@@ -133,9 +157,17 @@ class WebsiteAgent
 
         // Fetch the page and analyze
         try {
+            if ($onEvent) {
+                $onEvent("Menganalisis SEO {$targetUrl}...", 'loading', 'Website Agent');
+            }
+
             $html = Http::timeout(15)->get($targetUrl)->body();
 
             $analysis = $this->analyzeSeo($html, $targetUrl);
+
+            if ($onEvent) {
+                $onEvent("Audit SEO selesai: skor {$analysis['score']}/100", 'done', 'Website Agent');
+            }
 
             return [
                 'success' => true,

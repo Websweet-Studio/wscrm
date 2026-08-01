@@ -9,10 +9,18 @@ import { Head } from '@inertiajs/vue3';
 import { Bot, CheckCircle2, ExternalLink, Loader2, MessageSquare, Plus, Send, Sparkles, Trash2, XCircle, Zap } from 'lucide-vue-next';
 import { nextTick, onMounted, ref } from 'vue';
 
+interface ProgressItem {
+    message: string;
+    status: string;
+    agent?: string;
+}
+
 interface Message {
     role: 'user' | 'agent';
     content: string;
     actions?: ActionResult[];
+    progress?: ProgressItem[];
+    pending?: boolean;
 }
 
 interface ActionResult {
@@ -135,8 +143,32 @@ const sendMessage = async () => {
     await nextTick();
     scrollToBottom();
 
+    const agentMsg: Message = { role: 'agent', content: '', pending: true, progress: [] };
+    messages.value.push(agentMsg);
+
+    const handleEvent = (payload: any) => {
+        if (payload.type === 'start') {
+            activeConversationId.value = payload.conversation_id;
+            upsertConversation(payload.conversation_id, text);
+        } else if (payload.type === 'progress') {
+            agentMsg.progress!.push({ message: payload.message, status: payload.status, agent: payload.agent });
+            scrollToBottom();
+        } else if (payload.type === 'done') {
+            agentMsg.content = payload.ai_response || 'Tidak ada respons.';
+            agentMsg.actions = payload.actions || [];
+            agentMsg.pending = false;
+            agentMsg.progress = [];
+            scrollToBottom();
+        } else if (payload.type === 'error') {
+            agentMsg.content = payload.message || 'Terjadi error saat memproses permintaan.';
+            agentMsg.pending = false;
+            agentMsg.progress = [];
+            scrollToBottom();
+        }
+    };
+
     try {
-        const res = await fetch('/admin/websites/ai/chat', {
+        const res = await fetch('/admin/websites/ai/chat/stream', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -145,24 +177,44 @@ const sendMessage = async () => {
             body: JSON.stringify({ message: text, conversation_id: activeConversationId.value }),
         });
 
-        const data = await res.json();
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        if (!res.body) throw new Error('Stream tidak tersedia');
 
-        if (data.conversation_id) {
-            activeConversationId.value = data.conversation_id;
-            upsertConversation(data.conversation_id, text);
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            let sep: number;
+            while ((sep = buffer.indexOf('\n\n')) !== -1) {
+                const raw = buffer.slice(0, sep);
+                buffer = buffer.slice(sep + 2);
+
+                for (const line of raw.split('\n')) {
+                    if (!line.startsWith('data: ')) continue;
+                    const data = line.slice(6);
+                    if (data.trim() === '[DONE]') continue;
+                    try {
+                        handleEvent(JSON.parse(data));
+                    } catch {
+                        // event malformed — abaikan
+                    }
+                }
+            }
         }
-
-        messages.value.push({
-            role: 'agent',
-            content: data.ai_response || 'Tidak ada respons.',
-            actions: data.actions || [],
-        });
     } catch (e) {
-        messages.value.push({
-            role: 'agent',
-            content: 'Maaf, terjadi error saat menghubungi AI Agent.',
-        });
+        agentMsg.content = 'Maaf, terjadi error saat menghubungi AI Agent.';
+        agentMsg.pending = false;
+        agentMsg.progress = [];
     } finally {
+        if (agentMsg.pending) {
+            agentMsg.pending = false;
+            agentMsg.progress = [];
+        }
         isLoading.value = false;
         await nextTick();
         scrollToBottom();
@@ -295,8 +347,20 @@ onMounted(() => {
                                 <Bot class="h-4 w-4 text-primary" />
                             </div>
                             <div class="space-y-2">
-                                <div class="bg-muted/50 rounded-2xl rounded-bl-md px-4 py-2.5 text-sm prose-sm" v-html="formatMarkdown(msg.content)" />
+                                <!-- Progress real-time (streaming) -->
+                                <div v-if="msg.pending && msg.progress?.length" class="bg-muted/50 rounded-2xl rounded-bl-md px-4 py-2.5 text-sm space-y-1.5">
+                                    <p v-for="(log, i) in msg.progress" :key="i" class="text-xs flex items-center gap-1.5" :class="log.status === 'loading' ? 'text-muted-foreground' : ''">
+                                        <Loader2 v-if="log.status === 'loading'" class="h-3 w-3 animate-spin text-primary" />
+                                        <CheckCircle2 v-else class="h-3 w-3 text-green-600" />
+                                        <span v-if="log.agent" class="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium leading-none" :class="agentBadge(log.agent)">
+                                            {{ log.agent }}
+                                        </span>
+                                        {{ log.message }}
+                                    </p>
+                                </div>
 
+                                <!-- Final content -->
+                                <div v-if="!msg.pending" class="bg-muted/50 rounded-2xl rounded-bl-md px-4 py-2.5 text-sm prose-sm" v-html="formatMarkdown(msg.content)" />
                                 <!-- Actions Result -->
                                 <div v-if="msg.actions && msg.actions.length > 0" class="space-y-2">
                                     <div
@@ -414,7 +478,7 @@ onMounted(() => {
                     </div>
 
                     <!-- Loading -->
-                    <div v-if="isLoading" class="flex gap-3">
+                    <div v-if="isLoading && !messages.some(m => m.pending)" class="flex gap-3">
                         <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                             <Bot class="h-4 w-4 text-primary" />
                         </div>

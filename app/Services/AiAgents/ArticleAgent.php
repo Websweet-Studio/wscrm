@@ -14,9 +14,10 @@ class ArticleAgent
     public function __construct(private AiClient $aiClient) {}
 
     /**
-     * Workflow artikel SEO: generate (SEO Writer) → sisip gambar → audit → publish jika lolos (>= 80), revisi 1x.
+     * Workflow artikel SEO bertahap (melapor tiap langkah via $onEvent):
+     * judul → konten → gambar inline → featured image → kategori → audit → revisi (bila gagal) → publish.
      */
-    public function createArticle(?int $websiteId, string $title, string $content, string $keyword = ''): array
+    public function createArticle(?int $websiteId, string $title, string $content, string $keyword = '', ?callable $onEvent = null): array
     {
         if (!$websiteId) {
             return ['error' => 'ID website diperlukan.'];
@@ -32,17 +33,26 @@ class ArticleAgent
         }
 
         $hasAi = $this->aiClient->hasApiKey();
+        $logs = [];
 
-        $logs = [
-            ['agent' => 'Orchestrator', 'message' => 'Workflow artikel SEO dimulai', 'status' => 'done'],
-        ];
+        $this->emit($onEvent, $logs, 'Workflow artikel SEO dimulai', 'done', 'Orchestrator');
 
-        // 1. Generate draft via SEO Writer sub-agent
+        // 1. SEO Writer — judul artikel
         if (empty($content) && $hasAi) {
-            $logs[] = ['agent' => 'SEO Writer', 'message' => "Men-generate konten artikel untuk {$website->name}...", 'status' => 'loading'];
+            $this->emit($onEvent, $logs, "Men-generate judul artikel untuk {$website->name}...", 'loading', 'SEO Writer');
+            $title = $this->generateArticleTitle($title, $website, $keyword);
+            $this->emit($onEvent, $logs, "Judul artikel: '{$title}'", 'done', 'SEO Writer');
+        } else {
+            $this->emit($onEvent, $logs, 'Menggunakan judul yang sudah disediakan', 'done', 'SEO Writer');
+        }
+
+        // 2. SEO Writer — konten lengkap
+        if (empty($content) && $hasAi) {
+            $this->emit($onEvent, $logs, 'Men-generate konten artikel 800-1500 kata dengan SEO Writer...', 'loading', 'SEO Writer');
             $draft = $this->generateArticleDraft($title, $website, $keyword);
             $title = $draft['title'] ?? $title;
-            $logs[] = ['agent' => 'SEO Writer', 'message' => 'Konten artikel selesai di-generate', 'status' => 'done'];
+            $wordCount = $this->countWords($draft['html'] ?? '');
+            $this->emit($onEvent, $logs, "Konten selesai di-generate ({$wordCount} kata)", 'done', 'SEO Writer');
         } else {
             $draft = [
                 'title' => $title,
@@ -50,25 +60,37 @@ class ArticleAgent
                 'keywords' => $keyword ? [$keyword] : [],
                 'html' => $content,
             ];
-            $logs[] = ['agent' => 'SEO Writer', 'message' => 'Menggunakan konten yang sudah disediakan', 'status' => 'done'];
+            $this->emit($onEvent, $logs, 'Menggunakan konten yang sudah disediakan', 'done', 'SEO Writer');
         }
 
         $html = $draft['html'] ?? '';
 
-        // 2. Sisipkan gambar dari penyedia (picsum)
-        $logs[] = ['agent' => 'Media Agent', 'message' => 'Mencari & mengunggah 2 gambar dari picsum.photos ke media WordPress...', 'status' => 'loading'];
+        // 3. Media Agent — gambar inline
+        $this->emit($onEvent, $logs, 'Mencari 2 gambar relevan & mengunggah ke media WordPress...', 'loading', 'Media Agent');
         $mediaResult = $this->embedImages($website, $html, 2);
         $html = $mediaResult['html'];
-        $logs[] = ['agent' => 'Media Agent', 'message' => count($mediaResult['images']) . ' gambar berhasil disisipkan ke artikel', 'status' => 'done'];
+        $this->emit($onEvent, $logs, count($mediaResult['images']) . ' gambar berhasil disisipkan ke artikel', 'done', 'Media Agent');
 
-        // 3. Audit konten (rule-based, deterministik)
-        $logs[] = ['agent' => 'Content Auditor', 'message' => 'Menjalankan audit SEO konten (judul, meta, H1, H2, gambar, keyword)...', 'status' => 'loading'];
+        // 4. Media Agent — featured image
+        $this->emit($onEvent, $logs, 'Membuat featured image untuk artikel...', 'loading', 'Media Agent');
+        $featuredMedia = $this->uploadMedia($website, 'wscrm-featured-' . now()->format('YmdHis'));
+        $featuredMediaId = $featuredMedia['id'] ?? null;
+        $this->emit($onEvent, $logs, $featuredMediaId ? 'Featured image berhasil dibuat' : 'Featured image gagal dibuat (dilewati)', 'done', 'Media Agent');
+
+        // 5. Publisher — pilih kategori relevan
+        $this->emit($onEvent, $logs, 'Memilih kategori artikel yang relevan...', 'loading', 'Publisher');
+        $category = $this->pickCategory($website);
+        $categoryId = $category['id'] ?? null;
+        $this->emit($onEvent, $logs, $categoryId ? "Kategori dipilih: {$category['name']}" : 'Kategori tidak ditemukan, memakai default', 'done', 'Publisher');
+
+        // 6. Content Auditor — audit SEO
+        $this->emit($onEvent, $logs, 'Menjalankan audit SEO konten (judul, meta, H1, H2, gambar, keyword)...', 'loading', 'Content Auditor');
         $audit = $this->auditArticleContent($html, $title, $draft['meta_description'] ?? '', $keyword ?: ($draft['keywords'][0] ?? ''));
-        $logs[] = ['agent' => 'Content Auditor', 'message' => 'Audit selesai: skor ' . $audit['score'] . '/100 (' . ($audit['passed'] ? 'LOLOS' : 'BELUM LOLOS') . ')', 'status' => 'done'];
+        $this->emit($onEvent, $logs, 'Audit selesai: skor ' . $audit['score'] . '/100 (' . ($audit['passed'] ? 'LOLOS' : 'BELUM LOLOS') . ')', 'done', 'Content Auditor');
 
-        // 4. Revisi 1x jika audit gagal
+        // 7. Revisi 1x jika audit gagal
         if (!$audit['passed'] && $hasAi) {
-            $logs[] = ['agent' => 'SEO Writer', 'message' => 'Artikel belum lolos audit, melakukan revisi dengan feedback...', 'status' => 'loading'];
+            $this->emit($onEvent, $logs, 'Artikel belum lolos audit, melakukan revisi dengan feedback...', 'loading', 'SEO Writer');
             $feedback = collect($audit['issues'])->pluck('message')->implode('; ');
             $revision = $this->generateArticleDraft($title, $website, $keyword, $feedback);
 
@@ -76,22 +98,22 @@ class ArticleAgent
                 $title = $revision['title'] ?? $title;
                 $html = $revision['html'];
 
-                $logs[] = ['agent' => 'Media Agent', 'message' => 'Menyisipkan ulang gambar untuk versi revisi...', 'status' => 'loading'];
+                $this->emit($onEvent, $logs, 'Menyisipkan ulang gambar untuk versi revisi...', 'loading', 'Media Agent');
                 $mediaResult = $this->embedImages($website, $html, 2);
                 $html = $mediaResult['html'];
 
                 $audit = $this->auditArticleContent($html, $title, $revision['meta_description'] ?? '', $keyword ?: ($revision['keywords'][0] ?? ''));
-                $logs[] = ['agent' => 'Content Auditor', 'message' => 'Revisi selesai, audit ulang: skor ' . $audit['score'] . '/100 (' . ($audit['passed'] ? 'LOLOS' : 'BELUM LOLOS') . ')', 'status' => 'done'];
+                $this->emit($onEvent, $logs, 'Revisi selesai, audit ulang: skor ' . $audit['score'] . '/100 (' . ($audit['passed'] ? 'LOLOS' : 'BELUM LOLOS') . ')', 'done', 'Content Auditor');
             } else {
-                $logs[] = ['agent' => 'SEO Writer', 'message' => 'Revisi gagal di-generate, memakai konten versi awal', 'status' => 'done'];
+                $this->emit($onEvent, $logs, 'Revisi gagal di-generate, memakai konten versi awal', 'done', 'SEO Writer');
             }
         }
 
-        // 5. Publish jika lolos, simpan draft jika tidak
+        // 8. Publisher — publish (dengan kategori + featured image)
         $status = $audit['passed'] ? 'publish' : 'draft';
-        $logs[] = ['agent' => 'Publisher', 'message' => 'Mempublikasikan artikel ke WordPress...', 'status' => 'loading'];
-        $post = $this->publishWpPost($website, $title, $html, $status);
-        $logs[] = ['agent' => 'Publisher', 'message' => $status === 'publish' ? 'Artikel berhasil dipublikasikan' : 'Artikel disimpan sebagai draft', 'status' => 'done'];
+        $this->emit($onEvent, $logs, 'Mempublikasikan artikel ke WordPress...', 'loading', 'Publisher');
+        $post = $this->publishWpPost($website, $title, $html, $status, $categoryId, $featuredMediaId);
+        $this->emit($onEvent, $logs, $status === 'publish' ? 'Artikel berhasil dipublikasikan' : 'Artikel disimpan sebagai draft', 'done', 'Publisher');
 
         if (!$post) {
             return ['error' => "Gagal posting artikel ke {$website->name}."];
@@ -100,6 +122,7 @@ class ArticleAgent
         return [
             'success' => true,
             'website' => $website->name,
+            'title' => $title,
             'post_id' => $post['id'] ?? null,
             'post_url' => $post['link'] ?? null,
             'status' => $post['status'] ?? $status,
@@ -108,6 +131,8 @@ class ArticleAgent
             'issues' => $audit['issues'],
             'word_count' => $audit['word_count'],
             'images_embedded' => count($mediaResult['images']),
+            'featured_image' => (bool) $featuredMediaId,
+            'category' => $category['name'] ?? null,
             'logs' => $logs,
             'message' => "Artikel '{$title}' " . ($audit['passed']
                 ? "dipublikasikan di {$website->name} (skor SEO {$audit['score']}/100)."
@@ -115,7 +140,53 @@ class ArticleAgent
         ];
     }
 
+    /**
+     * Catat log + kirim event progress real-time ke chat.
+     */
+    private function emit(?callable $onEvent, array &$logs, string $message, string $status = 'done', string $agent = 'Orchestrator'): void
+    {
+        $logs[] = ['agent' => $agent, 'message' => $message, 'status' => $status];
+        if ($onEvent) {
+            $onEvent($message, $status, $agent);
+        }
+    }
+
+    private function countWords(string $html): int
+    {
+        $text = trim(preg_replace('/\s+/', ' ', strip_tags($html)));
+
+        return $text === '' ? 0 : count(preg_split('/\s+/', $text));
+    }
+
     // === Sub-agent: SEO Writer ===
+
+    /**
+     * Generate judul artikel dulu (call AI kecil) supaya user dapat feedback cepat.
+     */
+    private function generateArticleTitle(string $topic, WebsiteClient $website, string $keyword = ''): string
+    {
+        $keywordLine = $keyword ? " Fokus keyword: \"{$keyword}\"." : '';
+
+        $prompt = "Kamu adalah SEO Writer profesional. Berikan SATU judul artikel SEO terbaik untuk website {$website->name} tentang topik: \"{$topic}\".{$keywordLine}
+Judul harus 30-65 karakter, menarik, dan mengandung keyword jika ada.
+Balas HANYA judul saja — tanpa tanda kutip, tanpa penjelasan, tanpa awalan.";
+
+        try {
+            $content = $this->aiClient->chat([
+                ['role' => 'system', 'content' => $prompt],
+                ['role' => 'user', 'content' => 'Judulnya apa?'],
+            ], 0.7, 300);
+
+            $title = trim(trim($content), "\"'“” ");
+            if ($title !== '' && mb_strlen($title) <= 120) {
+                return $title;
+            }
+        } catch (\Exception $e) {
+            // fallback ke topik asli
+        }
+
+        return $topic;
+    }
 
     private function generateArticleDraft(string $topic, WebsiteClient $website, string $keyword = '', string $feedback = ''): array
     {
@@ -186,9 +257,9 @@ Output STRICT satu objek JSON (tanpa teks lain):
     {
         $images = [];
         for ($i = 0; $i < $count; $i++) {
-            $imageUrl = $this->uploadImage($website, 'wscrm-' . now()->format('YmdHis') . '-' . $i);
-            if ($imageUrl) {
-                $images[] = $imageUrl;
+            $media = $this->uploadMedia($website, 'wscrm-' . now()->format('YmdHis') . '-' . $i);
+            if ($media && !empty($media['source_url'])) {
+                $images[] = $media['source_url'];
             }
         }
 
@@ -207,7 +278,7 @@ Output STRICT satu objek JSON (tanpa teks lain):
         return ['html' => $html, 'images' => $images];
     }
 
-    private function uploadImage(WebsiteClient $website, string $seed): ?string
+    private function uploadMedia(WebsiteClient $website, string $seed): ?array
     {
         try {
             $imageData = Http::timeout(20)->get('https://picsum.photos/seed/' . urlencode($seed) . '/800/450')->body();
@@ -228,7 +299,11 @@ Output STRICT satu objek JSON (tanpa teks lain):
 
             if ($response->successful()) {
                 $media = $response->json();
-                return $media['source_url'] ?? ($media['guid']['rendered'] ?? null);
+
+                return [
+                    'id' => $media['id'] ?? null,
+                    'source_url' => $media['source_url'] ?? ($media['guid']['rendered'] ?? null),
+                ];
             }
         } catch (\Exception $e) {
             // biarkan kosong
@@ -322,7 +397,37 @@ Output STRICT satu objek JSON (tanpa teks lain):
 
     // === Sub-agent: Publisher ===
 
-    private function publishWpPost(WebsiteClient $website, string $title, string $html, string $status): ?array
+    /**
+     * Pilih kategori relevan: prefer slug "artikel", fallback kategori pertama selain "uncategorized".
+     */
+    private function pickCategory(WebsiteClient $website): ?array
+    {
+        try {
+            $auth = base64_encode($website->wp_username . ':' . $website->wp_app_password);
+
+            $categories = Http::withHeaders(['Authorization' => 'Basic ' . $auth])
+                ->timeout(15)
+                ->get(rtrim($website->url, '/') . '/wp-json/wp/v2/categories', ['per_page' => 100])
+                ->json();
+
+            foreach ($categories ?: [] as $c) {
+                if (($c['slug'] ?? '') === 'artikel') {
+                    return ['id' => $c['id'], 'name' => $c['name'] ?? 'Artikel'];
+                }
+            }
+            foreach ($categories ?: [] as $c) {
+                if (($c['slug'] ?? '') !== 'uncategorized') {
+                    return ['id' => $c['id'], 'name' => $c['name'] ?? $c['slug']];
+                }
+            }
+        } catch (\Exception $e) {
+            // biarkan null
+        }
+
+        return null;
+    }
+
+    private function publishWpPost(WebsiteClient $website, string $title, string $html, string $status, ?int $categoryId = null, ?int $featuredMediaId = null): ?array
     {
         try {
             $auth = base64_encode($website->wp_username . ':' . $website->wp_app_password);
@@ -334,14 +439,11 @@ Output STRICT satu objek JSON (tanpa teks lain):
                 'status' => $status,
             ];
 
-            // Beri kategori "artikel" jika ada agar tampil di halaman kategori artikel
-            $categories = Http::withHeaders(['Authorization' => 'Basic ' . $auth])
-                ->timeout(15)
-                ->get($base . '/categories', ['slug' => 'artikel', 'per_page' => 1])
-                ->json();
-            $categoryId = $categories[0]['id'] ?? null;
             if ($categoryId) {
                 $payload['categories'] = [$categoryId];
+            }
+            if ($featuredMediaId) {
+                $payload['featured_media'] = $featuredMediaId;
             }
 
             $response = Http::withHeaders([

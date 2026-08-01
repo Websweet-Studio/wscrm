@@ -93,6 +93,7 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     // AI Agent - must be before resource route to avoid conflict
     Route::get('websites/ai', [AiAgentController::class, 'index'])->name('websites.ai');
     Route::post('websites/ai/chat', [AiAgentController::class, 'chat'])->name('websites.ai.chat');
+    Route::post('websites/ai/chat/stream', [AiAgentController::class, 'streamChat'])->name('websites.ai.chat.stream');
     Route::get('websites/ai/conversations/{conversation}', [AiAgentController::class, 'show'])->name('websites.ai.conversations.show');
     Route::delete('websites/ai/conversations/{conversation}', [AiAgentController::class, 'destroy'])->name('websites.ai.conversations.destroy');
     Route::resource('websites', WebsiteClientController::class);

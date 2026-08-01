@@ -180,6 +180,7 @@ const uniqueWebsites = computed(() => new Set(props.reportData.entries.map(e => 
                                         <div class="space-y-1">
                                             <div v-for="(a, aIdx) in e.activities" :key="aIdx" class="flex items-start gap-2 text-sm">
                                                 <Badge :variant="getBadgeVariant(a.type)" class="whitespace-nowrap text-xs">{{ a.type_label || a.type }}</Badge>
+                                                <Badge v-if="a.source === 'AI'" variant="outline" class="whitespace-nowrap text-[10px] text-purple-600 border-purple-200 bg-purple-50">AI</Badge>
                                                 <span class="text-muted-foreground">{{ formatDetail(a) }}</span>
                                             </div>
                                         </div>
