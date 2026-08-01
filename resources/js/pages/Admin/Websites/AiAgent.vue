@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
-import { Bot, CheckCircle2, Loader2, MessageSquare, Plus, Send, Sparkles, Trash2, XCircle, Zap } from 'lucide-vue-next';
+import { Bot, CheckCircle2, ExternalLink, Loader2, MessageSquare, Plus, Send, Sparkles, Trash2, XCircle, Zap } from 'lucide-vue-next';
 import { nextTick, onMounted, ref } from 'vue';
 
 interface Message {
@@ -356,6 +356,30 @@ onMounted(() => {
                                                         <Badge v-else variant="destructive" class="text-xs">Tidak auto renew</Badge>
                                                     </div>
                                                 </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- create_article result -->
+                                        <div v-if="action.action === 'create_article' && action.result?.score !== undefined">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <span class="text-lg font-bold">{{ action.result.score }}/100</span>
+                                                <Badge :variant="action.result.passed ? 'default' : 'destructive'" class="text-xs">
+                                                    {{ action.result.passed ? 'Lolos & ' + (action.result.status === 'publish' ? 'Dipublish' : 'Draft') : 'Belum Lolos' }}
+                                                </Badge>
+                                                <span v-if="action.result.images_embedded" class="text-xs text-muted-foreground">· {{ action.result.images_embedded }} gambar</span>
+                                                <span v-if="action.result.word_count" class="text-xs text-muted-foreground">· {{ action.result.word_count }} kata</span>
+                                            </div>
+                                            <div v-if="action.result.post_url" class="text-xs mb-2">
+                                                <a :href="action.result.post_url" target="_blank" class="text-primary hover:underline flex items-center gap-1">
+                                                    Lihat artikel <ExternalLink class="h-3 w-3" />
+                                                </a>
+                                            </div>
+                                            <div v-if="action.result.issues?.length" class="space-y-1">
+                                                <p v-for="issue in action.result.issues" :key="issue.message" class="text-xs flex items-center gap-1">
+                                                    <XCircle v-if="issue.type === 'error'" class="h-3 w-3 text-red-500" />
+                                                    <span v-else class="text-yellow-500">⚠</span>
+                                                    {{ issue.message }}
+                                                </p>
                                             </div>
                                         </div>
 

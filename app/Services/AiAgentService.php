@@ -2,32 +2,31 @@
 
 namespace App\Services;
 
-use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\WebsiteClient;
-use Illuminate\Support\Facades\Http;
+use App\Services\AiAgents\ArticleAgent;
+use App\Services\AiAgents\OrderAgent;
+use App\Services\AiAgents\WebsiteAgent;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Orchestrator AI Agent: pahami intent user, bangun konteks, panggil sub-agent per domain.
+ */
 class AiAgentService
 {
-    private string $endpoint;
-    private string $apiKey;
-    private string $model;
-
     public function __construct(
-        private WordPressService $wpService,
-    ) {
-        $this->endpoint = config('services.ai.endpoint', env('AI_ENDPOINT', 'https://api.openai.com/v1'));
-        $this->apiKey = config('services.ai.api_key', env('AI_API_KEY', ''));
-        $this->model = config('services.ai.model', env('AI_MODEL', 'gpt-4o-mini'));
-    }
+        private AiClient $aiClient,
+        private WebsiteAgent $websiteAgent,
+        private ArticleAgent $articleAgent,
+        private OrderAgent $orderAgent,
+    ) {}
 
     /**
      * Process a user command and return the AI response + actions taken.
      */
     public function process(string $userMessage): array
     {
-        // 1. Gather context: all websites with their current state
+        // 1. Gather context: all websites & orders with their current state
         $context = $this->buildContext();
 
         // 2. Send to AI to determine intent and required actions
@@ -66,7 +65,7 @@ class AiAgentService
             ->orderBy('expires_at')
             ->get();
 
-        $orderData = $orders->map(fn (Order $o) => [
+        $orderData = $orders->map(fn(Order $o) => [
             'id' => $o->id,
             'customer' => $o->customer?->name ?? 'Tanpa customer',
             'service_type' => $o->service_type,
@@ -84,35 +83,15 @@ class AiAgentService
 
     private function callAI(string $userMessage, array $context): array
     {
-        if (empty($this->apiKey)) {
+        if (!$this->aiClient->hasApiKey()) {
             return ['message' => "AI tidak dikonfigurasi. Tambahkan AI_API_KEY di .env"];
         }
 
-        $systemPrompt = $this->getSystemPrompt($context);
-
         try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-            ])
-                ->timeout(60)
-                ->post(rtrim($this->endpoint, '/') . '/chat/completions', [
-                    'model' => $this->model,
-                    'messages' => [
-                        ['role' => 'system', 'content' => $systemPrompt],
-                        ['role' => 'user', 'content' => $userMessage],
-                    ],
-                    'temperature' => 0.3,
-                    'max_tokens' => 2000,
-                ]);
-
-            if (!$response->successful()) {
-                Log::error('AI API error', ['status' => $response->status(), 'body' => $response->body()]);
-                return ['message' => "Error AI API: " . $response->status()];
-            }
-
-            $data = $this->decodeResponse($response);
-            $content = $data['choices'][0]['message']['content'] ?? '';
+            $content = $this->aiClient->chat([
+                ['role' => 'system', 'content' => $this->getSystemPrompt($context)],
+                ['role' => 'user', 'content' => $userMessage],
+            ], 0.3, 2000);
 
             // Parse JSON from response (AI should return JSON with actions)
             return $this->parseAiResponse($content);
@@ -135,10 +114,10 @@ Kamu adalah AI Agent untuk mengelola aplikasi WSCRM (website WordPress, layanan 
 ```
 
 ## Aksi yang Bisa Kamu Lakukan:
-1. **check_updates** - Cek website mana yang perlu update WP core/plugin/tema
+1. **check_updates** - Cek website mana yang perlu update WP core/plugin/tema (sertakan website_id jika user menyebut website/domain tertentu, cari id-nya di data websites)
 2. **update_wp** - Update WordPress core untuk website tertentu (perlu id)
 3. **update_plugins** - Update plugin spesifik di website tertentu (perlu id, plugin_slugs[])
-4. **create_article** - Buat artikel via WordPress REST API (perlu id, title, content)
+4. **create_article** - Buat artikel SEO lengkap otomatis: generate konten, sisipkan 2 gambar, audit SEO, publish jika skor >= 80, revisi otomatis jika gagal (perlu id, title/topik, opsional keyword)
 5. **audit_seo** - Audit SEO halaman website (perlu id, url)
 6. **check_expiring_orders** - Cek berapa order/layanan aktif yang akan berakhir (kadaluarsa) bulan ini
 7. **renew_order** - Perpanjang masa aktif order/layanan dan/atau tandai sudah dibayar (perlu id dari data orders, months (jumlah bulan, default 3), mark_paid (true/false))
@@ -146,7 +125,9 @@ Kamu adalah AI Agent untuk mengelola aplikasi WSCRM (website WordPress, layanan 
 ## Aturan:
 - Selalu analisis data website & order terlebih dahulu
 - Jika user minta "cek update", gunakan aksi **check_updates** dan sebutkan website mana saja
+- Jika user menyebut website/domain tertentu (misal "cek demo1.sweet.web.id"), cari id website itu di data websites lalu sertakan **website_id** pada aksi check_updates — jangan cek semua website
 - Jika user minta "update", jalankan aksi update
+- Jika user minta "buat artikel" (dengan/tanpa menyebut gambar, audit, publish), jalankan aksi **create_article** — sistem otomatis generate konten, sisipkan gambar, audit, dan publish jika skor lolos
 - Jika user tanya order yang akan mati/berakhir/kadaluarsa/habis masa aktif bulan ini, gunakan aksi **check_expiring_orders**
 - Jika user bilang order sudah bayar / minta perpanjang / "set expired N bulan" / tandai lunas, cari order di data orders berdasarkan nama customer/domain lalu gunakan aksi **renew_order** dengan id yang sesuai, months sesuai permintaan (default 3 jika tidak disebut), dan mark_paid true jika user menyebut sudah bayar
 - Balas dalam bahasa Indonesia yang natural dan informatif
@@ -158,19 +139,6 @@ Kamu adalah AI Agent untuk mengelola aplikasi WSCRM (website WordPress, layanan 
 - Jika user hanya tanya/minta informasi, jawab saja tanpa actions
 
 PROMPT;
-    }
-
-    /**
-     * Decode gateway response body. Some gateways append SSE chunks (e.g. "data: [DONE]")
-     * right after the JSON payload, which breaks json_decode — extract the JSON object only.
-     */
-    private function decodeResponse($response): ?array
-    {
-        $body = $response->body();
-
-        return preg_match('/\{.*\}/s', $body, $m)
-            ? json_decode($m[0], true)
-            : null;
     }
 
     private function parseAiResponse(string $content): array
@@ -197,20 +165,28 @@ PROMPT;
     {
         $actions = $aiResponse['actions'] ?? [];
         $results = [];
+        $seen = [];
 
         foreach ($actions as $action) {
             $actionName = $action['action'] ?? '';
+
+            // Skip duplicate actions the AI may send twice
+            if (in_array($actionName, $seen, true)) {
+                continue;
+            }
+            $seen[] = $actionName;
+
             $params = $action['params'] ?? [];
 
             try {
                 $result = match ($actionName) {
-                    'check_updates' => $this->checkUpdates(),
-                    'update_wp' => $this->updateWp($params['id'] ?? null),
-                    'update_plugins' => $this->updatePlugins($params['id'] ?? null, $params['plugin_slugs'] ?? []),
-                    'create_article' => $this->createArticle($params['id'] ?? null, $params['title'] ?? '', $params['content'] ?? ''),
-                    'audit_seo' => $this->auditSeo($params['id'] ?? null, $params['url'] ?? ''),
-                    'check_expiring_orders' => $this->checkExpiringOrders(),
-                    'renew_order' => $this->renewOrder($params['id'] ?? null, (int) ($params['months'] ?? 3), (bool) ($params['mark_paid'] ?? false)),
+                    'check_updates' => $this->websiteAgent->checkUpdates($params['website_id'] ?? $params['id'] ?? null),
+                    'update_wp' => $this->websiteAgent->updateWp($params['id'] ?? null),
+                    'update_plugins' => $this->websiteAgent->updatePlugins($params['id'] ?? null, $params['plugin_slugs'] ?? []),
+                    'audit_seo' => $this->websiteAgent->auditSeo($params['id'] ?? null, $params['url'] ?? ''),
+                    'create_article' => $this->articleAgent->createArticle($params['id'] ?? null, $params['title'] ?? '', $params['content'] ?? '', $params['keyword'] ?? ''),
+                    'check_expiring_orders' => $this->orderAgent->checkExpiringOrders(),
+                    'renew_order' => $this->orderAgent->renewOrder($params['id'] ?? null, (int) ($params['months'] ?? 3), (bool) ($params['mark_paid'] ?? false)),
                     default => ['error' => "Aksi tidak dikenal: {$actionName}"],
                 };
             } catch (\Exception $e) {
@@ -225,377 +201,5 @@ PROMPT;
         }
 
         return $results;
-    }
-
-    // === Action Handlers ===
-
-    private function checkUpdates(): array
-    {
-        $websites = WebsiteClient::all();
-        $needUpdate = [];
-
-        foreach ($websites as $w) {
-            $issues = [];
-
-            // Check WP version (latest stable assumed 6.6.x)
-            if ($w->wp_version && version_compare($w->wp_version, '6.6', '<')) {
-                $issues[] = "WP core {$w->wp_version} → 6.6";
-            }
-
-            // Check plugins via WP REST if credentials available
-            if ($w->wp_username && $w->wp_app_password) {
-                try {
-                    $updates = $this->wpService->checkPluginUpdates($w);
-                    foreach ($updates as $update) {
-                        $issues[] = "Plugin {$update['name']}: {$update['installed']} → {$update['available']}";
-                    }
-                } catch (\Exception $e) {
-                    $issues[] = "Gagal cek plugin: " . $e->getMessage();
-                }
-            }
-
-            if (!empty($issues)) {
-                $needUpdate[] = [
-                    'id' => $w->id,
-                    'name' => $w->name,
-                    'url' => $w->url,
-                    'issues' => $issues,
-                    'can_auto_update' => !empty($w->wp_username) && !empty($w->wp_app_password),
-                ];
-            }
-        }
-
-        return [
-            'websites_need_update' => $needUpdate,
-            'total' => count($needUpdate),
-            'summary' => count($needUpdate) > 0
-                ? count($needUpdate) . ' website perlu update.'
-                : 'Semua website sudah up-to-date.',
-        ];
-    }
-
-    private function updateWp(?int $websiteId): array
-    {
-        if (!$websiteId) {
-            return ['error' => 'ID website diperlukan.'];
-        }
-
-        $website = WebsiteClient::find($websiteId);
-        if (!$website) {
-            return ['error' => 'Website tidak ditemukan.'];
-        }
-
-        if (!$website->wp_username || !$website->wp_app_password) {
-            return ['error' => "Website {$website->name} belum dikonfigurasi kredensial WP."];
-        }
-
-        // WP core update biasanya di-trigger via REST API update endpoint
-        // Simulate: re-sync will fetch latest version
-        $result = $this->wpService->syncSiteInfo($website);
-
-        return [
-            'success' => true,
-            'website' => $website->name,
-            'message' => "WP core untuk {$website->name} diperiksa. " . ($result ? 'Data berhasil di-sync.' : 'Gagal sync.'),
-            'data' => $result,
-        ];
-    }
-
-    private function updatePlugins(?int $websiteId, array $slugs): array
-    {
-        if (!$websiteId) {
-            return ['error' => 'ID website diperlukan.'];
-        }
-
-        $website = WebsiteClient::find($websiteId);
-        if (!$website) {
-            return ['error' => 'Website tidak ditemukan.'];
-        }
-
-        if (!$website->wp_username || !$website->wp_app_password) {
-            return ['error' => "Website {$website->name} belum dikonfigurasi kredensial WP."];
-        }
-
-        // Re-sync to get latest plugin versions
-        $this->wpService->syncSiteInfo($website);
-
-        return [
-            'success' => true,
-            'website' => $website->name,
-            'plugins' => $slugs,
-            'message' => "Plugin di {$website->name} berhasil di-sync. Data plugin terbaru sudah tersimpan.",
-        ];
-    }
-
-    private function createArticle(?int $websiteId, string $title, string $content): array
-    {
-        if (!$websiteId) {
-            return ['error' => 'ID website diperlukan.'];
-        }
-
-        $website = WebsiteClient::find($websiteId);
-        if (!$website) {
-            return ['error' => 'Website tidak ditemukan.'];
-        }
-
-        if (!$website->wp_username || !$website->wp_app_password) {
-            return ['error' => "Website {$website->name} belum dikonfigurasi kredensial WP."];
-        }
-
-        // If content not provided, generate with AI
-        if (empty($content) && !empty($this->apiKey)) {
-            $content = $this->generateArticleContent($title, $website);
-        }
-
-        // Post to WordPress REST API
-        try {
-            $auth = base64_encode($website->wp_username . ':' . $website->wp_app_password);
-            $response = Http::withHeaders([
-                'Authorization' => 'Basic ' . $auth,
-                'Content-Type' => 'application/json',
-            ])
-                ->timeout(30)
-                ->post(rtrim($website->url, '/') . '/wp-json/wp/v2/posts', [
-                    'title' => $title,
-                    'content' => $content,
-                    'status' => 'draft',
-                ]);
-
-            if ($response->successful()) {
-                $post = $response->json();
-                return [
-                    'success' => true,
-                    'website' => $website->name,
-                    'post_id' => $post['id'] ?? null,
-                    'post_url' => $post['link'] ?? null,
-                    'status' => $post['status'] ?? 'draft',
-                    'message' => "Artikel '{$title}' berhasil dibuat di {$website->name} sebagai draft.",
-                ];
-            }
-
-            return ['error' => "Gagal posting artikel: HTTP " . $response->status()];
-        } catch (\Exception $e) {
-            return ['error' => "Gagal posting: " . $e->getMessage()];
-        }
-    }
-
-    private function generateArticleContent(string $title, WebsiteClient $website): string
-    {
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-            ])
-                ->timeout(60)
-                ->post(rtrim($this->endpoint, '/') . '/chat/completions', [
-                    'model' => $this->model,
-                    'messages' => [
-                        ['role' => 'system', 'content' => "Kamu adalah penulis artikel SEO profesional. Tulis artikel dalam bahasa Indonesia yang SEO-friendly, informatif, dan engaging. Gunakan format HTML (p, h2, h3, ul, li). Target 800-1500 kata. Sertakan meta description di akhir dalam tag komentar HTML."],
-                        ['role' => 'user', 'content' => "Buat artikel SEO untuk website {$website->name} ({$website->url}) dengan judul: {$title}"],
-                    ],
-                    'temperature' => 0.7,
-                    'max_tokens' => 3000,
-                ]);
-
-            if ($response->successful()) {
-                $data = $this->decodeResponse($response);
-                return $data['choices'][0]['message']['content'] ?? '';
-            }
-
-            return "<p>Artikel tentang: {$title}</p><p>Konten akan ditulis nanti.</p>";
-        } catch (\Exception $e) {
-            return "<p>Gagal generate konten: {$e->getMessage()}</p>";
-        }
-    }
-
-    private function auditSeo(?int $websiteId, string $url): array
-    {
-        if (!$websiteId) {
-            return ['error' => 'ID website diperlukan.'];
-        }
-
-        $website = WebsiteClient::find($websiteId);
-        if (!$website) {
-            return ['error' => 'Website tidak ditemukan.'];
-        }
-
-        $targetUrl = $url ?: $website->url;
-
-        // Fetch the page and analyze
-        try {
-            $html = Http::timeout(15)->get($targetUrl)->body();
-
-            $analysis = $this->analyzeSeo($html, $targetUrl);
-
-            return [
-                'success' => true,
-                'website' => $website->name,
-                'url' => $targetUrl,
-                'analysis' => $analysis,
-            ];
-        } catch (\Exception $e) {
-            return ['error' => "Gagal mengakses {$targetUrl}: " . $e->getMessage()];
-        }
-    }
-
-    private function analyzeSeo(string $html, string $url): array
-    {
-        $issues = [];
-        $score = 100;
-
-        // Title check
-        preg_match('/<title>(.*?)<\/title>/i', $html, $titleMatch);
-        $title = $titleMatch[1] ?? '';
-        if (empty($title)) {
-            $issues[] = ['type' => 'error', 'message' => 'Title tag kosong'];
-            $score -= 20;
-        } elseif (strlen($title) < 20) {
-            $issues[] = ['type' => 'warning', 'message' => 'Title terlalu pendek (' . strlen($title) . ' karakter)'];
-            $score -= 5;
-        } elseif (strlen($title) > 65) {
-            $issues[] = ['type' => 'warning', 'message' => 'Title terlalu panjang (' . strlen($title) . ' karakter)'];
-            $score -= 5;
-        }
-
-        // Meta description
-        preg_match('/<meta\s+name="description"\s+content="([^"]*)/i', $html, $descMatch);
-        $desc = $descMatch[1] ?? '';
-        if (empty($desc)) {
-            $issues[] = ['type' => 'warning', 'message' => 'Meta description tidak ditemukan'];
-            $score -= 10;
-        }
-
-        // H1
-        preg_match_all('/<h1[^>]*>(.*?)<\/h1>/i', $html, $h1Match);
-        $h1Count = count($h1Match[1] ?? []);
-        if ($h1Count === 0) {
-            $issues[] = ['type' => 'error', 'message' => 'Tidak ada H1 tag'];
-            $score -= 15;
-        } elseif ($h1Count > 1) {
-            $issues[] = ['type' => 'warning', 'message' => "Terlalu banyak H1 ({$h1Count})"];
-            $score -= 5;
-        }
-
-        // Images with alt
-        preg_match_all('/<img[^>]+src=/i', $html, $imgMatch);
-        $totalImages = count($imgMatch[0] ?? []);
-        preg_match_all('/<img[^>]+alt="[^"]*"[^>]*src=/i', $html, $altMatch);
-        $imagesWithAlt = count($altMatch[0] ?? []);
-        if ($totalImages > 0 && $imagesWithAlt < $totalImages) {
-            $missing = $totalImages - $imagesWithAlt;
-            $issues[] = ['type' => 'warning', 'message' => "{$missing} dari {$totalImages} gambar tidak punya alt text"];
-            $score -= min(10, $missing * 2);
-        }
-
-        // Page size
-        $pageSize = strlen($html);
-        if ($pageSize > 500000) {
-            $issues[] = ['type' => 'warning', 'message' => 'Ukuran halaman besar (' . round($pageSize / 1024) . ' KB)'];
-            $score -= 5;
-        }
-
-        // Links
-        preg_match_all('/<a\s+href="([^"]*)/i', $html, $links);
-        $totalLinks = count($links[1] ?? []);
-        if ($totalLinks > 200) {
-            $issues[] = ['type' => 'info', 'message' => "Banyak link ({$totalLinks}), pertimbangkan optimasi"];
-        }
-
-        return [
-            'score' => max(0, $score),
-            'title' => $title,
-            'meta_description' => $desc,
-            'h1_count' => $h1Count,
-            'total_images' => $totalImages,
-            'images_with_alt' => $imagesWithAlt,
-            'page_size_kb' => round($pageSize / 1024),
-            'total_links' => $totalLinks,
-            'issues' => $issues,
-            'recommendation' => $score >= 80 ? 'Bagus! SEO sudah optimal.' : ($score >= 60 ? 'Perlu perbaikan minor.' : 'Prioritas tinggi untuk optimasi SEO.'),
-        ];
-    }
-
-    private function checkExpiringOrders(): array
-    {
-        $start = now()->startOfMonth();
-        $end = now()->endOfMonth();
-
-        $orders = Order::with('customer')
-            ->where('status', 'active')
-            ->whereNotNull('expires_at')
-            ->whereBetween('expires_at', [$start, $end])
-            ->orderBy('expires_at')
-            ->get();
-
-        $typeLabels = [
-            'hosting' => 'Hosting',
-            'domain' => 'Domain',
-            'service' => 'Layanan',
-            'app' => 'Aplikasi',
-            'web' => 'Website',
-            'maintenance' => 'Maintenance',
-        ];
-
-        $list = $orders->map(fn (Order $o) => [
-            'id' => $o->id,
-            'customer' => $o->customer?->name ?? 'Tanpa customer',
-            'service_type' => $typeLabels[$o->service_type] ?? $o->service_type,
-            'domain_name' => $o->domain_name,
-            'expires_at' => $o->expires_at?->format('d M Y'),
-            'auto_renew' => (bool) $o->auto_renew,
-            'days_left' => $o->expires_at ? max(0, (int) $o->expires_at->diffInDays(now())) : 0,
-        ])->values()->all();
-
-        $monthLabel = now()->translatedFormat('F Y');
-
-        return [
-            'orders_expiring' => $list,
-            'total' => count($list),
-            'month' => $monthLabel,
-            'summary' => count($list) > 0
-                ? count($list) . ' order aktif akan berakhir bulan ini (' . $monthLabel . ').'
-                : 'Tidak ada order aktif yang berakhir bulan ini (' . $monthLabel . ').',
-        ];
-    }
-
-    private function renewOrder(?int $orderId, int $months, bool $markPaid): array
-    {
-        if (!$orderId) {
-            return ['error' => 'ID order diperlukan.'];
-        }
-
-        $order = Order::find($orderId);
-        if (!$order) {
-            return ['error' => 'Order tidak ditemukan.'];
-        }
-
-        $months = max(1, $months);
-        $newExpiry = now()->addMonths($months);
-        $order->update(['expires_at' => $newExpiry]);
-
-        $invoiceMessage = '';
-        if ($markPaid) {
-            $updated = Invoice::where('order_id', $order->id)
-                ->whereNotIn('status', ['paid'])
-                ->update([
-                    'status' => 'paid',
-                    'paid_at' => now(),
-                ]);
-            $invoiceMessage = $updated > 0
-                ? $updated . ' invoice ditandai lunas. '
-                : 'Tidak ada invoice yang perlu ditandai lunas. ';
-        }
-
-        return [
-            'success' => true,
-            'order_id' => $order->id,
-            'customer' => $order->customer?->name ?? 'Tanpa customer',
-            'domain' => $order->domain_name,
-            'months_added' => $months,
-            'expires_at' => $newExpiry->format('d M Y'),
-            'invoices_marked_paid' => $markPaid,
-            'message' => $invoiceMessage . 'Masa aktif ' . ($order->customer?->name ?? 'order #' . $order->id)
-                . ' diperpanjang ' . $months . ' bulan → berakhir ' . $newExpiry->format('d M Y') . '.',
-        ];
     }
 }
