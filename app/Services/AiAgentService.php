@@ -35,8 +35,23 @@ class AiAgentService
         // 3. Parse & execute actions
         $results = $this->executeActions($aiResponse);
 
+        // 4. Lampirkan hasil eksekusi nyata ke pesan agar AI tidak mengklaim sukses sebelum aksi dijalankan
+        $message = $aiResponse['message'] ?? '';
+        if ($results) {
+            $lines = [];
+            foreach ($results as $r) {
+                $res = $r['result'];
+                if (isset($res['error'])) {
+                    $lines[] = '[GAGAL] ' . $r['action'] . ': ' . $res['error'];
+                } else {
+                    $lines[] = '[OK] ' . ($res['message'] ?? 'Aksi ' . $r['action'] . ' selesai');
+                }
+            }
+            $message = trim($message) . "\n\n" . implode("\n", $lines);
+        }
+
         return [
-            'ai_response' => $aiResponse['message'] ?? '',
+            'ai_response' => $message,
             'actions' => $results,
             'success' => true,
         ];
@@ -117,7 +132,7 @@ Kamu adalah AI Agent untuk mengelola aplikasi WSCRM (website WordPress, layanan 
 1. **check_updates** - Cek website mana yang perlu update WP core/plugin/tema (sertakan website_id jika user menyebut website/domain tertentu, cari id-nya di data websites)
 2. **update_wp** - Update WordPress core untuk website tertentu (perlu id)
 3. **update_plugins** - Update plugin spesifik di website tertentu (perlu id, plugin_slugs[])
-4. **create_article** - Buat artikel SEO lengkap otomatis: generate konten, sisipkan 2 gambar, audit SEO, publish jika skor >= 80, revisi otomatis jika gagal (perlu id, title/topik, opsional keyword)
+4. **create_article** - Buat artikel SEO lengkap otomatis: generate konten, sisipkan 2 gambar, audit SEO, publish jika skor >= 80, revisi otomatis jika gagal (perlu website_id, title/topik, opsional keyword)
 5. **audit_seo** - Audit SEO halaman website (perlu id, url)
 6. **check_expiring_orders** - Cek berapa order/layanan aktif yang akan berakhir (kadaluarsa) bulan ini
 7. **renew_order** - Perpanjang masa aktif order/layanan dan/atau tandai sudah dibayar (perlu id dari data orders, months (jumlah bulan, default 3), mark_paid (true/false))
@@ -184,7 +199,7 @@ PROMPT;
                     'update_wp' => $this->websiteAgent->updateWp($params['id'] ?? null),
                     'update_plugins' => $this->websiteAgent->updatePlugins($params['id'] ?? null, $params['plugin_slugs'] ?? []),
                     'audit_seo' => $this->websiteAgent->auditSeo($params['id'] ?? null, $params['url'] ?? ''),
-                    'create_article' => $this->articleAgent->createArticle($params['id'] ?? null, $params['title'] ?? '', $params['content'] ?? '', $params['keyword'] ?? ''),
+                    'create_article' => $this->articleAgent->createArticle($params['website_id'] ?? $params['id'] ?? null, $params['title'] ?? '', $params['content'] ?? '', $params['keyword'] ?? ''),
                     'check_expiring_orders' => $this->orderAgent->checkExpiringOrders(),
                     'renew_order' => $this->orderAgent->renewOrder($params['id'] ?? null, (int) ($params['months'] ?? 3), (bool) ($params['mark_paid'] ?? false)),
                     default => ['error' => "Aksi tidak dikenal: {$actionName}"],

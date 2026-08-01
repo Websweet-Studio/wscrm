@@ -54,6 +54,17 @@ const suggestions = [
     'Tampilkan ringkasan kondisi semua website',
 ];
 
+const agentBadge = (agent: string) => {
+    const map: Record<string, string> = {
+        'SEO Writer': 'bg-blue-100 text-blue-700',
+        'Media Agent': 'bg-purple-100 text-purple-700',
+        'Content Auditor': 'bg-amber-100 text-amber-700',
+        'Publisher': 'bg-green-100 text-green-700',
+        'Orchestrator': 'bg-slate-200 text-slate-700',
+    };
+    return map[agent] || 'bg-slate-200 text-slate-700';
+};
+
 const loadConversation = async (id: number) => {
     activeConversationId.value = id;
     isLoading.value = true;
@@ -373,6 +384,17 @@ onMounted(() => {
                                                 <a :href="action.result.post_url" target="_blank" class="text-primary hover:underline flex items-center gap-1">
                                                     Lihat artikel <ExternalLink class="h-3 w-3" />
                                                 </a>
+                                            </div>
+                                            <!-- Timeline log workflow artikel -->
+                                            <div v-if="action.result.logs?.length" class="my-2 rounded-lg border bg-muted/40 p-2 space-y-1">
+                                                <p v-for="(log, i) in action.result.logs" :key="i" class="text-xs flex items-center gap-1.5" :class="log.status === 'loading' ? 'text-muted-foreground' : ''">
+                                                    <Loader2 v-if="log.status === 'loading'" class="h-3 w-3 animate-spin text-primary" />
+                                                    <CheckCircle2 v-else class="h-3 w-3 text-green-600" />
+                                                    <span v-if="log.agent" class="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium leading-none" :class="agentBadge(log.agent)">
+                                                        {{ log.agent }}
+                                                    </span>
+                                                    {{ log.message }}
+                                                </p>
                                             </div>
                                             <div v-if="action.result.issues?.length" class="space-y-1">
                                                 <p v-for="issue in action.result.issues" :key="issue.message" class="text-xs flex items-center gap-1">
