@@ -15,8 +15,11 @@ import expenses from './expenses'
 import users from './users'
 import tasks from './tasks'
 import taskCategories from './task-categories'
+import websites from './websites'
+import journals from './journals'
 import branding from './branding'
 import database from './database'
+import tools from './tools'
 import demoWebsites from './demo-websites'
 import demoCategories from './demo-categories'
 import demoPackages from './demo-packages'
@@ -174,8 +177,11 @@ stopImpersonation: Object.assign(stopImpersonation, stopImpersonation),
 users: Object.assign(users, users),
 tasks: Object.assign(tasks, tasks),
 taskCategories: Object.assign(taskCategories, taskCategories),
+websites: Object.assign(websites, websites),
+journals: Object.assign(journals, journals),
 branding: Object.assign(branding, branding),
 database: Object.assign(database, database),
+tools: Object.assign(tools, tools),
 demoWebsites: Object.assign(demoWebsites, demoWebsites),
 demoCategories: Object.assign(demoCategories, demoCategories),
 demoPackages: Object.assign(demoPackages, demoPackages),

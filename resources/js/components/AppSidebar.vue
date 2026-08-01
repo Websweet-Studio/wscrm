@@ -267,8 +267,8 @@ const mainNavItems: NavItem[] = [
                 icon: FileText,
             },
             {
-                title: 'Admin Tools',
-                href: '/admin-tools.php',
+                title: 'App Manager',
+                href: '/admin/tools',
                 icon: Settings,
             },
         ],

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminToolsController;
 use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\BrandingController;
 use App\Http\Controllers\Admin\BulkPricingController;
@@ -107,6 +108,10 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::get('database/export', [DatabaseController::class, 'export'])->name('database.export');
     Route::post('database/import', [DatabaseController::class, 'import'])->name('database.import');
     Route::post('database/clear', [DatabaseController::class, 'clear'])->name('database.clear');
+
+    // Admin Tools
+    Route::get('tools', [AdminToolsController::class, 'index'])->name('tools.index');
+    Route::post('tools/execute', [AdminToolsController::class, 'execute'])->name('tools.execute');
 
     // Demo Website Management
     Route::resource('demo-websites', AdminDemoWebsiteController::class)->only(['index', 'create', 'edit', 'store', 'update', 'destroy']);

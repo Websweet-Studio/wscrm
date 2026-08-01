@@ -113,6 +113,7 @@ class HandleInertiaRequests extends Middleware
                 'toast' => $request->session()->get('toast'),
                 'error' => $request->session()->get('error'),
                 'success' => $request->session()->get('success'),
+                'tool_result' => $request->session()->get('tool_result'),
             ],
         ];
     }
