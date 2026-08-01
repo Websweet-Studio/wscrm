@@ -171,6 +171,8 @@ const formatActionName = (action: string): string => {
         update_plugins: 'Update Plugin',
         create_article: 'Buat Artikel',
         audit_seo: 'Audit SEO',
+        check_expiring_orders: 'Order Berakhir',
+        renew_order: 'Perpanjang Order',
     };
     return names[action] || action;
 };
@@ -335,6 +337,25 @@ onMounted(() => {
                                                     <span v-else class="text-blue-500">ℹ</span>
                                                     {{ issue.message }}
                                                 </p>
+                                            </div>
+                                        </div>
+
+                                        <!-- check_expiring_orders result -->
+                                        <div v-if="action.action === 'check_expiring_orders' && action.result?.orders_expiring">
+                                            <p v-if="action.result.orders_expiring.length === 0" class="text-green-600 flex items-center gap-1">
+                                                <CheckCircle2 class="h-3.5 w-3.5" /> Tidak ada order yang berakhir bulan ini
+                                            </p>
+                                            <div v-else class="space-y-2">
+                                                <div v-for="o in action.result.orders_expiring" :key="o.id" class="border-l-2 border-primary/50 pl-3">
+                                                    <p class="font-medium">{{ o.customer }}</p>
+                                                    <p class="text-xs text-muted-foreground">
+                                                        <template v-if="o.service_type">{{ o.service_type }}<template v-if="o.domain_name"> - {{ o.domain_name }}</template> · </template>{{ o.expires_at }}
+                                                    </p>
+                                                    <div class="flex gap-1.5 mt-1">
+                                                        <Badge v-if="o.auto_renew" variant="secondary" class="text-xs">Auto renew</Badge>
+                                                        <Badge v-else variant="destructive" class="text-xs">Tidak auto renew</Badge>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 

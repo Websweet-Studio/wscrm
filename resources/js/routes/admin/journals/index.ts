@@ -669,6 +669,84 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
     
     exportMethod.form = exportMethodForm
+/**
+* @see \App\Http\Controllers\Admin\JournalEntryController::exportExcel
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:163
+ * @route '/admin/journals/export-excel'
+ */
+export const exportExcel = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: exportExcel.url(options),
+    method: 'get',
+})
+
+exportExcel.definition = {
+    methods: ["get","head"],
+    url: '/admin/journals/export-excel',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\Admin\JournalEntryController::exportExcel
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:163
+ * @route '/admin/journals/export-excel'
+ */
+exportExcel.url = (options?: RouteQueryOptions) => {
+    return exportExcel.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Admin\JournalEntryController::exportExcel
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:163
+ * @route '/admin/journals/export-excel'
+ */
+exportExcel.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: exportExcel.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\Admin\JournalEntryController::exportExcel
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:163
+ * @route '/admin/journals/export-excel'
+ */
+exportExcel.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: exportExcel.url(options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\Admin\JournalEntryController::exportExcel
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:163
+ * @route '/admin/journals/export-excel'
+ */
+    const exportExcelForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: exportExcel.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\JournalEntryController::exportExcel
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:163
+ * @route '/admin/journals/export-excel'
+ */
+        exportExcelForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: exportExcel.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\JournalEntryController::exportExcel
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:163
+ * @route '/admin/journals/export-excel'
+ */
+        exportExcelForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: exportExcel.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    exportExcel.form = exportExcelForm
 const journals = {
     index: Object.assign(index, index),
 create: Object.assign(create, create),
@@ -678,6 +756,7 @@ update: Object.assign(update, update),
 destroy: Object.assign(destroy, destroy),
 report: Object.assign(report, report),
 export: Object.assign(exportMethod, exportMethod),
+exportExcel: Object.assign(exportExcel, exportExcel),
 }
 
 export default journals

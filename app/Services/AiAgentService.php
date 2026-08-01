@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Invoice;
+use App\Models\Order;
 use App\Models\WebsiteClient;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -45,9 +47,9 @@ class AiAgentService
     {
         $websites = WebsiteClient::with('customer')->get();
 
-        $context = [];
+        $websiteData = [];
         foreach ($websites as $w) {
-            $context[] = [
+            $websiteData[] = [
                 'id' => $w->id,
                 'name' => $w->name,
                 'url' => $w->url,
@@ -59,7 +61,25 @@ class AiAgentService
             ];
         }
 
-        return $context;
+        $orders = Order::with('customer')
+            ->whereIn('status', ['active', 'suspended'])
+            ->orderBy('expires_at')
+            ->get();
+
+        $orderData = $orders->map(fn (Order $o) => [
+            'id' => $o->id,
+            'customer' => $o->customer?->name ?? 'Tanpa customer',
+            'service_type' => $o->service_type,
+            'domain' => $o->domain_name,
+            'expires_at' => $o->expires_at?->format('Y-m-d'),
+            'auto_renew' => (bool) $o->auto_renew,
+            'status' => $o->status,
+        ])->values()->all();
+
+        return [
+            'websites' => $websiteData,
+            'orders' => $orderData,
+        ];
     }
 
     private function callAI(string $userMessage, array $context): array
@@ -107,9 +127,9 @@ class AiAgentService
         $contextJson = json_encode($context, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         return <<<PROMPT
-Kamu adalah AI Agent untuk mengelola website WordPress klien. Kamu BISA menjalankan aksi nyata.
+Kamu adalah AI Agent untuk mengelola aplikasi WSCRM (website WordPress, layanan hosting/domain, dan order klien). Kamu BISA menjalankan aksi nyata di sistem.
 
-## Data Website Klien Saat Ini:
+## Data Saat Ini:
 ```json
 {$contextJson}
 ```
@@ -120,11 +140,15 @@ Kamu adalah AI Agent untuk mengelola website WordPress klien. Kamu BISA menjalan
 3. **update_plugins** - Update plugin spesifik di website tertentu (perlu id, plugin_slugs[])
 4. **create_article** - Buat artikel via WordPress REST API (perlu id, title, content)
 5. **audit_seo** - Audit SEO halaman website (perlu id, url)
+6. **check_expiring_orders** - Cek berapa order/layanan aktif yang akan berakhir (kadaluarsa) bulan ini
+7. **renew_order** - Perpanjang masa aktif order/layanan dan/atau tandai sudah dibayar (perlu id dari data orders, months (jumlah bulan, default 3), mark_paid (true/false))
 
 ## Aturan:
-- Selalu analisis data website terlebih dahulu
+- Selalu analisis data website & order terlebih dahulu
 - Jika user minta "cek update", gunakan aksi **check_updates** dan sebutkan website mana saja
 - Jika user minta "update", jalankan aksi update
+- Jika user tanya order yang akan mati/berakhir/kadaluarsa/habis masa aktif bulan ini, gunakan aksi **check_expiring_orders**
+- Jika user bilang order sudah bayar / minta perpanjang / "set expired N bulan" / tandai lunas, cari order di data orders berdasarkan nama customer/domain lalu gunakan aksi **renew_order** dengan id yang sesuai, months sesuai permintaan (default 3 jika tidak disebut), dan mark_paid true jika user menyebut sudah bayar
 - Balas dalam bahasa Indonesia yang natural dan informatif
 - Di akhir respons, sertakan JSON aksi yang perlu dijalankan dalam format:
 ```json
@@ -185,6 +209,8 @@ PROMPT;
                     'update_plugins' => $this->updatePlugins($params['id'] ?? null, $params['plugin_slugs'] ?? []),
                     'create_article' => $this->createArticle($params['id'] ?? null, $params['title'] ?? '', $params['content'] ?? ''),
                     'audit_seo' => $this->auditSeo($params['id'] ?? null, $params['url'] ?? ''),
+                    'check_expiring_orders' => $this->checkExpiringOrders(),
+                    'renew_order' => $this->renewOrder($params['id'] ?? null, (int) ($params['months'] ?? 3), (bool) ($params['mark_paid'] ?? false)),
                     default => ['error' => "Aksi tidak dikenal: {$actionName}"],
                 };
             } catch (\Exception $e) {
@@ -486,6 +512,90 @@ PROMPT;
             'total_links' => $totalLinks,
             'issues' => $issues,
             'recommendation' => $score >= 80 ? 'Bagus! SEO sudah optimal.' : ($score >= 60 ? 'Perlu perbaikan minor.' : 'Prioritas tinggi untuk optimasi SEO.'),
+        ];
+    }
+
+    private function checkExpiringOrders(): array
+    {
+        $start = now()->startOfMonth();
+        $end = now()->endOfMonth();
+
+        $orders = Order::with('customer')
+            ->where('status', 'active')
+            ->whereNotNull('expires_at')
+            ->whereBetween('expires_at', [$start, $end])
+            ->orderBy('expires_at')
+            ->get();
+
+        $typeLabels = [
+            'hosting' => 'Hosting',
+            'domain' => 'Domain',
+            'service' => 'Layanan',
+            'app' => 'Aplikasi',
+            'web' => 'Website',
+            'maintenance' => 'Maintenance',
+        ];
+
+        $list = $orders->map(fn (Order $o) => [
+            'id' => $o->id,
+            'customer' => $o->customer?->name ?? 'Tanpa customer',
+            'service_type' => $typeLabels[$o->service_type] ?? $o->service_type,
+            'domain_name' => $o->domain_name,
+            'expires_at' => $o->expires_at?->format('d M Y'),
+            'auto_renew' => (bool) $o->auto_renew,
+            'days_left' => $o->expires_at ? max(0, (int) $o->expires_at->diffInDays(now())) : 0,
+        ])->values()->all();
+
+        $monthLabel = now()->translatedFormat('F Y');
+
+        return [
+            'orders_expiring' => $list,
+            'total' => count($list),
+            'month' => $monthLabel,
+            'summary' => count($list) > 0
+                ? count($list) . ' order aktif akan berakhir bulan ini (' . $monthLabel . ').'
+                : 'Tidak ada order aktif yang berakhir bulan ini (' . $monthLabel . ').',
+        ];
+    }
+
+    private function renewOrder(?int $orderId, int $months, bool $markPaid): array
+    {
+        if (!$orderId) {
+            return ['error' => 'ID order diperlukan.'];
+        }
+
+        $order = Order::find($orderId);
+        if (!$order) {
+            return ['error' => 'Order tidak ditemukan.'];
+        }
+
+        $months = max(1, $months);
+        $newExpiry = now()->addMonths($months);
+        $order->update(['expires_at' => $newExpiry]);
+
+        $invoiceMessage = '';
+        if ($markPaid) {
+            $updated = Invoice::where('order_id', $order->id)
+                ->whereNotIn('status', ['paid'])
+                ->update([
+                    'status' => 'paid',
+                    'paid_at' => now(),
+                ]);
+            $invoiceMessage = $updated > 0
+                ? $updated . ' invoice ditandai lunas. '
+                : 'Tidak ada invoice yang perlu ditandai lunas. ';
+        }
+
+        return [
+            'success' => true,
+            'order_id' => $order->id,
+            'customer' => $order->customer?->name ?? 'Tanpa customer',
+            'domain' => $order->domain_name,
+            'months_added' => $months,
+            'expires_at' => $newExpiry->format('d M Y'),
+            'invoices_marked_paid' => $markPaid,
+            'message' => $invoiceMessage . 'Masa aktif ' . ($order->customer?->name ?? 'order #' . $order->id)
+                . ' diperpanjang ' . $months . ' bulan → berakhir ' . $newExpiry->format('d M Y') . '.',
         ];
     }
 }

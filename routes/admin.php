@@ -102,6 +102,7 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::resource('journals', JournalEntryController::class)->except(['show']);
     Route::get('journals/report', [JournalEntryController::class, 'report'])->name('journals.report');
     Route::get('journals/export', [JournalEntryController::class, 'export'])->name('journals.export');
+    Route::get('journals/export-excel', [JournalEntryController::class, 'exportExcel'])->name('journals.export-excel');
 
     // Branding Settings
     Route::middleware('no.cache')->group(function () {

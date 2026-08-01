@@ -7,10 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
+import { formatDate } from '@/lib/utils';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { BarChart3, Calendar, Edit, Plus, Search, Trash2, X } from 'lucide-vue-next';
+import { BarChart3, Calendar, Download, Edit, Plus, Search, Trash2, X } from 'lucide-vue-next';
 import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 interface WebsiteClient { id: number; name: string; }
 interface User { id: number; name: string; }
@@ -73,6 +74,15 @@ const resetFilter = () => {
     router.get('/admin/journals', {}, { preserveState: true, replace: true });
 };
 
+const exportExcelUrl = computed(() => {
+    const p = new URLSearchParams();
+    if (websiteFilter.value) p.set('website_client_id', websiteFilter.value);
+    if (dateFrom.value) p.set('date_from', dateFrom.value);
+    if (dateTo.value) p.set('date_to', dateTo.value);
+    const qs = p.toString();
+    return qs ? `/admin/journals/export-excel?${qs}` : '/admin/journals/export-excel';
+});
+
 const openDeleteModal = (j: Journal) => { journalToDelete.value = j; showDeleteModal.value = true; };
 const confirmDelete = () => {
     if (!journalToDelete.value) return;
@@ -97,13 +107,16 @@ const confirmDelete = () => {
                     <Link href="/admin/journals/report">
                         <Button variant="outline" class="cursor-pointer"><BarChart3 class="mr-2 h-4 w-4" /> Laporan</Button>
                     </Link>
+                    <Link :href="exportExcelUrl">
+                        <Button variant="outline" class="cursor-pointer"><Download class="mr-2 h-4 w-4" /> Export Excel</Button>
+                    </Link>
                     <Link href="/admin/journals/create">
                         <Button class="cursor-pointer"><Plus class="mr-2 h-4 w-4" /> Catat Jurnal</Button>
                     </Link>
                 </div>
             </div>
 
-            <Card>
+            <Card class="overflow-visible">
                 <CardContent class="pt-6">
                     <div class="flex flex-wrap items-end gap-4">
                         <div>
@@ -149,7 +162,7 @@ const confirmDelete = () => {
                                 <TableRow v-for="j in journals.data" :key="j.id">
                                     <TableCell class="font-medium">{{ j.website_client?.name || '-' }}</TableCell>
                                     <TableCell class="whitespace-nowrap">
-                                        <div class="flex items-center gap-2"><Calendar class="h-3.5 w-3.5 text-muted-foreground" />{{ j.entry_date }}</div>
+                                        <div class="flex items-center gap-2"><Calendar class="h-3.5 w-3.5 text-muted-foreground" />{{ formatDate(j.entry_date, 'long') }}</div>
                                     </TableCell>
                                     <TableCell>
                                         <div class="space-y-1">

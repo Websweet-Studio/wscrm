@@ -127,7 +127,7 @@ const uniqueWebsites = computed(() => new Set(props.reportData.entries.map(e => 
                 </CardContent>
             </Card>
 
-            <Card>
+            <Card class="overflow-visible">
                 <CardContent class="pt-6">
                     <div class="flex flex-wrap items-end gap-4">
                         <div>

@@ -159,4 +159,108 @@ class JournalEntryController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+    public function exportExcel(JournalReportService $reportService)
+    {
+        $this->checkAdmin();
+
+        $journals = JournalEntry::with(['websiteClient', 'user'])
+            ->when(request('website_client_id'), fn($q, $v) => $q->where('website_client_id', $v))
+            ->when(request('date_from'), fn($q, $v) => $q->where('entry_date', '>=', $v))
+            ->when(request('date_to'), fn($q, $v) => $q->where('entry_date', '<=', $v))
+            ->orderBy('entry_date', 'desc')
+            ->get();
+
+        $typeLabels = [
+            'wp_update' => 'WP Update',
+            'plugin_update' => 'Update Plugin',
+            'theme_update' => 'Update Tema',
+            'article' => 'Artikel',
+            'page_optimization' => 'Optimasi Halaman',
+            'other' => 'Lainnya',
+        ];
+
+        $rows = [];
+        foreach ($journals as $j) {
+            foreach ($j->activities ?? [] as $activity) {
+                $rows[] = [
+                    $j->websiteClient?->name ?? '',
+                    $j->entry_date,
+                    $typeLabels[$activity['type'] ?? ''] ?? $activity['type'] ?? '',
+                    $reportService->formatActivityDetail($activity),
+                    $j->user?->name ?? '',
+                ];
+            }
+        }
+
+        $headers = ['Website', 'Tanggal', 'Tipe Aktivitas', 'Detail', 'User'];
+
+        $filename = 'jurnal-maintenance-' . date('Ymd-His') . '.xlsx';
+
+        return response($this->buildXlsx($headers, $rows), 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    /**
+     * Build a minimal valid .xlsx file (no external library required).
+     */
+    private function buildXlsx(array $headers, array $rows): string
+    {
+        $sheetData = '<sheetData>';
+        $sheetData .= '<row r="1">';
+        foreach ($headers as $i => $h) {
+            $sheetData .= $this->xlsxCell($this->colLetter($i + 1) . '1', $h);
+        }
+        $sheetData .= '</row>';
+
+        foreach ($rows as $rowNum => $row) {
+            $r = $rowNum + 2;
+            $sheetData .= '<row r="' . $r . '">';
+            foreach ($row as $i => $cell) {
+                $sheetData .= $this->xlsxCell($this->colLetter($i + 1) . $r, $cell);
+            }
+            $sheetData .= '</row>';
+        }
+        $sheetData .= '</sheetData>';
+
+        $parts = [
+            '[Content_Types].xml' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>',
+            '_rels/.rels' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
+            'xl/workbook.xml' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Jurnal" sheetId="1" r:id="rId1"/></sheets></workbook>',
+            'xl/_rels/workbook.xml.rels' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>',
+            'xl/worksheets/sheet1.xml' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' . $sheetData . '</worksheet>',
+        ];
+
+        $path = tempnam(sys_get_temp_dir(), 'xlsx');
+        $zip = new \ZipArchive();
+        $zip->open($path, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        foreach ($parts as $name => $content) {
+            $zip->addFromString($name, $content);
+        }
+        $zip->close();
+
+        $content = file_get_contents($path);
+        @unlink($path);
+
+        return $content;
+    }
+
+    private function xlsxCell(string $ref, $value): string
+    {
+        return '<c r="' . $ref . '" t="inlineStr"><is><t xml:space="preserve">'
+            . htmlspecialchars((string) $value, ENT_XML1 | ENT_QUOTES, 'UTF-8')
+            . '</t></is></c>';
+    }
+
+    private function colLetter(int $index): string
+    {
+        $letter = '';
+        while ($index > 0) {
+            $letter = chr(65 + (($index - 1) % 26)) . $letter;
+            $index = intdiv($index - 1, 26);
+        }
+        return $letter;
+    }
 }
