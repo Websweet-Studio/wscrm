@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\WebsiteClientRequest;
 use App\Models\Customer;
 use App\Models\WebsiteClient;
+use App\Services\WordPressService;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Http\JsonResponse;
 
 class WebsiteClientController extends Controller
 {
@@ -35,18 +37,33 @@ class WebsiteClientController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        $customers = Customer::orderBy('name')->get(['id', 'name']);
-
-        $editingWebsite = null;
-        if (request()->filled('edit')) {
-            $editingWebsite = WebsiteClient::find(request('edit'));
-        }
-
         return Inertia::render('Admin/WebsiteClients/Index', [
             'websites' => $websites,
-            'customers' => $customers,
             'filters' => request()->only(['search', 'customer_id', 'is_active']),
-            'editingWebsite' => $editingWebsite,
+        ]);
+    }
+
+    public function create(): Response
+    {
+        $this->checkAdmin();
+
+        $customers = Customer::orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('Admin/WebsiteClients/CreateEdit', [
+            'customers' => $customers,
+            'website' => null,
+        ]);
+    }
+
+    public function edit(WebsiteClient $website): Response
+    {
+        $this->checkAdmin();
+
+        $customers = Customer::orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('Admin/WebsiteClients/CreateEdit', [
+            'customers' => $customers,
+            'website' => $website,
         ]);
     }
 
@@ -55,7 +72,7 @@ class WebsiteClientController extends Controller
         $this->checkAdmin();
         WebsiteClient::create($request->validated());
 
-        return redirect()->back()->with('success', 'Website berhasil ditambahkan.');
+        return redirect()->route('admin.websites.index')->with('success', 'Website berhasil ditambahkan.');
     }
 
     public function update(WebsiteClientRequest $request, WebsiteClient $website)
@@ -63,7 +80,7 @@ class WebsiteClientController extends Controller
         $this->checkAdmin();
         $website->update($request->validated());
 
-        return redirect()->back()->with('success', 'Website berhasil diperbarui.');
+        return redirect()->route('admin.websites.index')->with('success', 'Website berhasil diperbarui.');
     }
 
     public function destroy(WebsiteClient $website)
@@ -102,6 +119,26 @@ class WebsiteClientController extends Controller
         return Inertia::render('Admin/WebsiteClients/Show', [
             'website' => $website,
             'journals' => $journals,
+        ]);
+    }
+
+    public function sync(WebsiteClient $website, WordPressService $wpService): JsonResponse
+    {
+        $this->checkAdmin();
+
+        $result = $wpService->syncSiteInfo($website);
+
+        if ($result === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal sync. Pastikan URL, username, dan Application Password sudah benar.',
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil sync data WordPress.',
+            'data' => $result,
         ]);
     }
 }

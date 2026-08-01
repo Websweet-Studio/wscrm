@@ -17,6 +17,8 @@ class WebsiteClientRequest extends FormRequest
             'customer_id' => 'nullable|exists:customers,id',
             'name' => 'required|string|max:255',
             'url' => 'required|string|max:500',
+            'wp_username' => 'nullable|string|max:255',
+            'wp_app_password' => 'nullable|string|max:500',
             'wp_version' => 'nullable|string|max:20',
             'theme_name' => 'nullable|string|max:255',
             'theme_version' => 'nullable|string|max:20',

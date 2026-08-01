@@ -15,6 +15,8 @@ class WebsiteClient extends Model
         'customer_id',
         'name',
         'url',
+        'wp_username',
+        'wp_app_password',
         'wp_version',
         'theme_name',
         'theme_version',

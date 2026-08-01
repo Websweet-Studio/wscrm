@@ -89,7 +89,8 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::resource('task-categories', TaskCategoryController::class)->only(['index', 'store', 'update', 'destroy']);
 
     // Website Client & Journal Management
-    Route::resource('websites', WebsiteClientController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
+    Route::resource('websites', WebsiteClientController::class);
+    Route::post('websites/{website}/sync', [WebsiteClientController::class, 'sync'])->name('websites.sync');
     Route::delete('websites/bulk', [WebsiteClientController::class, 'bulkDelete'])->name('websites.bulk-delete');
     Route::resource('journals', JournalEntryController::class)->except(['show']);
     Route::get('journals/report', [JournalEntryController::class, 'report'])->name('journals.report');
@@ -112,6 +113,9 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     // Admin Tools
     Route::get('tools', [AdminToolsController::class, 'index'])->name('tools.index');
     Route::post('tools/execute', [AdminToolsController::class, 'execute'])->name('tools.execute');
+
+    // API lookup helpers
+    Route::get('api/customers/search', [CustomerController::class, 'search'])->name('api.customers.search');
 
     // Demo Website Management
     Route::resource('demo-websites', AdminDemoWebsiteController::class)->only(['index', 'create', 'edit', 'store', 'update', 'destroy']);

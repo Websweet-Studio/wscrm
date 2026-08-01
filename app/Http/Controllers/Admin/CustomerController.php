@@ -8,6 +8,7 @@ use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -247,5 +248,18 @@ class CustomerController extends Controller
         \Illuminate\Support\Facades\Mail::to($customer->email)->send(new \App\Mail\CustomerNewPasswordMail($customer, $password));
 
         return back()->with('success', 'Password baru berhasil dikirim ke email pelanggan.');
+    }
+
+    public function search(Request $request): JsonResponse
+    {
+        $query = $request->get('q', '');
+
+        $customers = Customer::where('name', 'like', "%{$query}%")
+            ->orWhere('email', 'like', "%{$query}%")
+            ->orderBy('name')
+            ->limit(20)
+            ->get(['id', 'name', 'email']);
+
+        return response()->json($customers);
     }
 }

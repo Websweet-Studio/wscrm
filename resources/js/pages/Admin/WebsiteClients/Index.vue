@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { Edit, ExternalLink, Plus, Search, Trash2, X } from 'lucide-vue-next';
 import { ref } from 'vue';
 
@@ -40,99 +39,33 @@ interface Props {
         total: number;
         links: any[];
     };
-    customers: Customer[];
     filters: {
         search?: string;
         customer_id?: string;
         is_active?: string;
     };
-    editingWebsite?: WebsiteClient | null;
 }
 
 const props = defineProps<Props>();
 
 const search = ref(props.filters.search || '');
-const customerFilter = ref(props.filters.customer_id || '');
 const isActiveFilter = ref(props.filters.is_active ?? '');
 
-const showCreateModal = ref(false);
-const showEditModal = ref(false);
 const showDeleteModal = ref(false);
-const editingWebsite = ref<WebsiteClient | null>(null);
 const websiteToDelete = ref<WebsiteClient | null>(null);
 const selectedIds = ref<number[]>([]);
 const showBulkDeleteModal = ref(false);
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Website Klien', href: '/admin/websites' },
+    { title: 'Manage Website', href: '/admin/websites' },
 ];
-
-const createForm = useForm({
-    name: '',
-    url: '',
-    customer_id: null as (number | null),
-    wp_version: '',
-    theme_name: '',
-    theme_version: '',
-    plugins: [] as { name: string; version: string }[],
-    notes: '',
-    is_active: true,
-});
-
-const editForm = useForm({
-    name: '',
-    url: '',
-    customer_id: null as (number | null),
-    wp_version: '',
-    theme_name: '',
-    theme_version: '',
-    plugins: [] as { name: string; version: string }[],
-    notes: '',
-    is_active: true,
-    _method: 'PUT',
-});
 
 const handleSearch = () => {
     router.get('/admin/websites', {
         search: search.value,
-        customer_id: customerFilter.value,
         is_active: isActiveFilter.value,
     }, { preserveState: true, replace: true });
-};
-
-const submitCreate = () => {
-    createForm.post('/admin/websites', {
-        onSuccess: () => {
-            showCreateModal.value = false;
-            createForm.reset();
-        },
-    });
-};
-
-const openEditModal = (website: WebsiteClient) => {
-    editingWebsite.value = website;
-    editForm.name = website.name;
-    editForm.url = website.url;
-    editForm.customer_id = website.customer_id;
-    editForm.wp_version = website.wp_version || '';
-    editForm.theme_name = website.theme_name || '';
-    editForm.theme_version = website.theme_version || '';
-    editForm.plugins = [...(website.plugins || [])];
-    editForm.notes = website.notes || '';
-    editForm.is_active = website.is_active;
-    showEditModal.value = true;
-};
-
-const submitEdit = () => {
-    if (!editingWebsite.value) return;
-    editForm.post(`/admin/websites/${editingWebsite.value.id}`, {
-        onSuccess: () => {
-            showEditModal.value = false;
-            editForm.reset();
-            editingWebsite.value = null;
-        },
-    });
 };
 
 const openDeleteModal = (website: WebsiteClient) => {
@@ -168,20 +101,6 @@ const toggleSelect = (id: number) => {
     else selectedIds.value.push(id);
 };
 
-const newPluginName = ref('');
-const newPluginVersion = ref('');
-
-const addPlugin = (form: any) => {
-    if (!newPluginName.value.trim()) return;
-    form.plugins.push({ name: newPluginName.value.trim(), version: newPluginVersion.value.trim() });
-    newPluginName.value = '';
-    newPluginVersion.value = '';
-};
-
-const removePlugin = (form: any, index: number) => {
-    form.plugins.splice(index, 1);
-};
-
 const isAllSelected = () => {
     return props.websites.data.length > 0 && selectedIds.value.length === props.websites.data.length;
 };
@@ -197,7 +116,7 @@ const toggleAll = () => {
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Head title="Website Klien" />
+        <Head title="Manage Website" />
 
         <div class="space-y-6">
             <div class="flex items-center justify-between">
@@ -205,10 +124,12 @@ const toggleAll = () => {
                     <h1 class="text-3xl font-medium tracking-tight" style="font-family: Georgia, serif;">Website Klien</h1>
                     <p class="text-muted-foreground">Kelola website klien untuk maintenance</p>
                 </div>
-                <Button @click="showCreateModal = true" class="cursor-pointer">
-                    <Plus class="mr-2 h-4 w-4" />
-                    Tambah Website
-                </Button>
+                <Link href="/admin/websites/create">
+                    <Button class="cursor-pointer">
+                        <Plus class="mr-2 h-4 w-4" />
+                        Tambah Website
+                    </Button>
+                </Link>
             </div>
 
             <!-- Filters -->
@@ -223,13 +144,6 @@ const toggleAll = () => {
                             </div>
                         </div>
                         <div>
-                            <Label>Customer</Label>
-                            <select v-model="customerFilter" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
-                                <option value="">Semua Customer</option>
-                                <option v-for="c in customers" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
-                            </select>
-                        </div>
-                        <div>
                             <Label>Status</Label>
                             <select v-model="isActiveFilter" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
                                 <option value="">Semua</option>
@@ -238,7 +152,7 @@ const toggleAll = () => {
                             </select>
                         </div>
                         <Button variant="outline" @click="handleSearch" class="cursor-pointer">Filter</Button>
-                        <Button variant="ghost" @click="() => { search = ''; customerFilter = ''; isActiveFilter = ''; handleSearch(); }" class="cursor-pointer">
+                        <Button variant="ghost" @click="() => { search = ''; isActiveFilter = ''; handleSearch(); }" class="cursor-pointer">
                             <X class="mr-2 h-4 w-4" /> Reset
                         </Button>
                     </div>
@@ -301,9 +215,11 @@ const toggleAll = () => {
                                     </TableCell>
                                     <TableCell>
                                         <div class="flex items-center gap-1">
-                                            <Button size="sm" variant="outline" @click="openEditModal(website)" class="cursor-pointer" title="Edit">
-                                                <Edit class="h-3.5 w-3.5" />
-                                            </Button>
+                                            <Link :href="`/admin/websites/${website.id}/edit`">
+                                                <Button size="sm" variant="outline" class="cursor-pointer" title="Edit">
+                                                    <Edit class="h-3.5 w-3.5" />
+                                                </Button>
+                                            </Link>
                                             <Button size="sm" variant="outline" @click="openDeleteModal(website)" class="cursor-pointer text-destructive" title="Hapus">
                                                 <Trash2 class="h-3.5 w-3.5" />
                                             </Button>
@@ -326,139 +242,6 @@ const toggleAll = () => {
                     </div>
                 </CardContent>
             </Card>
-        </div>
-
-        <!-- Create Modal -->
-        <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center">
-            <div class="fixed inset-0 bg-black/50" @click="showCreateModal = false"></div>
-            <div class="relative mx-4 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
-                <div class="mb-4 flex items-center justify-between">
-                    <div>
-                        <h2 class="text-lg font-semibold">Tambah Website Klien</h2>
-                        <p class="text-sm text-muted-foreground">Isi data website klien untuk maintenance.</p>
-                    </div>
-                    <button @click="showCreateModal = false" class="cursor-pointer text-gray-500 hover:text-gray-700"><X class="h-4 w-4" /></button>
-                </div>
-                <form @submit.prevent="submitCreate" class="space-y-4">
-                    <div>
-                        <Label for="create-name">Nama Website *</Label>
-                        <Input id="create-name" v-model="createForm.name" required placeholder="Nama website / brand" />
-                        <p v-if="createForm.errors.name" class="mt-1 text-xs text-red-500">{{ createForm.errors.name }}</p>
-                    </div>
-                    <div>
-                        <Label for="create-url">URL *</Label>
-                        <Input id="create-url" v-model="createForm.url" required placeholder="https://example.com" />
-                        <p v-if="createForm.errors.url" class="mt-1 text-xs text-red-500">{{ createForm.errors.url }}</p>
-                    </div>
-                    <div>
-                        <Label for="create-customer">Customer (opsional)</Label>
-                        <select id="create-customer" v-model="createForm.customer_id" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
-                            <option :value="null">- Tanpa Customer -</option>
-                            <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }}</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <Label for="create-wpver">Versi WP</Label>
-                            <Input id="create-wpver" v-model="createForm.wp_version" placeholder="6.6" />
-                        </div>
-                        <div>
-                            <Label for="create-theme">Nama Tema</Label>
-                            <Input id="create-theme" v-model="createForm.theme_name" placeholder="Nama tema" />
-                        </div>
-                    </div>
-                    <div>
-                        <Label for="create-themever">Versi Tema</Label>
-                        <Input id="create-themever" v-model="createForm.theme_version" placeholder="1.0" />
-                    </div>
-                    <div>
-                        <Label>Plugin</Label>
-                        <div class="flex gap-2 mb-2">
-                            <Input v-model="newPluginName" placeholder="Nama plugin" class="flex-1" />
-                            <Input v-model="newPluginVersion" placeholder="Versi" class="w-24" />
-                            <Button type="button" variant="outline" size="sm" @click="addPlugin(createForm)" class="cursor-pointer">Tambah</Button>
-                        </div>
-                        <div v-if="createForm.plugins.length > 0" class="space-y-1 border rounded-md p-2">
-                            <div v-for="(plugin, idx) in createForm.plugins" :key="idx" class="flex items-center justify-between text-sm py-1 px-2 bg-muted/30 rounded">
-                                <span>{{ plugin.name }} <span v-if="plugin.version" class="text-muted-foreground">v{{ plugin.version }}</span></span>
-                                <button type="button" @click="removePlugin(createForm, idx)" class="cursor-pointer text-gray-400 hover:text-red-500"><X class="h-3 w-3" /></button>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <Label for="create-notes">Catatan</Label>
-                        <Textarea id="create-notes" v-model="createForm.notes" rows="2" placeholder="Catatan tambahan..." />
-                    </div>
-                    <div class="flex items-center justify-end gap-3 pt-2">
-                        <Button type="button" variant="outline" @click="showCreateModal = false" class="cursor-pointer">Batal</Button>
-                        <Button type="submit" :disabled="createForm.processing" class="cursor-pointer">Simpan</Button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Edit Modal -->
-        <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center">
-            <div class="fixed inset-0 bg-black/50" @click="showEditModal = false"></div>
-            <div class="relative mx-4 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
-                <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold">Edit Website Klien</h2>
-                    <button @click="showEditModal = false" class="cursor-pointer text-gray-500 hover:text-gray-700"><X class="h-4 w-4" /></button>
-                </div>
-                <form @submit.prevent="submitEdit" class="space-y-4">
-                    <div>
-                        <Label for="edit-name">Nama Website *</Label>
-                        <Input id="edit-name" v-model="editForm.name" required />
-                    </div>
-                    <div>
-                        <Label for="edit-url">URL *</Label>
-                        <Input id="edit-url" v-model="editForm.url" required />
-                    </div>
-                    <div>
-                        <Label for="edit-customer">Customer</Label>
-                        <select id="edit-customer" v-model="editForm.customer_id" class="mt-1 w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
-                            <option :value="null">- Tanpa Customer -</option>
-                            <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }}</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <Label for="edit-wpver">Versi WP</Label>
-                            <Input id="edit-wpver" v-model="editForm.wp_version" placeholder="6.6" />
-                        </div>
-                        <div>
-                            <Label for="edit-theme">Nama Tema</Label>
-                            <Input id="edit-theme" v-model="editForm.theme_name" placeholder="Nama tema" />
-                        </div>
-                    </div>
-                    <div>
-                        <Label for="edit-themever">Versi Tema</Label>
-                        <Input id="edit-themever" v-model="editForm.theme_version" placeholder="1.0" />
-                    </div>
-                    <div>
-                        <Label>Plugin</Label>
-                        <div class="flex gap-2 mb-2">
-                            <Input v-model="newPluginName" placeholder="Nama plugin" class="flex-1" />
-                            <Input v-model="newPluginVersion" placeholder="Versi" class="w-24" />
-                            <Button type="button" variant="outline" size="sm" @click="addPlugin(editForm)" class="cursor-pointer">Tambah</Button>
-                        </div>
-                        <div v-if="editForm.plugins.length > 0" class="space-y-1 border rounded-md p-2">
-                            <div v-for="(plugin, idx) in editForm.plugins" :key="idx" class="flex items-center justify-between text-sm py-1 px-2 bg-muted/30 rounded">
-                                <span>{{ plugin.name }} <span v-if="plugin.version" class="text-muted-foreground">v{{ plugin.version }}</span></span>
-                                <button type="button" @click="removePlugin(editForm, idx)" class="cursor-pointer text-gray-400 hover:text-red-500"><X class="h-3 w-3" /></button>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <Label for="edit-notes">Catatan</Label>
-                        <Textarea id="edit-notes" v-model="editForm.notes" rows="2" placeholder="Catatan tambahan..." />
-                    </div>
-                    <div class="flex items-center justify-end gap-3 pt-2">
-                        <Button type="button" variant="outline" @click="showEditModal = false" class="cursor-pointer">Batal</Button>
-                        <Button type="submit" :disabled="editForm.processing" class="cursor-pointer">Simpan</Button>
-                    </div>
-                </form>
-            </div>
         </div>
 
         <!-- Delete Modal -->

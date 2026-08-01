@@ -9,6 +9,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { BarChart3, Calendar, Edit, Plus, Search, Trash2, X } from 'lucide-vue-next';
+import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import { ref } from 'vue';
 
 interface WebsiteClient { id: number; name: string; }
@@ -114,11 +115,11 @@ const confirmDelete = () => {
                         </div>
                         <div>
                             <Label>Dari Tanggal</Label>
-                            <Input v-model="dateFrom" type="date" />
+                            <DatePicker v-model="dateFrom" placeholder="Dari tanggal" />
                         </div>
                         <div>
                             <Label>Sampai Tanggal</Label>
-                            <Input v-model="dateTo" type="date" />
+                            <DatePicker v-model="dateTo" placeholder="Sampai tanggal" />
                         </div>
                         <Button variant="outline" @click="handleFilter" class="cursor-pointer"><Search class="mr-2 h-4 w-4" /> Filter</Button>
                         <Button variant="ghost" @click="resetFilter" class="cursor-pointer"><X class="mr-2 h-4 w-4" /> Reset</Button>

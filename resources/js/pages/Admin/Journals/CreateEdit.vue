@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -74,7 +75,7 @@ const setType = (i: number, type: string) => { form.activities[i] = { type }; };
                         </div>
                         <div>
                             <Label>Tanggal *</Label>
-                            <Input v-model="form.entry_date" type="date" required />
+                            <DatePicker v-model="form.entry_date" placeholder="Pilih tanggal" />
                             <p v-if="form.errors.entry_date" class="text-xs text-red-500 mt-1">{{ form.errors.entry_date }}</p>
                         </div>
                     </CardContent>

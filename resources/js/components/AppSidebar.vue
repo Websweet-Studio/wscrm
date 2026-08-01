@@ -129,7 +129,7 @@ const mainNavItems: NavItem[] = [
         ],
     },
     {
-        title: 'Website Klien',
+        title: 'Manage Website',
         href: '#',
         icon: ClipboardList,
         children: [

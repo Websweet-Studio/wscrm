@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowLeft, ExternalLink, Calendar, FileText } from 'lucide-vue-next';
+import { ArrowLeft, CheckCircle2, ExternalLink, Calendar, FileText, Key, XCircle } from 'lucide-vue-next';
 
 interface Customer {
     id: number;
@@ -42,6 +42,8 @@ interface Website {
     customer_id: number | null;
     name: string;
     url: string;
+    wp_username: string | null;
+    wp_app_password: string | null;
     wp_version: string | null;
     theme_name: string | null;
     theme_version: string | null;
@@ -168,6 +170,40 @@ const formatDetail = (a: JournalActivity): string => {
             <Card v-if="website.notes">
                 <CardHeader><CardTitle class="text-base">Catatan</CardTitle></CardHeader>
                 <CardContent><p class="text-sm text-muted-foreground whitespace-pre-wrap">{{ website.notes }}</p></CardContent>
+            </Card>
+
+            <!-- WP Connection Status -->
+            <Card>
+                <CardHeader>
+                    <CardTitle class="text-base flex items-center gap-2">
+                        <Key class="h-4 w-4" /> Koneksi WordPress
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div v-if="website.wp_username && website.wp_app_password" class="flex items-start gap-3">
+                        <CheckCircle2 class="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                        <div>
+                            <p class="text-sm font-medium">Terkoneksi</p>
+                            <p class="text-sm text-muted-foreground">
+                                Username: <span class="font-mono">{{ website.wp_username }}</span>
+                                <span class="mx-2">|</span>
+                                Password: <span class="font-mono">••••••••</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div v-else class="flex items-start gap-3">
+                        <XCircle class="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" />
+                        <div>
+                            <p class="text-sm font-medium">Belum dikonfigurasi</p>
+                            <p class="text-sm text-muted-foreground">
+                                Tambahkan username & Application Password untuk mengelola website dari panel ini.
+                            </p>
+                            <Link :href="`/admin/websites/${website.id}/edit`" class="text-primary text-sm underline mt-1 inline-block">
+                                Konfigurasi sekarang
+                            </Link>
+                        </div>
+                    </div>
+                </CardContent>
             </Card>
 
             <Card>

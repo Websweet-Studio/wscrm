@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::index
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:21
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:23
  * @route '/admin/websites'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::index
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:21
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:23
  * @route '/admin/websites'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::index
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:21
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:23
  * @route '/admin/websites'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::index
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:21
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:23
  * @route '/admin/websites'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::index
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:21
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:23
  * @route '/admin/websites'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::index
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:21
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:23
  * @route '/admin/websites'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::index
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:21
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:23
  * @route '/admin/websites'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -78,8 +78,86 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     
     index.form = indexForm
 /**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::create
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:46
+ * @route '/admin/websites/create'
+ */
+export const create = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: create.url(options),
+    method: 'get',
+})
+
+create.definition = {
+    methods: ["get","head"],
+    url: '/admin/websites/create',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::create
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:46
+ * @route '/admin/websites/create'
+ */
+create.url = (options?: RouteQueryOptions) => {
+    return create.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::create
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:46
+ * @route '/admin/websites/create'
+ */
+create.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: create.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::create
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:46
+ * @route '/admin/websites/create'
+ */
+create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: create.url(options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::create
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:46
+ * @route '/admin/websites/create'
+ */
+    const createForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: create.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::create
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:46
+ * @route '/admin/websites/create'
+ */
+        createForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::create
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:46
+ * @route '/admin/websites/create'
+ */
+        createForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    create.form = createForm
+/**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::store
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:53
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:70
  * @route '/admin/websites'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -94,7 +172,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::store
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:53
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:70
  * @route '/admin/websites'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -103,7 +181,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::store
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:53
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:70
  * @route '/admin/websites'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -113,7 +191,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::store
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:53
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:70
  * @route '/admin/websites'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -123,7 +201,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::store
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:53
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:70
  * @route '/admin/websites'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -134,7 +212,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::show
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:91
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:108
  * @route '/admin/websites/{website}'
  */
 export const show = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -149,7 +227,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::show
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:91
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:108
  * @route '/admin/websites/{website}'
  */
 show.url = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -182,7 +260,7 @@ show.url = (args: { website: number | { id: number } } | [website: number | { id
 
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::show
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:91
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:108
  * @route '/admin/websites/{website}'
  */
 show.get = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -191,7 +269,7 @@ show.get = (args: { website: number | { id: number } } | [website: number | { id
 })
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::show
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:91
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:108
  * @route '/admin/websites/{website}'
  */
 show.head = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -201,7 +279,7 @@ show.head = (args: { website: number | { id: number } } | [website: number | { i
 
     /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::show
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:91
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:108
  * @route '/admin/websites/{website}'
  */
     const showForm = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -211,7 +289,7 @@ show.head = (args: { website: number | { id: number } } | [website: number | { i
 
             /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::show
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:91
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:108
  * @route '/admin/websites/{website}'
  */
         showForm.get = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -220,7 +298,7 @@ show.head = (args: { website: number | { id: number } } | [website: number | { i
         })
             /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::show
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:91
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:108
  * @route '/admin/websites/{website}'
  */
         showForm.head = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -235,8 +313,110 @@ show.head = (args: { website: number | { id: number } } | [website: number | { i
     
     show.form = showForm
 /**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::edit
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:58
+ * @route '/admin/websites/{website}/edit'
+ */
+export const edit = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: edit.url(args, options),
+    method: 'get',
+})
+
+edit.definition = {
+    methods: ["get","head"],
+    url: '/admin/websites/{website}/edit',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::edit
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:58
+ * @route '/admin/websites/{website}/edit'
+ */
+edit.url = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { website: args }
+    }
+
+            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+            args = { website: args.id }
+        }
+    
+    if (Array.isArray(args)) {
+        args = {
+                    website: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        website: typeof args.website === 'object'
+                ? args.website.id
+                : args.website,
+                }
+
+    return edit.definition.url
+            .replace('{website}', parsedArgs.website.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::edit
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:58
+ * @route '/admin/websites/{website}/edit'
+ */
+edit.get = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: edit.url(args, options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::edit
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:58
+ * @route '/admin/websites/{website}/edit'
+ */
+edit.head = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: edit.url(args, options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::edit
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:58
+ * @route '/admin/websites/{website}/edit'
+ */
+    const editForm = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: edit.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::edit
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:58
+ * @route '/admin/websites/{website}/edit'
+ */
+        editForm.get = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::edit
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:58
+ * @route '/admin/websites/{website}/edit'
+ */
+        editForm.head = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    edit.form = editForm
+/**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::update
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:61
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:78
  * @route '/admin/websites/{website}'
  */
 export const update = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -251,7 +431,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::update
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:61
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:78
  * @route '/admin/websites/{website}'
  */
 update.url = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -284,7 +464,7 @@ update.url = (args: { website: number | { id: number } } | [website: number | { 
 
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::update
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:61
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:78
  * @route '/admin/websites/{website}'
  */
 update.put = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -293,7 +473,7 @@ update.put = (args: { website: number | { id: number } } | [website: number | { 
 })
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::update
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:61
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:78
  * @route '/admin/websites/{website}'
  */
 update.patch = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -303,7 +483,7 @@ update.patch = (args: { website: number | { id: number } } | [website: number | 
 
     /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::update
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:61
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:78
  * @route '/admin/websites/{website}'
  */
     const updateForm = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -318,7 +498,7 @@ update.patch = (args: { website: number | { id: number } } | [website: number | 
 
             /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::update
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:61
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:78
  * @route '/admin/websites/{website}'
  */
         updateForm.put = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -332,7 +512,7 @@ update.patch = (args: { website: number | { id: number } } | [website: number | 
         })
             /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::update
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:61
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:78
  * @route '/admin/websites/{website}'
  */
         updateForm.patch = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -348,7 +528,7 @@ update.patch = (args: { website: number | { id: number } } | [website: number | 
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::destroy
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:69
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:86
  * @route '/admin/websites/{website}'
  */
 export const destroy = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -363,7 +543,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::destroy
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:69
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:86
  * @route '/admin/websites/{website}'
  */
 destroy.url = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -396,7 +576,7 @@ destroy.url = (args: { website: number | { id: number } } | [website: number | {
 
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::destroy
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:69
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:86
  * @route '/admin/websites/{website}'
  */
 destroy.delete = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -406,7 +586,7 @@ destroy.delete = (args: { website: number | { id: number } } | [website: number 
 
     /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::destroy
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:69
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:86
  * @route '/admin/websites/{website}'
  */
     const destroyForm = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -421,7 +601,7 @@ destroy.delete = (args: { website: number | { id: number } } | [website: number 
 
             /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::destroy
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:69
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:86
  * @route '/admin/websites/{website}'
  */
         destroyForm.delete = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -436,8 +616,87 @@ destroy.delete = (args: { website: number | { id: number } } | [website: number 
     
     destroy.form = destroyForm
 /**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::sync
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:125
+ * @route '/admin/websites/{website}/sync'
+ */
+export const sync = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: sync.url(args, options),
+    method: 'post',
+})
+
+sync.definition = {
+    methods: ["post"],
+    url: '/admin/websites/{website}/sync',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::sync
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:125
+ * @route '/admin/websites/{website}/sync'
+ */
+sync.url = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { website: args }
+    }
+
+            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+            args = { website: args.id }
+        }
+    
+    if (Array.isArray(args)) {
+        args = {
+                    website: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        website: typeof args.website === 'object'
+                ? args.website.id
+                : args.website,
+                }
+
+    return sync.definition.url
+            .replace('{website}', parsedArgs.website.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::sync
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:125
+ * @route '/admin/websites/{website}/sync'
+ */
+sync.post = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: sync.url(args, options),
+    method: 'post',
+})
+
+    /**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::sync
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:125
+ * @route '/admin/websites/{website}/sync'
+ */
+    const syncForm = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: sync.url(args, options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::sync
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:125
+ * @route '/admin/websites/{website}/sync'
+ */
+        syncForm.post = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: sync.url(args, options),
+            method: 'post',
+        })
+    
+    sync.form = syncForm
+/**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::bulkDelete
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:77
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:94
  * @route '/admin/websites/bulk'
  */
 export const bulkDelete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -452,7 +711,7 @@ bulkDelete.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::bulkDelete
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:77
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:94
  * @route '/admin/websites/bulk'
  */
 bulkDelete.url = (options?: RouteQueryOptions) => {
@@ -461,7 +720,7 @@ bulkDelete.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::bulkDelete
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:77
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:94
  * @route '/admin/websites/bulk'
  */
 bulkDelete.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -471,7 +730,7 @@ bulkDelete.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => 
 
     /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::bulkDelete
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:77
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:94
  * @route '/admin/websites/bulk'
  */
     const bulkDeleteForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -486,7 +745,7 @@ bulkDelete.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => 
 
             /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::bulkDelete
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:77
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:94
  * @route '/admin/websites/bulk'
  */
         bulkDeleteForm.delete = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -502,10 +761,13 @@ bulkDelete.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => 
     bulkDelete.form = bulkDeleteForm
 const websites = {
     index: Object.assign(index, index),
+create: Object.assign(create, create),
 store: Object.assign(store, store),
 show: Object.assign(show, show),
+edit: Object.assign(edit, edit),
 update: Object.assign(update, update),
 destroy: Object.assign(destroy, destroy),
+sync: Object.assign(sync, sync),
 bulkDelete: Object.assign(bulkDelete, bulkDelete),
 }
 

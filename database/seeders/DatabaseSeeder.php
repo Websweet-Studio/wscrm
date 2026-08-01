@@ -50,6 +50,7 @@ class DatabaseSeeder extends Seeder
             ExpenseSeeder::class,
             TaskSeeder::class,
             DemoWebsiteSeeder::class,
+            ManageWebsiteSeeder::class,
         ]);
     }
 }
