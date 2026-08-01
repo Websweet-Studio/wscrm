@@ -90,6 +90,7 @@ const toolGroups: { title: string; icon: any; actions: ToolAction[] }[] = [
             { key: 'db_seed_layanan', label: 'Seed Service Plans', desc: 'Data paket layanan', variant: 'secondary' as const },
             { key: 'db_seed_hosting', label: 'Seed Hosting Plans', desc: 'Data paket hosting', variant: 'secondary' as const },
             { key: 'db_seed_demo', label: 'Seed Demo Websites', desc: 'Demo website dari API', variant: 'secondary' as const },
+            { key: 'db_seed_websites', label: 'Seed Manage Website', desc: '6 website + jurnal sample', variant: 'secondary' as const },
             { key: 'migrate_fresh', label: 'Fresh Migration', desc: '⚠️ Drop all tables & re-migrate', variant: 'destructive' as const, confirm: true },
         ],
     },

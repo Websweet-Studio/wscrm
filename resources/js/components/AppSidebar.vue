@@ -5,13 +5,17 @@ import { useSidebar } from '@/composables/useSidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 import {
+    BarChart3,
     BookOpen,
+    BookText,
+    Bot,
     Building,
     Building2,
     Calculator,
     CheckSquare,
     ChevronDown,
     ChevronRight,
+    ClipboardList,
     CreditCard,
     DollarSign,
     FileText,
@@ -27,9 +31,6 @@ import {
     ShoppingCart,
     Tags,
     Users,
-    BarChart3,
-    BookText,
-    ClipboardList,
 } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
 import AppLogo from './AppLogo.vue';
@@ -147,6 +148,11 @@ const mainNavItems: NavItem[] = [
                 title: 'Laporan',
                 href: '/admin/journals/report',
                 icon: BarChart3,
+            },
+            {
+                title: 'AI Agent',
+                href: '/admin/websites/ai',
+                icon: Bot,
             },
         ],
     },

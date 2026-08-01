@@ -71,6 +71,7 @@ class AdminToolsController extends Controller
                 'db_seed_layanan' => $this->runCommands(['db:seed --class="Database\\Seeders\\ServicePlanSeeder" --force --no-interaction']),
                 'db_seed_hosting' => $this->runCommands(['db:seed --class="Database\\Seeders\\HostingPlanSeeder" --force --no-interaction']),
                 'db_seed_demo' => $this->runCommands(['db:seed --class="Database\\Seeders\\DemoWebsiteSeeder" --force --no-interaction']),
+                'db_seed_websites' => $this->runCommands(['db:seed --class="Database\\Seeders\\ManageWebsiteSeeder" --force --no-interaction']),
                 'migrate_fresh' => $this->runCommands(['migrate:fresh --force --no-interaction']),
 
                 // Maintenance

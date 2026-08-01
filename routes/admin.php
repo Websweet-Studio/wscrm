@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminToolsController;
+use App\Http\Controllers\Admin\AiAgentController;
 use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\BrandingController;
 use App\Http\Controllers\Admin\BulkPricingController;
@@ -89,9 +90,13 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::resource('task-categories', TaskCategoryController::class)->only(['index', 'store', 'update', 'destroy']);
 
     // Website Client & Journal Management
+    // AI Agent - must be before resource route to avoid conflict
+    Route::get('websites/ai', [AiAgentController::class, 'index'])->name('websites.ai');
+    Route::post('websites/ai/chat', [AiAgentController::class, 'chat'])->name('websites.ai.chat');
     Route::resource('websites', WebsiteClientController::class);
     Route::post('websites/{website}/sync', [WebsiteClientController::class, 'sync'])->name('websites.sync');
     Route::delete('websites/bulk', [WebsiteClientController::class, 'bulkDelete'])->name('websites.bulk-delete');
+
     Route::resource('journals', JournalEntryController::class)->except(['show']);
     Route::get('journals/report', [JournalEntryController::class, 'report'])->name('journals.report');
     Route::get('journals/export', [JournalEntryController::class, 'export'])->name('journals.export');
