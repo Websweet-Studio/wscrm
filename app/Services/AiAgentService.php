@@ -91,7 +91,7 @@ class AiAgentService
                 return ['message' => "Error AI API: " . $response->status()];
             }
 
-            $data = $response->json();
+            $data = $this->decodeResponse($response);
             $content = $data['choices'][0]['message']['content'] ?? '';
 
             // Parse JSON from response (AI should return JSON with actions)
@@ -134,6 +134,19 @@ Kamu adalah AI Agent untuk mengelola website WordPress klien. Kamu BISA menjalan
 - Jika user hanya tanya/minta informasi, jawab saja tanpa actions
 
 PROMPT;
+    }
+
+    /**
+     * Decode gateway response body. Some gateways append SSE chunks (e.g. "data: [DONE]")
+     * right after the JSON payload, which breaks json_decode — extract the JSON object only.
+     */
+    private function decodeResponse($response): ?array
+    {
+        $body = $response->body();
+
+        return preg_match('/\{.*\}/s', $body, $m)
+            ? json_decode($m[0], true)
+            : null;
     }
 
     private function parseAiResponse(string $content): array
@@ -359,7 +372,7 @@ PROMPT;
                 ]);
 
             if ($response->successful()) {
-                $data = $response->json();
+                $data = $this->decodeResponse($response);
                 return $data['choices'][0]['message']['content'] ?? '';
             }
 

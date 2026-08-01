@@ -66,12 +66,12 @@ class AdminToolsController extends Controller
                 'migrate' => $this->runCommands(['migrate --force --no-interaction']),
                 'migrate_optimize' => $this->runCommands(['migrate --force --no-interaction', 'optimize --no-interaction']),
                 'db_seed' => $this->runCommands(['db:seed --force --no-interaction']),
-                'db_seed_users' => $this->runCommands(['db:seed --class="Database\\Seeders\\SuperAdminSeeder" --force --no-interaction']),
-                'db_seed_domain' => $this->runCommands(['db:seed --class="Database\\Seeders\\DomainPriceSeeder" --force --no-interaction']),
-                'db_seed_layanan' => $this->runCommands(['db:seed --class="Database\\Seeders\\ServicePlanSeeder" --force --no-interaction']),
-                'db_seed_hosting' => $this->runCommands(['db:seed --class="Database\\Seeders\\HostingPlanSeeder" --force --no-interaction']),
-                'db_seed_demo' => $this->runCommands(['db:seed --class="Database\\Seeders\\DemoWebsiteSeeder" --force --no-interaction']),
-                'db_seed_websites' => $this->runCommands(['db:seed --class="Database\\Seeders\\ManageWebsiteSeeder" --force --no-interaction']),
+                'db_seed_users' => $this->runSeeder('Database\\Seeders\\SuperAdminSeeder'),
+                'db_seed_domain' => $this->runSeeder('Database\\Seeders\\DomainPriceSeeder'),
+                'db_seed_layanan' => $this->runSeeder('Database\\Seeders\\ServicePlanSeeder'),
+                'db_seed_hosting' => $this->runSeeder('Database\\Seeders\\HostingPlanSeeder'),
+                'db_seed_demo' => $this->runSeeder('Database\\Seeders\\DemoWebsiteSeeder'),
+                'db_seed_websites' => $this->runSeeder('Database\\Seeders\\ManageWebsiteSeeder'),
                 'migrate_fresh' => $this->runCommands(['migrate:fresh --force --no-interaction']),
 
                 // Maintenance
@@ -116,6 +116,16 @@ class AdminToolsController extends Controller
             $outputs[] = "\$ php artisan {$command}\n" . ($result ?: '(no output)');
         }
         return implode("\n\n", $outputs);
+    }
+
+    private function runSeeder(string $class): string
+    {
+        Artisan::call('db:seed', [
+            '--class' => $class,
+            '--force' => true,
+        ]);
+
+        return "\$ php artisan db:seed --class={$class}\n" . trim(Artisan::output());
     }
 
     private function handleStorageLink(): string

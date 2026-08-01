@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
-import { Check, Eye, EyeOff, Key, Link2, RefreshCw, Search, Trash2, User } from 'lucide-vue-next';
+import { Check, CalendarClock, Eye, EyeOff, Key, Link2, RefreshCw, Search, Trash2, User } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
 interface Customer { id: number; name: string; email?: string; }
@@ -26,6 +26,9 @@ interface Website {
     plugins: Plugin[] | null;
     notes: string | null;
     is_active: boolean;
+    auto_update_enabled: boolean;
+    last_auto_update_at: string | null;
+    last_auto_update_status: string | null;
     customer?: Customer | null;
 }
 
@@ -55,6 +58,7 @@ const form = useForm({
     plugins: [...(props.website?.plugins || [])] as Plugin[],
     notes: props.website?.notes || '',
     is_active: props.website?.is_active ?? true,
+    auto_update_enabled: props.website?.auto_update_enabled ?? false,
     _method: isEdit.value ? 'PUT' : 'POST',
 });
 
@@ -311,6 +315,47 @@ const syncData = async () => {
                         <div v-else class="text-center py-6 text-sm text-muted-foreground border border-dashed rounded-md">
                             Belum ada data. Sync dari WordPress untuk mengisi otomatis.
                         </div>
+                    </CardContent>
+                </Card>
+
+                <!-- Auto Update Scheduler -->
+                <Card>
+                    <CardHeader>
+                        <CardTitle class="text-base flex items-center gap-2">
+                            <CalendarClock class="h-4 w-4 text-muted-foreground" /> Auto Update Scheduler
+                        </CardTitle>
+                        <CardDescription>
+                            Aktifkan pengecekan & auto update terjadwal oleh Laravel Scheduler untuk website ini.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent class="space-y-3">
+                        <label class="flex items-start gap-3 rounded-md border p-3 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                v-model="form.auto_update_enabled"
+                                class="mt-0.5 h-4 w-4 rounded border-gray-300"
+                            />
+                            <div>
+                                <span class="text-sm font-medium">Aktifkan Scheduler Pengecekan Website</span>
+                                <p class="text-xs text-muted-foreground">
+                                    Saat scheduler berjalan, website ini akan di-sync & dicek update-nya otomatis (default tiap hari 03:00).
+                                </p>
+                            </div>
+                        </label>
+
+                        <div v-if="isEdit && props.website?.last_auto_update_at" class="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2 text-sm">
+                            <div class="flex items-center gap-2">
+                                <Badge :variant="(props.website.last_auto_update_status || '').startsWith('Gagal') ? 'destructive' : 'default'" class="text-xs">
+                                    {{ (props.website.last_auto_update_status || '').startsWith('Gagal') ? 'Gagal' : 'Berjalan' }}
+                                </Badge>
+                                <span class="text-xs text-muted-foreground">
+                                    Terakhir: {{ new Date(props.website.last_auto_update_at).toLocaleString('id-ID') }}
+                                </span>
+                            </div>
+                        </div>
+                        <p v-if="isEdit && props.website?.last_auto_update_status" class="text-xs text-muted-foreground">
+                            {{ props.website.last_auto_update_status }}
+                        </p>
                     </CardContent>
                 </Card>
 

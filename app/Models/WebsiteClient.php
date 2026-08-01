@@ -23,6 +23,9 @@ class WebsiteClient extends Model
         'plugins',
         'notes',
         'is_active',
+        'auto_update_enabled',
+        'last_auto_update_at',
+        'last_auto_update_status',
     ];
 
     protected function casts(): array
@@ -30,6 +33,8 @@ class WebsiteClient extends Model
         return [
             'plugins' => 'array',
             'is_active' => 'boolean',
+            'auto_update_enabled' => 'boolean',
+            'last_auto_update_at' => 'datetime',
         ];
     }
 

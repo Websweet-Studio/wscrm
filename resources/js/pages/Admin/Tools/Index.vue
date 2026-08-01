@@ -148,7 +148,7 @@ const executeAction = (key: string, confirmMsg?: string) => {
         preserveScroll: true,
         preserveState: true,
         onSuccess: (page: any) => {
-            const result = page.props.flash?.result || {};
+            const result = page.props.flash?.tool_result || {};
             output.value = result.output || 'Done (no output)';
             isRunning.value = false;
         },

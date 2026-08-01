@@ -27,6 +27,7 @@ class WebsiteClientRequest extends FormRequest
             'plugins.*.version' => 'nullable|string|max:20',
             'notes' => 'nullable|string|max:5000',
             'is_active' => 'boolean',
+            'auto_update_enabled' => 'boolean',
         ];
     }
 }

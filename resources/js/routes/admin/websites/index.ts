@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
 import ai335533 from './ai'
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::ai
- * @see app/Http/Controllers/Admin/AiAgentController.php:21
+ * @see app/Http/Controllers/Admin/AiAgentController.php:23
  * @route '/admin/websites/ai'
  */
 export const ai = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -17,7 +17,7 @@ ai.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::ai
- * @see app/Http/Controllers/Admin/AiAgentController.php:21
+ * @see app/Http/Controllers/Admin/AiAgentController.php:23
  * @route '/admin/websites/ai'
  */
 ai.url = (options?: RouteQueryOptions) => {
@@ -26,7 +26,7 @@ ai.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::ai
- * @see app/Http/Controllers/Admin/AiAgentController.php:21
+ * @see app/Http/Controllers/Admin/AiAgentController.php:23
  * @route '/admin/websites/ai'
  */
 ai.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -35,7 +35,7 @@ ai.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::ai
- * @see app/Http/Controllers/Admin/AiAgentController.php:21
+ * @see app/Http/Controllers/Admin/AiAgentController.php:23
  * @route '/admin/websites/ai'
  */
 ai.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -45,7 +45,7 @@ ai.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\AiAgentController::ai
- * @see app/Http/Controllers/Admin/AiAgentController.php:21
+ * @see app/Http/Controllers/Admin/AiAgentController.php:23
  * @route '/admin/websites/ai'
  */
     const aiForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -55,7 +55,7 @@ ai.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\AiAgentController::ai
- * @see app/Http/Controllers/Admin/AiAgentController.php:21
+ * @see app/Http/Controllers/Admin/AiAgentController.php:23
  * @route '/admin/websites/ai'
  */
         aiForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -64,7 +64,7 @@ ai.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\AiAgentController::ai
- * @see app/Http/Controllers/Admin/AiAgentController.php:21
+ * @see app/Http/Controllers/Admin/AiAgentController.php:23
  * @route '/admin/websites/ai'
  */
         aiForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

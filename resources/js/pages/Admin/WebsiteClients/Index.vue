@@ -27,6 +27,9 @@ interface WebsiteClient {
     plugins: { name: string; version: string }[] | null;
     notes: string | null;
     is_active: boolean;
+    auto_update_enabled: boolean;
+    last_auto_update_at: string | null;
+    last_auto_update_status: string | null;
     customer?: Customer | null;
 }
 
@@ -182,12 +185,13 @@ const toggleAll = () => {
                                     <TableHead>Customer</TableHead>
                                     <TableHead>WP Version</TableHead>
                                     <TableHead>Status</TableHead>
+                                    <TableHead>Auto Update</TableHead>
                                     <TableHead class="w-[100px]">Aksi</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 <TableRow v-if="websites.data.length === 0">
-                                    <TableCell colspan="7" class="py-8 text-center text-muted-foreground">
+                                    <TableCell colspan="8" class="py-8 text-center text-muted-foreground">
                                         Belum ada website. Klik "Tambah Website" untuk memulai.
                                     </TableCell>
                                 </TableRow>
@@ -212,6 +216,17 @@ const toggleAll = () => {
                                         <Badge :variant="website.is_active ? 'default' : 'secondary'">
                                             {{ website.is_active ? 'Aktif' : 'Nonaktif' }}
                                         </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <template v-if="website.auto_update_enabled">
+                                            <Badge :variant="(website.last_auto_update_status || '').startsWith('Gagal') ? 'destructive' : website.last_auto_update_at ? 'default' : 'secondary'" :title="website.last_auto_update_status || ''">
+                                                {{ website.last_auto_update_at ? 'Jalan' : 'Belum Jalan' }}
+                                            </Badge>
+                                            <p v-if="website.last_auto_update_at" class="text-xs text-muted-foreground mt-1">
+                                                {{ new Date(website.last_auto_update_at).toLocaleString('id-ID') }}
+                                            </p>
+                                        </template>
+                                        <Badge v-else variant="outline" class="text-muted-foreground">Nonaktif</Badge>
                                     </TableCell>
                                     <TableCell>
                                         <div class="flex items-center gap-1">
