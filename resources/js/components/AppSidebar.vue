@@ -204,6 +204,11 @@ const mainNavItems: NavItem[] = [
                 icon: Server,
             },
             {
+                title: 'DirectAdmin',
+                href: '/admin/directadmin',
+                icon: Server,
+            },
+            {
                 title: 'Bulk Pricing',
                 href: '/admin/bulk-pricing',
                 icon: Calculator,

@@ -20,6 +20,7 @@ import journals from './journals'
 import branding from './branding'
 import database from './database'
 import tools from './tools'
+import directadmin from './directadmin'
 import api from './api'
 import demoWebsites from './demo-websites'
 import demoCategories from './demo-categories'
@@ -183,6 +184,7 @@ journals: Object.assign(journals, journals),
 branding: Object.assign(branding, branding),
 database: Object.assign(database, database),
 tools: Object.assign(tools, tools),
+directadmin: Object.assign(directadmin, directadmin),
 api: Object.assign(api, api),
 demoWebsites: Object.assign(demoWebsites, demoWebsites),
 demoCategories: Object.assign(demoCategories, demoCategories),

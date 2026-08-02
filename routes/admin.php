@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\DatabaseController;
 use App\Http\Controllers\Admin\DemoCategoryController;
 use App\Http\Controllers\Admin\DemoPackageController;
 use App\Http\Controllers\Admin\DemoWebsiteController as AdminDemoWebsiteController;
+use App\Http\Controllers\Admin\DirectAdminController;
 use App\Http\Controllers\Admin\DomainPriceController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\ExpenseController;
@@ -128,6 +129,12 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     // Admin Tools
     Route::get('tools', [AdminToolsController::class, 'index'])->name('tools.index');
     Route::post('tools/execute', [AdminToolsController::class, 'execute'])->name('tools.execute');
+
+    // DirectAdmin Integration
+    Route::get('directadmin', [DirectAdminController::class, 'index'])->name('directadmin.index');
+    Route::post('directadmin/settings', [DirectAdminController::class, 'saveSettings'])->name('directadmin.settings');
+    Route::post('directadmin/accounts/{username}/suspend', [DirectAdminController::class, 'suspend'])->name('directadmin.suspend');
+    Route::post('directadmin/accounts/{username}/unsuspend', [DirectAdminController::class, 'unsuspend'])->name('directadmin.unsuspend');
 
     // API lookup helpers
     Route::get('api/customers/search', [CustomerController::class, 'search'])->name('api.customers.search');

@@ -33,5 +33,6 @@ test('admin pages can be opened by verified admin', function (string $url, strin
         ['/admin/database', 'Admin/Database'],
         ['/admin/bulk-pricing', 'Admin/BulkPricing/Index'],
         ['/admin/expenses', 'Admin/Expenses/Index'],
+        ['/admin/directadmin', 'Admin/DirectAdmin/Index'],
     ];
 });
