@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\TaskCategoryController;
 use App\Http\Controllers\Admin\ServicePlanController;
+use App\Http\Controllers\Admin\ThirdPartyPluginController;
 use App\Http\Controllers\Admin\WebsiteClientController;
 use App\Http\Controllers\Admin\JournalEntryController;
 use App\Http\Controllers\Admin\UserCredentialController;
@@ -96,6 +97,12 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::post('websites/ai/chat/stream', [AiAgentController::class, 'streamChat'])->name('websites.ai.chat.stream');
     Route::get('websites/ai/conversations/{conversation}', [AiAgentController::class, 'show'])->name('websites.ai.conversations.show');
     Route::delete('websites/ai/conversations/{conversation}', [AiAgentController::class, 'destroy'])->name('websites.ai.conversations.destroy');
+    // Plugin pihak ketiga - must be before resource route to avoid conflict
+    Route::get('websites/plugins', [ThirdPartyPluginController::class, 'index'])->name('websites.plugins');
+    Route::post('websites/plugins', [ThirdPartyPluginController::class, 'store'])->name('websites.plugins.store');
+    Route::post('websites/plugins/{plugin}', [ThirdPartyPluginController::class, 'update'])->name('websites.plugins.update');
+    Route::post('websites/plugins/{plugin}/deploy', [ThirdPartyPluginController::class, 'deploy'])->name('websites.plugins.deploy');
+    Route::delete('websites/plugins/{plugin}', [ThirdPartyPluginController::class, 'destroy'])->name('websites.plugins.destroy');
     Route::resource('websites', WebsiteClientController::class);
     Route::post('websites/{website}/sync', [WebsiteClientController::class, 'sync'])->name('websites.sync');
     Route::delete('websites/bulk', [WebsiteClientController::class, 'bulkDelete'])->name('websites.bulk-delete');

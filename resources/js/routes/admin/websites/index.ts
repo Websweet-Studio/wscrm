@@ -1,5 +1,6 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 import ai335533 from './ai'
+import plugins4ebc57 from './plugins'
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::ai
  * @see app/Http/Controllers/Admin/AiAgentController.php:23
@@ -78,6 +79,84 @@ ai.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
     
     ai.form = aiForm
+/**
+* @see \App\Http\Controllers\Admin\ThirdPartyPluginController::plugins
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:24
+ * @route '/admin/websites/plugins'
+ */
+export const plugins = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: plugins.url(options),
+    method: 'get',
+})
+
+plugins.definition = {
+    methods: ["get","head"],
+    url: '/admin/websites/plugins',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\Admin\ThirdPartyPluginController::plugins
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:24
+ * @route '/admin/websites/plugins'
+ */
+plugins.url = (options?: RouteQueryOptions) => {
+    return plugins.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Admin\ThirdPartyPluginController::plugins
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:24
+ * @route '/admin/websites/plugins'
+ */
+plugins.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: plugins.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\Admin\ThirdPartyPluginController::plugins
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:24
+ * @route '/admin/websites/plugins'
+ */
+plugins.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: plugins.url(options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\Admin\ThirdPartyPluginController::plugins
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:24
+ * @route '/admin/websites/plugins'
+ */
+    const pluginsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: plugins.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\ThirdPartyPluginController::plugins
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:24
+ * @route '/admin/websites/plugins'
+ */
+        pluginsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: plugins.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\ThirdPartyPluginController::plugins
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:24
+ * @route '/admin/websites/plugins'
+ */
+        pluginsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: plugins.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    plugins.form = pluginsForm
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::index
  * @see app/Http/Controllers/Admin/WebsiteClientController.php:23
@@ -840,6 +919,7 @@ bulkDelete.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => 
     bulkDelete.form = bulkDeleteForm
 const websites = {
     ai: Object.assign(ai, ai335533),
+plugins: Object.assign(plugins, plugins4ebc57),
 index: Object.assign(index, index),
 create: Object.assign(create, create),
 store: Object.assign(store, store),

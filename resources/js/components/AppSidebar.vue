@@ -154,6 +154,11 @@ const mainNavItems: NavItem[] = [
                 href: '/admin/websites/ai',
                 icon: Bot,
             },
+            {
+                title: 'Plugins',
+                href: '/admin/websites/plugins',
+                icon: Package,
+            },
         ],
     },
     {
