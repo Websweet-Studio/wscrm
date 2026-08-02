@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { CheckCircle2, FileArchive, Loader2, Package, Pencil, Plus, Send, Trash2, XCircle } from 'lucide-vue-next';
+import { FileArchive, Loader2, Package, Pencil, Plus, Trash2 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface ThirdPartyPlugin {
@@ -32,15 +32,8 @@ interface ThirdPartyPlugin {
     is_active: boolean;
 }
 
-interface WebsiteOption {
-    id: number;
-    name: string;
-    url: string;
-}
-
 const props = defineProps<{
     plugins: ThirdPartyPlugin[];
-    websites: WebsiteOption[];
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -67,11 +60,6 @@ const emptyForm = {
 
 const createForm = useForm({ ...emptyForm });
 const editForm = useForm({ ...emptyForm });
-
-// Deploy per baris
-const deployTarget = ref<Record<number, string>>({});
-const deployingId = ref<number | null>(null);
-const deployResult = ref<Record<number, { success: boolean; message: string }>>({});
 
 const formatSize = (bytes: number | null): string => {
     if (!bytes) return '-';
@@ -115,39 +103,6 @@ const confirmDelete = (plugin: ThirdPartyPlugin) => {
     if (!confirm(`Hapus plugin '${plugin.name}' beserta file zip?`)) return;
     router.delete(`/admin/websites/plugins/${plugin.id}`, { preserveScroll: true });
 };
-
-const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
-
-const deploy = async (plugin: ThirdPartyPlugin) => {
-    const websiteId = deployTarget.value[plugin.id];
-    if (!websiteId) {
-        deployResult.value[plugin.id] = { success: false, message: 'Pilih website target terlebih dahulu.' };
-        return;
-    }
-
-    deployingId.value = plugin.id;
-    deployResult.value[plugin.id] = { success: true, message: 'Mengirim ke website, mohon tunggu...' };
-
-    try {
-        const res = await fetch(`/admin/websites/plugins/${plugin.id}/deploy`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-            },
-            body: JSON.stringify({ website_id: Number(websiteId) }),
-        });
-        const data = await res.json();
-        deployResult.value[plugin.id] = {
-            success: data.success !== false,
-            message: data.message || (res.ok ? 'Berhasil' : 'Gagal'),
-        };
-    } catch (e) {
-        deployResult.value[plugin.id] = { success: false, message: 'Terjadi error saat mengirim ke website.' };
-    } finally {
-        deployingId.value = null;
-    }
-};
 </script>
 
 <template>
@@ -168,7 +123,7 @@ const deploy = async (plugin: ThirdPartyPlugin) => {
                             Plugin Pihak Ketiga
                         </CardTitle>
                         <p class="text-sm text-muted-foreground mt-1">
-                            Kelola plugin premium/custom (tidak ada di wordpress.org). Upload zip, lalu update ke website WordPress.
+                            Kelola plugin premium/custom (tidak ada di wordpress.org). Upload zip — theme wsbase di website WP menarik update & install otomatis dari sini.
                         </p>
                     </div>
                     <Button class="cursor-pointer" @click="showCreate = true">
@@ -183,7 +138,6 @@ const deploy = async (plugin: ThirdPartyPlugin) => {
                                 <TableHead>Slug</TableHead>
                                 <TableHead>Versi</TableHead>
                                 <TableHead>File ZIP</TableHead>
-                                <TableHead>Update ke Website</TableHead>
                                 <TableHead class="text-right">Aksi</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -208,36 +162,6 @@ const deploy = async (plugin: ThirdPartyPlugin) => {
                                         <span class="text-muted-foreground/60">({{ formatSize(plugin.file_size) }})</span>
                                     </div>
                                 </TableCell>
-                                <TableCell>
-                                    <div class="flex items-center gap-2">
-                                        <select
-                                            v-model="deployTarget[plugin.id]"
-                                            class="h-9 rounded-md border bg-background px-2 text-sm"
-                                        >
-                                            <option value="">Pilih website...</option>
-                                            <option v-for="w in websites" :key="w.id" :value="String(w.id)">
-                                                {{ w.name }}
-                                            </option>
-                                        </select>
-                                        <Button
-                                            size="sm"
-                                            variant="secondary"
-                                            class="cursor-pointer"
-                                            :disabled="deployingId === plugin.id"
-                                            @click="deploy(plugin)"
-                                        >
-                                            <Loader2 v-if="deployingId === plugin.id" class="mr-1 h-3.5 w-3.5 animate-spin" />
-                                            <Send v-else class="mr-1 h-3.5 w-3.5" />
-                                            Update
-                                        </Button>
-                                    </div>
-                                    <div v-if="deployResult[plugin.id]" class="mt-1.5 text-xs flex items-center gap-1"
-                                        :class="deployResult[plugin.id].success ? 'text-green-600' : 'text-red-600'">
-                                        <CheckCircle2 v-if="deployResult[plugin.id].success" class="h-3 w-3" />
-                                        <XCircle v-else class="h-3 w-3" />
-                                        {{ deployResult[plugin.id].message }}
-                                    </div>
-                                </TableCell>
                                 <TableCell class="text-right">
                                     <div class="flex justify-end gap-1">
                                         <Button size="icon" variant="ghost" class="cursor-pointer" title="Edit" @click="openEdit(plugin)">
@@ -250,7 +174,7 @@ const deploy = async (plugin: ThirdPartyPlugin) => {
                                 </TableCell>
                             </TableRow>
                             <TableRow v-if="plugins.length === 0">
-                                <TableCell colspan="6" class="text-center text-muted-foreground py-10">
+                                <TableCell colspan="5" class="text-center text-muted-foreground py-10">
                                     Belum ada plugin. Klik "Tambah Plugin" untuk mengupload zip plugin.
                                 </TableCell>
                             </TableRow>

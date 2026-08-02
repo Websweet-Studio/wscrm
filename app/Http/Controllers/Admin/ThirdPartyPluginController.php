@@ -4,9 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ThirdPartyPlugin;
-use App\Models\WebsiteClient;
-use App\Services\PluginDeployService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -26,11 +23,33 @@ class ThirdPartyPluginController extends Controller
         $this->checkAdmin();
 
         $plugins = ThirdPartyPlugin::orderBy('name')->get();
-        $websites = WebsiteClient::orderBy('name')->get(['id', 'name', 'url']);
 
         return Inertia::render('Admin/Websites/Plugins', [
             'plugins' => $plugins,
-            'websites' => $websites,
+        ]);
+    }
+
+    /**
+     * Endpoint publik untuk theme wsbase (WP side) menarik metadata plugin.
+     * URL: GET /api/plugins
+     */
+    public function publicIndex()
+    {
+        $plugins = ThirdPartyPlugin::where('is_active', true)->orderBy('name')->get();
+
+        return response()->json([
+            'plugins' => $plugins->map(function (ThirdPartyPlugin $plugin) {
+                return [
+                    'name' => $plugin->name,
+                    'slug' => $plugin->slug,
+                    'version' => $plugin->version,
+                    'description' => $plugin->description,
+                    'file_name' => $plugin->file_name,
+                    'file_size' => $plugin->file_size,
+                    'file_url' => $plugin->file_path ? Storage::disk('public')->url($plugin->file_path) : null,
+                    'updated_at' => $plugin->updated_at?->toIso8601String(),
+                ];
+            })->values(),
         ]);
     }
 
@@ -111,19 +130,5 @@ class ThirdPartyPluginController extends Controller
 
         return redirect()->route('admin.websites.plugins')
             ->with('success', "Plugin '{$plugin->name}' berhasil dihapus.");
-    }
-
-    public function deploy(Request $request, ThirdPartyPlugin $plugin, PluginDeployService $deployService): JsonResponse
-    {
-        $this->checkAdmin();
-
-        $validated = $request->validate([
-            'website_id' => ['required', 'exists:website_clients,id'],
-        ]);
-
-        $website = WebsiteClient::find($validated['website_id']);
-        $result = $deployService->deploy($plugin, $website);
-
-        return response()->json($result, $result['success'] ? 200 : 422);
     }
 }

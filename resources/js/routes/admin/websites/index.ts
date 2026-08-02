@@ -81,7 +81,7 @@ ai.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     ai.form = aiForm
 /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::plugins
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:24
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:21
  * @route '/admin/websites/plugins'
  */
 export const plugins = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -96,7 +96,7 @@ plugins.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::plugins
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:24
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:21
  * @route '/admin/websites/plugins'
  */
 plugins.url = (options?: RouteQueryOptions) => {
@@ -105,7 +105,7 @@ plugins.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::plugins
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:24
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:21
  * @route '/admin/websites/plugins'
  */
 plugins.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -114,7 +114,7 @@ plugins.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::plugins
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:24
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:21
  * @route '/admin/websites/plugins'
  */
 plugins.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -124,7 +124,7 @@ plugins.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::plugins
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:24
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:21
  * @route '/admin/websites/plugins'
  */
     const pluginsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -134,7 +134,7 @@ plugins.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::plugins
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:24
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:21
  * @route '/admin/websites/plugins'
  */
         pluginsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -143,7 +143,7 @@ plugins.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::plugins
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:24
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:21
  * @route '/admin/websites/plugins'
  */
         pluginsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

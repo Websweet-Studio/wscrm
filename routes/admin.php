@@ -101,7 +101,6 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::get('websites/plugins', [ThirdPartyPluginController::class, 'index'])->name('websites.plugins');
     Route::post('websites/plugins', [ThirdPartyPluginController::class, 'store'])->name('websites.plugins.store');
     Route::post('websites/plugins/{plugin}', [ThirdPartyPluginController::class, 'update'])->name('websites.plugins.update');
-    Route::post('websites/plugins/{plugin}/deploy', [ThirdPartyPluginController::class, 'deploy'])->name('websites.plugins.deploy');
     Route::delete('websites/plugins/{plugin}', [ThirdPartyPluginController::class, 'destroy'])->name('websites.plugins.destroy');
     Route::resource('websites', WebsiteClientController::class);
     Route::post('websites/{website}/sync', [WebsiteClientController::class, 'sync'])->name('websites.sync');
