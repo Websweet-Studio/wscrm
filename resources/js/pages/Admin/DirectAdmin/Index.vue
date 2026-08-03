@@ -228,7 +228,14 @@ const getOrderStatusText = (status: string) => {
                 </CardHeader>
                 <CardContent>
                     <div v-if="accounts.length === 0" class="py-8 text-center text-sm text-muted-foreground">
-                        Belum ada data akun. Pastikan server sudah dikonfigurasi dan koneksi berhasil.
+                        <template v-if="connection.ok">
+                            Koneksi berhasil, tapi tidak ada akun user ditemukan di server. Pastikan login yang dipakai
+                            berlevel admin/reseller (izin <code class="rounded bg-muted px-1">CMD_API_SELECT_USERS</code>)
+                            dan server memiliki akun user.
+                        </template>
+                        <template v-else>
+                            Belum ada data akun. Pastikan server sudah dikonfigurasi dan koneksi berhasil.
+                        </template>
                     </div>
                     <div v-else class="overflow-x-auto">
                         <table class="w-full table-auto">

@@ -84,13 +84,33 @@ class DirectAdminService
         try {
             $result = $this->request('CMD_API_SHOW_USER_CONFIG');
 
-            return [
-                'ok' => $this->successful($result),
-                'message' => $result['text'] ?? ($this->successful($result) ? 'Koneksi berhasil.' : 'Koneksi gagal.'),
-            ];
+            if ($this->successful($result)) {
+                return ['ok' => true, 'message' => $result['text'] ?? 'Koneksi berhasil.'];
+            }
+
+            return ['ok' => false, 'message' => $this->failureMessage($result)];
         } catch (RuntimeException $e) {
             return ['ok' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Pesan error dari respons DA yang tidak punya field `text`:
+     * tampilkan isi respons asli (HTML/JSON error) agar penyebab gagal terlihat.
+     */
+    private function failureMessage(array $result): string
+    {
+        $text = trim((string) ($result['text'] ?? ''));
+        if ($text !== '') {
+            return $text;
+        }
+
+        $raw = trim((string) ($result['_raw'] ?? ''));
+        if ($raw !== '') {
+            return 'Respons server tidak terduga: '.mb_substr($raw, 0, 300);
+        }
+
+        return 'Respons server kosong.';
     }
 
     /**
@@ -99,6 +119,13 @@ class DirectAdminService
     public function listAccounts(): array
     {
         $result = $this->request('CMD_API_SELECT_USERS');
+
+        if (! $this->successful($result)) {
+            throw new RuntimeException(
+                trim((string) ($result['text'] ?? '')) ?: 'Gagal mengambil daftar akun (CMD_API_SELECT_USERS ditolak). Pastikan login berlevel admin/reseller.'
+            );
+        }
+
         $usernames = $this->extractList($result);
 
         $accounts = [];
@@ -128,7 +155,23 @@ class DirectAdminService
 
     public function successful(array $result): bool
     {
-        return (int) ($result['error'] ?? 1) === 0;
+        if (array_key_exists('error', $result)) {
+            return (int) $result['error'] === 0;
+        }
+
+        // Respons tanpa field `error` — mis. CMD_API_SHOW_USER_CONFIG langsung
+        // mengirim dump config user. Anggap sukses bila isi respons valid
+        // (tidak kosong dan bukan halaman HTML).
+        $raw = trim((string) ($result['_raw'] ?? ''));
+
+        return $raw !== '' && ! $this->looksLikeHtml($raw);
+    }
+
+    private function looksLikeHtml(string $body): bool
+    {
+        $haystack = strtolower($body);
+
+        return str_contains($haystack, '<html') || str_contains($haystack, '<!doctype');
     }
 
     /**
@@ -151,12 +194,15 @@ class DirectAdminService
         // Coba parse JSON dulu
         $json = json_decode($body, true);
         if (is_array($json)) {
+            $json['_raw'] = $body;
+
             return $json;
         }
 
         // Fallback: parse url-encoded legacy response
         $parsed = [];
         parse_str($body, $parsed);
+        $parsed['_raw'] = $body;
 
         return $parsed;
     }

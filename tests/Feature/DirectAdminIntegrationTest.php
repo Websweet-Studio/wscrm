@@ -112,3 +112,56 @@ it('keeps existing password when saving settings with blank password', function 
     expect(DirectAdminSetting::getValue('password'))->toBe('secret')
         ->and(DirectAdminSetting::getValue('host'))->toBe('da2.example.com');
 });
+
+it('shows server response when connection test fails without text', function () {
+    Http::fake([
+        '*/CMD_API_SHOW_USER_CONFIG*' => Http::response('<html><body>Unauthorized</body></html>', 200),
+    ]);
+
+    $this->actingAs($this->user)
+        ->post('/admin/directadmin/settings', [
+            'scheme' => 'https',
+            'host' => 'da.example.com',
+            'port' => 2222,
+            'username' => 'admin',
+            'password' => 'secret',
+            'verify_ssl' => false,
+        ])
+        ->assertRedirect();
+
+    expect(session('error'))->toContain('Respons server tidak terduga')
+        ->toContain('<html>');
+});
+
+it('shows error when select users fails', function () {
+    Http::fake([
+        '*/CMD_API_SELECT_USERS' => Http::response('error=1&text=You cannot use that command'),
+    ]);
+
+    $this->actingAs($this->user)
+        ->get('/admin/directadmin')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Admin/DirectAdmin/Index')
+            ->has('accounts', 0)
+            ->where('error', 'You cannot use that command')
+        );
+});
+
+it('treats config dump without error field as successful connection', function () {
+    Http::fake([
+        '*/CMD_API_SHOW_USER_CONFIG*' => Http::response('account=ON&additional_bandwidth=0&aftp=ON&domain=admin.example.com&email=admin%40example.com&package=admin&suspended=no'),
+    ]);
+
+    $this->actingAs($this->user)
+        ->post('/admin/directadmin/settings', [
+            'scheme' => 'https',
+            'host' => 'da.example.com',
+            'port' => 2222,
+            'username' => 'admin',
+            'password' => 'secret',
+            'verify_ssl' => false,
+        ])
+        ->assertRedirect()
+        ->assertSessionHas('success');
+});
