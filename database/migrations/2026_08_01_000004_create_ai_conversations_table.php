@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('ai_conversations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            // Tanpa FK ke users: users.id di DB lama (production) bertipe non-bigint → errno 150.
+            $table->foreignId('user_id');
             $table->string('title')->default('Percakapan baru');
             $table->timestamps();
         });

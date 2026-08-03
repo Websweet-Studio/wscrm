@@ -11,7 +11,8 @@ return new class extends Migration
         Schema::create('journal_entries', function (Blueprint $table) {
             $table->id();
             $table->foreignId('website_client_id')->constrained('website_clients')->cascadeOnDelete();
-            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            // Tanpa FK ke users: users.id di DB lama (production) bertipe non-bigint → errno 150.
+            $table->foreignId('user_id')->nullable();
             $table->date('entry_date');
             $table->json('activities');
             $table->text('summary')->nullable();
