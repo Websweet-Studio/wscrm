@@ -164,13 +164,13 @@ const confirmDelete = () => {
                                     <TableCell class="whitespace-nowrap">
                                         <div class="flex items-center gap-2"><Calendar class="h-3.5 w-3.5 text-muted-foreground" />{{ formatDate(j.entry_date, 'long') }}</div>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell class="w-[45%] max-w-[480px]">
                                         <div class="space-y-1">
                                             <div v-for="(a, idx) in j.activities" :key="idx" class="flex items-start gap-2 text-sm">
-                                                <Badge :variant="getBadgeVariant(a.type)" class="whitespace-nowrap text-xs">{{ activityTypeLabels[a.type] || a.type }}</Badge>
-                                                <span class="text-muted-foreground">{{ formatDetail(a) }}</span>
+                                                <Badge :variant="getBadgeVariant(a.type)" class="shrink-0 whitespace-nowrap text-xs">{{ activityTypeLabels[a.type] || a.type }}</Badge>
+                                                <span class="min-w-0 truncate text-muted-foreground" :title="formatDetail(a)">{{ formatDetail(a) }}</span>
                                             </div>
-                                            <p v-if="j.summary" class="text-xs text-muted-foreground italic mt-2">{{ j.summary }}</p>
+                                            <p v-if="j.summary" class="truncate text-xs text-muted-foreground italic mt-2" :title="j.summary">{{ j.summary }}</p>
                                         </div>
                                     </TableCell>
                                     <TableCell class="text-sm text-muted-foreground whitespace-nowrap">{{ j.user?.name || '-' }}</TableCell>

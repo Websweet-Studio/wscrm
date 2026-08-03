@@ -137,6 +137,11 @@ class AiAgentController extends Controller
         $message = $validated['message'];
 
         return response()->stream(function () use ($agent, $message, $conversationId) {
+            // SSE: matikan buffering & kompresi PHP (zlib/output_buffering) supaya
+            // tiap event progress langsung terkirim, tidak menumpuk sampai respons selesai.
+            ini_set('output_buffering', 'off');
+            ini_set('zlib.output_compression', 'off');
+
             $send = function (array $payload) {
                 echo 'data: ' . json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
                 if (ob_get_level() > 0) {
