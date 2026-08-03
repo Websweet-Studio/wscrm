@@ -83,6 +83,7 @@ const toolGroups: { title: string; icon: any; actions: ToolAction[] }[] = [
         icon: Database,
         actions: [
             { key: 'migrate', label: 'Run Migrations', desc: 'Execute database migrations', variant: 'default' as const },
+            { key: 'migrate_repair', label: 'Repair Migrations', desc: 'Lompati migrasi yg tabel/kolomnya sudah ada (fix 1050)', variant: 'secondary' as const },
             { key: 'migrate_optimize', label: 'Migrate + Optimize', desc: 'Run migrations then optimize', variant: 'default' as const },
             { key: 'db_seed', label: 'Run Seeder', desc: 'Seed database', variant: 'secondary' as const },
             { key: 'db_seed_users', label: 'Seed Users', desc: 'Seed Super Admin', variant: 'secondary' as const },

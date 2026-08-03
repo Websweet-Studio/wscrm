@@ -10,13 +10,14 @@ Artefak build ada di `dist/production.zip` (dibuat dari lokal).
 ## 1) Build Release (di lokal)
 
 1. Pastikan dependency frontend sudah terinstall:
-   - `npm ci` (atau `npm install`)
+    - `npm ci` (atau `npm install`)
 2. Jalankan build produksi:
-   - `composer run build:production`
+    - `composer run build:production`
 3. Ambil file:
-   - `dist/production.zip`
+    - `dist/production.zip`
 
 Catatan:
+
 - Build ini tidak memasukkan `.env` secara default (lebih aman). `.env` dibuat/diatur di server.
 
 ## 2) Deploy Baru (Shared Hosting / cPanel / public_html)
@@ -34,14 +35,14 @@ Catatan:
 Struktur akhir (contoh):
 
 - `~/public_html/` (web root)
-  - `index.php`
-  - `.htaccess`
-  - `build/`
+    - `index.php`
+    - `.htaccess`
+    - `build/`
 - `~/wscrm/` (di luar web root)
-  - `artisan`
-  - `vendor/`
-  - `bootstrap/`
-  - `storage/`
+    - `artisan`
+    - `vendor/`
+    - `bootstrap/`
+    - `storage/`
 
 ### C. Buat `.env` di Server
 
@@ -97,8 +98,8 @@ Tujuan update: ganti kode & asset, tapi tetap mempertahankan `.env` dan `storage
 
 1. Backup database.
 2. Backup folder:
-   - `~/wscrm/storage/app` (minimal `storage/app/public`)
-   - `~/wscrm/.env`
+    - `~/wscrm/storage/app` (minimal `storage/app/public`)
+    - `~/wscrm/.env`
 
 ### B. Maintenance Mode (opsional tapi disarankan)
 
@@ -109,11 +110,11 @@ Tujuan update: ganti kode & asset, tapi tetap mempertahankan `.env` dan `storage
 
 1. Upload `production.zip` versi baru ke folder sementara, extract.
 2. Replace:
-   - Update `public_html/` (terutama `build/` dan `index.php`).
-   - Update `wscrm/` (kode aplikasi).
+    - Update `public_html/` (terutama `build/` dan `index.php`).
+    - Update `wscrm/` (kode aplikasi).
 3. Pastikan tetap mempertahankan:
-   - `~/wscrm/.env` (jangan tertimpa)
-   - `~/wscrm/storage/` (jangan tertimpa)
+    - `~/wscrm/.env` (jangan tertimpa)
+    - `~/wscrm/storage/` (jangan tertimpa)
 4. Pastikan `~/public_html/storage` masih mengarah ke `../wscrm/storage/app/public`.
 
 ### D. Post-update
@@ -123,6 +124,12 @@ Tujuan update: ganti kode & asset, tapi tetap mempertahankan `.env` dan `storage
 - `php artisan optimize`
 - `php artisan up`
 
+> Jika `migrate --force` gagal dengan `SQLSTATE[42S01]`/`1050 Table ... already exists` (tabel sudah ada tapi record migrations hilang), jalankan:
+>
+> - `php artisan migrate:repair`
+>
+> `migrate:repair` menjalankan migrasi pending satu-satu; yang gagal karena tabel/kolom sudah ada ditandai sebagai sudah jalan, sisanya dijalankan normal. Ulangi sampai tidak ada error, lalu lanjut `php artisan optimize` + `php artisan up`.
+
 Jika pakai queue worker:
 
 - restart worker (Supervisor / systemd / panel hosting) atau jalankan ulang `php artisan queue:work`.
@@ -130,10 +137,10 @@ Jika pakai queue worker:
 ## 4) Troubleshooting Cepat
 
 - **CSS/JS tidak update / 404 build assets**
-  - pastikan `public_html/build/` ada dan ter-upload
-  - pastikan cache dibersihkan: `php artisan optimize`
+    - pastikan `public_html/build/` ada dan ter-upload
+    - pastikan cache dibersihkan: `php artisan optimize`
 - **500 / blank page**
-  - cek permission `storage` dan `bootstrap/cache`
-  - cek nilai `APP_URL` dan koneksi `DB_*` di `.env`
+    - cek permission `storage` dan `bootstrap/cache`
+    - cek nilai `APP_URL` dan koneksi `DB_*` di `.env`
 - **Upload tidak bisa diakses (404 /storage/...)**
-  - pastikan link `public_html/storage -> ../wscrm/storage/app/public` benar
+    - pastikan link `public_html/storage -> ../wscrm/storage/app/public` benar

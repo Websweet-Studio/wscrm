@@ -236,7 +236,9 @@ class UpdateController extends Controller
             'config:clear',
             'route:clear',
             'view:clear',
-            'migrate --force',
+            // Repair: tahan error 1050 (tabel sudah ada tapi record migrations hilang),
+            // tetap menjalankan migrasi yang benar-benar baru.
+            'migrate:repair',
         ];
 
         foreach ($commands as $command) {

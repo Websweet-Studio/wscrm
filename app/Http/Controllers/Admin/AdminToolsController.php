@@ -64,6 +64,7 @@ class AdminToolsController extends Controller
 
                 // Database
                 'migrate' => $this->runCommands(['migrate --force --no-interaction']),
+                'migrate_repair' => $this->runCommands(['migrate:repair --no-interaction']),
                 'migrate_optimize' => $this->runCommands(['migrate --force --no-interaction', 'optimize --no-interaction']),
                 'db_seed' => $this->runCommands(['db:seed --force --no-interaction']),
                 'db_seed_users' => $this->runSeeder('Database\\Seeders\\SuperAdminSeeder'),
