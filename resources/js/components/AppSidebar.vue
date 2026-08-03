@@ -189,6 +189,38 @@ const mainNavItems: NavItem[] = [
         ],
     },
     {
+        title: 'AI',
+        href: '#',
+        icon: Cpu,
+        children: [
+            {
+                title: 'Providers',
+                href: '/admin/ai/providers',
+                icon: Cpu,
+            },
+            {
+                title: 'Models',
+                href: '/admin/ai/models',
+                icon: Bot,
+            },
+            {
+                title: 'Paket Kredit',
+                href: '/admin/ai/packages',
+                icon: Coins,
+            },
+            {
+                title: 'Kredit Customer',
+                href: '/admin/ai/credits',
+                icon: Coins,
+            },
+            {
+                title: 'Transaksi',
+                href: '/admin/ai/transactions',
+                icon: ClipboardList,
+            },
+        ],
+    },
+    {
         title: 'Karyawan',
         href: '/admin/employees',
         icon: Building2,

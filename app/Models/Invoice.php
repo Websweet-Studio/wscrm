@@ -26,6 +26,7 @@ class Invoice extends Model
         'payment_method',
         'bank_id',
         'payment_account_id',
+        'ai_package_id',
         'notes',
     ];
 
@@ -58,6 +59,11 @@ class Invoice extends Model
     public function paymentAccount(): BelongsTo
     {
         return $this->belongsTo(PaymentAccount::class);
+    }
+
+    public function aiPackage(): BelongsTo
+    {
+        return $this->belongsTo(AiPackage::class, 'ai_package_id');
     }
 
     public function scopePaid($query)

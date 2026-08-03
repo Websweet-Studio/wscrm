@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\BrandingSetting;
+use App\Models\Invoice;
+use App\Observers\InvoiceObserver;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
 
@@ -21,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Kredit AI otomatis saat invoice topup lunas
+        Invoice::observe(InvoiceObserver::class);
+
         // Share branding settings with all Inertia views
         Inertia::share('brandingSettings', function () {
             $brandingSettings = [];

@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ImpersonateController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Customer\Auth\LoginController;
 use App\Http\Controllers\Customer\Auth\RegisterController;
+use App\Http\Controllers\Customer\AiController;
 use App\Http\Controllers\Customer\DashboardController;
 use App\Http\Controllers\Customer\SettingsController;
 use App\Http\Controllers\OrderController;
@@ -56,6 +57,16 @@ Route::prefix('customer')->name('customer.')->group(function () {
             Route::get('/', [SettingsController::class, 'index'])->name('index');
             Route::patch('/profile', [SettingsController::class, 'updateProfile'])->name('update-profile');
             Route::patch('/password', [SettingsController::class, 'updatePassword'])->name('update-password');
+        });
+
+        // AI (chat + beli paket kredit)
+        Route::prefix('ai')->name('ai.')->group(function () {
+            Route::get('/', [AiController::class, 'index'])->name('index');
+            Route::get('/packages', [AiController::class, 'packages'])->name('packages');
+            Route::post('/packages/{package}/buy', [AiController::class, 'buy'])->name('buy');
+            Route::post('/chat/stream', [AiController::class, 'streamChat'])->name('chat.stream');
+            Route::get('/conversations/{conversation}', [AiController::class, 'show'])->name('conversations.show');
+            Route::delete('/conversations/{conversation}', [AiController::class, 'destroy'])->name('conversations.destroy');
         });
 
         // Stop Impersonation (available in customer area)

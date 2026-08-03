@@ -51,6 +51,7 @@ class DatabaseSeeder extends Seeder
             TaskSeeder::class,
             DemoWebsiteSeeder::class,
             ManageWebsiteSeeder::class,
+            AiDefaultSeeder::class,
         ]);
     }
 }

@@ -7,7 +7,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel
 import customer from '@/routes/customer';
 import { type NavItem } from '@/types';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { Headphones, Home, LayoutGrid, Settings, ShoppingCart } from 'lucide-vue-next';
+import { Headphones, Home, LayoutGrid, Settings, ShoppingCart, Bot } from 'lucide-vue-next';
 import AppSidebarLogo from './AppSidebarLogo.vue';
 import { computed, ref } from 'vue';
 
@@ -62,6 +62,11 @@ const mainNavItems: NavItem[] = [
         href: getCustomerUrl(() => customerRoutes?.orders?.index?.().url, '/customer/orders'),
         icon: ShoppingCart,
         badge: customerBadges.pending_orders || 0,
+    },
+    {
+        title: 'AI Assistant',
+        href: '/customer/ai',
+        icon: Bot,
     },
     {
         title: 'Pengaturan',

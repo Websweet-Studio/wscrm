@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -21,6 +22,24 @@ class AiClient
         $this->model = config('services.ai.model', env('AI_MODEL', 'gpt-4o-mini'));
     }
 
+    /**
+     * Buat client untuk provider dari DB (multi-provider). Api key didekripsi.
+     */
+    public static function forProvider(\App\Models\AiProvider $provider, string $modelKey): self
+    {
+        $client = new self;
+        $client->endpoint = rtrim($provider->endpoint, '/');
+        $client->model = $modelKey;
+
+        try {
+            $client->apiKey = $provider->api_key ? Crypt::decryptString($provider->api_key) : '';
+        } catch (\Throwable $e) {
+            $client->apiKey = '';
+        }
+
+        return $client;
+    }
+
     public function hasApiKey(): bool
     {
         return !empty($this->apiKey);
@@ -35,6 +54,14 @@ class AiClient
      * Kirim chat completion, kembalikan isi pesan. Throw exception jika gagal.
      */
     public function chat(array $messages, float $temperature = 0.3, int $maxTokens = 2000): string
+    {
+        return $this->chatWithUsage($messages, $temperature, $maxTokens)['content'];
+    }
+
+    /**
+     * Kirim chat completion dan kembalikan konten + usage (token) dari respons provider.
+     */
+    public function chatWithUsage(array $messages, float $temperature = 0.3, int $maxTokens = 2000): array
     {
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->apiKey,
@@ -55,7 +82,10 @@ class AiClient
 
         $data = $this->decodeResponse($response);
 
-        return $data['choices'][0]['message']['content'] ?? '';
+        return [
+            'content' => $data['choices'][0]['message']['content'] ?? '',
+            'usage' => $data['usage'] ?? [],
+        ];
     }
 
     /**

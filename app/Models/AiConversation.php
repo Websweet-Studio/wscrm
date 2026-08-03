@@ -8,11 +8,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AiConversation extends Model
 {
-    protected $fillable = ['user_id', 'title'];
+    protected $fillable = ['customer_id', 'user_id', 'title'];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
     public function messages(): HasMany

@@ -27,6 +27,11 @@ use App\Http\Controllers\Admin\ThirdPartyPluginController;
 use App\Http\Controllers\Admin\WebsiteClientController;
 use App\Http\Controllers\Admin\JournalEntryController;
 use App\Http\Controllers\Admin\UserCredentialController;
+use App\Http\Controllers\Admin\Ai\CreditController as AiCreditController;
+use App\Http\Controllers\Admin\Ai\ModelController as AiModelController;
+use App\Http\Controllers\Admin\Ai\PackageController as AiPackageController;
+use App\Http\Controllers\Admin\Ai\ProviderController as AiProviderController;
+use App\Http\Controllers\Admin\Ai\TransactionController as AiTransactionController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verified'])->group(function () {
@@ -138,6 +143,16 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
 
     // API lookup helpers
     Route::get('api/customers/search', [CustomerController::class, 'search'])->name('api.customers.search');
+
+    // AI Management (provider, model, paket kredit, saldo, transaksi)
+    Route::prefix('ai')->name('ai.')->group(function () {
+        Route::resource('providers', AiProviderController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('models', AiModelController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('packages', AiPackageController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::get('credits', [AiCreditController::class, 'index'])->name('credits.index');
+        Route::post('credits/adjust', [AiCreditController::class, 'adjust'])->name('credits.adjust');
+        Route::get('transactions', [AiTransactionController::class, 'index'])->name('transactions.index');
+    });
 
     // Demo Website Management
     Route::resource('demo-websites', AdminDemoWebsiteController::class)->only(['index', 'create', 'edit', 'store', 'update', 'destroy']);

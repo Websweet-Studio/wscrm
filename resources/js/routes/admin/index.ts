@@ -22,6 +22,7 @@ import database from './database'
 import tools from './tools'
 import directadmin from './directadmin'
 import api from './api'
+import ai from './ai'
 import demoWebsites from './demo-websites'
 import demoCategories from './demo-categories'
 import demoPackages from './demo-packages'
@@ -186,6 +187,7 @@ database: Object.assign(database, database),
 tools: Object.assign(tools, tools),
 directadmin: Object.assign(directadmin, directadmin),
 api: Object.assign(api, api),
+ai: Object.assign(ai, ai),
 demoWebsites: Object.assign(demoWebsites, demoWebsites),
 demoCategories: Object.assign(demoCategories, demoCategories),
 demoPackages: Object.assign(demoPackages, demoPackages),
