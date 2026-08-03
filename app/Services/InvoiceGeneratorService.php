@@ -28,14 +28,17 @@ class InvoiceGeneratorService
         $generatedCount = 0;
 
         foreach ($expiringOrders as $order) {
-            // Calculate renewal amount (same as current order amount minus discount for renewal)
-            $renewalAmount = $order->total_amount;
+            // Hitung ulang dari item (bukan total_amount) agar tahan data stale,
+            // lalu kurangi diskon order. Konsisten dengan createAndSendInvoice.
+            $subtotal = (float) $order->orderItems->sum(fn ($item) => $item->price * $item->quantity);
+            $orderDiscount = (float) ($order->discount_amount ?? 0);
+            $netAmount = max(0, $subtotal - $orderDiscount);
 
             // Apply renewal discount if service has been active for more than 1 year
             $serviceAge = Carbon::parse($order->created_at)->diffInMonths(Carbon::now());
-            $discount = 0;
+            $loyaltyDiscount = 0;
             if ($serviceAge >= 12) {
-                $discount = $renewalAmount * 0.05; // 5% discount for loyal customers
+                $loyaltyDiscount = $netAmount * 0.05; // 5% discount for loyal customers
             }
 
             // Generate due date (7 days before expiry)
@@ -44,14 +47,15 @@ class InvoiceGeneratorService
                 $dueDate = Carbon::now()->addDays(3); // If already past, give 3 days
             }
 
-            // Create renewal invoice
+            // Create renewal invoice (amount = subtotal, discount = semua diskon
+            // digabung, agar netTotal() dan template email konsisten)
             $invoice = Invoice::create([
                 'customer_id' => $order->customer_id,
                 'order_id' => $order->id,
                 'invoice_number' => $this->generateInvoiceNumber(),
                 'invoice_type' => 'renewal',
-                'amount' => $renewalAmount - $discount,
-                'discount' => $discount,
+                'amount' => $subtotal,
+                'discount' => $orderDiscount + $loyaltyDiscount,
                 'issue_date' => Carbon::now()->toDateString(),
                 'due_date' => $dueDate->toDateString(),
                 'status' => 'pending',

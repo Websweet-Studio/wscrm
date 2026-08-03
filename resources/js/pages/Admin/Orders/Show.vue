@@ -615,7 +615,7 @@ const createAndSendInvoice = () => {
                             <div class="border-t border-border/80 pt-2">
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm font-bold uppercase tracking-wider">Total</span>
-                                    <span class="text-lg font-bold">{{ formatPrice(order.total_amount) }}</span>
+                                    <span class="text-lg font-bold">{{ formatPrice(Math.max(0, totalItemsAmount - (Number(order.discount_amount) || 0))) }}</span>
                                 </div>
                             </div>
                         </div>
