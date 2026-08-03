@@ -25,6 +25,7 @@ interface AiModel {
 interface Props {
     models: { data: AiModel[]; current_page: number; last_page: number; per_page: number; total: number; links: any[] };
     providers: Array<{ id: number; name: string }>;
+    credit_price: number | null;
     filters?: { search?: string; provider_id?: string };
 }
 
@@ -94,6 +95,12 @@ const confirmDelete = (m: AiModel) => {
     if (!confirm(`Hapus model "${m.model_key}"?`)) return;
     router.delete(`/admin/ai/models/${m.id}`, { preserveScroll: true });
 };
+
+// Harga per 1 juta token: rate kredit/1K × harga 1 kredit × 1000.
+const formatRupiah = (n: number): string =>
+    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 2 }).format(n);
+const priceInput = (m: AiModel): string => (props.credit_price === null ? '—' : formatRupiah(Number(m.input_rate) * props.credit_price * 1000));
+const priceOutput = (m: AiModel): string => (props.credit_price === null ? '—' : formatRupiah(Number(m.output_rate) * props.credit_price * 1000));
 </script>
 
 <template>
@@ -105,7 +112,8 @@ const confirmDelete = (m: AiModel) => {
                 <CardHeader class="flex flex-row items-center justify-between space-y-0">
                     <div>
                         <CardTitle>Model AI</CardTitle>
-                        <CardDescription>Model per provider dengan harga kredit per 1K token (input/output)</CardDescription>
+                        <CardDescription v-if="credit_price !== null">Harga per 1 juta token input/output, referensi 1 kredit ≈ {{ formatRupiah(credit_price) }}</CardDescription>
+                        <CardDescription v-else>Tambahkan paket kredit aktif agar harga rupiah tampil.</CardDescription>
                     </div>
                     <Button class="cursor-pointer" :disabled="providers.length === 0" @click="openCreate">
                         <Plus class="mr-2 h-4 w-4" /> Tambah Model
@@ -131,8 +139,8 @@ const confirmDelete = (m: AiModel) => {
                                     <th class="px-3 py-3">Model</th>
                                     <th class="px-3 py-3">Nama Tampilan</th>
                                     <th class="px-3 py-3">Provider</th>
-                                    <th class="px-3 py-3">Rate Input/1K</th>
-                                    <th class="px-3 py-3">Rate Output/1K</th>
+                                    <th class="px-3 py-3">Harga Input / 1M token</th>
+                                    <th class="px-3 py-3">Harga Output / 1M token</th>
                                     <th class="px-3 py-3">Status</th>
                                     <th class="px-3 py-3 text-right">Aksi</th>
                                 </tr>
@@ -142,8 +150,8 @@ const confirmDelete = (m: AiModel) => {
                                     <td class="px-3 py-3 font-mono font-medium">{{ m.model_key }}</td>
                                     <td class="px-3 py-3 text-muted-foreground">{{ m.display_name || '-' }}</td>
                                     <td class="px-3 py-3">{{ m.provider?.name || '-' }}</td>
-                                    <td class="px-3 py-3">{{ m.input_rate }}</td>
-                                    <td class="px-3 py-3">{{ m.output_rate }}</td>
+                                    <td class="px-3 py-3">{{ priceInput(m) }}</td>
+                                    <td class="px-3 py-3">{{ priceOutput(m) }}</td>
                                     <td class="px-3 py-3">
                                         <Badge :variant="m.is_active ? 'default' : 'secondary'">{{ m.is_active ? 'Aktif' : 'Nonaktif' }}</Badge>
                                     </td>

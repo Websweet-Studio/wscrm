@@ -59,14 +59,12 @@ Route::prefix('customer')->name('customer.')->group(function () {
             Route::patch('/password', [SettingsController::class, 'updatePassword'])->name('update-password');
         });
 
-        // AI (chat + beli paket kredit)
+        // AI (dashboard token & usage + beli paket kredit)
         Route::prefix('ai')->name('ai.')->group(function () {
             Route::get('/', [AiController::class, 'index'])->name('index');
+            Route::post('/api-key', [AiController::class, 'apiKey'])->name('api-key');
             Route::get('/packages', [AiController::class, 'packages'])->name('packages');
             Route::post('/packages/{package}/buy', [AiController::class, 'buy'])->name('buy');
-            Route::post('/chat/stream', [AiController::class, 'streamChat'])->name('chat.stream');
-            Route::get('/conversations/{conversation}', [AiController::class, 'show'])->name('conversations.show');
-            Route::delete('/conversations/{conversation}', [AiController::class, 'destroy'])->name('conversations.destroy');
         });
 
         // Stop Impersonation (available in customer area)

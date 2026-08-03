@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Ai;
 
 use App\Http\Controllers\Controller;
 use App\Models\AiModel;
+use App\Models\AiPackage;
 use App\Models\AiProvider;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -27,10 +28,18 @@ class ModelController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        // Referensi harga 1 kredit (Rp) = paket aktif termurah per kredit, utk estimasi Rp/1M.
+        $creditPrice = AiPackage::active()
+            ->where('credits', '>', 0)
+            ->get()
+            ->map(fn ($p) => (float) $p->final_price / (int) $p->credits)
+            ->min();
+
         return Inertia::render('Admin/Ai/Models/Index', [
             'models' => $models,
             'providers' => AiProvider::orderBy('name')->get(['id', 'name']),
             'filters' => request()->only(['search', 'provider_id']),
+            'credit_price' => $creditPrice ? round($creditPrice, 2) : null,
         ]);
     }
 

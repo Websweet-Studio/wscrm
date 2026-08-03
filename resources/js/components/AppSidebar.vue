@@ -16,6 +16,8 @@ import {
     ChevronDown,
     ChevronRight,
     ClipboardList,
+    Coins,
+    Cpu,
     CreditCard,
     DollarSign,
     FileText,

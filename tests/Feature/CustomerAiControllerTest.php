@@ -1,21 +1,39 @@
 <?php
 
-use App\Models\AiConversation;
 use App\Models\AiCredit;
-use App\Models\AiMessage;
-use App\Models\AiModel;
 use App\Models\AiPackage;
-use App\Models\AiProvider;
 use App\Models\Customer;
 use App\Models\Invoice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->customer = Customer::factory()->create();
+});
+
+it('renders token dashboard with balance and endpoint', function () {
+    AiCredit::create(['customer_id' => $this->customer->id, 'balance' => 2500]);
+
+    $this->actingAs($this->customer, 'customer')
+        ->get('/customer/ai')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Customer/Ai/Index')
+            ->where('balance', 2500)
+            ->has('models')
+            ->has('endpoint'));
+});
+
+it('generates a customer api key', function () {
+    $this->actingAs($this->customer, 'customer')
+        ->post('/customer/ai/api-key')
+        ->assertOk()
+        ->assertJsonStructure(['api_key']);
+
+    $credit = AiCredit::where('customer_id', $this->customer->id)->first();
+    expect($credit)->not->toBeNull()
+        ->and($credit->api_key)->not->toBeNull();
 });
 
 it('creates a topup invoice when customer buys a package', function () {
@@ -64,37 +82,4 @@ it('adds credit balance after customer confirms payment', function () {
         ->assertRedirect();
 
     expect(AiCredit::currentBalance($this->customer->id))->toBe($package->credits);
-});
-
-it('deducts credits when customer chats via stream', function () {
-    $provider = AiProvider::create([
-        'name' => 'P',
-        'endpoint' => 'https://p.example.com/v1',
-        'api_key' => Crypt::encryptString('secret'),
-        'is_active' => true,
-    ]);
-    AiModel::create([
-        'provider_id' => $provider->id,
-        'model_key' => 'test-model',
-        'input_rate' => 1,
-        'output_rate' => 1,
-        'is_active' => true,
-    ]);
-    AiCredit::create(['customer_id' => $this->customer->id, 'balance' => 100]);
-
-    Http::fake([
-        '*/chat/completions' => Http::response([
-            'choices' => [['message' => ['content' => 'Balasan AI']]],
-            'usage' => ['prompt_tokens' => 1000, 'completion_tokens' => 0],
-        ]),
-    ]);
-
-    $this->actingAs($this->customer, 'customer')
-        ->post('/customer/ai/chat/stream', ['message' => 'halo'])
-        ->assertOk()
-        ->sendContent(); // stream diproses saat response dikirim
-
-    expect(AiCredit::currentBalance($this->customer->id))->toBe(99)
-        ->and(AiConversation::count())->toBe(1)
-        ->and(AiMessage::where('role', 'agent')->count())->toBe(1);
 });

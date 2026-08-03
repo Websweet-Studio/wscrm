@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
@@ -90,11 +91,11 @@ const formatDate = (d: string) => new Date(d).toLocaleString('id-ID', { dateStyl
                         </div>
                         <div>
                             <Label>Dari</Label>
-                            <Input v-model="filters.from" type="date" @change="applyFilters" />
+                            <DatePicker v-model="filters.from" placeholder="Dari tanggal" @update:model-value="applyFilters" />
                         </div>
                         <div>
                             <Label>Sampai</Label>
-                            <Input v-model="filters.to" type="date" @change="applyFilters" />
+                            <DatePicker v-model="filters.to" placeholder="Sampai tanggal" @update:model-value="applyFilters" />
                         </div>
                     </div>
 

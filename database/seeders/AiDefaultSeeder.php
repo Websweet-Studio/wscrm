@@ -20,10 +20,11 @@ class AiDefaultSeeder extends Seeder
             ['endpoint' => 'https://openrouter.ai/api/v1', 'is_active' => true, 'sort_order' => 1]
         );
 
+        // Rate kredit per 1K token ≈ margin ±2.5x harga pasar /1M (kurs Rp18.000) ÷ Rp5.000.
         $models = [
-            ['model_key' => 'openai/gpt-4o-mini', 'display_name' => 'GPT-4o Mini', 'input_rate' => 0.2, 'output_rate' => 0.6, 'sort_order' => 1],
-            ['model_key' => 'openai/gpt-4o', 'display_name' => 'GPT-4o', 'input_rate' => 2.5, 'output_rate' => 10, 'sort_order' => 2],
-            ['model_key' => 'anthropic/claude-3.5-sonnet', 'display_name' => 'Claude 3.5 Sonnet', 'input_rate' => 3, 'output_rate' => 15, 'sort_order' => 3],
+            ['model_key' => 'openai/gpt-4o-mini', 'display_name' => 'GPT-4o Mini', 'input_rate' => 1.5, 'output_rate' => 5.5, 'sort_order' => 1],
+            ['model_key' => 'openai/gpt-4o', 'display_name' => 'GPT-4o', 'input_rate' => 25, 'output_rate' => 90, 'sort_order' => 2],
+            ['model_key' => 'anthropic/claude-3.5-sonnet', 'display_name' => 'Claude 3.5 Sonnet', 'input_rate' => 27, 'output_rate' => 135, 'sort_order' => 3],
         ];
 
         foreach ($models as $model) {

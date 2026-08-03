@@ -3,40 +3,88 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Models\AiConversation;
 use App\Models\AiCredit;
-use App\Models\AiMessage;
+use App\Models\AiModel;
 use App\Models\AiPackage;
+use App\Models\AiTransaction;
 use App\Models\Invoice;
-use App\Services\AiGateway;
 use App\Services\InvoiceGeneratorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AiController extends Controller
 {
-    private const SYSTEM_PROMPT = 'Kamu adalah asisten AI yang membantu pelanggan hosting/website. Jawab dengan ramah dan jelas dalam Bahasa Indonesia.';
-
     private function customer(): \App\Models\Customer
     {
         return Auth::guard('customer')->user();
     }
 
+    /**
+     * Dashboard token & usage: sisa kredit, API key, harga per model, endpoint, riwayat usage.
+     */
     public function index(): Response
     {
         $customer = $this->customer();
 
-        $conversations = AiConversation::where('customer_id', $customer->id)
-            ->latest('updated_at')
-            ->get(['id', 'title', 'updated_at']);
+        $credit = AiCredit::firstOrCreate(['customer_id' => $customer->id]);
+
+        $apiKey = null;
+        if ($credit->api_key) {
+            try {
+                $apiKey = Crypt::decryptString($credit->api_key);
+            } catch (\Throwable $e) {
+                $apiKey = null;
+            }
+        }
+
+        $models = AiModel::with('provider:id,name')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        // Harga referensi 1 kredit (Rp) = paket aktif termurah per kredit.
+        $creditPrice = AiPackage::active()
+            ->where('credits', '>', 0)
+            ->get()
+            ->map(fn ($p) => (float) $p->final_price / (int) $p->credits)
+            ->min();
+
+        $transactions = AiTransaction::with(['model:id,model_key', 'package:id,name'])
+            ->where('customer_id', $customer->id)
+            ->latest('created_at')
+            ->limit(20)
+            ->get();
 
         return Inertia::render('Customer/Ai/Index', [
-            'balance' => AiCredit::currentBalance($customer->id),
-            'conversations' => $conversations,
+            'balance' => (int) $credit->balance,
+            'api_key' => $apiKey,
+            'endpoint' => url('/api/v1'),
+            'models' => $models,
+            'credit_price' => $creditPrice ? round($creditPrice, 2) : null,
+            'transactions' => $transactions,
         ]);
+    }
+
+    /**
+     * Generate / regenerate API key customer.
+     */
+    public function apiKey(): JsonResponse
+    {
+        $customer = $this->customer();
+
+        $credit = AiCredit::firstOrCreate(['customer_id' => $customer->id]);
+
+        $key = 'wsk-'.Str::random(48);
+
+        $credit->update(['api_key' => Crypt::encryptString($key)]);
+
+        return response()->json(['api_key' => $key]);
     }
 
     public function packages(): Response
@@ -75,168 +123,5 @@ class AiController extends Controller
 
         return redirect()->route('customer.invoices.payment', $invoice)
             ->with('success', 'Invoice pembelian kredit AI dibuat. Silakan selesaikan pembayaran.');
-    }
-
-    public function show(AiConversation $conversation): JsonResponse
-    {
-        abort_unless($conversation->customer_id === $this->customer()->id, 403, 'Unauthorized access.');
-
-        return response()->json([
-            'conversation' => $conversation,
-            'messages' => $conversation->messages()->get(['id', 'role', 'content', 'created_at']),
-        ]);
-    }
-
-    public function destroy(AiConversation $conversation): JsonResponse
-    {
-        abort_unless($conversation->customer_id === $this->customer()->id, 403, 'Unauthorized access.');
-
-        $conversation->delete();
-
-        return response()->json(['success' => true]);
-    }
-
-    public function chat(Request $request, AiGateway $gateway): JsonResponse
-    {
-        $validated = $request->validate([
-            'conversation_id' => 'nullable|integer',
-            'message' => 'required|string|max:2000',
-        ]);
-
-        $conversation = $this->resolveConversation($validated['conversation_id'] ?? null, $validated['message']);
-
-        AiMessage::create([
-            'conversation_id' => $conversation->id,
-            'role' => 'user',
-            'content' => $validated['message'],
-        ]);
-
-        try {
-            $result = $gateway->chat($this->customer()->id, null, $this->buildMessages($conversation, $validated['message']));
-            $response = $result['content'];
-            $meta = [
-                'credits_used' => $result['credits_used'],
-                'balance_after' => $result['balance_after'],
-                'model_key' => $result['model_key'],
-            ];
-        } catch (\Exception $e) {
-            $response = 'Maaf, terjadi error: '.$e->getMessage();
-            $meta = [];
-        }
-
-        AiMessage::create([
-            'conversation_id' => $conversation->id,
-            'role' => 'agent',
-            'content' => $response,
-        ]);
-
-        return response()->json(['conversation_id' => $conversation->id, 'ai_response' => $response] + $meta);
-    }
-
-    /**
-     * Chat streaming SSE — pola sama dengan admin AiAgent, diproses via AiGateway (multi-provider + kredit).
-     */
-    public function streamChat(Request $request, AiGateway $gateway)
-    {
-        $validated = $request->validate([
-            'conversation_id' => 'nullable|integer',
-            'message' => 'required|string|max:2000',
-        ]);
-
-        $conversation = $this->resolveConversation($validated['conversation_id'] ?? null, $validated['message']);
-
-        AiMessage::create([
-            'conversation_id' => $conversation->id,
-            'role' => 'user',
-            'content' => $validated['message'],
-        ]);
-
-        $conversationId = $conversation->id;
-        $message = $validated['message'];
-
-        return response()->stream(function () use ($gateway, $message, $conversationId) {
-            $send = function (array $payload) {
-                echo 'data: '.json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n\n";
-                if (ob_get_level() > 0) {
-                    ob_flush();
-                }
-                flush();
-            };
-
-            set_time_limit(300);
-
-            $send(['type' => 'start', 'conversation_id' => $conversationId]);
-
-            $conversation = AiConversation::find($conversationId);
-            $response = '';
-            $meta = [];
-
-            try {
-                $result = $gateway->chat($this->customer()->id, null, $this->buildMessages($conversation, $message));
-                $response = $result['content'];
-                $meta = [
-                    'credits_used' => $result['credits_used'],
-                    'balance_after' => $result['balance_after'],
-                    'model_key' => $result['model_key'],
-                ];
-            } catch (\Exception $e) {
-                $response = 'Maaf, terjadi error: '.$e->getMessage().' Silakan beli paket kredit di halaman paket.';
-            }
-
-            AiMessage::create([
-                'conversation_id' => $conversationId,
-                'role' => 'agent',
-                'content' => $response,
-            ]);
-
-            $send([
-                'type' => 'done',
-                'conversation_id' => $conversationId,
-                'ai_response' => $response,
-                'meta' => $meta,
-            ]);
-
-            echo "data: [DONE]\n\n";
-            if (ob_get_level() > 0) {
-                ob_flush();
-            }
-            flush();
-        }, 200, [
-            'Content-Type' => 'text/event-stream',
-            'Cache-Control' => 'no-cache',
-            'X-Accel-Buffering' => 'no',
-            'Connection' => 'keep-alive',
-        ]);
-    }
-
-    private function resolveConversation(?int $conversationId, string $message): AiConversation
-    {
-        if ($conversationId) {
-            $conversation = AiConversation::find($conversationId);
-            abort_unless($conversation && $conversation->customer_id === $this->customer()->id, 403, 'Unauthorized access.');
-
-            return $conversation;
-        }
-
-        return AiConversation::create([
-            'customer_id' => $this->customer()->id,
-            'title' => mb_strimwidth($message, 0, 50),
-        ]);
-    }
-
-    private function buildMessages(AiConversation $conversation, string $newMessage): array
-    {
-        $messages = [['role' => 'system', 'content' => self::SYSTEM_PROMPT]];
-
-        foreach ($conversation->messages()->orderBy('id')->get() as $m) {
-            $messages[] = [
-                'role' => $m->role === 'agent' ? 'assistant' : 'user',
-                'content' => $m->content,
-            ];
-        }
-
-        $messages[] = ['role' => 'user', 'content' => $newMessage];
-
-        return $messages;
     }
 }

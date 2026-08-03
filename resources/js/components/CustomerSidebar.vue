@@ -64,7 +64,7 @@ const mainNavItems: NavItem[] = [
         badge: customerBadges.pending_orders || 0,
     },
     {
-        title: 'AI Assistant',
+        title: 'Token AI',
         href: '/customer/ai',
         icon: Bot,
     },

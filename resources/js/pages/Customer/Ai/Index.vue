@@ -1,315 +1,257 @@
 <script setup lang="ts">
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { Bot, Coins, Loader2, MessageSquare, Plus, Send, Sparkles, Trash2 } from 'lucide-vue-next';
-import { nextTick, onMounted, ref } from 'vue';
+import { ArrowDownCircle, ArrowUpCircle, Check, Coins, Copy, KeyRound, RefreshCw, Server, ShoppingCart } from 'lucide-vue-next';
+import { ref } from 'vue';
 
-interface Message {
-    role: 'user' | 'agent';
-    content: string;
-    meta?: { credits_used: number; balance_after: number; model_key: string } | null;
-    pending?: boolean;
-}
-
-interface Conversation {
+interface Model {
     id: number;
-    title: string;
-    updated_at: string;
+    model_key: string;
+    display_name: string | null;
+    input_rate: string;
+    output_rate: string;
+    provider: { id: number; name: string } | null;
 }
 
-const props = defineProps<{
+interface Transaction {
+    id: number;
+    type: 'in' | 'out';
+    source: 'purchase' | 'usage' | 'manual_adjust';
+    credits: number;
+    description: string | null;
+    created_at: string;
+    model: { model_key: string } | null;
+    package: { name: string } | null;
+}
+
+interface Props {
     balance: number;
-    conversations: Conversation[];
-}>();
+    api_key: string | null;
+    endpoint: string;
+    models: Model[];
+    credit_price: number | null;
+    transactions: Transaction[];
+}
+
+const props = defineProps<Props>();
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/customer/dashboard' },
-    { title: 'AI Assistant', href: '/customer/ai' },
+    { title: 'Token AI', href: '/customer/ai' },
 ];
 
 const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
 
-const balance = ref(props.balance);
-const conversations = ref<Conversation[]>(props.conversations || []);
-const activeConversationId = ref<number | null>(null);
-const messages = ref<Message[]>([]);
-const inputMessage = ref('');
-const isLoading = ref(false);
-const chatContainer = ref<HTMLElement>();
+const apiKey = ref(props.api_key);
+const showKey = ref(false);
+const copied = ref(false);
 
-const loadConversation = async (id: number) => {
-    activeConversationId.value = id;
-    isLoading.value = true;
+const copyText = async (text: string) => {
     try {
-        const res = await fetch(`/customer/ai/conversations/${id}`, { headers: { 'X-CSRF-TOKEN': csrfToken } });
-        const data = await res.json();
-        messages.value = (data.messages || []).map((m: any) => ({ role: m.role, content: m.content }));
+        await navigator.clipboard.writeText(text);
     } catch {
-        messages.value = [];
-    } finally {
-        isLoading.value = false;
-        await nextTick();
-        scrollToBottom();
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
     }
+    copied.value = true;
+    setTimeout(() => (copied.value = false), 1500);
 };
 
-const newChat = () => {
-    activeConversationId.value = null;
-    messages.value = [];
-};
-
-const deleteConversation = async (id: number) => {
-    if (!confirm('Hapus percakapan ini?')) return;
-    const res = await fetch(`/customer/ai/conversations/${id}`, {
-        method: 'DELETE',
-        headers: { 'X-CSRF-TOKEN': csrfToken },
-    });
+const regenerateKey = async () => {
+    if (!confirm('Generate API key baru? Key lama langsung tidak berlaku.')) return;
+    const res = await fetch('/customer/ai/api-key', { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken } });
     if (res.ok) {
-        conversations.value = conversations.value.filter((c) => c.id !== id);
-        if (activeConversationId.value === id) {
-            activeConversationId.value = null;
-            messages.value = [];
-        }
+        const data = await res.json();
+        apiKey.value = data.api_key;
+        showKey.value = true;
     }
 };
 
-const upsertConversation = (id: number, firstMessage: string) => {
-    const existing = conversations.value.find((c) => c.id === id);
-    if (existing) {
-        conversations.value.splice(conversations.value.indexOf(existing), 1);
-        conversations.value.unshift(existing);
-    } else {
-        conversations.value.unshift({
-            id,
-            title: firstMessage.length > 40 ? firstMessage.slice(0, 40) + '…' : firstMessage,
-            updated_at: new Date().toISOString(),
-        });
-    }
-};
+const formatRupiah = (n: number): string =>
+    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 2 }).format(n);
 
-const sendMessage = async () => {
-    const text = inputMessage.value.trim();
-    if (!text || isLoading.value) return;
+// Harga per 1 juta token: rate per 1K × harga 1 kredit × 1000.
+const priceInput = (m: Model): string => (props.credit_price === null ? '—' : formatRupiah(Number(m.input_rate) * props.credit_price * 1000));
+const priceOutput = (m: Model): string => (props.credit_price === null ? '—' : formatRupiah(Number(m.output_rate) * props.credit_price * 1000));
 
-    messages.value.push({ role: 'user', content: text });
-    inputMessage.value = '';
-    isLoading.value = true;
+const maskKey = (key: string): string => `${key.slice(0, 8)}••••••••${key.slice(-4)}`;
 
-    await nextTick();
-    scrollToBottom();
-
-    const agentMsg: Message = { role: 'agent', content: '', pending: true, meta: null };
-    messages.value.push(agentMsg);
-
-    const handleEvent = (payload: any) => {
-        if (payload.type === 'start') {
-            activeConversationId.value = payload.conversation_id;
-            upsertConversation(payload.conversation_id, text);
-        } else if (payload.type === 'done') {
-            agentMsg.content = payload.ai_response || 'Tidak ada respons.';
-            agentMsg.meta = payload.meta || null;
-            if (payload.meta?.balance_after !== undefined) balance.value = payload.meta.balance_after;
-            agentMsg.pending = false;
-            scrollToBottom();
-        } else if (payload.type === 'error') {
-            agentMsg.content = payload.message || 'Terjadi error saat memproses permintaan.';
-            agentMsg.pending = false;
-            scrollToBottom();
-        }
-    };
-
-    try {
-        const res = await fetch('/customer/ai/chat/stream', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-            },
-            body: JSON.stringify({ message: text, conversation_id: activeConversationId.value }),
-        });
-
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        if (!res.body) throw new Error('Stream tidak tersedia');
-
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-
-            let sep: number;
-            while ((sep = buffer.indexOf('\n\n')) !== -1) {
-                const raw = buffer.slice(0, sep);
-                buffer = buffer.slice(sep + 2);
-
-                for (const line of raw.split('\n')) {
-                    if (!line.startsWith('data: ')) continue;
-                    const data = line.slice(6);
-                    if (data.trim() === '[DONE]') continue;
-                    try {
-                        handleEvent(JSON.parse(data));
-                    } catch {
-                        // event malformed — abaikan
-                    }
-                }
-            }
-        }
-    } catch (e) {
-        agentMsg.content = 'Maaf, terjadi error saat menghubungi AI Assistant.';
-        agentMsg.pending = false;
-    } finally {
-        agentMsg.pending = false;
-        isLoading.value = false;
-        await nextTick();
-        scrollToBottom();
-    }
-};
-
-const scrollToBottom = () => {
-    if (chatContainer.value) chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
-};
-
-const formatMarkdown = (text: string): string =>
-    text
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/`(.*?)`/g, '<code class="bg-muted px-1 rounded text-sm font-mono">$1</code>')
-        .replace(/\n/g, '<br>');
-
-const handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-    }
-};
-
-onMounted(() => {
-    if (conversations.value.length > 0) {
-        loadConversation(conversations.value[0].id);
-    }
-});
+const formatDate = (d: string) => new Date(d).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
 </script>
 
 <template>
     <CustomerLayout :breadcrumbs="breadcrumbs">
-        <Head title="AI Assistant" />
+        <Head title="Token AI" />
 
-        <div class="flex gap-6 h-[calc(100vh-140px)]">
-            <!-- Sidebar: Riwayat -->
-            <aside class="w-64 flex-shrink-0 flex flex-col border rounded-lg bg-card overflow-hidden">
-                <div class="p-3 border-b space-y-2">
-                    <div class="flex items-center justify-between rounded-md bg-primary/5 px-3 py-2">
-                        <span class="flex items-center gap-1.5 text-sm font-semibold">
-                            <Coins class="h-4 w-4 text-amber-500" /> {{ balance.toLocaleString('id-ID') }}
-                        </span>
-                        <Link href="/customer/ai/packages" class="text-xs font-medium text-primary hover:underline">Beli</Link>
-                    </div>
-                    <Button class="w-full cursor-pointer justify-start" @click="newChat">
-                        <Plus class="mr-2 h-4 w-4" /> Percakapan Baru
-                    </Button>
+        <div class="space-y-6">
+            <!-- Header -->
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold">Token AI</h1>
+                    <p class="text-muted-foreground">Kelola sisa saldo, API key, dan harga model untuk dipasang di Hermes agent / code editor Anda.</p>
                 </div>
-                <div class="flex-1 overflow-y-auto p-2 space-y-1">
-                    <p v-if="conversations.length === 0" class="text-xs text-muted-foreground text-center py-8">Belum ada percakapan</p>
-                    <div
-                        v-for="c in conversations"
-                        :key="c.id"
-                        class="group flex items-center gap-2 rounded-md px-3 py-2 cursor-pointer text-sm transition-colors"
-                        :class="activeConversationId === c.id ? 'bg-primary/10 text-primary' : 'hover:bg-muted'"
-                        @click="loadConversation(c.id)"
-                    >
-                        <MessageSquare class="h-4 w-4 flex-shrink-0" />
-                        <span class="flex-1 truncate">{{ c.title }}</span>
-                        <button
-                            class="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive cursor-pointer flex-shrink-0"
-                            title="Hapus"
-                            @click.stop="deleteConversation(c.id)"
-                        >
-                            <Trash2 class="h-3.5 w-3.5" />
-                        </button>
-                    </div>
-                </div>
-            </aside>
+                <Link href="/customer/ai/packages">
+                    <Button class="cursor-pointer"><ShoppingCart class="mr-2 h-4 w-4" /> Beli Saldo</Button>
+                </Link>
+            </div>
 
-            <!-- Main Chat -->
-            <div class="flex-1 flex flex-col min-w-0 max-w-3xl">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                            <Bot class="h-5 w-5 text-primary" />
+            <!-- Saldo + Endpoint -->
+            <div class="grid gap-4 lg:grid-cols-5">
+                <Card class="flex flex-col lg:col-span-2">
+                    <CardHeader>
+                        <CardTitle class="flex items-center gap-2"><Coins class="h-5 w-5 text-amber-500" /> Sisa Saldo</CardTitle>
+                    </CardHeader>
+                    <CardContent class="flex flex-1 flex-col">
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-5xl font-bold">{{ balance.toLocaleString('id-ID') }}</span>
+                            <span class="text-sm text-muted-foreground">kredit</span>
+                        </div>
+                        <p class="mt-2 text-sm text-muted-foreground">Saldo kredit. Setiap pemakaian memotong saldo sesuai jumlah token × harga model.</p>
+                        <p v-if="credit_price !== null" class="mt-1 text-sm text-muted-foreground">Referensi harga: 1 kredit ≈ {{ formatRupiah(credit_price) }}</p>
+                        <div class="mt-auto pt-5">
+                            <Link href="/customer/ai/packages" class="block">
+                                <Button class="w-full cursor-pointer"><ShoppingCart class="mr-2 h-4 w-4" /> Beli Saldo</Button>
+                            </Link>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card class="lg:col-span-3">
+                    <CardHeader>
+                        <CardTitle class="flex items-center gap-2"><Server class="h-5 w-5 text-primary" /> Endpoint API</CardTitle>
+                        <CardDescription>Isi di Hermes agent atau code editor (OpenAI-compatible)</CardDescription>
+                    </CardHeader>
+                    <CardContent class="space-y-4">
+                        <div>
+                            <div class="mb-1 flex items-center gap-2 text-sm font-medium">
+                                <Server class="h-4 w-4 text-muted-foreground" /> Base URL
+                            </div>
+                            <div class="flex items-center justify-between gap-2 rounded-md bg-muted px-3 py-2 text-sm font-mono">
+                                <span class="truncate">{{ endpoint }}</span>
+                                <button class="shrink-0 cursor-pointer text-muted-foreground hover:text-foreground" title="Salin" @click="copyText(endpoint)">
+                                    <Copy v-if="!copied" class="h-4 w-4" />
+                                    <Check v-else class="h-4 w-4 text-green-600" />
+                                </button>
+                            </div>
                         </div>
                         <div>
-                            <h1 class="text-xl font-semibold">AI Assistant</h1>
-                            <p class="text-sm text-muted-foreground">Chat AI — biaya dipotong dari saldo kredit Anda</p>
-                        </div>
-                    </div>
-                    <Link href="/customer/ai/packages">
-                        <Button variant="outline" class="cursor-pointer"><Coins class="mr-2 h-4 w-4" /> Beli Kredit</Button>
-                    </Link>
-                </div>
-
-                <div class="flex-1 overflow-y-auto space-y-4 mb-4" ref="chatContainer">
-                    <div v-if="messages.length === 0" class="text-center py-12">
-                        <Sparkles class="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <h2 class="text-lg font-medium mb-2">Halo! Saya AI Assistant Anda</h2>
-                        <p class="text-sm text-muted-foreground mb-6">
-                            Tanyakan apa saja — bantuan teknis, tips website, dan lainnya.
-                        </p>
-                    </div>
-
-                    <div v-for="(msg, idx) in messages" :key="idx" class="flex gap-3" :class="msg.role === 'user' ? 'justify-end' : ''">
-                        <div v-if="msg.role === 'user'" class="bg-primary text-primary-foreground rounded-2xl rounded-br-md px-4 py-2.5 max-w-[80%] text-sm">
-                            {{ msg.content }}
-                        </div>
-                        <div v-else class="flex gap-3 max-w-[85%]">
-                            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 flex-shrink-0 mt-1">
-                                <Bot class="h-4 w-4 text-primary" />
+                            <div class="mb-1 flex items-center gap-2 text-sm font-medium">
+                                <KeyRound class="h-4 w-4 text-muted-foreground" /> API Key
                             </div>
-                            <div class="space-y-2">
-                                <div v-if="msg.pending" class="bg-muted/50 rounded-2xl rounded-bl-md px-4 py-2.5 text-sm">
-                                    <Loader2 class="h-4 w-4 animate-spin text-muted-foreground" />
-                                </div>
-                                <template v-else>
-                                    <div class="bg-muted/50 rounded-2xl rounded-bl-md px-4 py-2.5 text-sm prose-sm" v-html="formatMarkdown(msg.content)" />
-                                    <p v-if="msg.meta" class="text-[11px] text-muted-foreground">
-                                        Model {{ msg.meta.model_key }} · pakai {{ msg.meta.credits_used }} kredit · sisa {{ msg.meta.balance_after }}
-                                    </p>
-                                </template>
+                            <div v-if="apiKey" class="flex items-center gap-2">
+                                <code class="flex-1 truncate rounded-md bg-muted px-3 py-2 text-sm font-mono">{{ showKey ? apiKey : maskKey(apiKey) }}</code>
+                                <Button size="sm" variant="ghost" class="cursor-pointer text-xs" @click="showKey = !showKey">{{ showKey ? 'Sembunyikan' : 'Lihat' }}</Button>
+                                <Button size="sm" variant="ghost" class="cursor-pointer text-xs" title="Salin key" @click="apiKey && copyText(apiKey)">
+                                    <Copy v-if="!copied" class="h-3.5 w-3.5" />
+                                    <Check v-else class="h-3.5 w-3.5 text-green-600" />
+                                </Button>
                             </div>
+                            <div v-else class="flex items-center justify-between rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
+                                Belum ada API key
+                            </div>
+                            <Button size="sm" variant="outline" class="mt-2 cursor-pointer" @click="regenerateKey">
+                                <RefreshCw class="mr-1.5 h-3.5 w-3.5" /> Generate / Ganti Key
+                            </Button>
                         </div>
-                    </div>
-                </div>
-
-                <div class="border-t pt-4">
-                    <div class="flex gap-3">
-                        <Textarea
-                            v-model="inputMessage"
-                            placeholder="Ketik pertanyaan Anda..."
-                            :disabled="isLoading"
-                            class="min-h-[52px] max-h-32 resize-none"
-                            rows="2"
-                            @keydown="handleKeydown"
-                        />
-                        <Button
-                            @click="sendMessage"
-                            :disabled="isLoading || !inputMessage.trim()"
-                            class="cursor-pointer flex-shrink-0 h-[52px] w-[52px]"
-                        >
-                            <Send class="h-4 w-4" />
-                        </Button>
-                    </div>
-                    <p class="text-xs text-muted-foreground mt-2">
-                        <span class="text-primary">Enter</span> kirim · <span class="text-primary">Shift+Enter</span> baris baru.
-                        Saldo dipotong per pemakaian sesuai model yang dipakai.
-                    </p>
-                </div>
+                        <div>
+                            <p class="mb-1 text-xs font-medium text-muted-foreground">Contoh request</p>
+                            <pre class="overflow-x-auto rounded-md bg-muted px-3 py-2 text-xs font-mono">POST {{ endpoint }}/chat/completions
+Authorization: Bearer &lt;API_KEY&gt;
+{"model": "grok-4.5", "messages": [{"role": "user", "content": "halo"}]}</pre>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
+
+            <!-- Harga per model -->
+            <Card>
+                <CardHeader>
+                    <CardTitle>Harga Token per Model</CardTitle>
+                    <CardDescription v-if="credit_price !== null">
+                        Harga per 1 juta token input/output, referensi 1 kredit ≈ {{ formatRupiah(credit_price) }}
+                    </CardDescription>
+                    <CardDescription v-else>Tambahkan paket kredit aktif di panel admin agar harga rupiah tampil.</CardDescription>
+                </CardHeader>
+                <CardContent class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b text-left text-muted-foreground">
+                                <th class="px-3 py-3">Model</th>
+                                <th class="px-3 py-3">Provider</th>
+                                <th class="px-3 py-3">Input / 1M token</th>
+                                <th class="px-3 py-3">Output / 1M token</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="m in models" :key="m.id" class="border-b transition-colors last:border-0 hover:bg-muted/40">
+                                <td class="px-3 py-3">
+                                    <div class="font-mono font-medium">{{ m.model_key }}</div>
+                                    <div v-if="m.display_name" class="text-xs text-muted-foreground">{{ m.display_name }}</div>
+                                </td>
+                                <td class="px-3 py-3">{{ m.provider?.name || '-' }}</td>
+                                <td class="px-3 py-3">{{ priceInput(m) }}</td>
+                                <td class="px-3 py-3">{{ priceOutput(m) }}</td>
+                            </tr>
+                            <tr v-if="models.length === 0">
+                                <td colspan="4" class="px-3 py-8 text-center text-muted-foreground">Belum ada model aktif.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </CardContent>
+            </Card>
+
+            <!-- Riwayat usage -->
+            <Card>
+                <CardHeader>
+                    <CardTitle>Riwayat Token &amp; Usage</CardTitle>
+                    <CardDescription>20 transaksi terakhir (pembelian & pemakaian)</CardDescription>
+                </CardHeader>
+                <CardContent class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b text-left text-muted-foreground">
+                                <th class="px-3 py-3">Waktu</th>
+                                <th class="px-3 py-3">Tipe</th>
+                                <th class="px-3 py-3">Token</th>
+                                <th class="px-3 py-3">Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="t in transactions" :key="t.id" class="border-b transition-colors last:border-0 hover:bg-muted/40">
+                                <td class="px-3 py-3 text-xs text-muted-foreground">{{ formatDate(t.created_at) }}</td>
+                                <td class="px-3 py-3">
+                                    <Badge :variant="t.type === 'in' ? 'default' : 'secondary'">
+                                        {{ t.source === 'purchase' ? 'Pembelian' : t.source === 'usage' ? 'Pemakaian' : 'Penyesuaian' }}
+                                    </Badge>
+                                </td>
+                                <td class="px-3 py-3">
+                                    <span class="inline-flex items-center gap-1 font-semibold" :class="t.credits > 0 ? 'text-green-600' : 'text-red-500'">
+                                        <ArrowUpCircle v-if="t.credits > 0" class="h-4 w-4" />
+                                        <ArrowDownCircle v-else class="h-4 w-4" />
+                                        {{ t.credits > 0 ? '+' : '' }}{{ t.credits.toLocaleString('id-ID') }}
+                                    </span>
+                                </td>
+                                <td class="px-3 py-3 text-xs text-muted-foreground">
+                                    <template v-if="t.model">{{ t.model.model_key }} · </template>
+                                    <template v-if="t.package">{{ t.package.name }} · </template>
+                                    {{ t.description || '-' }}
+                                </td>
+                            </tr>
+                            <tr v-if="transactions.length === 0">
+                                <td colspan="4" class="px-3 py-8 text-center text-muted-foreground">Belum ada transaksi. Beli token untuk mulai memakai.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </CardContent>
+            </Card>
         </div>
     </CustomerLayout>
 </template>
