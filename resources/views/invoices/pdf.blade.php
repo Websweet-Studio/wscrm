@@ -133,9 +133,32 @@
                 </div>
             </td>
             <td style="width: 40%; text-align: right;">
-                <div style="margin-bottom: 5px;">websweetstudio.com</div>
-                <div style="margin-bottom: 5px;">websweetstudio@gmail.com</div>
-                <div>+62 851 75227339</div>
+                @php
+                    $companyName = $branding->get('app_name', 'WSCRM');
+                    $companyEmail = $branding->get('company_email');
+                    $companyPhone = $branding->get('company_phone');
+                    $companyWhatsapp = $branding->get('company_whatsapp');
+                    $companyAddress = $branding->get('company_address');
+                    $appLogo = $branding->get('app_logo');
+                @endphp
+                @if($appLogo)
+                    @php
+                        $logoRelative = str_replace('/storage/', '', $appLogo);
+                        $logoPath = \Illuminate\Support\Facades\Storage::disk('public')->path($logoRelative);
+                    @endphp
+                    <img src="{{ $logoPath }}" alt="{{ $companyName }}" style="max-height: 60px; margin-bottom: 5px;">
+                @else
+                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">{{ $companyName }}</div>
+                @endif
+                @if($companyEmail)
+                    <div style="margin-bottom: 5px;">{{ $companyEmail }}</div>
+                @endif
+                @if($companyPhone)
+                    <div style="margin-bottom: 5px;">{{ $companyPhone }}</div>
+                @endif
+                @if($companyWhatsapp && $companyWhatsapp !== $companyPhone)
+                    <div>WA: {{ $companyWhatsapp }}</div>
+                @endif
             </td>
         </tr>
     </table>
@@ -274,26 +297,82 @@
         </div>
     @elseif($invoice->status !== 'paid')
         <!-- Bank Payment Information -->
-        <div class="bank-info" style="clear: both;">
-            <h3 style="margin: 0 0 10px 0; color: #007bff;">INFORMASI PEMBAYARAN</h3>
-            <table style="width: 100%; border: none;">
-                <tr>
-                    <td style="width: 50%; border: none; padding: 0; padding-right: 20px;">
-                        <strong>Bank BCA</strong><br>
-                        No. Rek: 1234567890<br>
-                        A/n: WebSweetStudio
-                    </td>
-                    <td style="width: 50%; border: none; padding: 0;">
-                        <strong>Bank Mandiri</strong><br>
-                        No. Rek: 0987654321<br>
-                        A/n: WebSweetStudio
-                    </td>
-                </tr>
-            </table>
-            <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">
-                Silakan transfer sesuai nominal dan konfirmasi pembayaran ke WhatsApp: +62 851 75227339
-            </p>
-        </div>
+        @if($paymentAccounts->isNotEmpty())
+            <div class="bank-info" style="clear: both;">
+                <h3 style="margin: 0 0 10px 0; color: #007bff;">INFORMASI PEMBAYARAN</h3>
+                <table style="width: 100%; border: none;">
+                    @foreach($paymentAccounts->chunk(2) as $chunk)
+                        <tr>
+                            @foreach($chunk as $account)
+                                <td style="width: {{ 100 / min(2, $chunk->count()) }}%; border: none; padding: 0; padding-right: 20px;">
+                                    @if($account->type === 'bank')
+                                        <strong>{{ $account->name ?: 'Bank' }}</strong><br>
+                                        No. Rek: {{ $account->account_number }}<br>
+                                        A/n: {{ $account->account_name }}
+                                    @elseif($account->type === 'ewallet')
+                                        <strong>{{ $account->name ?: 'E-Wallet' }}</strong><br>
+                                        No: {{ $account->account_number }}<br>
+                                        A/n: {{ $account->account_name }}
+                                    @elseif($account->type === 'qris')
+                                        <strong>{{ $account->name ?: 'QRIS' }}</strong><br>
+                                        @if($account->qris_image_path)
+                                            @php
+                                                $qrisRelative = str_replace('/storage/', '', $account->qris_image_path);
+                                                $qrisPath = \Illuminate\Support\Facades\Storage::disk('public')->path($qrisRelative);
+                                            @endphp
+                                            <img src="{{ $qrisPath }}" alt="QRIS" style="max-width: 150px; max-height: 150px;">
+                                        @endif
+                                        @if($account->account_name)
+                                            <br>A/n: {{ $account->account_name }}
+                                        @endif
+                                    @endif
+                                </td>
+                            @endforeach
+                            @for($i = $chunk->count(); $i < 2; $i++)
+                                <td style="border: none; padding: 0;"></td>
+                            @endfor
+                        </tr>
+                    @endforeach
+                </table>
+                @php $primaryPhone = $branding->get('company_whatsapp') ?: $branding->get('company_phone'); @endphp
+                @if($primaryPhone)
+                    <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">
+                        Silakan transfer sesuai nominal dan konfirmasi pembayaran ke WhatsApp: {{ $primaryPhone }}
+                    </p>
+                @endif
+            </div>
+        @elseif($invoice->paymentAccount)
+            <div class="bank-info" style="clear: both;">
+                <h3 style="margin: 0 0 10px 0; color: #007bff;">INFORMASI PEMBAYARAN</h3>
+                @if($invoice->paymentAccount->type === 'bank')
+                    <strong>{{ $invoice->paymentAccount->name ?: 'Bank' }}</strong><br>
+                    No. Rek: {{ $invoice->paymentAccount->account_number }}<br>
+                    A/n: {{ $invoice->paymentAccount->account_name }}
+                @elseif($invoice->paymentAccount->type === 'ewallet')
+                    <strong>{{ $invoice->paymentAccount->name ?: 'E-Wallet' }}</strong><br>
+                    No: {{ $invoice->paymentAccount->account_number }}<br>
+                    A/n: {{ $invoice->paymentAccount->account_name }}
+                @elseif($invoice->paymentAccount->type === 'qris')
+                    <strong>{{ $invoice->paymentAccount->name ?: 'QRIS' }}</strong><br>
+                    @if($invoice->paymentAccount->qris_image_path)
+                        @php
+                            $qrisRel = str_replace('/storage/', '', $invoice->paymentAccount->qris_image_path);
+                            $qrisP = \Illuminate\Support\Facades\Storage::disk('public')->path($qrisRel);
+                        @endphp
+                        <img src="{{ $qrisP }}" alt="QRIS" style="max-width: 150px; max-height: 150px;">
+                    @endif
+                    @if($invoice->paymentAccount->account_name)
+                        <br>A/n: {{ $invoice->paymentAccount->account_name }}
+                    @endif
+                @endif
+                @php $priPhone = $branding->get('company_whatsapp') ?: $branding->get('company_phone'); @endphp
+                @if($priPhone)
+                    <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">
+                        Silakan transfer sesuai nominal dan konfirmasi pembayaran ke WhatsApp: {{ $priPhone }}
+                    </p>
+                @endif
+            </div>
+        @endif
     @endif
 
     @if($invoice->notes)
@@ -306,9 +385,21 @@
     @endif
 
     <div class="footer" style="clear: both;">
-        <p><strong>Terima kasih atas kepercayaan Anda kepada WebSweetStudio!</strong></p>
+        <p><strong>Terima kasih atas kepercayaan Anda!</strong></p>
         <p>Untuk pertanyaan mengenai faktur ini, silakan hubungi kami:</p>
-        <p>Email: websweetstudio@gmail.com | WhatsApp: +62 851 75227339 | Website: websweetstudio.com</p>
+        @php
+            $footerParts = [];
+            if ($companyEmail) $footerParts[] = 'Email: ' . $companyEmail;
+            $priNo = $branding->get('company_whatsapp') ?: $companyPhone;
+            if ($priNo) $footerParts[] = 'WhatsApp: ' . $priNo;
+            if ($companyPhone && $companyPhone !== $priNo) $footerParts[] = 'Tel: ' . $companyPhone;
+        @endphp
+        @if(count($footerParts))
+            <p>{{ implode(' | ', $footerParts) }}</p>
+        @endif
+        @if($companyAddress)
+            <p>{{ $companyAddress }}</p>
+        @endif
         <p style="margin-top: 20px; font-size: 10px;">
             Faktur ini dibuat secara otomatis pada {{ now()->format('d M Y H:i:s') }} WIB
         </p>

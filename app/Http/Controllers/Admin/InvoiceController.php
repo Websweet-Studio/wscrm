@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\BrandingSetting;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Order;
+use App\Models\PaymentAccount;
 use App\Services\InvoiceGeneratorService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -185,19 +187,21 @@ class InvoiceController extends Controller
     public function downloadPdf(Invoice $invoice)
     {
         try {
-            $invoice->load(['customer', 'order.orderItems']);
+            $invoice->load(['customer', 'order.orderItems', 'paymentAccount']);
 
-            $pdf = Pdf::loadView('invoices.pdf', compact('invoice'))
+            $branding = BrandingSetting::getAllActive()->pluck('value', 'key');
+            $paymentAccounts = PaymentAccount::active()->orderBy('sort')->get();
+
+            $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'branding', 'paymentAccounts'))
                 ->setPaper('a4', 'portrait');
 
-            $filename = 'invoice-'.str_replace(['/', '\\'], '-', $invoice->invoice_number).'.pdf';
+            $filename = 'invoice-' . str_replace(['/', '\\'], '-', $invoice->invoice_number) . '.pdf';
 
             return $pdf->download($filename);
-
         } catch (\Exception $e) {
-            logger()->error('PDF Generation Error: '.$e->getMessage());
+            logger()->error('PDF Generation Error: ' . $e->getMessage());
 
-            return back()->with('error', 'Gagal menggenerate PDF: '.$e->getMessage());
+            return back()->with('error', 'Gagal menggenerate PDF: ' . $e->getMessage());
         }
     }
 
@@ -233,7 +237,7 @@ class InvoiceController extends Controller
 
         // Calculate subtotal from order items
         $orderItems = $order->orderItems()->with(['hostingPlan', 'domainPrice', 'servicePlan'])->get();
-        $subtotal = $orderItems->sum(fn ($item) => $item->price * $item->quantity);
+        $subtotal = $orderItems->sum(fn($item) => $item->price * $item->quantity);
         $discountAmount = $order->discount_amount ?? 0;
 
         // Calculate due date: 7 days from now
