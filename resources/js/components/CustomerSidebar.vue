@@ -7,7 +7,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel
 import customer from '@/routes/customer';
 import { type NavItem } from '@/types';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { Headphones, Home, LayoutGrid, Settings, ShoppingCart, Bot } from 'lucide-vue-next';
+import { Headphones, Home, LayoutGrid, Settings, ShoppingCart, Bot, Wrench } from 'lucide-vue-next';
 import AppSidebarLogo from './AppSidebarLogo.vue';
 import { computed, ref } from 'vue';
 
@@ -69,6 +69,11 @@ const mainNavItems: NavItem[] = [
         icon: Bot,
     },
     {
+        title: 'Maintenance',
+        href: '/customer/maintenance',
+        icon: Wrench,
+    },
+    {
         title: 'Pengaturan',
         href: getCustomerUrl(() => customerRoutes?.settings?.index?.().url, '/customer/settings'),
         icon: Settings,
@@ -90,18 +95,12 @@ const mainNavItems: NavItem[] = [
             </SidebarMenu>
 
             <!-- Impersonation Banner -->
-            <div v-if="isImpersonating()" class="mx-3 my-2">
-                <div class="rounded-md border border-orange-200 bg-orange-50 p-2">
-                    <div class="flex items-center gap-2">
-                        <div class="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500"></div>
-                        <div class="flex-1">
-                            <div class="text-xs font-medium text-orange-800">Mode Admin</div>
-                            <div class="text-xs text-orange-700">Anda login sebagai customer</div>
-                        </div>
-                    </div>
+            <div v-if="isImpersonating() && state !== 'collapsed'" class="mx-3 my-2">
+                <div class="bg-muted/60 px-3 py-2">
+                    <div class="text-xs text-muted-foreground">Login sebagai customer</div>
                     <button
                         @click="stopImpersonation"
-                        class="mt-2 w-full rounded border border-orange-300 bg-orange-100 px-2 py-1 text-xs text-orange-800 transition-colors hover:bg-orange-200"
+                        class="mt-2 w-full bg-background px-2 py-1 text-xs text-foreground transition-colors hover:bg-muted"
                     >
                         Kembali ke Admin
                     </button>

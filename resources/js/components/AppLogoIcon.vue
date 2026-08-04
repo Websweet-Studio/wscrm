@@ -39,5 +39,5 @@ const altText = computed(() => {
 </script>
 
 <template>
-    <img :src="logoSrc" :alt="altText" :class="className" v-bind="$attrs" class="object-contain" />
+    <img :src="logoSrc" :alt="altText" :class="className" v-bind="$attrs" class="rounded-md object-contain" />
 </template>

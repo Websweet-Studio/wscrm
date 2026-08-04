@@ -6,6 +6,7 @@ use App\Http\Controllers\Customer\Auth\LoginController;
 use App\Http\Controllers\Customer\Auth\RegisterController;
 use App\Http\Controllers\Customer\AiController;
 use App\Http\Controllers\Customer\DashboardController;
+use App\Http\Controllers\Customer\MaintenanceController;
 use App\Http\Controllers\Customer\SettingsController;
 use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
@@ -65,6 +66,11 @@ Route::prefix('customer')->name('customer.')->group(function () {
             Route::post('/api-key', [AiController::class, 'apiKey'])->name('api-key');
             Route::get('/packages', [AiController::class, 'packages'])->name('packages');
             Route::post('/packages/{package}/buy', [AiController::class, 'buy'])->name('buy');
+        });
+
+        // Maintenance journal
+        Route::prefix('maintenance')->name('maintenance.')->group(function () {
+            Route::get('/', [MaintenanceController::class, 'index'])->name('index');
         });
 
         // Stop Impersonation (available in customer area)

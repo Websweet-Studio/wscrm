@@ -7,7 +7,7 @@ const { state } = useSidebar();
 
 <template>
     <div class="flex items-center">
-        <div class="flex aspect-square size-8 items-center justify-center rounded-md">
+        <div class="flex aspect-square size-8 items-center justify-center rounded-md bg-muted">
             <AppLogoIcon class="size-8 h-8 w-8" />
         </div>
         <div v-show="state === 'expanded'" class="ml-2 grid flex-1 text-left text-sm transition-all duration-200">

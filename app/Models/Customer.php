@@ -47,6 +47,11 @@ class Customer extends Authenticatable
         return $this->hasMany(Invoice::class);
     }
 
+    public function websiteClients(): HasMany
+    {
+        return $this->hasMany(WebsiteClient::class);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
