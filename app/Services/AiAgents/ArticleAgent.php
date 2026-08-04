@@ -33,6 +33,7 @@ class ArticleAgent
         }
 
         $hasAi = $this->aiClient->hasApiKey();
+        $hasUnsplash = $this->hasUnsplashConfig();
         $logs = [];
 
         $this->emit($onEvent, $logs, 'Workflow artikel SEO dimulai', 'done', 'Orchestrator');
@@ -69,16 +70,23 @@ class ArticleAgent
         $html = $draft['html'] ?? '';
 
         // 3. Media Agent — gambar inline (relevan dengan topik)
-        $this->emit($onEvent, $logs, 'Mencari 2 gambar relevan dengan topik (' . implode(', ', $imageTags) . ')...', 'loading', 'Media Agent');
-        $mediaResult = $this->embedImages($website, $html, 2, $imageTags);
-        $html = $mediaResult['html'];
-        $this->emit($onEvent, $logs, count($mediaResult['images']) . ' gambar berhasil disisipkan ke artikel', 'done', 'Media Agent');
+        $featuredMediaId = null;
+        $mediaImages = [];
+        if ($hasUnsplash) {
+            $this->emit($onEvent, $logs, 'Mencari 2 gambar relevan dengan topik (' . implode(', ', $imageTags) . ')...', 'loading', 'Media Agent');
+            $mediaResult = $this->embedImages($website, $html, 2, $imageTags);
+            $html = $mediaResult['html'];
+            $mediaImages = $mediaResult['images'];
+            $this->emit($onEvent, $logs, count($mediaImages) . ' gambar berhasil disisipkan ke artikel', 'done', 'Media Agent');
 
-        // 4. Media Agent — featured image
-        $this->emit($onEvent, $logs, 'Membuat featured image yang relevan dengan topik...', 'loading', 'Media Agent');
-        $featuredMedia = $this->uploadMedia($website, 'wscrm-featured-' . now()->format('YmdHis'), $imageTags);
-        $featuredMediaId = $featuredMedia['id'] ?? null;
-        $this->emit($onEvent, $logs, $featuredMediaId ? 'Featured image berhasil dibuat' : 'Featured image gagal dibuat (dilewati)', 'done', 'Media Agent');
+            // 4. Media Agent — featured image
+            $this->emit($onEvent, $logs, 'Membuat featured image yang relevan dengan topik...', 'loading', 'Media Agent');
+            $featuredMedia = $this->uploadMedia($website, 'wscrm-featured-' . now()->format('YmdHis'), $imageTags);
+            $featuredMediaId = $featuredMedia['id'] ?? null;
+            $this->emit($onEvent, $logs, $featuredMediaId ? 'Featured image berhasil dibuat' : 'Featured image gagal dibuat (dilewati)', 'done', 'Media Agent');
+        } else {
+            $this->emit($onEvent, $logs, 'UNSPLASH_ACCESS_KEY belum disetting — gambar dilewati. Upload manual via WordPress.', 'done', 'Media Agent');
+        }
 
         // 5. Publisher — pilih kategori relevan
         $this->emit($onEvent, $logs, 'Memilih kategori artikel yang relevan...', 'loading', 'Publisher');
@@ -88,7 +96,7 @@ class ArticleAgent
 
         // 6. Content Auditor — audit SEO
         $this->emit($onEvent, $logs, 'Menjalankan audit SEO konten (judul, meta, H1, H2, gambar, keyword)...', 'loading', 'Content Auditor');
-        $audit = $this->auditArticleContent($html, $title, $draft['meta_description'] ?? '', $keyword ?: ($draft['keywords'][0] ?? ''));
+        $audit = $this->auditArticleContent($html, $title, $draft['meta_description'] ?? '', $keyword ?: ($draft['keywords'][0] ?? ''), !$hasUnsplash);
         $this->emit($onEvent, $logs, 'Audit selesai: skor ' . $audit['score'] . '/100 (' . ($audit['passed'] ? 'LOLOS' : 'BELUM LOLOS') . ')', 'done', 'Content Auditor');
 
         // 7. Revisi 1x jika audit gagal
@@ -101,11 +109,14 @@ class ArticleAgent
                 $title = $revision['title'] ?? $title;
                 $html = $revision['html'];
 
-                $this->emit($onEvent, $logs, 'Menyisipkan ulang gambar untuk versi revisi...', 'loading', 'Media Agent');
-                $mediaResult = $this->embedImages($website, $html, 2, $imageTags);
-                $html = $mediaResult['html'];
+                if ($hasUnsplash) {
+                    $this->emit($onEvent, $logs, 'Menyisipkan ulang gambar untuk versi revisi...', 'loading', 'Media Agent');
+                    $mediaResult = $this->embedImages($website, $html, 2, $imageTags);
+                    $html = $mediaResult['html'];
+                    $mediaImages = $mediaResult['images'];
+                }
 
-                $audit = $this->auditArticleContent($html, $title, $revision['meta_description'] ?? '', $keyword ?: ($revision['keywords'][0] ?? ''));
+                $audit = $this->auditArticleContent($html, $title, $revision['meta_description'] ?? '', $keyword ?: ($revision['keywords'][0] ?? ''), !$hasUnsplash);
                 $this->emit($onEvent, $logs, 'Revisi selesai, audit ulang: skor ' . $audit['score'] . '/100 (' . ($audit['passed'] ? 'LOLOS' : 'BELUM LOLOS') . ')', 'done', 'Content Auditor');
             } else {
                 $this->emit($onEvent, $logs, 'Revisi gagal di-generate, memakai konten versi awal', 'done', 'SEO Writer');
@@ -133,7 +144,7 @@ class ArticleAgent
             'passed' => $audit['passed'],
             'issues' => $audit['issues'],
             'word_count' => $audit['word_count'],
-            'images_embedded' => count($mediaResult['images']),
+            'images_embedded' => count($mediaImages),
             'featured_image' => (bool) $featuredMediaId,
             'category' => $category['name'] ?? null,
             'logs' => $logs,
@@ -141,6 +152,15 @@ class ArticleAgent
                 ? "dipublikasikan di {$website->name} (skor SEO {$audit['score']}/100)."
                 : "disimpan sebagai draft di {$website->name} karena skor SEO {$audit['score']}/100 belum lolos (min 80)."),
         ];
+    }
+
+    /**
+     * Cek apakah UNSPLASH_ACCESS_KEY sudah disetting.
+     */
+    private function hasUnsplashConfig(): bool
+    {
+        $key = config('services.unsplash.access_key', env('UNSPLASH_ACCESS_KEY', ''));
+        return !empty($key);
     }
 
     /**
@@ -360,7 +380,7 @@ Output STRICT satu objek JSON (tanpa teks lain):
 
     // === Sub-agent: Content Auditor ===
 
-    private function auditArticleContent(string $html, string $title, string $metaDescription, string $keyword): array
+    private function auditArticleContent(string $html, string $title, string $metaDescription, string $keyword, bool $skipImageChecks = false): array
     {
         $issues = [];
         $score = 100;
@@ -402,14 +422,19 @@ Output STRICT satu objek JSON (tanpa teks lain):
         // Gambar + alt
         preg_match_all('/<img[^>]+>/i', $html, $imgs);
         $imgCount = count($imgs[0]);
-        if ($imgCount < 2) {
-            $issues[] = ['type' => 'warning', 'message' => "Minimal 2 gambar ({$imgCount} terpasang)"];
-            $score -= 15;
-        }
-        preg_match_all('/<img[^>]+alt="[^"]+"[^>]*>/i', $html, $alt);
-        if ($imgCount > 0 && count($alt[0]) !== $imgCount) {
-            $issues[] = ['type' => 'warning', 'message' => 'Semua gambar wajib punya alt text'];
-            $score -= 10;
+        if ($skipImageChecks) {
+            // Unsplash tidak dikonfigurasi — user akan upload gambar manual
+            $issues[] = ['type' => 'info', 'message' => 'Gambar dilewati (UNSPLASH_ACCESS_KEY belum diset). Upload manual via WordPress.'];
+        } else {
+            if ($imgCount < 2) {
+                $issues[] = ['type' => 'warning', 'message' => "Minimal 2 gambar ({$imgCount} terpasang)"];
+                $score -= 15;
+            }
+            preg_match_all('/<img[^>]+alt="[^"]+"[^>]*>/i', $html, $alt);
+            if ($imgCount > 0 && count($alt[0]) !== $imgCount) {
+                $issues[] = ['type' => 'warning', 'message' => 'Semua gambar wajib punya alt text'];
+                $score -= 10;
+            }
         }
 
         // Panjang artikel

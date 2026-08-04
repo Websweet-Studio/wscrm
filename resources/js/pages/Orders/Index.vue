@@ -129,10 +129,10 @@ const getStatusColor = (status: string) => {
     }
 };
 
-const getPayableAmount = (order: Order) => {
+const getOriginalAmount = (order: Order) => {
     const discount = Number(order.discount_amount || 0);
     const total = Number(order.total_amount || 0);
-    return discount > 0 ? total - discount : total;
+    return total + discount;
 };
 
 const getOrderItemsSummary = (order: Order) => {
@@ -330,8 +330,9 @@ const getStatusText = (status: string) => {
                                         </TableCell>
                                         <TableCell class="align-top text-right">
                                             <template v-if="order.discount_amount && order.discount_amount > 0">
-                                                <div class="text-xs text-muted-foreground line-through">{{ formatPrice(order.total_amount) }}</div>
-                                                <div class="font-medium">{{ formatPrice(getPayableAmount(order)) }}</div>
+                                                <div class="text-xs text-muted-foreground line-through">{{ formatPrice(getOriginalAmount(order)) }}</div>
+                                                <div class="font-medium">{{ formatPrice(order.total_amount) }}</div>
+                                                <div class="text-xs text-green-600">Hemat: {{ formatPrice(order.discount_amount) }}</div>
                                             </template>
                                             <template v-else>
                                                 <div class="font-medium">{{ formatPrice(order.total_amount) }}</div>
@@ -380,7 +381,7 @@ const getStatusText = (status: string) => {
                             <div class="truncate font-medium">Pesanan #{{ orderToDelete.id }}</div>
                             <div class="mt-0.5 truncate text-xs text-muted-foreground">{{ getOrderItemsSummary(orderToDelete) }}</div>
                         </div>
-                        <div class="shrink-0 font-medium">{{ formatPrice(getPayableAmount(orderToDelete)) }}</div>
+                        <div class="shrink-0 font-medium">{{ formatPrice(orderToDelete.total_amount) }}</div>
                     </div>
                 </div>
                 <DialogFooter class="gap-2">
