@@ -7,7 +7,7 @@ import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Bot, Coins, ShoppingCart } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 interface Package {
     id: number;
@@ -43,6 +43,10 @@ const confirmBuy = () => {
         router.post(`/customer/ai/packages/${selectedPkg.value.id}/buy`, undefined, { preserveScroll: true });
     }
 };
+
+const buyMessage = computed(() => 
+    `Beli paket "${selectedPkg.value?.name || ''}" senilai ${selectedPkg.value ? formatPrice(selectedPkg.value.final_price) : ''}?`
+);
 </script>
 
 <template>
@@ -101,7 +105,7 @@ const confirmBuy = () => {
         <ConfirmModal
             :show="showBuyModal"
             title="Beli Paket"
-            :message="`Beli paket \"${selectedPkg?.name || ''}\" senilai ${selectedPkg ? formatPrice(selectedPkg.final_price) : ''}?`"
+            :message="buyMessage"
             confirmText="Beli"
             @confirm="confirmBuy"
             @cancel="showBuyModal = false"
