@@ -40,16 +40,19 @@ class DemoEmbedTrackingController extends Controller
         ]);
     }
 
-    public function toggleBlock(DemoEmbedTracking $demoEmbedTracking)
+    public function toggleBlock(Request $request, DemoEmbedTracking $demoEmbedTracking)
     {
+        $isBlocking = !$demoEmbedTracking->is_blocked;
+
         $demoEmbedTracking->update([
-            'is_blocked' => !$demoEmbedTracking->is_blocked,
-            'blocked_at' => $demoEmbedTracking->is_blocked ? null : now(),
+            'is_blocked' => $isBlocking,
+            'blocked_at' => $isBlocking ? now() : null,
+            'blocked_reason' => $isBlocking ? $request->input('reason') : null,
         ]);
 
-        return back()->with('success', $demoEmbedTracking->is_blocked
-            ? 'Domain berhasil di-unblock.'
-            : 'Domain berhasil di-block.');
+        return back()->with('success', $isBlocking
+            ? 'Domain berhasil di-block.'
+            : 'Domain berhasil di-unblock.');
     }
 
     public function destroy(DemoEmbedTracking $demoEmbedTracking)

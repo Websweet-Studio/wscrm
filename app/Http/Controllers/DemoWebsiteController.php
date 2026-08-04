@@ -84,8 +84,9 @@ class DemoWebsiteController extends Controller
     public function publicIndex(Request $request): JsonResponse
     {
         $referer = $request->header('Referer', '');
-        if ($referer && DemoEmbedTracking::isBlocked($referer)) {
-            return response()->json(['error' => 'Access denied'], 403);
+        $blockReason = $referer ? DemoEmbedTracking::isBlocked($referer) : null;
+        if ($blockReason) {
+            return response()->json(['error' => $blockReason], 403);
         }
         if ($referer) {
             DemoEmbedTracking::recordHit($referer, 'api');
@@ -148,8 +149,9 @@ class DemoWebsiteController extends Controller
     public function publicShow(Request $request, DemoWebsite $demoWebsite): JsonResponse
     {
         $referer = $request->header('Referer', '');
-        if ($referer && DemoEmbedTracking::isBlocked($referer)) {
-            return response()->json(['error' => 'Access denied'], 403);
+        $blockReason = $referer ? DemoEmbedTracking::isBlocked($referer) : null;
+        if ($blockReason) {
+            return response()->json(['error' => $blockReason], 403);
         }
         if ($referer) {
             DemoEmbedTracking::recordHit($referer, 'api', $demoWebsite->id);

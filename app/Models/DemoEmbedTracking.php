@@ -15,6 +15,7 @@ class DemoEmbedTracking extends Model
         'demo_website_id',
         'hits',
         'is_blocked',
+        'blocked_reason',
         'blocked_at',
         'first_seen_at',
         'last_seen_at',
@@ -45,12 +46,16 @@ class DemoEmbedTracking extends Model
         $query->where('is_blocked', false);
     }
 
-    public static function isBlocked(string $referer): bool
+    /**
+     * Check if a referer host is blocked. Returns reason string or null.
+     */
+    public static function isBlocked(string $referer): ?string
     {
         $host = parse_url($referer, PHP_URL_HOST);
-        if (!$host) return false;
+        if (!$host) return null;
 
-        return self::where('referer_host', $host)->where('is_blocked', true)->exists();
+        $row = self::where('referer_host', $host)->where('is_blocked', true)->first();
+        return $row ? ($row->blocked_reason ?: 'Domain diblokir oleh admin.') : null;
     }
 
     public static function recordHit(string $referer, string $type, ?int $demoId = null): void

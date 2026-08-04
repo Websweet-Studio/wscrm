@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::show
- * @see app/Http/Controllers/DemoWebsiteController.php:148
+ * @see app/Http/Controllers/DemoWebsiteController.php:149
  * @route '/api/demos/{demoWebsite}'
  */
 export const show = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::show
- * @see app/Http/Controllers/DemoWebsiteController.php:148
+ * @see app/Http/Controllers/DemoWebsiteController.php:149
  * @route '/api/demos/{demoWebsite}'
  */
 show.url = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -127,7 +127,7 @@ show.url = (args: { demoWebsite: number | { id: number } } | [demoWebsite: numbe
 
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::show
- * @see app/Http/Controllers/DemoWebsiteController.php:148
+ * @see app/Http/Controllers/DemoWebsiteController.php:149
  * @route '/api/demos/{demoWebsite}'
  */
 show.get = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -136,7 +136,7 @@ show.get = (args: { demoWebsite: number | { id: number } } | [demoWebsite: numbe
 })
 /**
 * @see \App\Http\Controllers\DemoWebsiteController::show
- * @see app/Http/Controllers/DemoWebsiteController.php:148
+ * @see app/Http/Controllers/DemoWebsiteController.php:149
  * @route '/api/demos/{demoWebsite}'
  */
 show.head = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -146,7 +146,7 @@ show.head = (args: { demoWebsite: number | { id: number } } | [demoWebsite: numb
 
     /**
 * @see \App\Http\Controllers\DemoWebsiteController::show
- * @see app/Http/Controllers/DemoWebsiteController.php:148
+ * @see app/Http/Controllers/DemoWebsiteController.php:149
  * @route '/api/demos/{demoWebsite}'
  */
     const showForm = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -156,7 +156,7 @@ show.head = (args: { demoWebsite: number | { id: number } } | [demoWebsite: numb
 
             /**
 * @see \App\Http\Controllers\DemoWebsiteController::show
- * @see app/Http/Controllers/DemoWebsiteController.php:148
+ * @see app/Http/Controllers/DemoWebsiteController.php:149
  * @route '/api/demos/{demoWebsite}'
  */
         showForm.get = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -165,7 +165,7 @@ show.head = (args: { demoWebsite: number | { id: number } } | [demoWebsite: numb
         })
             /**
 * @see \App\Http\Controllers\DemoWebsiteController::show
- * @see app/Http/Controllers/DemoWebsiteController.php:148
+ * @see app/Http/Controllers/DemoWebsiteController.php:149
  * @route '/api/demos/{demoWebsite}'
  */
         showForm.head = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

@@ -638,9 +638,8 @@ const copyToClipboard = async (text: string, id: string) => {
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                        </div>
+                </div>
+            </div>
                     </div>
 
                     <!-- API Content -->
@@ -703,11 +702,6 @@ curl "{{ appUrl }}/api/demos?package=instant"</pre>
 }, null, 2) }}</pre>
                                 </div>
                             </div>
-                        </div>
-                        <div class="mt-6 rounded-xl p-4" style="background-color: #e8e6dc40; border: 1px solid #e8e6dc">
-                            <p class="text-xs" style="color: #5e5d59">
-                                <strong style="color: #4d4c48">Catatan:</strong> API ini public (no auth). Headers <code style="color: var(--primary)">Referer</code> digunakan untuk tracking statistik. Domain yang disalahgunakan dapat di-block oleh admin.
-                            </p>
                         </div>
                     </div>
                     </CardContent>

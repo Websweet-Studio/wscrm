@@ -18,6 +18,7 @@ interface TrackingItem {
     demo_website_id: number | null;
     hits: number;
     is_blocked: boolean;
+    blocked_reason: string | null;
     blocked_at: string | null;
     first_seen_at: string | null;
     last_seen_at: string | null;
@@ -73,9 +74,19 @@ const handleSearch = () => {
 };
 
 const toggleBlock = (item: TrackingItem) => {
-    router.patch(`/admin/demo-embed-trackings/${item.id}/toggle-block`, {}, {
-        preserveState: true,
-    });
+    if (item.is_blocked) {
+        router.patch(`/admin/demo-embed-trackings/${item.id}/toggle-block`, {}, {
+            preserveState: true,
+        });
+    } else {
+        const reason = prompt('Alasan block domain ini:', 'Penyalahgunaan API / scraping berlebihan');
+        if (reason === null) return; // cancelled
+        router.patch(`/admin/demo-embed-trackings/${item.id}/toggle-block`, {
+            reason: reason || 'Domain diblokir oleh admin.',
+        }, {
+            preserveState: true,
+        });
+    }
 };
 
 const deleteItem = (item: TrackingItem) => {
@@ -248,9 +259,12 @@ const formatNumber = (n: number) => {
                             <TableCell class="text-xs text-muted-foreground">{{ formatDate(item.first_seen_at) }}</TableCell>
                             <TableCell class="text-xs text-muted-foreground">{{ formatDate(item.last_seen_at) }}</TableCell>
                             <TableCell>
-                                <Badge :variant="item.is_blocked ? 'destructive' : 'default'">
+                                <Badge :variant="item.is_blocked ? 'destructive' : 'default'" class="whitespace-nowrap">
                                     {{ item.is_blocked ? 'Blocked' : 'Active' }}
                                 </Badge>
+                                <span v-if="item.is_blocked && item.blocked_reason" class="ml-1.5 text-xs text-muted-foreground" :title="item.blocked_reason">
+                                    {{ item.blocked_reason.length > 30 ? item.blocked_reason.slice(0, 30) + '...' : item.blocked_reason }}
+                                </span>
                             </TableCell>
                             <TableCell class="text-right">
                                 <div class="flex justify-end gap-1">

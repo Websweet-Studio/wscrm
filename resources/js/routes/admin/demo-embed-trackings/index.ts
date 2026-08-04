@@ -79,10 +79,10 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\DemoEmbedTrackingController::destroy
- * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:55
+ * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:58
  * @route '/admin/demo-embed-trackings/{demo_embed_tracking}'
  */
-export const destroy = (args: { demo_embed_tracking: string | number | { id: string | number } } | [demo_embed_tracking: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { demo_embed_tracking: number | { id: number } } | [demo_embed_tracking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -94,10 +94,10 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DemoEmbedTrackingController::destroy
- * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:55
+ * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:58
  * @route '/admin/demo-embed-trackings/{demo_embed_tracking}'
  */
-destroy.url = (args: { demo_embed_tracking: string | number | { id: string | number } } | [demo_embed_tracking: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { demo_embed_tracking: number | { id: number } } | [demo_embed_tracking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { demo_embed_tracking: args }
     }
@@ -127,20 +127,20 @@ destroy.url = (args: { demo_embed_tracking: string | number | { id: string | num
 
 /**
 * @see \App\Http\Controllers\Admin\DemoEmbedTrackingController::destroy
- * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:55
+ * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:58
  * @route '/admin/demo-embed-trackings/{demo_embed_tracking}'
  */
-destroy.delete = (args: { demo_embed_tracking: string | number | { id: string | number } } | [demo_embed_tracking: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { demo_embed_tracking: number | { id: number } } | [demo_embed_tracking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
 
     /**
 * @see \App\Http\Controllers\Admin\DemoEmbedTrackingController::destroy
- * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:55
+ * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:58
  * @route '/admin/demo-embed-trackings/{demo_embed_tracking}'
  */
-    const destroyForm = (args: { demo_embed_tracking: string | number | { id: string | number } } | [demo_embed_tracking: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const destroyForm = (args: { demo_embed_tracking: number | { id: number } } | [demo_embed_tracking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: destroy.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'DELETE',
@@ -152,10 +152,10 @@ destroy.delete = (args: { demo_embed_tracking: string | number | { id: string | 
 
             /**
 * @see \App\Http\Controllers\Admin\DemoEmbedTrackingController::destroy
- * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:55
+ * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:58
  * @route '/admin/demo-embed-trackings/{demo_embed_tracking}'
  */
-        destroyForm.delete = (args: { demo_embed_tracking: string | number | { id: string | number } } | [demo_embed_tracking: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        destroyForm.delete = (args: { demo_embed_tracking: number | { id: number } } | [demo_embed_tracking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: destroy.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'DELETE',
@@ -171,7 +171,7 @@ destroy.delete = (args: { demo_embed_tracking: string | number | { id: string | 
  * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:43
  * @route '/admin/demo-embed-trackings/{demoEmbedTracking}/toggle-block'
  */
-export const toggleBlock = (args: { demoEmbedTracking: string | number | { id: string | number } } | [demoEmbedTracking: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+export const toggleBlock = (args: { demoEmbedTracking: number | { id: number } } | [demoEmbedTracking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: toggleBlock.url(args, options),
     method: 'patch',
 })
@@ -186,7 +186,7 @@ toggleBlock.definition = {
  * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:43
  * @route '/admin/demo-embed-trackings/{demoEmbedTracking}/toggle-block'
  */
-toggleBlock.url = (args: { demoEmbedTracking: string | number | { id: string | number } } | [demoEmbedTracking: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+toggleBlock.url = (args: { demoEmbedTracking: number | { id: number } } | [demoEmbedTracking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { demoEmbedTracking: args }
     }
@@ -219,7 +219,7 @@ toggleBlock.url = (args: { demoEmbedTracking: string | number | { id: string | n
  * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:43
  * @route '/admin/demo-embed-trackings/{demoEmbedTracking}/toggle-block'
  */
-toggleBlock.patch = (args: { demoEmbedTracking: string | number | { id: string | number } } | [demoEmbedTracking: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+toggleBlock.patch = (args: { demoEmbedTracking: number | { id: number } } | [demoEmbedTracking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: toggleBlock.url(args, options),
     method: 'patch',
 })
@@ -229,7 +229,7 @@ toggleBlock.patch = (args: { demoEmbedTracking: string | number | { id: string |
  * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:43
  * @route '/admin/demo-embed-trackings/{demoEmbedTracking}/toggle-block'
  */
-    const toggleBlockForm = (args: { demoEmbedTracking: string | number | { id: string | number } } | [demoEmbedTracking: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const toggleBlockForm = (args: { demoEmbedTracking: number | { id: number } } | [demoEmbedTracking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: toggleBlock.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'PATCH',
@@ -244,7 +244,7 @@ toggleBlock.patch = (args: { demoEmbedTracking: string | number | { id: string |
  * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:43
  * @route '/admin/demo-embed-trackings/{demoEmbedTracking}/toggle-block'
  */
-        toggleBlockForm.patch = (args: { demoEmbedTracking: string | number | { id: string | number } } | [demoEmbedTracking: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        toggleBlockForm.patch = (args: { demoEmbedTracking: number | { id: number } } | [demoEmbedTracking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: toggleBlock.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PATCH',
@@ -257,7 +257,7 @@ toggleBlock.patch = (args: { demoEmbedTracking: string | number | { id: string |
     toggleBlock.form = toggleBlockForm
 /**
 * @see \App\Http\Controllers\Admin\DemoEmbedTrackingController::bulkDestroy
- * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:62
+ * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:65
  * @route '/admin/demo-embed-trackings-bulk'
  */
 export const bulkDestroy = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -272,7 +272,7 @@ bulkDestroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DemoEmbedTrackingController::bulkDestroy
- * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:62
+ * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:65
  * @route '/admin/demo-embed-trackings-bulk'
  */
 bulkDestroy.url = (options?: RouteQueryOptions) => {
@@ -281,7 +281,7 @@ bulkDestroy.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\DemoEmbedTrackingController::bulkDestroy
- * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:62
+ * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:65
  * @route '/admin/demo-embed-trackings-bulk'
  */
 bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -291,7 +291,7 @@ bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
 
     /**
 * @see \App\Http\Controllers\Admin\DemoEmbedTrackingController::bulkDestroy
- * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:62
+ * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:65
  * @route '/admin/demo-embed-trackings-bulk'
  */
     const bulkDestroyForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -306,7 +306,7 @@ bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
 
             /**
 * @see \App\Http\Controllers\Admin\DemoEmbedTrackingController::bulkDestroy
- * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:62
+ * @see app/Http/Controllers/Admin/DemoEmbedTrackingController.php:65
  * @route '/admin/demo-embed-trackings-bulk'
  */
         bulkDestroyForm.delete = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
