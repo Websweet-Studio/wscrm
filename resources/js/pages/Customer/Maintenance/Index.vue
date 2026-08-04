@@ -8,9 +8,13 @@ import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { formatDate } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
-import { Activity, ArrowRight, Calendar, ClipboardList, FileText, Search, Wrench, X } from 'lucide-vue-next';
+import { Activity, Calendar, ClipboardList, Search, Wrench, X } from 'lucide-vue-next';
 import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
+import { Bar } from 'vue-chartjs';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { computed, ref } from 'vue';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 interface WebsiteClient { id: number; name: string; }
 interface JournalActivity { type: string; [key: string]: any; }
@@ -73,6 +77,25 @@ const totalActivities = computed(() =>
     props.journals.data.reduce((sum, j) => sum + j.activities.length, 0)
 );
 const uniqueWebsites = computed(() => new Set(props.journals.data.map(j => j.website_client?.name)).size);
+
+const chartJsData = computed(() => ({
+    labels: props.chartData.map(d => d.label),
+    datasets: [
+        { label: 'WP Update', data: props.chartData.map(d => d.byType.wp_update || 0), backgroundColor: '#3b82f6' },
+        { label: 'Update Plugin', data: props.chartData.map(d => d.byType.plugin_update || 0), backgroundColor: '#a855f7' },
+        { label: 'Update Tema', data: props.chartData.map(d => d.byType.theme_update || 0), backgroundColor: '#6366f1' },
+        { label: 'Artikel', data: props.chartData.map(d => d.byType.article || 0), backgroundColor: '#10b981' },
+        { label: 'Optimasi Halaman', data: props.chartData.map(d => d.byType.page_optimization || 0), backgroundColor: '#f59e0b' },
+        { label: 'Lainnya', data: props.chartData.map(d => d.byType.other || 0), backgroundColor: '#9ca3af' },
+    ],
+}));
+
+const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: { x: { stacked: true, grid: { display: false }, ticks: { maxTicksLimit: 10, font: { size: 10 } } }, y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } } } },
+    plugins: { legend: { position: 'top' as const, labels: { boxWidth: 12, boxHeight: 12, padding: 12, font: { size: 11 } } }, tooltip: { mode: 'index' as const, intersect: false } },
+};
 
 const showActivityModal = ref(false);
 const selectedJournal = ref<Journal | null>(null);
@@ -148,16 +171,8 @@ const resetFilter = () => {
                     <CardDescription>Jumlah aktivitas maintenance per hari dalam sebulan terakhir</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div class="flex items-end gap-1 h-40 sm:h-48">
-                        <div v-for="(d, i) in chartData" :key="i" class="flex-1 flex flex-col items-center justify-end h-full group relative">
-                            <span class="mb-1 text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">{{ d.total }}</span>
-                            <div
-                                class="w-full rounded-t-sm bg-primary/60 hover:bg-primary transition-colors min-h-[2px]"
-                                :style="{ height: Math.max(d.height_pct, 2) + '%' }"
-                                :title="`${d.label}: ${d.total} aktivitas`"
-                            ></div>
-                            <span v-if="i % 5 === 0 || i === chartData.length - 1" class="mt-1 text-[10px] text-muted-foreground">{{ d.label }}</span>
-                        </div>
+                    <div class="h-64 sm:h-72">
+                        <Bar :data="chartJsData" :options="chartOptions" />
                     </div>
                 </CardContent>
             </Card>

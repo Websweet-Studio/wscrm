@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import MonthlyStatsStrips from '@/components/MonthlyStatsStrips.vue';
-import OrderChart from '@/components/OrderChart.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -11,10 +9,8 @@ import {
     ArrowRight,
     BarChart3,
     Calendar,
-    CheckCircle2,
     CheckSquare,
     Clock,
-    CreditCard,
     DollarSign,
     Download,
     ListTodo,
@@ -25,6 +21,10 @@ import {
     Users,
 } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
+import { Bar } from 'vue-chartjs';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, LineController, Title, Tooltip, Legend, Filler } from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, LineController, Title, Tooltip, Legend, Filler);
 
 interface Stats {
     customers: {
@@ -107,7 +107,6 @@ interface Props {
         customers: Customer[];
     };
     expiringServices: Order[];
-    activeServices: Order[];
     chartData: {
         dailyOrders: ChartDataPoint[];
         monthlyStats: MonthlyStats[];
@@ -136,7 +135,7 @@ const greeting = computed(() => {
 });
 
 const refreshDashboard = () => {
-    router.reload({ only: ['stats', 'recentActivities', 'expiringServices', 'activeServices', 'chartData', 'myPendingTasks'] });
+    router.reload({ only: ['stats', 'recentActivities', 'expiringServices', 'chartData', 'myPendingTasks'] });
 };
 
 const githubRepoUrl = 'https://github.com/Websweet-Studio/wscrm/';
@@ -193,23 +192,50 @@ const formatGrowth = (growth: number) => {
     };
 };
 
-const getDaysUntilExpiry = (expiresAt: string) => {
-    const now = new Date();
-    const expiry = new Date(expiresAt);
-    const diffTime = expiry.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+const dailyChartData = computed(() => ({
+    labels: props.chartData.dailyOrders.map(d => d.day.toString()),
+    datasets: [{
+        label: 'Pesanan',
+        data: props.chartData.dailyOrders.map(d => d.orders),
+        borderColor: 'hsl(var(--primary))',
+        backgroundColor: 'hsla(var(--primary) / 0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+        pointBackgroundColor: 'hsl(var(--primary))',
+    }],
+}));
+
+const dailyChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { mode: 'index' as const, intersect: false } },
+    scales: {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 10, font: { size: 10 } } },
+        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: 'hsl(var(--border))' } },
+    },
+    interaction: { intersect: false, mode: 'index' as const },
 };
 
-const getExpiryBadgeClass = (daysLeft: number) => {
-    if (daysLeft <= 15) {
-        return 'bg-muted text-destructive';
-    } else if (daysLeft <= 30) {
-        return 'bg-muted text-foreground';
-    } else {
-        return 'bg-muted text-muted-foreground';
-    }
+const monthlyChartData = computed(() => ({
+    labels: props.chartData.monthlyStats.map(m => m.month_short),
+    datasets: [
+        { label: 'Pesanan', data: props.chartData.monthlyStats.map(m => m.orders), backgroundColor: '#3b82f6', borderRadius: 2 },
+        { label: 'Pelanggan', data: props.chartData.monthlyStats.map(m => m.customers), backgroundColor: '#a855f7', borderRadius: 2 },
+        { label: 'Pendapatan (jt)', data: props.chartData.monthlyStats.map(m => Math.round(m.revenue / 1000000)), backgroundColor: '#10b981', borderRadius: 2 },
+    ],
+}));
+
+const monthlyChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' as const, labels: { boxWidth: 12, boxHeight: 12, padding: 12, font: { size: 11 } } }, tooltip: { mode: 'index' as const, intersect: false } },
+    scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { beginAtZero: true, ticks: { font: { size: 10 } }, grid: { color: 'hsl(var(--border))' } },
+    },
 };
+
 </script>
 
 <template>
@@ -260,34 +286,6 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                             Install Sekarang
                             <ArrowRight class="ml-2 h-4 w-4" />
                         </Button>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <!-- Quick Actions -->
-            <Card>
-                <CardHeader class="px-4 sm:px-6">
-                    <CardTitle style="font-family: Georgia, serif;" class="text-base sm:text-lg">Aksi Cepat</CardTitle>
-                    <CardDescription class="text-xs sm:text-sm">Tugas admin umum</CardDescription>
-                </CardHeader>
-                <CardContent class="px-4 sm:px-6">
-                    <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-                        <Link href="/admin/customers/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
-                            <UserPlus class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                            <span class="text-xs font-medium sm:text-sm">Tambah Pelanggan</span>
-                        </Link>
-                        <Link href="/admin/orders/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
-                            <ShoppingCart class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                            <span class="text-xs font-medium sm:text-sm">Pesanan Baru</span>
-                        </Link>
-                        <Link href="/admin/tasks/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
-                            <CheckSquare class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                            <span class="text-xs font-medium sm:text-sm">Tugas Baru</span>
-                        </Link>
-                        <Link href="/admin/invoices/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
-                            <CreditCard class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                            <span class="text-xs font-medium sm:text-sm">Faktur Baru</span>
-                        </Link>
                     </div>
                 </CardContent>
             </Card>
@@ -455,7 +453,9 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                         </div>
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
-                        <OrderChart :data="chartData.dailyOrders" :height="180" />
+                        <div class="h-48 sm:h-52">
+                            <Bar :data="dailyChartData" :options="dailyChartOptions" />
+                        </div>
                     </CardContent>
                 </Card>
 
@@ -473,57 +473,11 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                         </CardDescription>
                     </CardHeader>
                     <CardContent class="px-4 sm:px-6">
-                        <MonthlyStatsStrips :data="chartData.monthlyStats" />
-                    </CardContent>
-                </Card>
-            </div>
-
-            <!-- Services Section -->
-            <div class="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
-                <Card>
-                    <CardHeader class="px-4 sm:px-6">
-                        <CardTitle style="font-family: Georgia, serif;" class="flex items-center gap-2 text-base sm:text-lg">
-                            <CheckCircle2 class="h-4 w-4 sm:h-5 sm:w-5" />
-                            Layanan Aktif
-                        </CardTitle>
-                        <CardDescription class="text-xs sm:text-sm">
-                            Diurutkan dari yang akan kadaluarsa
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent class="px-4 sm:px-6">
-                        <div v-if="activeServices.length === 0" class="py-4 text-center text-xs text-muted-foreground sm:text-sm">
-                            Tidak ada layanan aktif.
-                        </div>
-                        <div v-else class="space-y-3">
-                            <div
-                                v-for="service in activeServices"
-                                :key="service.id"
-                                class="flex items-center justify-between rounded-md bg-muted/30 p-3"
-                            >
-                                <div class="min-w-0 flex-1">
-                                    <div class="truncate text-xs font-medium sm:text-sm">{{ service.domain_name || `Service #${service.id}` }}</div>
-                                    <div class="truncate text-xs text-muted-foreground">{{ service.customer.name }}</div>
-                                </div>
-                                <div class="ml-3 flex-shrink-0 text-right">
-                                    <span
-                                        v-if="service.expires_at"
-                                        class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
-                                        :class="getExpiryBadgeClass(getDaysUntilExpiry(service.expires_at))"
-                                    >
-                                        {{ getDaysUntilExpiry(service.expires_at) }} hari lagi
-                                    </span>
-                                    <div class="mt-1 text-xs text-muted-foreground" v-if="service.expires_at">{{ formatDate(service.expires_at!) }}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <Button variant="outline" size="sm" asChild class="w-full text-xs sm:text-sm">
-                                <Link href="/admin/services?status=active">Kelola Layanan</Link>
-                            </Button>
+                        <div class="h-60 sm:h-64">
+                            <Bar :data="monthlyChartData" :options="monthlyChartOptions" />
                         </div>
                     </CardContent>
                 </Card>
-
             </div>
 
             <!-- Recent Activities Grid -->
@@ -607,34 +561,6 @@ const getExpiryBadgeClass = (daysLeft: number) => {
                     </CardContent>
                 </Card>
             </div>
-
-            <!-- Quick Actions -->
-            <Card>
-                <CardHeader class="px-4 sm:px-6">
-                    <CardTitle style="font-family: Georgia, serif;" class="text-base sm:text-lg">Aksi Cepat</CardTitle>
-                    <CardDescription class="text-xs sm:text-sm">Tugas admin umum</CardDescription>
-                </CardHeader>
-                <CardContent class="px-4 sm:px-6">
-                    <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-                        <Link href="/admin/customers/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
-                            <UserPlus class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                            <span class="text-xs font-medium sm:text-sm">Tambah Pelanggan</span>
-                        </Link>
-                        <Link href="/admin/orders/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
-                            <ShoppingCart class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                            <span class="text-xs font-medium sm:text-sm">Pesanan Baru</span>
-                        </Link>
-                        <Link href="/admin/tasks/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
-                            <CheckSquare class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                            <span class="text-xs font-medium sm:text-sm">Tugas Baru</span>
-                        </Link>
-                        <Link href="/admin/invoices/create" class="group flex flex-col items-center justify-center rounded-lg border border-muted bg-transparent p-4 transition-colors hover:bg-muted/50 hover:text-primary">
-                            <CreditCard class="mb-2 h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                            <span class="text-xs font-medium sm:text-sm">Faktur Baru</span>
-                        </Link>
-                    </div>
-                </CardContent>
-            </Card>
         </div>
     </AppLayout>
 </template>
