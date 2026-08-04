@@ -8,7 +8,7 @@ import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { formatDate } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
-import { Activity, Calendar, ClipboardList, Search, Wrench, X } from 'lucide-vue-next';
+import { Activity, Calendar, ClipboardList, Download, Search, Wrench, X } from 'lucide-vue-next';
 import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import { Bar } from 'vue-chartjs';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
@@ -73,6 +73,14 @@ const activitySummary = (j: Journal): string => {
 };
 
 const totalEntries = computed(() => props.journals.total);
+const exportUrl = computed(() => {
+    const params = new URLSearchParams();
+    if (websiteFilter.value) params.set('website_client_id', websiteFilter.value);
+    if (dateFrom.value) params.set('date_from', dateFrom.value);
+    if (dateTo.value) params.set('date_to', dateTo.value);
+    const qs = params.toString();
+    return '/customer/maintenance/export' + (qs ? '?' + qs : '');
+});
 const totalActivities = computed(() =>
     props.journals.data.reduce((sum, j) => sum + j.activities.length, 0)
 );
@@ -212,6 +220,10 @@ const resetFilter = () => {
                                 Jurnal
                             </CardTitle>
                         </div>
+                        <a :href="exportUrl" class="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 no-underline">
+                            <Download class="h-4 w-4" />
+                            Download Excel
+                        </a>
                     </div>
                 </CardHeader>
                 <CardContent>

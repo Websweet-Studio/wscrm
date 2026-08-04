@@ -71,6 +71,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
         // Maintenance journal
         Route::prefix('maintenance')->name('maintenance.')->group(function () {
             Route::get('/', [MaintenanceController::class, 'index'])->name('index');
+            Route::get('/export', [MaintenanceController::class, 'export'])->name('export');
         });
 
         // Stop Impersonation (available in customer area)
