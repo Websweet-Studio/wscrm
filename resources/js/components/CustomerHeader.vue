@@ -50,25 +50,25 @@ const handleLogout = () => {
                         <Link href="/blog">Blog</Link>
                     </Button>
                     <template v-if="isAdmin">
-                        <Button variant="outline" size="sm" asChild>
+                        <Button size="sm" asChild>
                             <Link href="/dashboard" class="flex items-center gap-2">
                                 <LayoutGrid class="h-4 w-4" />
                                 Dashboard Admin
                             </Link>
                         </Button>
-                        <Button variant="ghost" size="sm" @click="handleLogout" class="flex items-center gap-2 text-red-600 hover:text-red-700">
+                        <Button variant="ghost" size="sm" @click="handleLogout" class="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50">
                             <LogOut class="h-4 w-4" />
                             Logout
                         </Button>
                     </template>
                     <template v-else-if="isCustomer">
-                        <Button variant="outline" size="sm" asChild>
+                        <Button size="sm" asChild>
                             <Link href="/customer/dashboard" class="flex items-center gap-2">
                                 <LayoutGrid class="h-4 w-4" />
                                 Dashboard
                             </Link>
                         </Button>
-                        <Button variant="ghost" size="sm" @click="handleLogout" class="flex items-center gap-2 text-red-600 hover:text-red-700">
+                        <Button variant="ghost" size="sm" @click="handleLogout" class="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50">
                             <LogOut class="h-4 w-4" />
                             Logout
                         </Button>

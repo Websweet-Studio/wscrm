@@ -6,6 +6,8 @@ import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Building2, Calendar, DollarSign, Edit, Key, Mail, MapPin, Phone, Trash2, User } from 'lucide-vue-next';
+import { ref } from 'vue';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 
 interface Employee {
     id: number;
@@ -35,6 +37,23 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const showConfirm = ref(false);
+const confirmMessage = ref('');
+const confirmCallback = ref<(() => void) | null>(null);
+
+const openConfirm = (message: string, callback: () => void, _variant?: string) => {
+    confirmMessage.value = message;
+    confirmCallback.value = callback;
+    showConfirm.value = true;
+};
+
+const handleConfirm = () => {
+    if (confirmCallback.value) {
+        confirmCallback.value();
+    }
+    showConfirm.value = false;
+};
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard().url },
@@ -87,7 +106,7 @@ const getStatusText = (status: string) => {
 };
 
 const resetPassword = () => {
-    if (confirm(`Reset password untuk ${props.employee.user.name}? Password baru akan dikirim ke email ${props.employee.user.email}`)) {
+    openConfirm(`Reset password untuk ${props.employee.user.name}? Password baru akan dikirim ke email ${props.employee.user.email}`, () => {
         router.post(
             `/admin/employees/${props.employee.id}/reset-password`,
             {},
@@ -101,11 +120,11 @@ const resetPassword = () => {
                 },
             },
         );
-    }
+    });
 };
 
 const deleteEmployee = () => {
-    if (confirm(`Apakah Anda yakin ingin menghapus karyawan ${props.employee.user.name}? Tindakan ini tidak dapat dibatalkan.`)) {
+    openConfirm(`Apakah Anda yakin ingin menghapus karyawan ${props.employee.user.name}? Tindakan ini tidak dapat dibatalkan.`, () => {
         router.delete(`/admin/employees/${props.employee.id}`, {
             onSuccess: () => {
                 router.visit('/admin/employees');
@@ -115,7 +134,7 @@ const deleteEmployee = () => {
                 alert('Gagal menghapus karyawan. Silakan coba lagi.');
             },
         });
-    }
+    });
 };
 </script>
 
@@ -333,5 +352,7 @@ const deleteEmployee = () => {
                 </div>
             </div>
         </div>
+
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>

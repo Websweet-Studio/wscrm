@@ -9,6 +9,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Clock, DollarSign, Edit, Eye, FileText, Plus, Search, Trash2, X } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 
 interface Customer {
     id: number;
@@ -283,21 +284,37 @@ const bulkMarkAsPaid = () => {
     );
 };
 
+const showConfirm = ref(false);
+const confirmMessage = ref('');
+const confirmCallback = ref<(() => void) | null>(null);
+
+const openConfirm = (message: string, callback: () => void, _variant?: string) => {
+    confirmMessage.value = message;
+    confirmCallback.value = callback;
+    showConfirm.value = true;
+};
+
+const handleConfirm = () => {
+    if (confirmCallback.value) {
+        confirmCallback.value();
+    }
+    showConfirm.value = false;
+};
+
 const bulkDelete = () => {
     if (selectedInvoiceIds.value.length === 0 || bulkDeleting.value) return;
-    if (!confirm(`Hapus ${selectedInvoiceIds.value.length} invoice yang dipilih? (Invoice yang sudah dibayar akan dilewati)`)) return;
-
-    bulkDeleting.value = true;
-
-    router.delete('/admin/invoices/bulk', {
-        data: { ids: selectedInvoiceIds.value },
-        preserveScroll: true,
-        onFinish: () => {
-            bulkDeleting.value = false;
-        },
-        onSuccess: () => {
-            clearSelection();
-        },
+    openConfirm(`Hapus ${selectedInvoiceIds.value.length} invoice yang dipilih? (Invoice yang sudah dibayar akan dilewati)`, () => {
+        bulkDeleting.value = true;
+        router.delete('/admin/invoices/bulk', {
+            data: { ids: selectedInvoiceIds.value },
+            preserveScroll: true,
+            onFinish: () => {
+                bulkDeleting.value = false;
+            },
+            onSuccess: () => {
+                clearSelection();
+            },
+        });
     });
 };
 
@@ -842,5 +859,7 @@ const markAsPaid = (invoice: Invoice) => {
                 </form>
             </div>
         </div>
+
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>

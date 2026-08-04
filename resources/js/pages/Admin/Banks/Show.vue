@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ConfirmModal from '@/components/ConfirmModal.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +10,7 @@ import { formatDate, formatPrice } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ArrowLeft, Building2, Edit, FileText, ToggleLeft, ToggleRight, Trash2 } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 interface Bank {
     id: number;
@@ -113,10 +115,25 @@ const toggleBankStatus = () => {
     );
 };
 
-const deleteBank = () => {
-    if (confirm(`Apakah Anda yakin ingin menghapus bank ${props.bank.bank_name}?`)) {
-        router.delete(`/admin/banks/${props.bank.id}`);
+const showConfirm = ref(false);
+const confirmTarget = ref<any>(null);
+const confirmMessage = ref('');
+
+const openConfirm = (target: any, message: string) => {
+    confirmTarget.value = target;
+    confirmMessage.value = message;
+    showConfirm.value = true;
+};
+
+const handleConfirm = () => {
+    showConfirm.value = false;
+    if (confirmTarget.value) {
+        router.delete(`/admin/banks/${confirmTarget.value.id}`);
     }
+};
+
+const deleteBank = () => {
+    openConfirm(props.bank, `Apakah Anda yakin ingin menghapus bank ${props.bank.bank_name}?`);
 };
 </script>
 
@@ -330,5 +347,7 @@ const deleteBank = () => {
                 </div>
             </div>
         </div>
+
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" variant="destructive" confirmText="Hapus" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>

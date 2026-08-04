@@ -10,6 +10,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ChevronDown, ChevronUp, Edit, Plus, Search, Trash2, X } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 
 interface DomainPrice {
     id: number;
@@ -76,20 +77,38 @@ const clearSelection = () => {
 };
 
 const bulkDeleting = ref(false);
+
+const showConfirm = ref(false);
+const confirmMessage = ref('');
+const confirmCallback = ref<(() => void) | null>(null);
+
+const openConfirm = (message: string, callback: () => void, _variant?: string) => {
+    confirmMessage.value = message;
+    confirmCallback.value = callback;
+    showConfirm.value = true;
+};
+
+const handleConfirm = () => {
+    if (confirmCallback.value) {
+        confirmCallback.value();
+    }
+    showConfirm.value = false;
+};
+
 const bulkDelete = () => {
     if (selectedDomainPriceIds.value.length === 0 || bulkDeleting.value) return;
-    if (!confirm(`Hapus ${selectedDomainPriceIds.value.length} harga domain yang dipilih?`)) return;
-
-    bulkDeleting.value = true;
-    router.delete('/admin/domain-prices/bulk', {
-        data: { ids: selectedDomainPriceIds.value },
-        preserveScroll: true,
-        onFinish: () => {
-            bulkDeleting.value = false;
-        },
-        onSuccess: () => {
-            clearSelection();
-        },
+    openConfirm(`Hapus ${selectedDomainPriceIds.value.length} harga domain yang dipilih?`, () => {
+        bulkDeleting.value = true;
+        router.delete('/admin/domain-prices/bulk', {
+            data: { ids: selectedDomainPriceIds.value },
+            preserveScroll: true,
+            onFinish: () => {
+                bulkDeleting.value = false;
+            },
+            onSuccess: () => {
+                clearSelection();
+            },
+        });
     });
 };
 
@@ -679,6 +698,8 @@ const confirmDelete = () => {
                 </div>
             </div>
         </div>
+
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>
 "}]

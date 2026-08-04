@@ -17,6 +17,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ChevronDown, ChevronUp, Clock, Edit, Key, LogIn, Mail, MoreHorizontal, Plus, Search, Trash2, UserCheck, Users, UserX, X } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 
 interface Customer {
     id: number;
@@ -94,20 +95,38 @@ const clearSelection = () => {
 };
 
 const bulkDeleting = ref(false);
+
+const showConfirm = ref(false);
+const confirmMessage = ref('');
+const confirmCallback = ref<(() => void) | null>(null);
+
+const openConfirm = (message: string, callback: () => void, _variant?: string) => {
+    confirmMessage.value = message;
+    confirmCallback.value = callback;
+    showConfirm.value = true;
+};
+
+const handleConfirm = () => {
+    if (confirmCallback.value) {
+        confirmCallback.value();
+    }
+    showConfirm.value = false;
+};
+
 const bulkDelete = () => {
     if (selectedCustomerIds.value.length === 0 || bulkDeleting.value) return;
-    if (!confirm(`Hapus ${selectedCustomerIds.value.length} pelanggan yang dipilih?`)) return;
-
-    bulkDeleting.value = true;
-    router.delete('/admin/customers/bulk', {
-        data: { ids: selectedCustomerIds.value },
-        preserveScroll: true,
-        onFinish: () => {
-            bulkDeleting.value = false;
-        },
-        onSuccess: () => {
-            clearSelection();
-        },
+    openConfirm(`Hapus ${selectedCustomerIds.value.length} pelanggan yang dipilih?`, () => {
+        bulkDeleting.value = true;
+        router.delete('/admin/customers/bulk', {
+            data: { ids: selectedCustomerIds.value },
+            preserveScroll: true,
+            onFinish: () => {
+                bulkDeleting.value = false;
+            },
+            onSuccess: () => {
+                clearSelection();
+            },
+        });
     });
 };
 
@@ -399,7 +418,7 @@ const confirmDelete = () => {
 };
 
 const impersonateCustomer = (customer: Customer) => {
-    if (confirm(`Login sebagai ${customer.name}?`)) {
+    openConfirm(`Login sebagai ${customer.name}?`, () => {
         router.post(
             `/admin/impersonate/${customer.id}`,
             {},
@@ -413,7 +432,7 @@ const impersonateCustomer = (customer: Customer) => {
                 },
             },
         );
-    }
+    });
 };
 
 const sortBy = (field: string) => {
@@ -1201,5 +1220,7 @@ const getSortIcon = (field: string) => {
                 </div>
             </div>
         </div>
+
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>

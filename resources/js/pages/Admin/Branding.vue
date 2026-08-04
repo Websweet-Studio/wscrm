@@ -99,7 +99,7 @@
                                         <button
                                             v-if="setting.value"
                                             type="button"
-                                            @click="deleteImage(setting.key)"
+                                            @click="openDeleteImage(setting.key)"
                                             :disabled="form.processing"
                                             class="text-sm text-red-600 hover:text-red-800 disabled:opacity-50 dark:text-red-400"
                                         >
@@ -223,6 +223,7 @@
                 </CardContent>
             </Card>
         </div>
+        <ConfirmModal :show="showDeleteImage" message="Yakin ingin menghapus gambar ini?" confirmText="Hapus" variant="destructive" @confirm="deleteImage" @cancel="showDeleteImage = false" />
     </AppLayout>
 </template>
 
@@ -234,6 +235,7 @@ import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useForm } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 
 interface BrandingSetting {
     id: number;
@@ -322,7 +324,7 @@ const colorPresets: ColorPreset[] = [
     { name: 'Warm Natural',   primary: '#c96442', secondary: '#a8a29e', accent: '#65a30d' },
     { name: 'Ocean Blue',     primary: '#0891b2', secondary: '#6b7280', accent: '#10b981' },
     { name: 'Classic Navy',   primary: '#2563eb', secondary: '#64748b', accent: '#06b6d4' },
-    { name: 'Elegant Rose',   primary: '#e11d48', secondary: '#a1a1aa', accent: '#d946ef' },
+    { name: 'Soft Rose',      primary: '#e11d48', secondary: '#a8a29e', accent: '#fda4af' },
     { name: 'Sunset Orange',  primary: '#ea580c', secondary: '#78716c', accent: '#eab308' },
     { name: 'Modern Indigo',  primary: '#6366f1', secondary: '#334155', accent: '#22d3ee' },
     { name: 'Forest Green',   primary: '#16a34a', secondary: '#737373', accent: '#06b6d4' },
@@ -536,8 +538,15 @@ const updateBrowserFavicon = (faviconUrl: string) => {
     updateFavicon(faviconUrl, 'apple-touch-icon');
 };
 
-const deleteImage = async (key: string) => {
-    if (!confirm('Yakin ingin menghapus gambar ini?')) return;
+const showDeleteImage = ref(false);
+const deleteImageKey = ref('');
+
+const openDeleteImage = (key: string) => { deleteImageKey.value = key; showDeleteImage.value = true; };
+
+const deleteImage = async () => {
+    showDeleteImage.value = false;
+    const key = deleteImageKey.value;
+    if (!key) return;
 
     try {
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');

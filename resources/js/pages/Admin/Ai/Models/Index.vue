@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ConfirmModal from '@/components/ConfirmModal.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -91,9 +92,25 @@ const submitEdit = () => {
     });
 };
 
+const showConfirm = ref(false);
+const confirmTarget = ref<any>(null);
+const confirmMessage = ref('');
+
+const openConfirm = (target: any, message: string) => {
+    confirmTarget.value = target;
+    confirmMessage.value = message;
+    showConfirm.value = true;
+};
+
+const handleConfirm = () => {
+    showConfirm.value = false;
+    if (confirmTarget.value) {
+        router.delete(`/admin/ai/models/${confirmTarget.value.id}`, { preserveScroll: true });
+    }
+};
+
 const confirmDelete = (m: AiModel) => {
-    if (!confirm(`Hapus model "${m.model_key}"?`)) return;
-    router.delete(`/admin/ai/models/${m.id}`, { preserveScroll: true });
+    openConfirm(m, `Hapus model "${m.model_key}"?`);
 };
 
 // Harga per 1 juta token: rate kredit/1K × harga 1 kredit × 1000.
@@ -229,5 +246,7 @@ const priceOutput = (m: AiModel): string => (props.credit_price === null ? '—'
                 </form>
             </div>
         </div>
+
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" variant="destructive" confirmText="Hapus" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>

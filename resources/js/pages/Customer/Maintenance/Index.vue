@@ -20,10 +20,13 @@ interface Journal {
     website_client: WebsiteClient;
 }
 
+interface ChartDay { date: string; label: string; total: number; byType: Record<string, number>; height_pct: number; }
+
 interface Props {
     journals: { data: Journal[]; current_page: number; last_page: number; per_page: number; total: number; links: any[] };
     websites: WebsiteClient[];
     filters: { website_client_id?: string; date_from?: string; date_to?: string };
+    chartData: ChartDay[];
 }
 
 const props = defineProps<Props>();
@@ -134,6 +137,30 @@ const resetFilter = () => {
                     </CardHeader>
                 </Card>
             </div>
+
+            <!-- Chart -->
+            <Card v-if="chartData.length > 0" class="rounded-lg border-border/60 shadow-sm">
+                <CardHeader>
+                    <CardTitle class="flex items-center gap-2">
+                        <Activity class="h-5 w-5" />
+                        Aktivitas 30 Hari Terakhir
+                    </CardTitle>
+                    <CardDescription>Jumlah aktivitas maintenance per hari dalam sebulan terakhir</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div class="flex items-end gap-1 h-40 sm:h-48">
+                        <div v-for="(d, i) in chartData" :key="i" class="flex-1 flex flex-col items-center justify-end h-full group relative">
+                            <span class="mb-1 text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">{{ d.total }}</span>
+                            <div
+                                class="w-full rounded-t-sm bg-primary/60 hover:bg-primary transition-colors min-h-[2px]"
+                                :style="{ height: Math.max(d.height_pct, 2) + '%' }"
+                                :title="`${d.label}: ${d.total} aktivitas`"
+                            ></div>
+                            <span v-if="i % 5 === 0 || i === chartData.length - 1" class="mt-1 text-[10px] text-muted-foreground">{{ d.label }}</span>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
             <!-- Filter -->
             <Card class="overflow-visible rounded-lg border-border/60 shadow-sm">

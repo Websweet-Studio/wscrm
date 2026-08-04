@@ -375,7 +375,7 @@ const footerNavItems: NavItem[] = [
         </div>
 
         <!-- Navigation -->
-        <nav class="custom-scrollbar flex-1 overflow-y-auto p-0">
+        <nav class="custom-scrollbar flex-1 overflow-y-auto p-2">
             <div class="space-y-1">
                 <template v-for="item in mainNavItems" :key="item.title">
                     <!-- Single menu item -->
@@ -384,8 +384,8 @@ const footerNavItems: NavItem[] = [
                         :href="item.href"
                         @click="handleLinkClick"
                         :class="[
-                            'relative flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent',
-                            item.href === $page.url ? 'bg-sidebar-accent font-medium' : '',
+                            'relative flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                            item.href === $page.url ? 'bg-sidebar-accent font-medium text-sidebar-accent-foreground' : '',
                             shouldShowIconsOnly ? 'justify-center' : '',
                         ]"
                         :title="shouldShowIconsOnly ? item.title : ''"
@@ -415,7 +415,7 @@ const footerNavItems: NavItem[] = [
                             v-if="!shouldShowIconsOnly"
                             @click="toggleGroup(item.title.toLowerCase().replace(' ', '-'))"
                             :class="[
-                                'flex w-full cursor-pointer items-center justify-between rounded-md px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent',
+                                'flex w-full cursor-pointer items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                                 'text-left',
                             ]"
                         >
@@ -434,8 +434,8 @@ const footerNavItems: NavItem[] = [
                             v-else
                             @click="toggleGroup(item.title.toLowerCase().replace(' ', '-'))"
                             :class="[
-                                'w-full flex cursor-pointer items-center justify-center rounded-md px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent',
-                                expandedGroups.has(item.title.toLowerCase().replace(' ', '-')) ? 'bg-sidebar-accent' : '',
+                                'w-full flex cursor-pointer items-center justify-center rounded-md px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                                expandedGroups.has(item.title.toLowerCase().replace(' ', '-')) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : '',
                             ]"
                             :title="item.title"
                         >
@@ -451,7 +451,7 @@ const footerNavItems: NavItem[] = [
                                     :href="child.href"
                                     @click="handleLinkClick"
                                     :class="[
-                                        'flex cursor-pointer items-center justify-center rounded-md px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent/50',
+                                        'flex cursor-pointer items-center justify-center rounded-md px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
                                         'text-sidebar-foreground/60',
                                         child.href === $page.url ? 'bg-sidebar-accent font-medium text-sidebar-accent-foreground' : '',
                                     ]"
@@ -465,9 +465,9 @@ const footerNavItems: NavItem[] = [
                                     <button
                                         @click="toggleGroup(child.title.toLowerCase().replace(' ', '-'))"
                                         :class="[
-                                            'flex cursor-pointer items-center justify-center rounded-md px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent/50',
+                                            'flex cursor-pointer items-center justify-center rounded-md px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
                                             'text-sidebar-foreground/60',
-                                            expandedGroups.has(child.title.toLowerCase().replace(' ', '-')) ? 'bg-sidebar-accent/30' : '',
+                                            expandedGroups.has(child.title.toLowerCase().replace(' ', '-')) ? 'bg-sidebar-accent/30 text-sidebar-accent-foreground' : '',
                                         ]"
                                         :title="child.title"
                                     >
@@ -482,10 +482,10 @@ const footerNavItems: NavItem[] = [
                                             :href="nestedChild.href"
                                             @click="handleLinkClick"
                                             :class="[
-                                                'flex cursor-pointer items-center justify-center rounded-md px-2 py-1.5 text-xs transition-colors hover:bg-sidebar-accent/30',
-                                                'text-sidebar-foreground/50',
-                                                nestedChild.href === $page.url ? 'bg-sidebar-accent font-medium text-sidebar-accent-foreground' : '',
-                                            ]"
+                                                    'flex cursor-pointer items-center justify-center rounded-md px-2 py-1.5 text-xs transition-colors hover:bg-sidebar-accent/30 hover:text-sidebar-accent-foreground',
+                                                    'text-sidebar-foreground/50',
+                                                    nestedChild.href === $page.url ? 'bg-sidebar-accent font-medium text-sidebar-accent-foreground' : '',
+                                                ]"
                                             :title="nestedChild.title"
                                         >
                                             <component :is="nestedChild.icon" class="h-3 w-3 flex-shrink-0" />
@@ -507,8 +507,8 @@ const footerNavItems: NavItem[] = [
                                     :href="child.href"
                                     @click="handleLinkClick"
                                     :class="[
-                                        'flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent',
-                                        child.href === $page.url ? 'bg-sidebar-accent font-medium' : '',
+                                        'flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                                        child.href === $page.url ? 'bg-sidebar-accent font-medium text-sidebar-accent-foreground' : '',
                                     ]"
                                 >
                                     <component :is="child.icon" class="h-4 w-4 flex-shrink-0" />
@@ -520,7 +520,7 @@ const footerNavItems: NavItem[] = [
                                     <button
                                         @click="toggleGroup(child.title.toLowerCase().replace(' ', '-'))"
                                         :class="[
-                                            'flex w-full cursor-pointer items-center justify-between rounded-md px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent',
+                                            'flex w-full cursor-pointer items-center justify-between rounded-md px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                                             'text-left',
                                         ]"
                                     >
@@ -545,7 +545,7 @@ const footerNavItems: NavItem[] = [
                                             :href="nestedChild.href"
                                             @click="handleLinkClick"
                                             :class="[
-                                                'flex cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-xs transition-colors hover:bg-sidebar-accent/50',
+                                                'flex cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-xs transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
                                                 'text-sidebar-foreground/70',
                                                 nestedChild.href === $page.url ? 'bg-sidebar-accent font-medium text-sidebar-accent-foreground' : '',
                                             ]"

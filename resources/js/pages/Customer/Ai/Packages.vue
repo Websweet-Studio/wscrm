@@ -2,10 +2,12 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Bot, Coins, ShoppingCart } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 interface Package {
     id: number;
@@ -30,9 +32,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 const formatPrice = (price: number): string =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
 
-const buy = (pkg: Package) => {
-    if (!confirm(`Beli paket "${pkg.name}" senilai ${formatPrice(pkg.final_price)}?`)) return;
-    router.post(`/customer/ai/packages/${pkg.id}/buy`, undefined, { preserveScroll: true });
+const showBuyModal = ref(false);
+const selectedPkg = ref<Package | null>(null);
+
+const openBuy = (pkg: Package) => { selectedPkg.value = pkg; showBuyModal.value = true; };
+
+const confirmBuy = () => {
+    showBuyModal.value = false;
+    if (selectedPkg.value) {
+        router.post(`/customer/ai/packages/${selectedPkg.value.id}/buy`, undefined, { preserveScroll: true });
+    }
 };
 </script>
 
@@ -81,12 +90,21 @@ const buy = (pkg: Package) => {
                             <div class="text-3xl font-bold">{{ formatPrice(pkg.final_price) }}</div>
                             <div v-if="pkg.discount_amount !== null" class="text-xs text-muted-foreground">Hemat {{ formatPrice(Number(pkg.discount_amount)) }}</div>
                         </div>
-                        <Button class="w-full cursor-pointer" @click="buy(pkg)">
+                        <Button class="w-full cursor-pointer" @click="openBuy(pkg)">
                             <ShoppingCart class="mr-2 h-4 w-4" /> Beli Paket
                         </Button>
                     </CardContent>
                 </Card>
             </div>
         </div>
+
+        <ConfirmModal
+            :show="showBuyModal"
+            title="Beli Paket"
+            :message="`Beli paket \"${selectedPkg?.name || ''}\" senilai ${selectedPkg ? formatPrice(selectedPkg.final_price) : ''}?`"
+            confirmText="Beli"
+            @confirm="confirmBuy"
+            @cancel="showBuyModal = false"
+        />
     </CustomerLayout>
 </template>

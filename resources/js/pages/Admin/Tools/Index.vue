@@ -2,6 +2,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
@@ -30,6 +31,21 @@ const $page = usePage();
 
 const output = ref('');
 const isRunning = ref(false);
+
+const showConfirm = ref(false);
+const confirmMessage = ref('');
+const confirmCallback = ref<(() => void) | null>(null);
+
+function openConfirm(msg: string, cb: () => void) {
+    confirmMessage.value = msg;
+    confirmCallback.value = cb;
+    showConfirm.value = true;
+}
+
+function handleConfirm() {
+    showConfirm.value = false;
+    if (confirmCallback.value) confirmCallback.value();
+}
 
 // Read result from flash on page load
 const flashResult = ($page.props.flash as any)?.tool_result;
@@ -140,24 +156,30 @@ const getVariantClass = (v: string) => {
 };
 
 const executeAction = (key: string, confirmMsg?: string) => {
-    if (confirmMsg && !confirm('⚠️ ' + confirmMsg + ' Lanjutkan?')) return;
+    const run = () => {
+        isRunning.value = true;
+        output.value = 'Running...';
 
-    isRunning.value = true;
-    output.value = 'Running...';
+        router.post('/admin/tools/execute', { action: key }, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: (page: any) => {
+                const result = page.props.flash?.tool_result || {};
+                output.value = result.output || 'Done (no output)';
+                isRunning.value = false;
+            },
+            onError: () => {
+                output.value = 'Error executing action';
+                isRunning.value = false;
+            },
+        });
+    };
 
-    router.post('/admin/tools/execute', { action: key }, {
-        preserveScroll: true,
-        preserveState: true,
-        onSuccess: (page: any) => {
-            const result = page.props.flash?.tool_result || {};
-            output.value = result.output || 'Done (no output)';
-            isRunning.value = false;
-        },
-        onError: () => {
-            output.value = 'Error executing action';
-            isRunning.value = false;
-        },
-    });
+    if (confirmMsg) {
+        openConfirm('⚠️ ' + confirmMsg + ' Lanjutkan?', run);
+    } else {
+        run();
+    }
 };
 </script>
 
@@ -231,5 +253,6 @@ const executeAction = (key: string, confirmMsg?: string) => {
                 </Card>
             </div>
         </div>
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" variant="destructive" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>

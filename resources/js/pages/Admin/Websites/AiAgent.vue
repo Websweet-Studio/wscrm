@@ -8,6 +8,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import { Bot, CheckCircle2, ExternalLink, Loader2, MessageSquare, Plus, Send, Sparkles, Trash2, XCircle, Zap } from 'lucide-vue-next';
 import { nextTick, onMounted, ref } from 'vue';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 
 interface ProgressItem {
     message: string;
@@ -94,6 +95,7 @@ const loadConversation = async (id: number) => {
         await nextTick();
         scrollToBottom();
     }
+    });
 };
 
 const newChat = () => {
@@ -101,8 +103,14 @@ const newChat = () => {
     messages.value = [];
 };
 
+const showConfirm = ref(false);
+const confirmMessage = ref('');
+const confirmCallback = ref<(() => void) | null>(null);
+const openConfirm = (msg: string, cb: () => void) => { confirmMessage.value = msg; confirmCallback.value = cb; showConfirm.value = true; };
+const handleConfirm = () => { showConfirm.value = false; if (confirmCallback.value) confirmCallback.value(); };
+
 const deleteConversation = async (id: number) => {
-    if (!confirm('Hapus percakapan ini?')) return;
+    openConfirm('Hapus percakapan ini?', async () => {
 
     const res = await fetch(`/admin/websites/ai/conversations/${id}`, {
         method: 'DELETE',
@@ -116,6 +124,7 @@ const deleteConversation = async (id: number) => {
             messages.value = [];
         }
     }
+    });
 };
 
 const upsertConversation = (id: number, firstMessage: string) => {
@@ -514,5 +523,6 @@ onMounted(() => {
                 </div>
             </div>
         </div>
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" confirmText="Hapus" variant="destructive" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>

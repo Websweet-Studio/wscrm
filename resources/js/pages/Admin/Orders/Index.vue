@@ -9,6 +9,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ChevronDown, ChevronUp, Edit, Package, Plus, Search, Trash2 } from 'lucide-vue-next';
 import { computed, onMounted, ref, watch } from 'vue';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 
 interface Customer {
     id: number;
@@ -136,20 +137,38 @@ const clearSelection = () => {
 };
 
 const bulkDeleting = ref(false);
+
+const showConfirm = ref(false);
+const confirmMessage = ref('');
+const confirmCallback = ref<(() => void) | null>(null);
+
+const openConfirm = (message: string, callback: () => void, _variant?: string) => {
+    confirmMessage.value = message;
+    confirmCallback.value = callback;
+    showConfirm.value = true;
+};
+
+const handleConfirm = () => {
+    if (confirmCallback.value) {
+        confirmCallback.value();
+    }
+    showConfirm.value = false;
+};
+
 const bulkDelete = () => {
     if (selectedOrderIds.value.length === 0 || bulkDeleting.value) return;
-    if (!confirm(`Hapus ${selectedOrderIds.value.length} data yang dipilih? (Layanan aktif akan dilewati)`)) return;
-
-    bulkDeleting.value = true;
-    router.delete('/admin/orders/bulk', {
-        data: { ids: selectedOrderIds.value },
-        preserveScroll: true,
-        onFinish: () => {
-            bulkDeleting.value = false;
-        },
-        onSuccess: () => {
-            clearSelection();
-        },
+    openConfirm(`Hapus ${selectedOrderIds.value.length} data yang dipilih? (Layanan aktif akan dilewati)`, () => {
+        bulkDeleting.value = true;
+        router.delete('/admin/orders/bulk', {
+            data: { ids: selectedOrderIds.value },
+            preserveScroll: true,
+            onFinish: () => {
+                bulkDeleting.value = false;
+            },
+            onSuccess: () => {
+                clearSelection();
+            },
+        });
     });
 };
 
@@ -855,5 +874,7 @@ const getSortIcon = (field: string) => {
                 </div>
             </div>
         </div>
+
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>

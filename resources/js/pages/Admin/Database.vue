@@ -2,10 +2,12 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
 import { Database, Download, Upload } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 const form = useForm({
     file: null as File | null,
@@ -14,6 +16,21 @@ const form = useForm({
 const clearForm = useForm({
     confirm: '',
 });
+
+const showConfirm = ref(false);
+const confirmMessage = ref('');
+const confirmCallback = ref<(() => void) | null>(null);
+
+function openConfirm(msg: string, cb: () => void) {
+    confirmMessage.value = msg;
+    confirmCallback.value = cb;
+    showConfirm.value = true;
+}
+
+function handleConfirm() {
+    showConfirm.value = false;
+    if (confirmCallback.value) confirmCallback.value();
+}
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -36,13 +53,12 @@ const onFileChange = (e: Event) => {
 };
 
 const submitClear = () => {
-    const ok = window.confirm('Ini akan menghapus semua data database kecuali users. Lanjutkan?');
-    if (!ok) return;
-
-    clearForm.post('/admin/database/clear', {
-        onSuccess: () => {
-            clearForm.reset('confirm');
-        },
+    openConfirm('Ini akan menghapus semua data database kecuali users. Lanjutkan?', () => {
+        clearForm.post('/admin/database/clear', {
+            onSuccess: () => {
+                clearForm.reset('confirm');
+            },
+        });
     });
 };
 </script>
@@ -136,5 +152,6 @@ const submitClear = () => {
                 </CardContent>
             </Card>
         </div>
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" variant="destructive" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>

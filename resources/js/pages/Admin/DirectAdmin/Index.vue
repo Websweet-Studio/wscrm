@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
@@ -58,6 +59,23 @@ const breadcrumbs: BreadcrumbItem[] = [
 const saving = ref(false);
 const acting = ref<string | null>(null);
 
+const showConfirm = ref(false);
+const confirmMessage = ref('');
+const confirmCallback = ref<(() => void) | null>(null);
+const confirmVariant = ref<'default' | 'destructive'>('default');
+
+function openConfirm(msg: string, cb: () => void, variant: 'default' | 'destructive' = 'default') {
+    confirmMessage.value = msg;
+    confirmCallback.value = cb;
+    confirmVariant.value = variant;
+    showConfirm.value = true;
+}
+
+function handleConfirm() {
+    showConfirm.value = false;
+    if (confirmCallback.value) confirmCallback.value();
+}
+
 const form = reactive({
     scheme: props.settings.scheme,
     host: props.settings.host,
@@ -79,20 +97,22 @@ const saveSettings = () => {
 };
 
 const suspend = (account: Account) => {
-    if (!confirm(`Suspend akun DirectAdmin "${account.username}"? Status order terhubung akan ikut menjadi "Ditangguhkan".`)) return;
-    acting.value = account.username;
-    router.post(`/admin/directadmin/accounts/${account.username}/suspend`, {}, {
-        preserveScroll: true,
-        onFinish: () => (acting.value = null),
-    });
+    openConfirm(`Suspend akun DirectAdmin "${account.username}"? Status order terhubung akan ikut menjadi "Ditangguhkan".`, () => {
+        acting.value = account.username;
+        router.post(`/admin/directadmin/accounts/${account.username}/suspend`, {}, {
+            preserveScroll: true,
+            onFinish: () => (acting.value = null),
+        });
+    }, 'destructive');
 };
 
 const unsuspend = (account: Account) => {
-    if (!confirm(`Aktifkan kembali akun DirectAdmin "${account.username}"? Status order terhubung akan ikut menjadi "Aktif".`)) return;
-    acting.value = account.username;
-    router.post(`/admin/directadmin/accounts/${account.username}/unsuspend`, {}, {
-        preserveScroll: true,
-        onFinish: () => (acting.value = null),
+    openConfirm(`Aktifkan kembali akun DirectAdmin "${account.username}"? Status order terhubung akan ikut menjadi "Aktif".`, () => {
+        acting.value = account.username;
+        router.post(`/admin/directadmin/accounts/${account.username}/unsuspend`, {}, {
+            preserveScroll: true,
+            onFinish: () => (acting.value = null),
+        });
     });
 };
 
@@ -348,5 +368,6 @@ const getOrderStatusText = (status: string) => {
                 </CardContent>
             </Card>
         </div>
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" :variant="confirmVariant" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>

@@ -9,6 +9,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ArrowRight, ChevronLeft, ReceiptText, ShoppingCart, Trash2 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 
 interface OrderItem {
     id: number;
@@ -40,11 +41,43 @@ const props = defineProps<Props>();
 
 const deleting = ref(false);
 
+const showConfirm = ref(false);
+const confirmMessage = ref('');
+const confirmCallback = ref<(() => void) | null>(null);
+
+const openConfirm = (message: string, callback: () => void, _variant?: string) => {
+    confirmMessage.value = message;
+    confirmCallback.value = callback;
+    showConfirm.value = true;
+};
+
+const handleConfirm = () => {
+    if (confirmCallback.value) {
+        confirmCallback.value();
+    }
+    showConfirm.value = false;
+};
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/customer/dashboard' },
     { title: 'My Orders', href: '/customer/orders' },
     { title: `Order #${props.order.id}`, href: `/customer/orders/${props.order.id}` },
 ];
+
+const deleteOrder = () => {
+    if (props.order.status !== 'pending') {
+        return;
+    }
+
+    openConfirm('Apakah Anda yakin ingin menghapus order ini?', () => {
+        deleting.value = true;
+        router.delete(`/customer/orders/${props.order.id}`, {
+            onFinish: () => {
+                deleting.value = false;
+            },
+        });
+    });
+};
 
 const getStatusColor = (status: string) => {
     switch (status) {
@@ -83,23 +116,6 @@ const payableAmount = computed(() => {
     const discount = Number(props.order.discount_amount || 0);
     return discount > 0 ? subtotal.value - discount : subtotal.value;
 });
-
-const deleteOrder = () => {
-    if (props.order.status !== 'pending') {
-        return;
-    }
-
-    if (!confirm('Apakah Anda yakin ingin menghapus order ini?')) {
-        return;
-    }
-
-    deleting.value = true;
-    router.delete(`/customer/orders/${props.order.id}`, {
-        onFinish: () => {
-            deleting.value = false;
-        },
-    });
-};
 </script>
 
 <template>
@@ -233,5 +249,7 @@ const deleteOrder = () => {
                 </Card>
             </div>
         </div>
+
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </CustomerLayout>
 </template>

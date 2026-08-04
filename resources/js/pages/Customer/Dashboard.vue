@@ -164,6 +164,12 @@ const timeGreeting = computed(() => {
     return 'Selamat malam';
 });
 
+const displayStatus = computed(() => props.customer?.status || 'active');
+const statusLabel = computed(() => {
+    const labels: Record<string, string> = { active: 'Aktif', pending: 'Pending', suspended: 'Ditangguhkan', terminated: 'Dihentikan', inactive: 'Tidak Aktif' };
+    return labels[displayStatus.value] || displayStatus.value;
+});
+
 const todayLabel = computed(() =>
     new Date().toLocaleDateString('id-ID', {
         weekday: 'long',
@@ -279,9 +285,9 @@ const todayLabel = computed(() =>
                         <span class="text-xs font-bold uppercase tracking-wide" style="color: #62625b;">Status Akun</span>
                         <Sparkles class="h-4 w-4" style="color: var(--primary)" />
                     </div>
-                    <div class="font-heading mt-2 text-3xl font-bold capitalize" style="letter-spacing: -1.2px;">{{ customer.status }}</div>
-                    <span :class="`mt-1.5 inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${getStatusColor(customer.status)}`">
-                        {{ customer.status }}
+                    <div class="font-heading mt-2 text-3xl font-bold capitalize" style="letter-spacing: -1.2px;">{{ statusLabel }}</div>
+                    <span :class="`mt-1.5 inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${getStatusColor(displayStatus)}`">
+                        {{ statusLabel }}
                     </span>
                 </div>
             </div>

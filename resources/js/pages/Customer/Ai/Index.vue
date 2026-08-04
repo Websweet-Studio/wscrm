@@ -7,7 +7,7 @@ import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowDownCircle, ArrowRight, ArrowUpCircle, Check, Coins, Copy, Cpu, History, KeyRound, RefreshCw, Server, ShoppingCart } from 'lucide-vue-next';
+import { ArrowDownCircle, ArrowRight, ArrowUpCircle, Check, Copy, Cpu, History, KeyRound, RefreshCw, Server, ShoppingCart } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface Model {
@@ -51,6 +51,7 @@ const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMeta
 const apiKey = ref(props.api_key);
 const showKey = ref(false);
 const copied = ref(false);
+const activeTab = ref<'endpoint' | 'pricing' | 'history'>('endpoint');
 
 const totalTransactions = computed(() => props.transactions.length);
 const usageTransactions = computed(() => props.transactions.filter(t => t.type === 'out').length);
@@ -71,8 +72,10 @@ const copyText = async (text: string) => {
     setTimeout(() => (copied.value = false), 1500);
 };
 
-const regenerateKey = async () => {
-    if (!confirm('Generate API key baru? Key lama langsung tidak berlaku.')) return;
+const openRegenModal = () => { showRegenModal.value = true; };
+
+const confirmRegen = async () => {
+    showRegenModal.value = false;
     const res = await fetch('/customer/ai/api-key', { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken } });
     if (res.ok) {
         const data = await res.json();
@@ -166,33 +169,24 @@ const formatDate = (d: string) => new Date(d).toLocaleString('id-ID', { dateStyl
                 </Card>
             </div>
 
-            <!-- Saldo & Endpoint -->
-            <div class="grid gap-4 lg:grid-cols-5">
-                <Card class="flex flex-col rounded-lg border-border/60 shadow-sm lg:col-span-2">
-                    <CardHeader>
-                        <CardTitle class="flex items-center gap-2"><Coins class="h-5 w-5 text-amber-500" /> Sisa Saldo</CardTitle>
-                    </CardHeader>
-                    <CardContent class="flex flex-1 flex-col">
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-5xl font-bold">{{ balance.toLocaleString('id-ID') }}</span>
-                            <span class="text-sm text-muted-foreground">kredit</span>
-                        </div>
-                        <p class="mt-2 text-sm text-muted-foreground">Saldo kredit. Setiap pemakaian memotong saldo sesuai jumlah token &times; harga model.</p>
-                        <p v-if="credit_price !== null" class="mt-1 text-sm text-muted-foreground">Referensi harga: 1 kredit &approx; {{ formatRupiah(credit_price) }}</p>
-                        <div class="mt-auto pt-5">
-                            <Link href="/customer/ai/packages" class="block">
-                                <Button class="w-full cursor-pointer"><ShoppingCart class="mr-2 h-4 w-4" /> Beli Saldo</Button>
-                            </Link>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card class="rounded-lg border-border/60 shadow-sm lg:col-span-3">
-                    <CardHeader>
-                        <CardTitle class="flex items-center gap-2"><Server class="h-5 w-5 text-primary" /> Endpoint API</CardTitle>
-                        <CardDescription>Isi di Hermes agent atau code editor (OpenAI-compatible)</CardDescription>
-                    </CardHeader>
-                    <CardContent class="space-y-4">
+            <!-- Tabbed: Endpoint API / Harga Token / Riwayat -->
+            <Card class="rounded-lg border-border/60 shadow-sm">
+                <CardHeader>
+                    <div class="flex items-center gap-1 rounded-lg bg-muted p-1 w-fit">
+                        <button @click="activeTab = 'endpoint'" :class="['inline-flex items-center px-3 py-1.5 text-sm rounded-md transition-colors cursor-pointer', activeTab === 'endpoint' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground']">
+                            <Server class="h-4 w-4 mr-1.5" /> Endpoint API
+                        </button>
+                        <button @click="activeTab = 'pricing'" :class="['inline-flex items-center px-3 py-1.5 text-sm rounded-md transition-colors cursor-pointer', activeTab === 'pricing' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground']">
+                            <Cpu class="h-4 w-4 mr-1.5" /> Harga Token
+                        </button>
+                        <button @click="activeTab = 'history'" :class="['inline-flex items-center px-3 py-1.5 text-sm rounded-md transition-colors cursor-pointer', activeTab === 'history' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground']">
+                            <History class="h-4 w-4 mr-1.5" /> Riwayat Usage
+                        </button>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <!-- Endpoint API -->
+                    <div v-if="activeTab === 'endpoint'" class="space-y-4">
                         <div>
                             <div class="mb-1 flex items-center gap-2 text-sm font-medium">
                                 <Server class="h-4 w-4 text-muted-foreground" /> Base URL
@@ -220,7 +214,7 @@ const formatDate = (d: string) => new Date(d).toLocaleString('id-ID', { dateStyl
                             <div v-else class="flex items-center justify-between rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
                                 Belum ada API key
                             </div>
-                            <Button size="sm" variant="outline" class="mt-2 cursor-pointer" @click="regenerateKey">
+                            <Button size="sm" variant="outline" class="mt-2 cursor-pointer" @click="openRegenModal">
                                 <RefreshCw class="mr-1.5 h-3.5 w-3.5" /> Generate / Ganti Key
                             </Button>
                         </div>
@@ -230,109 +224,105 @@ const formatDate = (d: string) => new Date(d).toLocaleString('id-ID', { dateStyl
 Authorization: Bearer &lt;API_KEY&gt;
 {"model": "grok-4.5", "messages": [{"role": "user", "content": "halo"}]}</pre>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+
+                    <!-- Harga Token -->
+                    <div v-if="activeTab === 'pricing'">
+                        <p v-if="credit_price !== null" class="mb-3 text-sm text-muted-foreground">
+                            Harga per 1 juta token input/output, referensi 1 kredit &approx; {{ formatRupiah(credit_price) }}
+                        </p>
+                        <p v-else class="mb-3 text-sm text-muted-foreground">Tambahkan paket kredit aktif di panel admin agar harga rupiah tampil.</p>
+                        <div class="overflow-hidden rounded-lg border border-border/60">
+                            <div class="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Model</TableHead>
+                                            <TableHead>Provider</TableHead>
+                                            <TableHead>Input / 1M token</TableHead>
+                                            <TableHead>Output / 1M token</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        <TableRow v-for="m in models" :key="m.id">
+                                            <TableCell>
+                                                <div class="font-mono font-medium">{{ m.model_key }}</div>
+                                                <div v-if="m.display_name" class="text-xs text-muted-foreground">{{ m.display_name }}</div>
+                                            </TableCell>
+                                            <TableCell>{{ m.provider?.name || '-' }}</TableCell>
+                                            <TableCell>{{ priceInput(m) }}</TableCell>
+                                            <TableCell>{{ priceOutput(m) }}</TableCell>
+                                        </TableRow>
+                                        <TableRow v-if="models.length === 0">
+                                            <TableCell colspan="4" class="text-center text-muted-foreground">Belum ada model aktif.</TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Riwayat Usage -->
+                    <div v-if="activeTab === 'history'">
+                        <p class="mb-3 text-sm text-muted-foreground">20 transaksi terakhir (pembelian &amp; pemakaian)</p>
+                        <div class="overflow-hidden rounded-lg border border-border/60">
+                            <div class="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Waktu</TableHead>
+                                            <TableHead>Tipe</TableHead>
+                                            <TableHead>Token</TableHead>
+                                            <TableHead>Detail</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        <TableRow v-for="t in transactions" :key="t.id">
+                                            <TableCell class="text-xs text-muted-foreground">{{ formatDate(t.created_at) }}</TableCell>
+                                            <TableCell>
+                                                <Badge :variant="t.type === 'in' ? 'default' : 'secondary'">
+                                                    {{ t.source === 'purchase' ? 'Pembelian' : t.source === 'usage' ? 'Pemakaian' : 'Penyesuaian' }}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <span class="inline-flex items-center gap-1 font-semibold" :class="t.credits > 0 ? 'text-green-600' : 'text-red-500'">
+                                                    <ArrowUpCircle v-if="t.credits > 0" class="h-4 w-4" />
+                                                    <ArrowDownCircle v-else class="h-4 w-4" />
+                                                    {{ t.credits > 0 ? '+' : '' }}{{ t.credits.toLocaleString('id-ID') }}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell class="text-xs text-muted-foreground">
+                                                <template v-if="t.model">{{ t.model.model_key }} &middot; </template>
+                                                <template v-if="t.package">{{ t.package.name }} &middot; </template>
+                                                {{ t.description || '-' }}
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow v-if="transactions.length === 0">
+                                            <TableCell colspan="4" class="text-center text-muted-foreground">Belum ada transaksi. Beli token untuk mulai memakai.</TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+        <!-- Regenerate Key Modal -->
+        <div v-if="showRegenModal" class="fixed inset-0 z-50 flex items-center justify-center">
+            <div class="fixed inset-0 bg-black/50" @click="showRegenModal = false"></div>
+            <div class="relative mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
+                <div class="mb-4">
+                    <h2 class="text-lg font-semibold">Generate API Key Baru</h2>
+                    <p class="mt-2 text-sm text-muted-foreground">
+                        Key lama akan <strong>langsung tidak berlaku</strong>. Pastikan Anda sudah memperbarui key di semua aplikasi yang menggunakannya.
+                    </p>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <Button variant="outline" @click="showRegenModal = false" class="cursor-pointer">Batal</Button>
+                    <Button @click="confirmRegen" class="cursor-pointer">Generate Baru</Button>
+                </div>
             </div>
-
-            <!-- Harga per model -->
-            <Card class="rounded-lg border-border/60 shadow-sm">
-                <CardHeader>
-                    <CardTitle class="flex items-center gap-2">
-                        <Cpu class="h-5 w-5" />
-                        Harga Token per Model
-                    </CardTitle>
-                    <CardDescription v-if="credit_price !== null">
-                        Harga per 1 juta token input/output, referensi 1 kredit &approx; {{ formatRupiah(credit_price) }}
-                    </CardDescription>
-                    <CardDescription v-else>Tambahkan paket kredit aktif di panel admin agar harga rupiah tampil.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div class="overflow-hidden rounded-lg border border-border/60">
-                        <div class="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Model</TableHead>
-                                        <TableHead>Provider</TableHead>
-                                        <TableHead>Input / 1M token</TableHead>
-                                        <TableHead>Output / 1M token</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    <TableRow v-for="m in models" :key="m.id">
-                                        <TableCell>
-                                            <div class="font-mono font-medium">{{ m.model_key }}</div>
-                                            <div v-if="m.display_name" class="text-xs text-muted-foreground">{{ m.display_name }}</div>
-                                        </TableCell>
-                                        <TableCell>{{ m.provider?.name || '-' }}</TableCell>
-                                        <TableCell>{{ priceInput(m) }}</TableCell>
-                                        <TableCell>{{ priceOutput(m) }}</TableCell>
-                                    </TableRow>
-                                    <TableRow v-if="models.length === 0">
-                                        <TableCell colspan="4" class="text-center text-muted-foreground">Belum ada model aktif.</TableCell>
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <!-- Riwayat usage -->
-            <Card class="rounded-lg border-border/60 shadow-sm">
-                <CardHeader>
-                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                            <CardTitle class="flex items-center gap-2">
-                                <History class="h-5 w-5" />
-                                Riwayat Token &amp; Usage
-                            </CardTitle>
-                            <CardDescription>20 transaksi terakhir (pembelian &amp; pemakaian)</CardDescription>
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <div class="overflow-hidden rounded-lg border border-border/60">
-                        <div class="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Waktu</TableHead>
-                                        <TableHead>Tipe</TableHead>
-                                        <TableHead>Token</TableHead>
-                                        <TableHead>Detail</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    <TableRow v-for="t in transactions" :key="t.id">
-                                        <TableCell class="text-xs text-muted-foreground">{{ formatDate(t.created_at) }}</TableCell>
-                                        <TableCell>
-                                            <Badge :variant="t.type === 'in' ? 'default' : 'secondary'">
-                                                {{ t.source === 'purchase' ? 'Pembelian' : t.source === 'usage' ? 'Pemakaian' : 'Penyesuaian' }}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <span class="inline-flex items-center gap-1 font-semibold" :class="t.credits > 0 ? 'text-green-600' : 'text-red-500'">
-                                                <ArrowUpCircle v-if="t.credits > 0" class="h-4 w-4" />
-                                                <ArrowDownCircle v-else class="h-4 w-4" />
-                                                {{ t.credits > 0 ? '+' : '' }}{{ t.credits.toLocaleString('id-ID') }}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell class="text-xs text-muted-foreground">
-                                            <template v-if="t.model">{{ t.model.model_key }} &middot; </template>
-                                            <template v-if="t.package">{{ t.package.name }} &middot; </template>
-                                            {{ t.description || '-' }}
-                                        </TableCell>
-                                    </TableRow>
-                                    <TableRow v-if="transactions.length === 0">
-                                        <TableCell colspan="4" class="text-center text-muted-foreground">Belum ada transaksi. Beli token untuk mulai memakai.</TableCell>
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
         </div>
     </CustomerLayout>
 </template>

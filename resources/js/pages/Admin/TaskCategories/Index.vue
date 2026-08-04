@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Pencil, Trash2, Plus, X } from 'lucide-vue-next';
 import { useToast } from '@/composables/useToast';
 import { type BreadcrumbItem } from '@/types';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 
 const getDefaultPrimary = () => document.documentElement.style.getPropertyValue('--primary').trim() || '#c96442';
 
@@ -40,6 +41,12 @@ const form = useForm({
     description: '',
     qc_checklist: [] as string[],
 });
+
+const showConfirm = ref(false);
+const confirmMessage = ref('');
+const confirmCallback = ref<(() => void) | null>(null);
+const openConfirm = (msg: string, cb: () => void) => { confirmMessage.value = msg; confirmCallback.value = cb; showConfirm.value = true; };
+const handleConfirm = () => { showConfirm.value = false; if (confirmCallback.value) confirmCallback.value(); };
 
 const addQcItem = () => {
     if (newQcItem.value.trim()) {
@@ -102,13 +109,13 @@ const submitEdit = () => {
 };
 
 const deleteCategory = (category: TaskCategory) => {
-    if (confirm('Apakah Anda yakin ingin menghapus kategori ini? Tugas yang menggunakan kategori ini tidak akan memiliki kategori.')) {
+    openConfirm('Hapus kategori "' + category.name + '"? Tugas yang menggunakan kategori ini tidak akan memiliki kategori.', () => {
         router.delete(`/admin/task-categories/${category.id}`, {
             onSuccess: () => {
                 success('Berhasil', 'Kategori berhasil dihapus');
             },
         });
-    }
+    });
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -368,5 +375,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                 </Card>
             </div>
         </div>
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" confirmText="Hapus" variant="destructive" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>

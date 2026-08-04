@@ -200,12 +200,14 @@
                 </div>
             </div>
         </div>
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" title="Restore Backup" confirmText="Restore" variant="destructive" :loading="isUpdating" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>
 
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { onMounted, ref } from 'vue';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 
 // State
 const currentVersion = ref<string>('');
@@ -215,6 +217,12 @@ const isUpdating = ref(false);
 const isRestoring = ref(false);
 const updateProgress = ref<string>('');
 const errorMessage = ref<string>('');
+
+const showConfirm = ref(false);
+const confirmMessage = ref('');
+const confirmCallback = ref<(() => void) | null>(null);
+const openConfirm = (msg: string, cb: () => void) => { confirmMessage.value = msg; confirmCallback.value = cb; showConfirm.value = true; };
+const handleConfirm = () => { showConfirm.value = false; if (confirmCallback.value) confirmCallback.value(); };
 
 // Methods
 const checkForUpdates = async () => {
@@ -281,9 +289,7 @@ const performUpdate = async () => {
 };
 
 const restoreBackup = async () => {
-    if (!confirm('Yakin ingin restore backup? Ini akan mengembalikan sistem ke kondisi sebelum update terakhir.')) {
-        return;
-    }
+    openConfirm('Yakin ingin restore backup? Ini akan mengembalikan sistem ke kondisi sebelum update terakhir.', async () => {
 
     isRestoring.value = true;
     errorMessage.value = '';
@@ -309,6 +315,7 @@ const restoreBackup = async () => {
     } finally {
         isRestoring.value = false;
     }
+    });
 };
 
 const formatDate = (dateString: string) => {

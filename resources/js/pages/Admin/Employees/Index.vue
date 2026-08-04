@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -89,21 +90,41 @@ const clearSelection = () => {
 };
 
 const bulkDeleting = ref(false);
+
+const showConfirm = ref(false);
+const confirmMessage = ref('');
+const confirmVariant = ref<'default' | 'destructive'>('default');
+const confirmCallback = ref<(() => void) | null>(null);
+
+const openConfirm = (message: string, callback: () => void, variant: 'default' | 'destructive' = 'default') => {
+    confirmMessage.value = message;
+    confirmCallback.value = callback;
+    confirmVariant.value = variant;
+    showConfirm.value = true;
+};
+
+const handleConfirm = () => {
+    if (confirmCallback.value) {
+        confirmCallback.value();
+    }
+    showConfirm.value = false;
+};
+
 const bulkDelete = () => {
     if (selectedEmployeeIds.value.length === 0 || bulkDeleting.value) return;
-    if (!confirm(`Hapus ${selectedEmployeeIds.value.length} karyawan yang dipilih?`)) return;
-
-    bulkDeleting.value = true;
-    router.delete('/admin/employees/bulk', {
-        data: { ids: selectedEmployeeIds.value },
-        preserveScroll: true,
-        onFinish: () => {
-            bulkDeleting.value = false;
-        },
-        onSuccess: () => {
-            clearSelection();
-        },
-    });
+    openConfirm(`Hapus ${selectedEmployeeIds.value.length} karyawan yang dipilih?`, () => {
+        bulkDeleting.value = true;
+        router.delete('/admin/employees/bulk', {
+            data: { ids: selectedEmployeeIds.value },
+            preserveScroll: true,
+            onFinish: () => {
+                bulkDeleting.value = false;
+            },
+            onSuccess: () => {
+                clearSelection();
+            },
+        });
+    }, 'destructive');
 };
 
 const createForm = useForm({
@@ -280,7 +301,7 @@ const confirmDelete = () => {
 };
 
 const resetPassword = (employee: Employee) => {
-    if (confirm(`Reset password untuk ${employee.user.name}? Password baru akan dikirim ke email ${employee.user.email}`)) {
+    openConfirm(`Reset password untuk ${employee.user.name}? Password baru akan dikirim ke email ${employee.user.email}`, () => {
         router.post(
             `/admin/employees/${employee.id}/reset-password`,
             {},
@@ -294,7 +315,7 @@ const resetPassword = (employee: Employee) => {
                 },
             },
         );
-    }
+    });
 };
 </script>
 
@@ -958,5 +979,7 @@ const resetPassword = (employee: Employee) => {
                 </div>
             </div>
         </div>
+
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" :variant="confirmVariant" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>

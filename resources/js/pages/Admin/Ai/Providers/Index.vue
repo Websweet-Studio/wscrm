@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ConfirmModal from '@/components/ConfirmModal.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -84,9 +85,25 @@ const submitEdit = () => {
     });
 };
 
+const showConfirm = ref(false);
+const confirmTarget = ref<any>(null);
+const confirmMessage = ref('');
+
+const openConfirm = (target: any, message: string) => {
+    confirmTarget.value = target;
+    confirmMessage.value = message;
+    showConfirm.value = true;
+};
+
+const handleConfirm = () => {
+    showConfirm.value = false;
+    if (confirmTarget.value) {
+        router.delete(`/admin/ai/providers/${confirmTarget.value.id}`, { preserveScroll: true });
+    }
+};
+
 const confirmDelete = (p: Provider) => {
-    if (!confirm(`Hapus provider "${p.name}"? Model di bawahnya ikut terhapus.`)) return;
-    router.delete(`/admin/ai/providers/${p.id}`, { preserveScroll: true });
+    openConfirm(p, `Hapus provider "${p.name}"? Model di bawahnya ikut terhapus.`);
 };
 </script>
 
@@ -198,5 +215,7 @@ const confirmDelete = (p: Provider) => {
                 </form>
             </div>
         </div>
+
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" variant="destructive" confirmText="Hapus" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>

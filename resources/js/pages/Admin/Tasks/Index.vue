@@ -11,6 +11,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { Calendar, CheckCircle2, Clock, Edit, Plus, Search, Trash2, LayoutList, CalendarDays, ChevronLeft, ChevronRight, AlertCircle, Circle, ArrowRightCircle, XCircle } from 'lucide-vue-next';
 import { computed, ref, watch, onMounted } from 'vue';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isSameDay, addMonths, subMonths, parseISO } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -113,6 +114,23 @@ const currentDate = ref(props.filters?.calendar_date ? parseISO(props.filters.ca
 const scopeFilter = ref(props.filters?.scope || 'assigned');
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
+
+const showConfirm = ref(false);
+const confirmMessage = ref('');
+const confirmCallback = ref<(() => void) | null>(null);
+
+const openConfirm = (message: string, callback: () => void, _variant?: string) => {
+    confirmMessage.value = message;
+    confirmCallback.value = callback;
+    showConfirm.value = true;
+};
+
+const handleConfirm = () => {
+    if (confirmCallback.value) {
+        confirmCallback.value();
+    }
+    showConfirm.value = false;
+};
 
 const isCalendarView = computed(() => viewMode.value === 'calendar');
 
@@ -327,12 +345,12 @@ const handleMarkAsDone = (task: Task) => {
 };
 
 const handleDeleteTask = () => {
-    if (!confirm('Apakah Anda yakin ingin menghapus tugas ini?')) return;
-    
-    editForm.delete(`/admin/tasks/${editForm.id}`, {
-        onSuccess: () => {
-            showEditModal.value = false;
-        },
+    openConfirm('Apakah Anda yakin ingin menghapus tugas ini?', () => {
+        editForm.delete(`/admin/tasks/${editForm.id}`, {
+            onSuccess: () => {
+                showEditModal.value = false;
+            },
+        });
     });
 };
 
@@ -949,5 +967,7 @@ const getTaskIcon = (status: Task['status']) => {
                 </div>
             </div>
         </div>
+
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>

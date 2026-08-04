@@ -8,6 +8,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import { Calendar, Edit, FileText, Mail, MapPin, Phone, Send, Settings, ShoppingCart } from 'lucide-vue-next';
 import { ref } from 'vue';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 
 interface Customer {
     id: number;
@@ -73,6 +74,23 @@ const props = defineProps<Props>();
 
 const sendingCredentials = ref(false);
 
+const showConfirm = ref(false);
+const confirmMessage = ref('');
+const confirmCallback = ref<(() => void) | null>(null);
+
+const openConfirm = (message: string, callback: () => void, _variant?: string) => {
+    confirmMessage.value = message;
+    confirmCallback.value = callback;
+    showConfirm.value = true;
+};
+
+const handleConfirm = () => {
+    if (confirmCallback.value) {
+        confirmCallback.value();
+    }
+    showConfirm.value = false;
+};
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Customers', href: '/admin/customers' },
@@ -82,25 +100,24 @@ const breadcrumbs: BreadcrumbItem[] = [
 const sendCredentials = () => {
     if (sendingCredentials.value) return;
 
-    const confirmed = confirm(
+    openConfirm(
         `Kirim kredensial login ke ${props.customer.email}?\n\nIni akan mengubah password user dan mengirim email dengan username dan password baru.`,
+        () => {
+            sendingCredentials.value = true;
+            router.post(
+                `/admin/users/${props.customer.id}/send-credentials`,
+                {},
+                {
+                    onSuccess: () => {
+                        sendingCredentials.value = false;
+                    },
+                    onError: () => {
+                        sendingCredentials.value = false;
+                    },
+                },
+            );
+        },
     );
-
-    if (confirmed) {
-        sendingCredentials.value = true;
-        router.post(
-            `/admin/users/${props.customer.id}/send-credentials`,
-            {},
-            {
-                onSuccess: () => {
-                    sendingCredentials.value = false;
-                },
-                onError: () => {
-                    sendingCredentials.value = false;
-                },
-            },
-        );
-    }
 };
 
 const formatDate = (dateString: string) => {
@@ -390,5 +407,7 @@ const getStatusClass = (status: string) => {
                 </div>
             </div>
         </div>
+
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>

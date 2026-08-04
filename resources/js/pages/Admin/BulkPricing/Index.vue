@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatPrice } from '@/lib/utils';
 import { Head, router } from '@inertiajs/vue3';
@@ -154,6 +155,21 @@ const saveForm = reactive({
     is_default: false,
 });
 
+const showConfirm = ref(false);
+const confirmMessage = ref('');
+const confirmCallback = ref<(() => void) | null>(null);
+
+function openConfirm(msg: string, cb: () => void) {
+    confirmMessage.value = msg;
+    confirmCallback.value = cb;
+    showConfirm.value = true;
+}
+
+function handleConfirm() {
+    showConfirm.value = false;
+    if (confirmCallback.value) confirmCallback.value();
+}
+
 const getStatusClass = (profitMargin: number) => {
     if (profitMargin < 0) return 'text-destructive border border-destructive/20';
     if (profitMargin < 10) return 'text-muted-foreground border border-border';
@@ -218,31 +234,29 @@ const applyPricing = () => {
         return;
     }
 
-    if (!confirm('Apakah Anda yakin ingin menerapkan pricing baru ini ke hosting plan yang disimulasikan? Perubahan tidak dapat dibatalkan.')) {
-        return;
-    }
+    openConfirm('Apakah Anda yakin ingin menerapkan pricing baru ini ke hosting plan yang disimulasikan? Perubahan tidak dapat dibatalkan.', () => {
+        isApplying.value = true;
 
-    isApplying.value = true;
-
-    router.post(
-        '/admin/bulk-pricing/apply',
-        {
-            ...form,
-            plan_ids: selectedPlanIds.value,
-        },
-        {
-            preserveState: true,
-            onSuccess: () => {
-                alert('Bulk pricing berhasil diterapkan!');
+        router.post(
+            '/admin/bulk-pricing/apply',
+            {
+                ...form,
+                plan_ids: selectedPlanIds.value,
             },
-            onError: () => {
-                alert('Terjadi kesalahan saat menerapkan bulk pricing!');
+            {
+                preserveState: true,
+                onSuccess: () => {
+                    alert('Bulk pricing berhasil diterapkan!');
+                },
+                onError: () => {
+                    alert('Terjadi kesalahan saat menerapkan bulk pricing!');
+                },
+                onFinish: () => {
+                    isApplying.value = false;
+                },
             },
-            onFinish: () => {
-                isApplying.value = false;
-            },
-        },
-    );
+        );
+    });
 };
 
 const loadConfig = async (configId: number) => {
@@ -347,9 +361,9 @@ const saveConfig = () => {
 };
 
 const deleteConfig = (configId: number, configName: string) => {
-    if (confirm(`Apakah Anda yakin ingin menghapus konfigurasi "${configName}"?`)) {
+    openConfirm(`Apakah Anda yakin ingin menghapus konfigurasi "${configName}"?`, () => {
         router.delete(`/admin/bulk-pricing/delete-config/${configId}`);
-    }
+    });
 };
 
 // Initial simulation data comes from props, no need to run on mount
@@ -709,5 +723,6 @@ const deleteConfig = (configId: number, configName: string) => {
                 </form>
             </div>
         </div>
+        <ConfirmModal :show="showConfirm" :message="confirmMessage" variant="destructive" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>
