@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DemoCategory;
+use App\Models\DemoEmbedTracking;
 use App\Models\DemoPackage;
 use App\Models\DemoWebsite;
 use Illuminate\Http\JsonResponse;
@@ -333,7 +334,7 @@ class DemoWebsiteController extends Controller
     '.wss-hdr p{font-size:15px;color:'+TEXT2+';max-width:540px;margin:0 auto;line-height:1.7}' +
 
     /* Grid */
-    '.wss-grd{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:22px;padding:0 4px}' +
+    '.wss-grd{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;padding:0 4px}' +
 
     /* Card */
     '.wss-crd{background:'+CARD_BG+';border:1px solid '+BDR+';border-radius:16px;overflow:hidden;transition:transform .25s ease,box-shadow .25s ease;display:flex;flex-direction:column}' +
@@ -353,10 +354,6 @@ class DemoWebsiteController extends Controller
     '.wss-cbdy h3{font-size:17px;font-weight:700;font-family:Georgia,serif;color:'+TEXT+';margin-bottom:8px;line-height:1.4;letter-spacing:-.01em;padding:0}' +
     '.wss-cbdy>p{font-size:13px;color:'+TEXT2+';margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:0;line-height:1.65}' +
 
-    /* Packages */
-    '.wss-pkgs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}' +
-    '.wss-pkg{display:inline-flex;align-items:center;border:1px solid '+BDR+';color:'+TEXT2+';padding:3px 10px;border-radius:6px;font-size:11px;font-weight:500;letter-spacing:.01em}' +
-
     /* Button area */
     '.wss-act{margin-top:auto;display:flex;gap:8px;padding-top:4px}' +
 
@@ -364,8 +361,8 @@ class DemoWebsiteController extends Controller
     '.wss-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none;transition:all .2s ease;border:none;cursor:pointer;flex:1;line-height:1.4}' +
 
     /* Primary button */
-    '.wss-bp{background:'+PRIMARY+';color:#fff;padding:12px 20px;}' +
-    '.wss-bp:hover{filter:brightness(1.08);box-shadow:0 6px 20px rgba(0,0,0,.15)}' +
+    '.wss-bp{background:'+PRIMARY+';color:#fff;padding:8px 14px;font-size:13px}' +
+    '.wss-bp:hover{filter:brightness(1.08);box-shadow:0 6px 20px rgba(0,0,0,.15);color:#fff}' +
     '.wss-bp:active{transform:scale(0.98);filter:brightness(0.95)}' +
     '.wss-bp svg{width:14px;height:14px;flex-shrink:0}' +
 
@@ -395,15 +392,27 @@ class DemoWebsiteController extends Controller
     '.wss-ov-wa{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;background:#25D366;color:#fff;font-size:13px;font-weight:600;text-decoration:none;border:none;cursor:pointer;transition:filter .2s;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}' +
     '.wss-ov-wa:hover{filter:brightness(1.1)}' +
     '.wss-ov-wa svg{width:16px;height:16px;flex-shrink:0}' +
-    '.wss-overlay iframe{flex:1;border:none;width:100%;height:100%;background:#fff}' +
+    '.wss-ov-body{flex:1;position:relative;overflow:hidden}' +
+    '.wss-overlay iframe{border:none;width:100%;height:100%;background:#fff}' +
+    '.wss-ov-loader{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:14px;z-index:1}' +
+    '.wss-ov-spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.15);border-top-color:#fff;border-radius:50%;animation:wss-spin .7s linear infinite}' +
+    '@keyframes wss-spin{to{transform:rotate(360deg)}}' +
+    '.wss-ov-loader-text{color:rgba(255,255,255,.5);font-size:12px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;letter-spacing:.02em}' +
 
-    /* Category filter */
-    '.wss-flt{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:24px;padding:0 4px}' +
-    '.wss-flt-btn{display:inline-flex;align-items:center;padding:8px 18px;border-radius:10px;font-size:13px;font-weight:500;text-decoration:none;border:1px solid '+BDR+';color:'+TEXT2+';background:'+CARD_BG+';cursor:pointer;transition:all .2s ease;-webkit-user-select:none;user-select:none;line-height:1.4}' +
-    '.wss-flt-btn:hover{background:'+BDR+';border-color:#d5d3ca}' +
-    '.wss-flt-btn.wss-flt-act{background:'+PRIMARY+';color:#fff;border-color:'+PRIMARY+';box-shadow:0 2px 10px rgba(0,0,0,.1)}' +
+    /* Filter bar */
+    '.wss-flt{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:24px;padding:0 4px}' +
+    '.wss-flt input[type="text"]{flex:2;min-width:160px;background:'+CARD_BG+';border:1px solid '+BDR+';border-radius:10px;padding:9px 14px;font-size:13px;color:'+TEXT+';outline:none;transition:border-color .2s}' +
+    '.wss-flt input[type="text"]:focus{border-color:'+PRIMARY+'}' +
+    '.wss-flt input[type="text"]::placeholder{color:'+TEXT2+'}' +
+    '.wss-flt select{flex:1;min-width:130px;background:'+CARD_BG+';border:1px solid '+BDR+';border-radius:10px;padding:9px 12px;font-size:13px;color:'+TEXT+';outline:none;cursor:pointer;transition:border-color .2s;appearance:auto}' +
+    '.wss-flt select:focus{border-color:'+PRIMARY+'}' +
+    '.wss-flt .wss-flt-reset{display:inline-flex;align-items:center;background:'+CARD_BG+';border:1px solid '+BDR+';color:'+TEXT2+';font-size:12px;font-weight:500;cursor:pointer;padding:8px 14px;border-radius:10px;white-space:nowrap;text-decoration:none;transition:all .2s ease}' +
+    '.wss-flt .wss-flt-reset:hover{background:'+BDR+';border-color:#d5d3ca;color:'+TEXT+'}' +
 
     /* Responsive */
+'@media(max-width:900px){' +
+      '.wss-grd{grid-template-columns:repeat(2,1fr);gap:18px}' +
+    '}' +
 '@media(max-width:640px){' +
       '.wss-grd{grid-template-columns:1fr;gap:16px}' +
       '.wss-hdr h2{font-size:22px}' +
@@ -414,55 +423,127 @@ class DemoWebsiteController extends Controller
       '.wss-pag{gap:4px}' +
       '.wss-pag a,.wss-pag span{min-width:36px;height:36px;font-size:12px}' +
       '.wss-flt{gap:6px}' +
-      '.wss-flt-btn{padding:6px 14px;font-size:12px}' +
     '}';
 
     document.head.appendChild(s);
 
-    // Category filter (only when showing all categories)
-    var filterBar;
-    if (!CATEGORY) {
-        var categories = [];
-        demos.forEach(function(d) {
-            if (d.category_slug && categories.every(function(c) { return c.slug !== d.category_slug; })) {
-                categories.push({ slug: d.category_slug, name: d.category });
-            }
-        });
+    // Filter bar with search, category, and package dropdowns
+    var categories = [];
+    demos.forEach(function(d) {
+        if (d.category_slug && categories.every(function(c) { return c.slug !== d.category_slug; })) {
+            categories.push({ slug: d.category_slug, name: d.category });
+        }
+    });
 
-        if (categories.length > 1) {
-            filterBar = document.createElement('div');
-            filterBar.className = 'wss-flt';
-            C.appendChild(filterBar);
+    var packages = [];
+    demos.forEach(function(d) {
+        if (d.packages) {
+            d.packages.forEach(function(p) {
+                if (packages.every(function(pk) { return pk.name !== p.name; })) {
+                    packages.push(p);
+                }
+            });
+        }
+    });
 
-            var activeSlug = '';
+    var currentSearch = '';
+    var currentCat = CATEGORY || '';
+    var currentPkg = '';
 
-            function filterByCategory(slug) {
-                activeSlug = slug;
-                filteredDemos = slug ? demos.filter(function(d) { return d.category_slug === slug; }) : demos;
-                currentPage = 1;
-                totalPages = Math.ceil(filteredDemos.length / PER_PAGE);
-                renderFilters();
-                render();
-            }
+    if (categories.length > 0 || packages.length > 0) {
+        var filterBar = document.createElement('div');
+        filterBar.className = 'wss-flt';
 
-            function renderFilters() {
-                filterBar.innerHTML = '';
-                var allBtn = document.createElement('button');
-                allBtn.className = 'wss-flt-btn' + (activeSlug === '' ? ' wss-flt-act' : '');
-                allBtn.textContent = 'Semua';
-                allBtn.onclick = function() { filterByCategory(''); };
-                filterBar.appendChild(allBtn);
+        var searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.placeholder = 'Cari demo website...';
+        searchInput.value = currentSearch;
+        filterBar.appendChild(searchInput);
 
-                categories.forEach(function(cat) {
-                    var btn = document.createElement('button');
-                    btn.className = 'wss-flt-btn' + (activeSlug === cat.slug ? ' wss-flt-act' : '');
-                    btn.textContent = cat.name;
-                    btn.onclick = function() { filterByCategory(cat.slug); };
-                    filterBar.appendChild(btn);
+        var catSelect;
+        if (categories.length > 0) {
+            catSelect = document.createElement('select');
+            var catOpt0 = document.createElement('option');
+            catOpt0.value = '';
+            catOpt0.textContent = 'Semua Kategori';
+            catSelect.appendChild(catOpt0);
+            categories.forEach(function(cat) {
+                var opt = document.createElement('option');
+                opt.value = cat.slug;
+                opt.textContent = cat.name;
+                if (cat.slug === currentCat) opt.selected = true;
+                catSelect.appendChild(opt);
+            });
+            filterBar.appendChild(catSelect);
+        }
+
+        var pkgSelect;
+        if (packages.length > 0) {
+            pkgSelect = document.createElement('select');
+            var pkgOpt0 = document.createElement('option');
+            pkgOpt0.value = '';
+            pkgOpt0.textContent = 'Semua Paket';
+            pkgSelect.appendChild(pkgOpt0);
+            packages.forEach(function(pkg) {
+                var opt = document.createElement('option');
+                opt.value = pkg.name;
+                opt.textContent = pkg.name;
+                pkgSelect.appendChild(opt);
+            });
+            filterBar.appendChild(pkgSelect);
+        }
+
+        var resetBtn = document.createElement('a');
+        resetBtn.className = 'wss-flt-reset';
+        resetBtn.textContent = 'Reset';
+        resetBtn.href = 'javascript:void(0)';
+        resetBtn.onclick = function() {
+            searchInput.value = '';
+            currentSearch = '';
+            if (catSelect) { catSelect.value = ''; currentCat = ''; }
+            if (pkgSelect) { pkgSelect.value = ''; currentPkg = ''; }
+            applyFilter();
+        };
+        filterBar.appendChild(resetBtn);
+
+        C.appendChild(filterBar);
+
+        function applyFilter() {
+            filteredDemos = demos;
+            if (currentCat) filteredDemos = filteredDemos.filter(function(d) { return d.category_slug === currentCat; });
+            if (currentPkg) filteredDemos = filteredDemos.filter(function(d) { return d.packages && d.packages.some(function(p) { return p.name === currentPkg; }); });
+            if (currentSearch) {
+                var q = currentSearch.toLowerCase();
+                filteredDemos = filteredDemos.filter(function(d) {
+                    return (d.title && d.title.toLowerCase().indexOf(q) !== -1) || (d.description && d.description.toLowerCase().indexOf(q) !== -1);
                 });
             }
+            currentPage = 1;
+            totalPages = Math.ceil(filteredDemos.length / PER_PAGE);
+            render();
+        }
 
-            renderFilters();
+        var searchTimer;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function() {
+                currentSearch = searchInput.value;
+                applyFilter();
+            }, 400);
+        });
+
+        if (catSelect) {
+            catSelect.addEventListener('change', function() {
+                currentCat = catSelect.value;
+                applyFilter();
+            });
+        }
+
+        if (pkgSelect) {
+            pkgSelect.addEventListener('change', function() {
+                currentPkg = pkgSelect.value;
+                applyFilter();
+            });
         }
     }
 
@@ -525,10 +606,22 @@ class DemoWebsiteController extends Controller
                     '<button class="wss-ov-close" title="Tutup">&times;</button>' +
                 '</div>' +
             '</div>' +
-            '<iframe src="' + esc(url) + '" allowfullscreen></iframe>';
+            '<div class="wss-ov-body">' +
+                '<div class="wss-ov-loader">' +
+                    '<div class="wss-ov-spinner"></div>' +
+                    '<span class="wss-ov-loader-text">Memuat demo...</span>' +
+                '</div>' +
+                '<iframe src="' + esc(url) + '" allowfullscreen></iframe>' +
+            '</div>';
 
         document.body.appendChild(overlay);
         document.body.style.overflow = 'hidden';
+
+        var iframe = overlay.querySelector('iframe');
+        iframe.onload = function() {
+            var loader = overlay.querySelector('.wss-ov-loader');
+            if (loader) loader.style.display = 'none';
+        };
 
         function closeOverlay() {
             overlay.remove();
@@ -565,19 +658,11 @@ class DemoWebsiteController extends Controller
 
             var badge = d.category ? '<span class="wss-bdg">' + esc(d.category) + '</span>' : '';
 
-            var pkgs = '';
-            if (d.packages && d.packages.length) {
-                d.packages.forEach(function(p) { pkgs += '<span class="wss-pkg">' + esc(p.name) + '</span>'; });
-            }
-
-            var desc = d.description ? '<p>' + esc(d.description) + '</p>' : '';
-
             grid.innerHTML +=
                 '<div class="wss-crd">' +
                     '<div class="wss-cimg">' + img + badge + '</div>' +
                     '<div class="wss-cbdy">' +
                         '<h3>' + esc(truncate(d.title, 30)) + '</h3>' +
-                        (pkgs ? '<div class="wss-pkgs">' + pkgs + '</div>' : '') +
                         '<div class="wss-act">' +
                             '<a href="javascript:void(0)" class="wss-btn wss-bp wss-open-demo" data-url="' + esc(d.url) + '" data-title="' + esc(d.title) + '">' + extSvg + ' Lihat Demo</a>' +
                         '</div>' +
