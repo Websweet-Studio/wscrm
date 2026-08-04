@@ -95,7 +95,6 @@ const loadConversation = async (id: number) => {
         await nextTick();
         scrollToBottom();
     }
-    });
 };
 
 const newChat = () => {
