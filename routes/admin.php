@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\BulkPricingController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DatabaseController;
 use App\Http\Controllers\Admin\DemoCategoryController;
+use App\Http\Controllers\Admin\DemoEmbedTrackingController;
 use App\Http\Controllers\Admin\DemoPackageController;
 use App\Http\Controllers\Admin\DemoWebsiteController as AdminDemoWebsiteController;
 use App\Http\Controllers\Admin\DirectAdminController;
@@ -161,4 +162,9 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::patch('demo-categories/{demoCategory}/toggle-status', [DemoCategoryController::class, 'toggleStatus'])->name('demo-categories.toggle-status');
     Route::resource('demo-packages', DemoPackageController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::patch('demo-packages/{demoPackage}/toggle-status', [DemoPackageController::class, 'toggleStatus'])->name('demo-packages.toggle-status');
+
+    // Demo Embed Tracking
+    Route::resource('demo-embed-trackings', DemoEmbedTrackingController::class)->only(['index', 'destroy']);
+    Route::patch('demo-embed-trackings/{demoEmbedTracking}/toggle-block', [DemoEmbedTrackingController::class, 'toggleBlock'])->name('demo-embed-trackings.toggle-block');
+    Route::delete('demo-embed-trackings-bulk', [DemoEmbedTrackingController::class, 'bulkDestroy'])->name('demo-embed-trackings.bulk-destroy');
 });

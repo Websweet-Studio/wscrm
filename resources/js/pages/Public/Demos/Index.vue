@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
-import { ExternalLink, Filter, LayoutGrid, Monitor, Search, Code, Check, Copy, Palette } from 'lucide-vue-next';
+import { ExternalLink, Filter, LayoutGrid, Monitor, Search, Code, Check, Copy, Palette, Terminal } from 'lucide-vue-next';
 import { router, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
@@ -111,6 +111,7 @@ const companyWhatsapp = computed(() => (page.props.brandingSettings as any)?.com
 
 const appUrl = window.location.origin;
 const copiedId = ref<string | null>(null);
+const activeTab = ref<'embed' | 'api'>('embed');
 
 // JS Embed Configurator
 const embedCategory = ref<string | null>(null);
@@ -382,18 +383,44 @@ const copyToClipboard = async (text: string, id: string) => {
                 </Button>
             </div>
 
-            <!-- Embed Code Section - JS Widget -->
+            <!-- Embed / API Pills -->
             <div class="mt-12">
                 <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px">
                     <CardContent class="pt-6">
-                        <div class="mb-6 flex items-center gap-3">
-                            <div class="rounded-full p-2" style="background-color: #e8e6dc">
-                                <Code class="h-5 w-5" style="color: var(--primary)" />
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif">Embed di Website Anda</h3>
-                            </div>
+                        <!-- Pill Tabs -->
+                        <div class="mb-6 flex items-center justify-center gap-1 rounded-xl p-1" style="background-color: #f5f4ef; max-width: 240px; margin-left: auto; margin-right: auto">
+                            <button
+                                class="cursor-pointer rounded-lg px-5 py-2 text-sm font-medium transition-all duration-200"
+                                :style="activeTab === 'embed'
+                                    ? { backgroundColor: 'var(--primary)', color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,.08)' }
+                                    : { backgroundColor: 'transparent', color: '#5e5d59' }"
+                                @click="activeTab = 'embed'"
+                            >
+                                <Monitor class="mr-1.5 inline-block h-4 w-4" />
+                                Embed
+                            </button>
+                            <button
+                                class="cursor-pointer rounded-lg px-5 py-2 text-sm font-medium transition-all duration-200"
+                                :style="activeTab === 'api'
+                                    ? { backgroundColor: 'var(--primary)', color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,.08)' }
+                                    : { backgroundColor: 'transparent', color: '#5e5d59' }"
+                                @click="activeTab = 'api'"
+                            >
+                                <Terminal class="mr-1.5 inline-block h-4 w-4" />
+                                API
+                            </button>
                         </div>
+
+                        <!-- Embed Content -->
+                        <div v-if="activeTab === 'embed'">
+                            <div class="mb-6 flex items-center gap-3">
+                                <div class="rounded-full p-2" style="background-color: #e8e6dc">
+                                    <Code class="h-5 w-5" style="color: var(--primary)" />
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif">Embed di Website Anda</h3>
+                                </div>
+                            </div>
 
                         <div class="grid gap-6 lg:grid-cols-2">
                             <!-- Left: Configurator -->
@@ -613,6 +640,76 @@ const copyToClipboard = async (text: string, id: string) => {
                                 </div>
                             </div>
                         </div>
+                        </div>
+                    </div>
+
+                    <!-- API Content -->
+                    <div v-if="activeTab === 'api'">
+                        <div class="mb-6 flex items-center gap-3">
+                            <div class="rounded-full p-2" style="background-color: #e8e6dc">
+                                <Terminal class="h-5 w-5" style="color: var(--primary)" />
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif">REST API</h3>
+                            </div>
+                        </div>
+
+                        <p class="mb-4 text-sm" style="color: #5e5d59">
+                            Gunakan REST API untuk mengambil data demo website dan membangun tampilan kustom sendiri. Bisa juga digunakan dari backend aplikasi Anda.
+                        </p>
+
+                        <div class="grid gap-8 lg:grid-cols-2">
+                            <div class="rounded-xl p-5" style="background-color: #ffffff; border: 1px solid #f0eee6">
+                                <div class="mb-3 flex items-center gap-2">
+                                    <Badge style="background-color: #059669; color: #fff; border-radius: 6px">GET</Badge>
+                                    <code class="text-sm font-mono" style="color: #141413">{{ appUrl }}/api/demos</code>
+                                </div>
+                                <p class="mb-3 text-xs" style="color: #5e5d59">Mengembalikan semua demo website aktif beserta kategori dan paket.</p>
+                                <p class="mb-2 text-xs font-medium" style="color: #4d4c48">Query Parameters:</p>
+                                <div class="space-y-1.5 text-xs" style="color: #87867f">
+                                    <p><code style="color: var(--primary)">category</code> — Filter berdasarkan slug kategori</p>
+                                    <p><code style="color: var(--primary)">package</code> — Filter berdasarkan slug paket</p>
+                                </div>
+                                <p class="mt-3 mb-2 text-xs font-medium" style="color: #4d4c48">Contoh:</p>
+                                <div class="overflow-x-auto rounded-lg p-3 text-xs" style="background-color: #141413; color: #b0aea5; font-family: 'Fira Code', monospace">
+                                    <pre class="whitespace-pre-wrap break-all" style="font-size: 11px; line-height: 1.8">curl {{ appUrl }}/api/demos
+
+curl "{{ appUrl }}/api/demos?category=profil-perusahaan"
+
+curl "{{ appUrl }}/api/demos?package=instant"</pre>
+                                </div>
+                            </div>
+                            <div class="rounded-xl p-5" style="background-color: #ffffff; border: 1px solid #f0eee6">
+                                <div class="mb-3 flex items-center gap-2">
+                                    <Badge style="background-color: #059669; color: #fff; border-radius: 6px">GET</Badge>
+                                    <code class="text-sm font-mono" style="color: #141413">{{ appUrl }}/api/demos/{id}</code>
+                                </div>
+                                <p class="mb-3 text-xs" style="color: #5e5d59">Mengembalikan detail satu demo website berdasarkan ID.</p>
+                                <p class="mt-3 mb-2 text-xs font-medium" style="color: #4d4c48">Contoh:</p>
+                                <div class="overflow-x-auto rounded-lg p-3 text-xs" style="background-color: #141413; color: #b0aea5; font-family: 'Fira Code', monospace">
+                                    <pre class="whitespace-pre-wrap break-all" style="font-size: 11px; line-height: 1.8">curl {{ appUrl }}/api/demos/1</pre>
+                                </div>
+                                <p class="mt-3 mb-2 text-xs font-medium" style="color: #4d4c48">Response (contoh):</p>
+                                <div class="overflow-x-auto rounded-lg p-3 text-xs" style="background-color: #141413; color: #b0aea5; font-family: 'Fira Code', monospace; max-height: 300px; overflow-y: auto">
+<pre class="whitespace-pre-wrap" style="font-size: 10px; line-height: 1.7">{{ JSON.stringify({
+    id: 1,
+    title: 'Nama Demo',
+    url: 'https://demo.sweet.web.id',
+    category: 'Profil Perusahaan',
+    category_slug: 'profil-perusahaan',
+    packages: [{ id: 1, name: 'Instant', slug: 'instant' }],
+    featured_image: 'https://...',
+    description: 'Deskripsi demo...'
+}, null, 2) }}</pre>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 rounded-xl p-4" style="background-color: #e8e6dc40; border: 1px solid #e8e6dc">
+                            <p class="text-xs" style="color: #5e5d59">
+                                <strong style="color: #4d4c48">Catatan:</strong> API ini public (no auth). Headers <code style="color: var(--primary)">Referer</code> digunakan untuk tracking statistik. Domain yang disalahgunakan dapat di-block oleh admin.
+                            </p>
+                        </div>
+                    </div>
                     </CardContent>
                 </Card>
             </div>

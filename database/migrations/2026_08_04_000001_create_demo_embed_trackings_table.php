@@ -12,9 +12,11 @@ return new class extends Migration
             $table->id();
             $table->string('referer_url')->nullable();
             $table->string('referer_host')->nullable();
-            $table->enum('embed_type', ['listing', 'single', 'oembed'])->default('listing');
+            $table->enum('embed_type', ['listing', 'single', 'oembed', 'api'])->default('listing');
             $table->foreignId('demo_website_id')->nullable()->constrained()->nullOnDelete();
             $table->unsignedBigInteger('hits')->default(1);
+            $table->boolean('is_blocked')->default(false);
+            $table->timestamp('blocked_at')->nullable();
             $table->timestamp('first_seen_at')->nullable();
             $table->timestamp('last_seen_at')->nullable();
             $table->timestamps();

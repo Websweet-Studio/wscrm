@@ -284,6 +284,11 @@ const mainNavItems: NavItem[] = [
                 href: '/admin/demo-packages',
                 icon: Package,
             },
+            {
+                title: 'Tracking',
+                href: '/admin/demo-embed-trackings',
+                icon: BarChart3,
+            },
         ],
     },
     ...(financialChildren.length > 0

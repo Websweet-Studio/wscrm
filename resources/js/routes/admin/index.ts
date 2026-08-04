@@ -26,6 +26,7 @@ import ai from './ai'
 import demoWebsites from './demo-websites'
 import demoCategories from './demo-categories'
 import demoPackages from './demo-packages'
+import demoEmbedTrackings from './demo-embed-trackings'
 import system from './system'
 /**
 * @see \App\Http\Controllers\Admin\ImpersonateController::impersonate
@@ -191,6 +192,7 @@ ai: Object.assign(ai, ai),
 demoWebsites: Object.assign(demoWebsites, demoWebsites),
 demoCategories: Object.assign(demoCategories, demoCategories),
 demoPackages: Object.assign(demoPackages, demoPackages),
+demoEmbedTrackings: Object.assign(demoEmbedTrackings, demoEmbedTrackings),
 system: Object.assign(system, system),
 }
 

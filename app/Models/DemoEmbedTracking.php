@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -13,6 +14,8 @@ class DemoEmbedTracking extends Model
         'embed_type',
         'demo_website_id',
         'hits',
+        'is_blocked',
+        'blocked_at',
         'first_seen_at',
         'last_seen_at',
     ];
@@ -20,6 +23,8 @@ class DemoEmbedTracking extends Model
     protected function casts(): array
     {
         return [
+            'is_blocked' => 'boolean',
+            'blocked_at' => 'datetime',
             'first_seen_at' => 'datetime',
             'last_seen_at' => 'datetime',
         ];
@@ -28,6 +33,24 @@ class DemoEmbedTracking extends Model
     public function demoWebsite(): BelongsTo
     {
         return $this->belongsTo(DemoWebsite::class);
+    }
+
+    public function scopeBlocked(Builder $query): void
+    {
+        $query->where('is_blocked', true);
+    }
+
+    public function scopeNotBlocked(Builder $query): void
+    {
+        $query->where('is_blocked', false);
+    }
+
+    public static function isBlocked(string $referer): bool
+    {
+        $host = parse_url($referer, PHP_URL_HOST);
+        if (!$host) return false;
+
+        return self::where('referer_host', $host)->where('is_blocked', true)->exists();
     }
 
     public static function recordHit(string $referer, string $type, ?int $demoId = null): void

@@ -83,6 +83,14 @@ class DemoWebsiteController extends Controller
 
     public function publicIndex(Request $request): JsonResponse
     {
+        $referer = $request->header('Referer', '');
+        if ($referer && DemoEmbedTracking::isBlocked($referer)) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+        if ($referer) {
+            DemoEmbedTracking::recordHit($referer, 'api');
+        }
+
         $demos = DemoWebsite::active()
             ->with(['demoCategory', 'demoPackages'])
             ->when($request->category, function ($query, $category) {
@@ -137,8 +145,16 @@ class DemoWebsiteController extends Controller
         ]);
     }
 
-    public function publicShow(DemoWebsite $demoWebsite): JsonResponse
+    public function publicShow(Request $request, DemoWebsite $demoWebsite): JsonResponse
     {
+        $referer = $request->header('Referer', '');
+        if ($referer && DemoEmbedTracking::isBlocked($referer)) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+        if ($referer) {
+            DemoEmbedTracking::recordHit($referer, 'api', $demoWebsite->id);
+        }
+
         if (!$demoWebsite->is_active) {
             abort(404);
         }
@@ -250,6 +266,11 @@ class DemoWebsiteController extends Controller
      */
     public function oembed(Request $request): JsonResponse
     {
+        $referer = $request->header('Referer', '');
+        if ($referer) {
+            DemoEmbedTracking::recordHit($referer, 'oembed');
+        }
+
         $maxwidth = $request->input('maxwidth', 800);
         $maxheight = $request->input('maxheight', 900);
 
@@ -268,6 +289,22 @@ class DemoWebsiteController extends Controller
             'height' => min((int) $maxheight, 900),
             'html' => '<iframe src="' . $embedUrl . '" width="' . min((int) $maxwidth, 1200) . '" height="' . min((int) $maxheight, 900) . '" frameborder="0" allowfullscreen style="max-width:100%;border:1px solid #e8e6dc;border-radius:12px;overflow:hidden;"></iframe>',
         ]);
+    }
+
+    /**
+     * Tracking beacon for embed widget hits.
+     */
+    public function trackEmbed(Request $request): JsonResponse
+    {
+        $referer = $request->header('Referer') ?: $request->input('ref', '');
+        $type = $request->input('type', 'listing');
+        $demoId = $request->input('demo_id');
+
+        if ($referer) {
+            DemoEmbedTracking::recordHit($referer, $type, $demoId ? (int) $demoId : null);
+        }
+
+        return response()->json(['ok' => true]);
     }
 
     /**
@@ -728,11 +765,20 @@ class DemoWebsiteController extends Controller
         C.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
+    // Tracking beacon
+    var trackUrl = 'TRACK_URL_PLACEHOLDER';
+    if (navigator.sendBeacon) {
+        navigator.sendBeacon(trackUrl, JSON.stringify({ref: document.referrer || window.location.href, type: 'listing'}));
+    } else {
+        (new Image()).src = trackUrl + '?ref=' + encodeURIComponent(document.referrer || window.location.href) + '&type=listing';
+    }
+
     render();
 })();
 JS;
 
         $js = str_replace('DEMOS_JSON_PLACEHOLDER', $demosJson, $js);
+        $js = str_replace('TRACK_URL_PLACEHOLDER', config('app.url') . '/api/demo-embed/track', $js);
 
         return response($js)
             ->header('Content-Type', 'application/javascript')
