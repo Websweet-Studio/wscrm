@@ -72,6 +72,15 @@ const statCards = [
     { label: 'Lainnya', value: props.reportData.stats.others, icon: Activity, color: 'text-gray-600', bg: 'bg-gray-50' },
 ];
 
+const showActivityModal = ref(false);
+const selectedEntry = ref<ReportEntry | null>(null);
+
+const activitySummary = (e: ReportEntry): string => {
+    return e.activities.map(a => `${a.type_label || a.type}: ${formatDetail(a)}`).join(' | ');
+};
+
+const openActivityModal = (e: ReportEntry) => { selectedEntry.value = e; showActivityModal.value = true; };
+
 const uniqueWebsites = computed(() => new Set(props.reportData.entries.map(e => e.website_name)).size);
 </script>
 
@@ -177,11 +186,10 @@ const uniqueWebsites = computed(() => new Set(props.reportData.entries.map(e => 
                                     <TableCell class="font-medium">{{ e.website_name }}</TableCell>
                                     <TableCell class="whitespace-nowrap text-sm">{{ e.entry_date }}</TableCell>
                                     <TableCell>
-                                        <div class="space-y-1">
-                                            <div v-for="(a, aIdx) in e.activities" :key="aIdx" class="flex items-start gap-2 text-sm">
-                                                <Badge :variant="getBadgeVariant(a.type)" class="whitespace-nowrap text-xs">{{ a.type_label || a.type }}</Badge>
-                                                <Badge v-if="a.source === 'AI'" variant="outline" class="whitespace-nowrap text-[10px] text-purple-600 border-purple-200 bg-purple-50">AI</Badge>
-                                                <span class="text-muted-foreground">{{ formatDetail(a) }}</span>
+                                        <div class="cursor-pointer" @click="openActivityModal(e)" title="Klik untuk lihat detail">
+                                            <div class="flex items-center gap-2">
+                                                <Badge variant="outline" class="shrink-0 text-xs">{{ e.activities.length }} aktivitas</Badge>
+                                                <span class="min-w-0 truncate text-sm text-muted-foreground">{{ activitySummary(e) }}</span>
                                             </div>
                                         </div>
                                     </TableCell>
@@ -191,6 +199,28 @@ const uniqueWebsites = computed(() => new Set(props.reportData.entries.map(e => 
                     </div>
                 </CardContent>
             </Card>
+        </div>
+        <!-- Activity Detail Modal -->
+        <div v-if="showActivityModal" class="fixed inset-0 z-50 flex items-center justify-center">
+            <div class="fixed inset-0 bg-black/50" @click="showActivityModal = false"></div>
+            <div class="relative mx-4 w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
+                <div class="mb-4">
+                    <h2 class="text-lg font-semibold">Detail Aktivitas</h2>
+                    <p class="text-sm text-muted-foreground mt-1">
+                        {{ selectedEntry?.website_name }} &mdash; {{ selectedEntry?.entry_date }}
+                    </p>
+                </div>
+                <div class="space-y-3">
+                    <div v-for="(a, idx) in selectedEntry?.activities" :key="idx" class="flex items-start gap-3 rounded-md border p-3">
+                        <Badge :variant="getBadgeVariant(a.type)" class="shrink-0 whitespace-nowrap text-xs">{{ a.type_label || a.type }}</Badge>
+                        <Badge v-if="a.source === 'AI'" variant="outline" class="shrink-0 text-[10px] text-purple-600 border-purple-200 bg-purple-50">AI</Badge>
+                        <span class="text-sm">{{ formatDetail(a) }}</span>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-6">
+                    <Button variant="outline" @click="showActivityModal = false" class="cursor-pointer">Tutup</Button>
+                </div>
+            </div>
         </div>
     </AppLayout>
 </template>

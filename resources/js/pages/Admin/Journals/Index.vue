@@ -13,7 +13,7 @@ import { BarChart3, Calendar, Download, Edit, Plus, Search, Trash2, X } from 'lu
 import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import { computed, ref } from 'vue';
 
-interface WebsiteClient { id: number; name: string; }
+interface WebsiteClient { id: number; name: string; customer?: { id: number; name: string; } }
 interface User { id: number; name: string; }
 interface JournalActivity { type: string; type_label?: string; [key: string]: any; }
 interface Journal {
@@ -34,6 +34,14 @@ const dateFrom = ref(props.filters.date_from || '');
 const dateTo = ref(props.filters.date_to || '');
 const showDeleteModal = ref(false);
 const journalToDelete = ref<Journal | null>(null);
+const showActivityModal = ref(false);
+const selectedJournal = ref<Journal | null>(null);
+
+const activitySummary = (j: Journal): string => {
+    return j.activities.map(a => `${activityTypeLabels[a.type] || a.type}: ${formatDetail(a)}`).join(' | ');
+};
+
+const openActivityModal = (j: Journal) => { selectedJournal.value = j; showActivityModal.value = true; };
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' }, { title: 'Jurnal', href: '/admin/journals' },
@@ -107,9 +115,9 @@ const confirmDelete = () => {
                     <Link href="/admin/journals/report">
                         <Button variant="outline" class="cursor-pointer"><BarChart3 class="mr-2 h-4 w-4" /> Laporan</Button>
                     </Link>
-                    <Link :href="exportExcelUrl">
+                    <a :href="exportExcelUrl">
                         <Button variant="outline" class="cursor-pointer"><Download class="mr-2 h-4 w-4" /> Export Excel</Button>
-                    </Link>
+                    </a>
                     <Link href="/admin/journals/create">
                         <Button class="cursor-pointer"><Plus class="mr-2 h-4 w-4" /> Catat Jurnal</Button>
                     </Link>
@@ -147,6 +155,7 @@ const confirmDelete = () => {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Website</TableHead>
+                                    <TableHead>Customer</TableHead>
                                     <TableHead>Tanggal</TableHead>
                                     <TableHead>Aktivitas</TableHead>
                                     <TableHead>Oleh</TableHead>
@@ -155,22 +164,23 @@ const confirmDelete = () => {
                             </TableHeader>
                             <TableBody>
                                 <TableRow v-if="journals.data.length === 0">
-                                    <TableCell colspan="5" class="py-8 text-center text-muted-foreground">
+                                    <TableCell colspan="6" class="py-8 text-center text-muted-foreground">
                                         Belum ada jurnal. Klik "Catat Jurnal" untuk memulai.
                                     </TableCell>
                                 </TableRow>
                                 <TableRow v-for="j in journals.data" :key="j.id">
                                     <TableCell class="font-medium">{{ j.website_client?.name || '-' }}</TableCell>
+                                    <TableCell class="whitespace-nowrap text-sm">{{ j.website_client?.customer?.name || '-' }}</TableCell>
                                     <TableCell class="whitespace-nowrap">
                                         <div class="flex items-center gap-2"><Calendar class="h-3.5 w-3.5 text-muted-foreground" />{{ formatDate(j.entry_date, 'long') }}</div>
                                     </TableCell>
                                     <TableCell class="w-[45%] max-w-[480px]">
-                                        <div class="space-y-1">
-                                            <div v-for="(a, idx) in j.activities" :key="idx" class="flex items-start gap-2 text-sm">
-                                                <Badge :variant="getBadgeVariant(a.type)" class="shrink-0 whitespace-nowrap text-xs">{{ activityTypeLabels[a.type] || a.type }}</Badge>
-                                                <span class="min-w-0 truncate text-muted-foreground" :title="formatDetail(a)">{{ formatDetail(a) }}</span>
+                                        <div class="cursor-pointer" @click="openActivityModal(j)" title="Klik untuk lihat detail">
+                                            <div class="flex items-center gap-2">
+                                                <Badge variant="outline" class="shrink-0 text-xs">{{ j.activities.length }} aktivitas</Badge>
+                                                <span class="min-w-0 truncate text-sm text-muted-foreground">{{ activitySummary(j) }}</span>
                                             </div>
-                                            <p v-if="j.summary" class="truncate text-xs text-muted-foreground italic mt-2" :title="j.summary">{{ j.summary }}</p>
+                                            <p v-if="j.summary" class="truncate text-xs text-muted-foreground italic mt-1">{{ j.summary }}</p>
                                         </div>
                                     </TableCell>
                                     <TableCell class="text-sm text-muted-foreground whitespace-nowrap">{{ j.user?.name || '-' }}</TableCell>
@@ -213,6 +223,32 @@ const confirmDelete = () => {
                 <div class="flex justify-end gap-3">
                     <Button variant="outline" @click="showDeleteModal = false" class="cursor-pointer">Batal</Button>
                     <Button variant="destructive" @click="confirmDelete" class="cursor-pointer">Hapus</Button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Detail Modal -->
+        <div v-if="showActivityModal" class="fixed inset-0 z-50 flex items-center justify-center">
+            <div class="fixed inset-0 bg-black/50" @click="showActivityModal = false"></div>
+            <div class="relative mx-4 w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
+                <div class="mb-4">
+                    <h2 class="text-lg font-semibold">Detail Aktivitas</h2>
+                    <p class="text-sm text-muted-foreground mt-1">
+                        {{ selectedJournal?.website_client?.name }} &mdash; {{ selectedJournal ? formatDate(selectedJournal.entry_date, 'long') : '' }}
+                    </p>
+                </div>
+                <div class="space-y-3">
+                    <div v-for="(a, idx) in selectedJournal?.activities" :key="idx" class="flex items-start gap-3 rounded-md border p-3">
+                        <Badge :variant="getBadgeVariant(a.type)" class="shrink-0 whitespace-nowrap text-xs">{{ activityTypeLabels[a.type] || a.type }}</Badge>
+                        <span class="text-sm">{{ formatDetail(a) }}</span>
+                    </div>
+                </div>
+                <div v-if="selectedJournal?.summary" class="mt-4 pt-4 border-t">
+                    <Label class="text-xs text-muted-foreground">Ringkasan</Label>
+                    <p class="text-sm mt-1">{{ selectedJournal?.summary }}</p>
+                </div>
+                <div class="flex justify-end mt-6">
+                    <Button variant="outline" @click="showActivityModal = false" class="cursor-pointer">Tutup</Button>
                 </div>
             </div>
         </div>

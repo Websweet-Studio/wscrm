@@ -23,7 +23,7 @@ class JournalEntryController extends Controller
     {
         $this->checkAdmin();
 
-        $journals = JournalEntry::with(['websiteClient', 'user'])
+        $journals = JournalEntry::with(['websiteClient.customer', 'user'])
             ->when(request('website_client_id'), fn($q, $v) => $q->where('website_client_id', $v))
             ->when(request('user_id'), fn($q, $v) => $q->where('user_id', $v))
             ->when(request('date_from'), fn($q, $v) => $q->where('entry_date', '>=', $v))

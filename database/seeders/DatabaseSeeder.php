@@ -53,6 +53,9 @@ class DatabaseSeeder extends Seeder
             ManageWebsiteSeeder::class,
             AiDefaultSeeder::class,
             AiCatalogSeeder::class,
+            BlogPostSeeder::class,
+            BlogCategorySeeder::class,
+            JournalEntrySeeder::class,
         ]);
     }
 }

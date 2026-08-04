@@ -2,11 +2,13 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
+import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowDownCircle, ArrowUpCircle, Check, Coins, Copy, KeyRound, RefreshCw, Server, ShoppingCart } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { ArrowDownCircle, ArrowRight, ArrowUpCircle, Check, Coins, Copy, Cpu, History, KeyRound, RefreshCw, Server, ShoppingCart } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
 interface Model {
     id: number;
@@ -50,6 +52,10 @@ const apiKey = ref(props.api_key);
 const showKey = ref(false);
 const copied = ref(false);
 
+const totalTransactions = computed(() => props.transactions.length);
+const usageTransactions = computed(() => props.transactions.filter(t => t.type === 'out').length);
+const purchaseTransactions = computed(() => props.transactions.filter(t => t.source === 'purchase').length);
+
 const copyText = async (text: string) => {
     try {
         await navigator.clipboard.writeText(text);
@@ -78,7 +84,6 @@ const regenerateKey = async () => {
 const formatRupiah = (n: number): string =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 2 }).format(n);
 
-// Harga per 1 juta token: rate per 1K × harga 1 kredit × 1000.
 const priceInput = (m: Model): string => (props.credit_price === null ? '—' : formatRupiah(Number(m.input_rate) * props.credit_price * 1000));
 const priceOutput = (m: Model): string => (props.credit_price === null ? '—' : formatRupiah(Number(m.output_rate) * props.credit_price * 1000));
 
@@ -88,24 +93,82 @@ const formatDate = (d: string) => new Date(d).toLocaleString('id-ID', { dateStyl
 </script>
 
 <template>
-    <CustomerLayout :breadcrumbs="breadcrumbs">
-        <Head title="Token AI" />
+    <Head title="Token AI" />
 
-        <div class="space-y-6">
-            <!-- Header -->
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                    <h1 class="text-2xl font-bold">Token AI</h1>
-                    <p class="text-muted-foreground">Kelola sisa saldo, API key, dan harga model untuk dipasang di Hermes agent / code editor Anda.</p>
+    <CustomerLayout :breadcrumbs="breadcrumbs">
+        <div class="space-y-4 p-4 sm:space-y-6 sm:p-6">
+            <!-- Hero Card -->
+            <Card class="relative overflow-hidden border-border/60 bg-card/70 shadow-sm backdrop-blur">
+                <div class="pointer-events-none absolute inset-0 opacity-60 dark:opacity-80">
+                    <div class="absolute -inset-24 bg-[radial-gradient(closest-side,rgba(245,158,11,0.16),transparent_65%)]"></div>
+                    <div class="absolute -right-24 -top-32 h-96 w-96 bg-[radial-gradient(closest-side,rgba(34,211,238,0.14),transparent_60%)]"></div>
+                    <div class="absolute inset-0 bg-[linear-gradient(to_right,transparent_0,rgba(245,158,11,0.05)_50%,transparent_100%)]"></div>
                 </div>
-                <Link href="/customer/ai/packages">
-                    <Button class="cursor-pointer"><ShoppingCart class="mr-2 h-4 w-4" /> Beli Saldo</Button>
-                </Link>
+                <CardContent class="relative p-4 sm:p-6">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div class="min-w-0">
+                            <div class="mb-2 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-xs text-muted-foreground">
+                                <Cpu class="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                                <span>AI &amp; LLM</span>
+                            </div>
+                            <h1 class="font-heading text-2xl font-medium tracking-tight sm:text-3xl">Token AI</h1>
+                            <p class="mt-1 text-sm text-muted-foreground sm:text-base">Kelola saldo, API key, dan harga model untuk dipasang di Hermes agent / code editor Anda.</p>
+                        </div>
+                        <div class="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[240px]">
+                            <Button asChild size="sm" class="w-full justify-between">
+                                <Link href="/customer/ai/packages">
+                                    <span class="inline-flex items-center gap-2">
+                                        <ShoppingCart class="h-4 w-4" />
+                                        Beli Saldo
+                                    </span>
+                                    <ArrowRight class="h-4 w-4 opacity-80" />
+                                </Link>
+                            </Button>
+                            <Button asChild variant="outline" size="sm" class="w-full justify-between">
+                                <Link :href="`${endpoint}/chat/completions`" target="_blank">
+                                    <span class="inline-flex items-center gap-2">
+                                        <Server class="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                                        Dokumentasi API
+                                    </span>
+                                    <ArrowRight class="h-4 w-4 opacity-70" />
+                                </Link>
+                            </Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <!-- Stat Cards -->
+            <div class="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+                <Card class="rounded-lg border-border/60 shadow-sm">
+                    <CardHeader class="pb-2">
+                        <CardDescription>Sisa Saldo</CardDescription>
+                        <CardTitle class="text-2xl font-semibold">{{ balance.toLocaleString('id-ID') }}</CardTitle>
+                    </CardHeader>
+                </Card>
+                <Card class="rounded-lg border-border/60 shadow-sm">
+                    <CardHeader class="pb-2">
+                        <CardDescription>Model Tersedia</CardDescription>
+                        <CardTitle class="text-2xl font-semibold">{{ models.length }}</CardTitle>
+                    </CardHeader>
+                </Card>
+                <Card class="rounded-lg border-border/60 shadow-sm">
+                    <CardHeader class="pb-2">
+                        <CardDescription>Pemakaian</CardDescription>
+                        <CardTitle class="text-2xl font-semibold">{{ usageTransactions }}</CardTitle>
+                    </CardHeader>
+                </Card>
+                <Card class="rounded-lg border-border/60 shadow-sm">
+                    <CardHeader class="pb-2">
+                        <CardDescription>Pembelian</CardDescription>
+                        <CardTitle class="text-2xl font-semibold">{{ purchaseTransactions }}</CardTitle>
+                    </CardHeader>
+                </Card>
             </div>
 
-            <!-- Saldo + Endpoint -->
+            <!-- Saldo & Endpoint -->
             <div class="grid gap-4 lg:grid-cols-5">
-                <Card class="flex flex-col lg:col-span-2">
+                <Card class="flex flex-col rounded-lg border-border/60 shadow-sm lg:col-span-2">
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2"><Coins class="h-5 w-5 text-amber-500" /> Sisa Saldo</CardTitle>
                     </CardHeader>
@@ -114,8 +177,8 @@ const formatDate = (d: string) => new Date(d).toLocaleString('id-ID', { dateStyl
                             <span class="text-5xl font-bold">{{ balance.toLocaleString('id-ID') }}</span>
                             <span class="text-sm text-muted-foreground">kredit</span>
                         </div>
-                        <p class="mt-2 text-sm text-muted-foreground">Saldo kredit. Setiap pemakaian memotong saldo sesuai jumlah token × harga model.</p>
-                        <p v-if="credit_price !== null" class="mt-1 text-sm text-muted-foreground">Referensi harga: 1 kredit ≈ {{ formatRupiah(credit_price) }}</p>
+                        <p class="mt-2 text-sm text-muted-foreground">Saldo kredit. Setiap pemakaian memotong saldo sesuai jumlah token &times; harga model.</p>
+                        <p v-if="credit_price !== null" class="mt-1 text-sm text-muted-foreground">Referensi harga: 1 kredit &approx; {{ formatRupiah(credit_price) }}</p>
                         <div class="mt-auto pt-5">
                             <Link href="/customer/ai/packages" class="block">
                                 <Button class="w-full cursor-pointer"><ShoppingCart class="mr-2 h-4 w-4" /> Beli Saldo</Button>
@@ -124,7 +187,7 @@ const formatDate = (d: string) => new Date(d).toLocaleString('id-ID', { dateStyl
                     </CardContent>
                 </Card>
 
-                <Card class="lg:col-span-3">
+                <Card class="rounded-lg border-border/60 shadow-sm lg:col-span-3">
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2"><Server class="h-5 w-5 text-primary" /> Endpoint API</CardTitle>
                         <CardDescription>Isi di Hermes agent atau code editor (OpenAI-compatible)</CardDescription>
@@ -172,84 +235,102 @@ Authorization: Bearer &lt;API_KEY&gt;
             </div>
 
             <!-- Harga per model -->
-            <Card>
+            <Card class="rounded-lg border-border/60 shadow-sm">
                 <CardHeader>
-                    <CardTitle>Harga Token per Model</CardTitle>
+                    <CardTitle class="flex items-center gap-2">
+                        <Cpu class="h-5 w-5" />
+                        Harga Token per Model
+                    </CardTitle>
                     <CardDescription v-if="credit_price !== null">
-                        Harga per 1 juta token input/output, referensi 1 kredit ≈ {{ formatRupiah(credit_price) }}
+                        Harga per 1 juta token input/output, referensi 1 kredit &approx; {{ formatRupiah(credit_price) }}
                     </CardDescription>
                     <CardDescription v-else>Tambahkan paket kredit aktif di panel admin agar harga rupiah tampil.</CardDescription>
                 </CardHeader>
-                <CardContent class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b text-left text-muted-foreground">
-                                <th class="px-3 py-3">Model</th>
-                                <th class="px-3 py-3">Provider</th>
-                                <th class="px-3 py-3">Input / 1M token</th>
-                                <th class="px-3 py-3">Output / 1M token</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="m in models" :key="m.id" class="border-b transition-colors last:border-0 hover:bg-muted/40">
-                                <td class="px-3 py-3">
-                                    <div class="font-mono font-medium">{{ m.model_key }}</div>
-                                    <div v-if="m.display_name" class="text-xs text-muted-foreground">{{ m.display_name }}</div>
-                                </td>
-                                <td class="px-3 py-3">{{ m.provider?.name || '-' }}</td>
-                                <td class="px-3 py-3">{{ priceInput(m) }}</td>
-                                <td class="px-3 py-3">{{ priceOutput(m) }}</td>
-                            </tr>
-                            <tr v-if="models.length === 0">
-                                <td colspan="4" class="px-3 py-8 text-center text-muted-foreground">Belum ada model aktif.</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <CardContent>
+                    <div class="overflow-hidden rounded-lg border border-border/60">
+                        <div class="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Model</TableHead>
+                                        <TableHead>Provider</TableHead>
+                                        <TableHead>Input / 1M token</TableHead>
+                                        <TableHead>Output / 1M token</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow v-for="m in models" :key="m.id">
+                                        <TableCell>
+                                            <div class="font-mono font-medium">{{ m.model_key }}</div>
+                                            <div v-if="m.display_name" class="text-xs text-muted-foreground">{{ m.display_name }}</div>
+                                        </TableCell>
+                                        <TableCell>{{ m.provider?.name || '-' }}</TableCell>
+                                        <TableCell>{{ priceInput(m) }}</TableCell>
+                                        <TableCell>{{ priceOutput(m) }}</TableCell>
+                                    </TableRow>
+                                    <TableRow v-if="models.length === 0">
+                                        <TableCell colspan="4" class="text-center text-muted-foreground">Belum ada model aktif.</TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
 
             <!-- Riwayat usage -->
-            <Card>
+            <Card class="rounded-lg border-border/60 shadow-sm">
                 <CardHeader>
-                    <CardTitle>Riwayat Token &amp; Usage</CardTitle>
-                    <CardDescription>20 transaksi terakhir (pembelian & pemakaian)</CardDescription>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <CardTitle class="flex items-center gap-2">
+                                <History class="h-5 w-5" />
+                                Riwayat Token &amp; Usage
+                            </CardTitle>
+                            <CardDescription>20 transaksi terakhir (pembelian &amp; pemakaian)</CardDescription>
+                        </div>
+                    </div>
                 </CardHeader>
-                <CardContent class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b text-left text-muted-foreground">
-                                <th class="px-3 py-3">Waktu</th>
-                                <th class="px-3 py-3">Tipe</th>
-                                <th class="px-3 py-3">Token</th>
-                                <th class="px-3 py-3">Detail</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="t in transactions" :key="t.id" class="border-b transition-colors last:border-0 hover:bg-muted/40">
-                                <td class="px-3 py-3 text-xs text-muted-foreground">{{ formatDate(t.created_at) }}</td>
-                                <td class="px-3 py-3">
-                                    <Badge :variant="t.type === 'in' ? 'default' : 'secondary'">
-                                        {{ t.source === 'purchase' ? 'Pembelian' : t.source === 'usage' ? 'Pemakaian' : 'Penyesuaian' }}
-                                    </Badge>
-                                </td>
-                                <td class="px-3 py-3">
-                                    <span class="inline-flex items-center gap-1 font-semibold" :class="t.credits > 0 ? 'text-green-600' : 'text-red-500'">
-                                        <ArrowUpCircle v-if="t.credits > 0" class="h-4 w-4" />
-                                        <ArrowDownCircle v-else class="h-4 w-4" />
-                                        {{ t.credits > 0 ? '+' : '' }}{{ t.credits.toLocaleString('id-ID') }}
-                                    </span>
-                                </td>
-                                <td class="px-3 py-3 text-xs text-muted-foreground">
-                                    <template v-if="t.model">{{ t.model.model_key }} · </template>
-                                    <template v-if="t.package">{{ t.package.name }} · </template>
-                                    {{ t.description || '-' }}
-                                </td>
-                            </tr>
-                            <tr v-if="transactions.length === 0">
-                                <td colspan="4" class="px-3 py-8 text-center text-muted-foreground">Belum ada transaksi. Beli token untuk mulai memakai.</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <CardContent>
+                    <div class="overflow-hidden rounded-lg border border-border/60">
+                        <div class="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Waktu</TableHead>
+                                        <TableHead>Tipe</TableHead>
+                                        <TableHead>Token</TableHead>
+                                        <TableHead>Detail</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow v-for="t in transactions" :key="t.id">
+                                        <TableCell class="text-xs text-muted-foreground">{{ formatDate(t.created_at) }}</TableCell>
+                                        <TableCell>
+                                            <Badge :variant="t.type === 'in' ? 'default' : 'secondary'">
+                                                {{ t.source === 'purchase' ? 'Pembelian' : t.source === 'usage' ? 'Pemakaian' : 'Penyesuaian' }}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span class="inline-flex items-center gap-1 font-semibold" :class="t.credits > 0 ? 'text-green-600' : 'text-red-500'">
+                                                <ArrowUpCircle v-if="t.credits > 0" class="h-4 w-4" />
+                                                <ArrowDownCircle v-else class="h-4 w-4" />
+                                                {{ t.credits > 0 ? '+' : '' }}{{ t.credits.toLocaleString('id-ID') }}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell class="text-xs text-muted-foreground">
+                                            <template v-if="t.model">{{ t.model.model_key }} &middot; </template>
+                                            <template v-if="t.package">{{ t.package.name }} &middot; </template>
+                                            {{ t.description || '-' }}
+                                        </TableCell>
+                                    </TableRow>
+                                    <TableRow v-if="transactions.length === 0">
+                                        <TableCell colspan="4" class="text-center text-muted-foreground">Belum ada transaksi. Beli token untuk mulai memakai.</TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
         </div>
