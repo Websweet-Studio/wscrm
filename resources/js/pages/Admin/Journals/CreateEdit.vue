@@ -62,7 +62,7 @@ const setType = (i: number, type: string) => { form.activities[i] = { type }; };
             </div>
 
             <form @submit.prevent="form.post(submitUrl)" class="space-y-6">
-                <Card>
+                <Card class="overflow-visible">
                     <CardHeader><CardTitle class="text-base">Website & Tanggal</CardTitle></CardHeader>
                     <CardContent class="space-y-4">
                         <div>
