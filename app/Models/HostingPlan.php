@@ -12,6 +12,7 @@ class HostingPlan extends Model
 
     protected $fillable = [
         'plan_name',
+        'service_type',
         'storage_gb',
         'cpu_cores',
         'ram_gb',
@@ -54,6 +55,16 @@ class HostingPlan extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeHosting($query)
+    {
+        return $query->where('service_type', 'hosting');
+    }
+
+    public function scopeVps($query)
+    {
+        return $query->where('service_type', 'vps');
     }
 
     public function scopeByPlan($query, string $planName)

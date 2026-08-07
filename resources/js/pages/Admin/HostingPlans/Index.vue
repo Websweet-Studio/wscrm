@@ -16,6 +16,7 @@ import { getHostingPlanFinalPrice } from '@/lib/utils';
 interface HostingPlan {
     id: number;
     plan_name: string;
+    service_type: string;
     storage_gb: number;
     cpu_cores: number;
     ram_gb: number;
@@ -40,12 +41,14 @@ interface Props {
     };
     filters: {
         search?: string;
+        service_type?: string;
     };
 }
 
 const props = defineProps<Props>();
 
 const search = ref(props.filters.search || '');
+const serviceTypeFilter = ref(props.filters.service_type || '');
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
@@ -117,6 +120,7 @@ const bulkDelete = () => {
 
 const createForm = useForm({
     plan_name: '',
+    service_type: 'hosting',
     storage_gb: '',
     cpu_cores: '',
     ram_gb: '',
@@ -131,6 +135,7 @@ const createForm = useForm({
 
 const editForm = useForm({
     plan_name: '',
+    service_type: 'hosting',
     storage_gb: '',
     cpu_cores: '',
     ram_gb: '',
@@ -159,11 +164,20 @@ const formatPrice = (price: number) => {
 const handleSearch = () => {
     router.get(
         '/admin/hosting-plans',
-        { search: search.value },
+        { search: search.value, service_type: serviceTypeFilter.value },
         {
             preserveState: true,
             replace: true,
         },
+    );
+};
+
+const setServiceType = (type: string) => {
+    serviceTypeFilter.value = type;
+    router.get(
+        '/admin/hosting-plans',
+        { search: search.value, service_type: type },
+        { preserveState: true, replace: true },
     );
 };
 
@@ -189,6 +203,7 @@ const openEditModal = (plan: HostingPlan) => {
     selectedPlan.value = plan;
     editForm.reset();
     editForm.plan_name = plan.plan_name;
+    editForm.service_type = plan.service_type || 'hosting';
     editForm.storage_gb = plan.storage_gb;
     editForm.cpu_cores = plan.cpu_cores;
     editForm.ram_gb = plan.ram_gb;
@@ -261,6 +276,12 @@ const confirmDelete = () => {
                         <Button @click="handleSearch" class="cursor-pointer">Cari</Button>
                     </div>
 
+                    <div class="mb-4 flex items-center gap-1 rounded-lg bg-muted p-1 w-fit">
+                        <button @click="setServiceType('')" :class="['px-3 py-1.5 text-sm rounded-md transition-colors cursor-pointer', serviceTypeFilter === '' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground']">Semua</button>
+                        <button @click="setServiceType('hosting')" :class="['px-3 py-1.5 text-sm rounded-md transition-colors cursor-pointer', serviceTypeFilter === 'hosting' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground']">Hosting</button>
+                        <button @click="setServiceType('vps')" :class="['px-3 py-1.5 text-sm rounded-md transition-colors cursor-pointer', serviceTypeFilter === 'vps' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground']">VPS</button>
+                    </div>
+
                     <div
                         v-if="selectedPlanIds.length > 0"
                         class="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between"
@@ -308,7 +329,12 @@ const confirmDelete = () => {
                                             @change="togglePlanSelection(plan.id)"
                                         />
                                     </TableCell>
-                                    <TableCell class="font-medium">{{ plan.plan_name }}</TableCell>
+                                    <TableCell class="font-medium">
+                                        <span class="inline-flex items-center gap-2">
+                                            {{ plan.plan_name }}
+                                            <Badge :variant="plan.service_type === 'vps' ? 'destructive' : 'outline'" class="text-[10px]">{{ plan.service_type === 'vps' ? 'VPS' : 'Hosting' }}</Badge>
+                                        </span>
+                                    </TableCell>
                                     <TableCell>
                                         <div class="flex flex-wrap gap-2 text-xs">
                                             <div class="flex items-center space-x-1 rounded bg-muted px-2 py-1">
@@ -424,6 +450,19 @@ const confirmDelete = () => {
                             required
                         />
                         <p v-if="createForm.errors.plan_name" class="mt-1 text-xs text-red-500">{{ createForm.errors.plan_name }}</p>
+                    </div>
+
+                    <div>
+                        <Label for="create-service-type">Jenis Layanan *</Label>
+                        <select
+                            id="create-service-type"
+                            v-model="createForm.service_type"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                            <option value="hosting">Hosting</option>
+                            <option value="vps">VPS</option>
+                        </select>
+                        <p v-if="createForm.errors.service_type" class="mt-1 text-xs text-red-500">{{ createForm.errors.service_type }}</p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
@@ -610,6 +649,19 @@ const confirmDelete = () => {
                             required
                         />
                         <p v-if="editForm.errors.plan_name" class="mt-1 text-xs text-red-500">{{ editForm.errors.plan_name }}</p>
+                    </div>
+
+                    <div>
+                        <Label for="edit-service-type">Jenis Layanan *</Label>
+                        <select
+                            id="edit-service-type"
+                            v-model="editForm.service_type"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                            <option value="hosting">Hosting</option>
+                            <option value="vps">VPS</option>
+                        </select>
+                        <p v-if="editForm.errors.service_type" class="mt-1 text-xs text-red-500">{{ editForm.errors.service_type }}</p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">

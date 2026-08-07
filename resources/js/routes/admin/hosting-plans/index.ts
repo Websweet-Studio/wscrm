@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::bulkDestroy
- * @see app/Http/Controllers/Admin/HostingPlanController.php:102
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:105
  * @route '/admin/hosting-plans/bulk'
  */
 export const bulkDestroy = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -16,7 +16,7 @@ bulkDestroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::bulkDestroy
- * @see app/Http/Controllers/Admin/HostingPlanController.php:102
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:105
  * @route '/admin/hosting-plans/bulk'
  */
 bulkDestroy.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ bulkDestroy.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::bulkDestroy
- * @see app/Http/Controllers/Admin/HostingPlanController.php:102
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:105
  * @route '/admin/hosting-plans/bulk'
  */
 bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -35,7 +35,7 @@ bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
 
     /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::bulkDestroy
- * @see app/Http/Controllers/Admin/HostingPlanController.php:102
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:105
  * @route '/admin/hosting-plans/bulk'
  */
     const bulkDestroyForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -50,7 +50,7 @@ bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
 
             /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::bulkDestroy
- * @see app/Http/Controllers/Admin/HostingPlanController.php:102
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:105
  * @route '/admin/hosting-plans/bulk'
  */
         bulkDestroyForm.delete = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -144,7 +144,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::create
- * @see app/Http/Controllers/Admin/HostingPlanController.php:31
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:32
  * @route '/admin/hosting-plans/create'
  */
 export const create = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -159,7 +159,7 @@ create.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::create
- * @see app/Http/Controllers/Admin/HostingPlanController.php:31
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:32
  * @route '/admin/hosting-plans/create'
  */
 create.url = (options?: RouteQueryOptions) => {
@@ -168,7 +168,7 @@ create.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::create
- * @see app/Http/Controllers/Admin/HostingPlanController.php:31
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:32
  * @route '/admin/hosting-plans/create'
  */
 create.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -177,7 +177,7 @@ create.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::create
- * @see app/Http/Controllers/Admin/HostingPlanController.php:31
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:32
  * @route '/admin/hosting-plans/create'
  */
 create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -187,7 +187,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::create
- * @see app/Http/Controllers/Admin/HostingPlanController.php:31
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:32
  * @route '/admin/hosting-plans/create'
  */
     const createForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -197,7 +197,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::create
- * @see app/Http/Controllers/Admin/HostingPlanController.php:31
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:32
  * @route '/admin/hosting-plans/create'
  */
         createForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -206,7 +206,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::create
- * @see app/Http/Controllers/Admin/HostingPlanController.php:31
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:32
  * @route '/admin/hosting-plans/create'
  */
         createForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -222,7 +222,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     create.form = createForm
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::store
- * @see app/Http/Controllers/Admin/HostingPlanController.php:36
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:37
  * @route '/admin/hosting-plans'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -237,7 +237,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::store
- * @see app/Http/Controllers/Admin/HostingPlanController.php:36
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:37
  * @route '/admin/hosting-plans'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -246,7 +246,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::store
- * @see app/Http/Controllers/Admin/HostingPlanController.php:36
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:37
  * @route '/admin/hosting-plans'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -256,7 +256,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::store
- * @see app/Http/Controllers/Admin/HostingPlanController.php:36
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:37
  * @route '/admin/hosting-plans'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -266,7 +266,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::store
- * @see app/Http/Controllers/Admin/HostingPlanController.php:36
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:37
  * @route '/admin/hosting-plans'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -277,7 +277,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::show
- * @see app/Http/Controllers/Admin/HostingPlanController.php:58
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:60
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
 export const show = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -292,7 +292,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::show
- * @see app/Http/Controllers/Admin/HostingPlanController.php:58
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:60
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
 show.url = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -325,7 +325,7 @@ show.url = (args: { hosting_plan: number | { id: number } } | [hosting_plan: num
 
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::show
- * @see app/Http/Controllers/Admin/HostingPlanController.php:58
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:60
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
 show.get = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -334,7 +334,7 @@ show.get = (args: { hosting_plan: number | { id: number } } | [hosting_plan: num
 })
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::show
- * @see app/Http/Controllers/Admin/HostingPlanController.php:58
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:60
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
 show.head = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -344,7 +344,7 @@ show.head = (args: { hosting_plan: number | { id: number } } | [hosting_plan: nu
 
     /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::show
- * @see app/Http/Controllers/Admin/HostingPlanController.php:58
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:60
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
     const showForm = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -354,7 +354,7 @@ show.head = (args: { hosting_plan: number | { id: number } } | [hosting_plan: nu
 
             /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::show
- * @see app/Http/Controllers/Admin/HostingPlanController.php:58
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:60
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
         showForm.get = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -363,7 +363,7 @@ show.head = (args: { hosting_plan: number | { id: number } } | [hosting_plan: nu
         })
             /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::show
- * @see app/Http/Controllers/Admin/HostingPlanController.php:58
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:60
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
         showForm.head = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -379,7 +379,7 @@ show.head = (args: { hosting_plan: number | { id: number } } | [hosting_plan: nu
     show.form = showForm
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::edit
- * @see app/Http/Controllers/Admin/HostingPlanController.php:65
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:67
  * @route '/admin/hosting-plans/{hosting_plan}/edit'
  */
 export const edit = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -394,7 +394,7 @@ edit.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::edit
- * @see app/Http/Controllers/Admin/HostingPlanController.php:65
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:67
  * @route '/admin/hosting-plans/{hosting_plan}/edit'
  */
 edit.url = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -427,7 +427,7 @@ edit.url = (args: { hosting_plan: number | { id: number } } | [hosting_plan: num
 
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::edit
- * @see app/Http/Controllers/Admin/HostingPlanController.php:65
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:67
  * @route '/admin/hosting-plans/{hosting_plan}/edit'
  */
 edit.get = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -436,7 +436,7 @@ edit.get = (args: { hosting_plan: number | { id: number } } | [hosting_plan: num
 })
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::edit
- * @see app/Http/Controllers/Admin/HostingPlanController.php:65
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:67
  * @route '/admin/hosting-plans/{hosting_plan}/edit'
  */
 edit.head = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -446,7 +446,7 @@ edit.head = (args: { hosting_plan: number | { id: number } } | [hosting_plan: nu
 
     /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::edit
- * @see app/Http/Controllers/Admin/HostingPlanController.php:65
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:67
  * @route '/admin/hosting-plans/{hosting_plan}/edit'
  */
     const editForm = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -456,7 +456,7 @@ edit.head = (args: { hosting_plan: number | { id: number } } | [hosting_plan: nu
 
             /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::edit
- * @see app/Http/Controllers/Admin/HostingPlanController.php:65
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:67
  * @route '/admin/hosting-plans/{hosting_plan}/edit'
  */
         editForm.get = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -465,7 +465,7 @@ edit.head = (args: { hosting_plan: number | { id: number } } | [hosting_plan: nu
         })
             /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::edit
- * @see app/Http/Controllers/Admin/HostingPlanController.php:65
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:67
  * @route '/admin/hosting-plans/{hosting_plan}/edit'
  */
         editForm.head = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -481,7 +481,7 @@ edit.head = (args: { hosting_plan: number | { id: number } } | [hosting_plan: nu
     edit.form = editForm
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::update
- * @see app/Http/Controllers/Admin/HostingPlanController.php:72
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:74
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
 export const update = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -496,7 +496,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::update
- * @see app/Http/Controllers/Admin/HostingPlanController.php:72
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:74
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
 update.url = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -529,7 +529,7 @@ update.url = (args: { hosting_plan: number | { id: number } } | [hosting_plan: n
 
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::update
- * @see app/Http/Controllers/Admin/HostingPlanController.php:72
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:74
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
 update.put = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -538,7 +538,7 @@ update.put = (args: { hosting_plan: number | { id: number } } | [hosting_plan: n
 })
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::update
- * @see app/Http/Controllers/Admin/HostingPlanController.php:72
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:74
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
 update.patch = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -548,7 +548,7 @@ update.patch = (args: { hosting_plan: number | { id: number } } | [hosting_plan:
 
     /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::update
- * @see app/Http/Controllers/Admin/HostingPlanController.php:72
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:74
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
     const updateForm = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -563,7 +563,7 @@ update.patch = (args: { hosting_plan: number | { id: number } } | [hosting_plan:
 
             /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::update
- * @see app/Http/Controllers/Admin/HostingPlanController.php:72
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:74
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
         updateForm.put = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -577,7 +577,7 @@ update.patch = (args: { hosting_plan: number | { id: number } } | [hosting_plan:
         })
             /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::update
- * @see app/Http/Controllers/Admin/HostingPlanController.php:72
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:74
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
         updateForm.patch = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -593,7 +593,7 @@ update.patch = (args: { hosting_plan: number | { id: number } } | [hosting_plan:
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::destroy
- * @see app/Http/Controllers/Admin/HostingPlanController.php:94
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:97
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
 export const destroy = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -608,7 +608,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::destroy
- * @see app/Http/Controllers/Admin/HostingPlanController.php:94
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:97
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
 destroy.url = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -641,7 +641,7 @@ destroy.url = (args: { hosting_plan: number | { id: number } } | [hosting_plan: 
 
 /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::destroy
- * @see app/Http/Controllers/Admin/HostingPlanController.php:94
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:97
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
 destroy.delete = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -651,7 +651,7 @@ destroy.delete = (args: { hosting_plan: number | { id: number } } | [hosting_pla
 
     /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::destroy
- * @see app/Http/Controllers/Admin/HostingPlanController.php:94
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:97
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
     const destroyForm = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -666,7 +666,7 @@ destroy.delete = (args: { hosting_plan: number | { id: number } } | [hosting_pla
 
             /**
 * @see \App\Http\Controllers\Admin\HostingPlanController::destroy
- * @see app/Http/Controllers/Admin/HostingPlanController.php:94
+ * @see app/Http/Controllers/Admin/HostingPlanController.php:97
  * @route '/admin/hosting-plans/{hosting_plan}'
  */
         destroyForm.delete = (args: { hosting_plan: number | { id: number } } | [hosting_plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

@@ -324,7 +324,7 @@ const colorPresets: ColorPreset[] = [
     { name: 'Warm Natural',   primary: '#c96442', secondary: '#a8a29e', accent: '#65a30d' },
     { name: 'Ocean Blue',     primary: '#0891b2', secondary: '#6b7280', accent: '#10b981' },
     { name: 'Classic Navy',   primary: '#2563eb', secondary: '#64748b', accent: '#06b6d4' },
-    { name: 'Soft Rose',      primary: '#e11d48', secondary: '#a8a29e', accent: '#fda4af' },
+    { name: 'Soft Rose',      primary: '#e11d48', secondary: '#e7e7e7', accent: '#fda4af' },
     { name: 'Sunset Orange',  primary: '#ea580c', secondary: '#78716c', accent: '#eab308' },
     { name: 'Modern Indigo',  primary: '#6366f1', secondary: '#334155', accent: '#22d3ee' },
     { name: 'Forest Green',   primary: '#16a34a', secondary: '#737373', accent: '#06b6d4' },

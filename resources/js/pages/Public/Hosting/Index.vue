@@ -10,6 +10,7 @@ import { computed, ref } from 'vue';
 interface HostingPlan {
     id: number;
     plan_name: string;
+    service_type: string;
     storage_gb: number;
     cpu_cores: number;
     ram_gb: number;
@@ -69,34 +70,22 @@ const handleSearch = () => {
     );
 };
 
+// Paket Lite (entry-level) disembunyikan dari halaman publik
+const visiblePlans = computed(() =>
+    props.hostingPlans.filter((plan) => !(plan.service_type === 'hosting' && plan.plan_name.toLowerCase() === 'lite')),
+);
+
 const filteredPlans = computed(() => {
-    let plans = props.hostingPlans;
+    let plans = visiblePlans.value;
 
     if (search.value) {
         plans = plans.filter((plan) => plan.plan_name.toLowerCase().includes(search.value.toLowerCase()));
     }
 
-    if (activeTab.value === 'basic') {
-        plans = plans.filter(
-            (plan) =>
-                plan.plan_name.toLowerCase().includes('basic') ||
-                plan.plan_name.toLowerCase().includes('starter') ||
-                plan.plan_name.toLowerCase().includes('standard'),
-        );
-    } else if (activeTab.value === 'lite') {
-        plans = plans.filter(
-            (plan) =>
-                plan.plan_name.toLowerCase().includes('lite') ||
-                plan.plan_name.toLowerCase().includes('light') ||
-                plan.plan_name.toLowerCase().includes('minimal'),
-        );
-    } else if (activeTab.value === 'premium') {
-        plans = plans.filter(
-            (plan) =>
-                plan.plan_name.toLowerCase().includes('premium') ||
-                plan.plan_name.toLowerCase().includes('pro') ||
-                plan.plan_name.toLowerCase().includes('advanced'),
-        );
+    if (activeTab.value === 'hosting') {
+        plans = plans.filter((plan) => plan.service_type === 'hosting');
+    } else if (activeTab.value === 'vps') {
+        plans = plans.filter((plan) => plan.service_type === 'vps');
     }
 
     return plans
@@ -109,15 +98,15 @@ const filteredPlans = computed(() => {
 </script>
 
 <template>
-    <CustomerPublicLayout title="Paket Hosting Web Profesional">
+    <CustomerPublicLayout title="Paket Shared Hosting & VPS Profesional">
         <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:py-20">
             <!-- Hero -->
             <div class="mb-12 text-center sm:mb-16">
                 <h1 class="mb-4 text-4xl leading-tight font-medium sm:text-5xl md:text-6xl" style="color: #141413; line-height: 1.1; font-family: Georgia, serif;">
-                    Paket Hosting Web Profesional
+                    Paket Shared Hosting &amp; VPS Profesional
                 </h1>
                 <p class="mx-auto mb-6 max-w-2xl text-base sm:text-lg lg:text-xl" style="color: #5e5d59; line-height: 1.6;">
-                    Pilih paket hosting yang sempurna untuk website Anda. Hosting yang cepat, terpercaya, dan aman.
+                    Pilih paket hosting atau VPS yang sempurna untuk website dan aplikasi Anda. Cepat, terpercaya, dan aman.
                 </p>
             </div>
 
@@ -149,31 +138,25 @@ const filteredPlans = computed(() => {
                         :style="activeTab === 'all' ? 'background-color: #000000; color: #ffffff;' : 'background-color: var(--secondary); color: #000000;'"
                     >Semua</button>
                     <button
-                        @click="activeTab = 'basic'"
+                        @click="activeTab = 'hosting'"
                         class="rounded-full px-4 py-2 text-sm font-bold transition-colors"
-                        :style="activeTab === 'basic' ? 'background-color: #000000; color: #ffffff;' : 'background-color: var(--secondary); color: #000000;'"
+                        :style="activeTab === 'hosting' ? 'background-color: #000000; color: #ffffff;' : 'background-color: var(--secondary); color: #000000;'"
                     >
-                        <Server class="mr-1 inline h-4 w-4" />Dasar
+                        <Server class="mr-1 inline h-4 w-4" />Shared Hosting
                     </button>
                     <button
-                        @click="activeTab = 'lite'"
+                        @click="activeTab = 'vps'"
                         class="rounded-full px-4 py-2 text-sm font-bold transition-colors"
-                        :style="activeTab === 'lite' ? 'background-color: #000000; color: #ffffff;' : 'background-color: var(--secondary); color: #000000;'"
-                    >Lite</button>
-                    <button
-                        @click="activeTab = 'premium'"
-                        class="rounded-full px-4 py-2 text-sm font-bold transition-colors"
-                        :style="activeTab === 'premium' ? 'background-color: #000000; color: #ffffff;' : 'background-color: var(--secondary); color: #000000;'"
+                        :style="activeTab === 'vps' ? 'background-color: #000000; color: #ffffff;' : 'background-color: var(--secondary); color: #000000;'"
                     >
-                        <Check class="mr-1 inline h-4 w-4" />Premium
+                        <Server class="mr-1 inline h-4 w-4" />VPS
                     </button>
                 </div>
 
                 <div class="mt-3 text-sm" style="color: #62625b;">
-                    <span v-if="activeTab === 'all'">Menampilkan semua paket hosting</span>
-                    <span v-else-if="activeTab === 'basic'">Paket hosting Dasar & Standar &mdash; sempurna untuk website pribadi</span>
-                    <span v-else-if="activeTab === 'lite'">Paket hosting Lite & Minimal &mdash; bagus untuk proyek kecil</span>
-                    <span v-else-if="activeTab === 'premium'">Paket hosting Premium & Pro &mdash; ideal untuk website bisnis</span>
+                    <span v-if="activeTab === 'all'">Menampilkan semua paket shared hosting &amp; VPS</span>
+                    <span v-else-if="activeTab === 'hosting'">Paket shared hosting &mdash; sempurna untuk website pribadi &amp; bisnis</span>
+                    <span v-else-if="activeTab === 'vps'">Paket VPS &mdash; kontrol penuh untuk proyek &amp; aplikasi besar</span>
                     &middot; {{ filteredPlans.length }} paket
                 </div>
             </div>
@@ -208,7 +191,15 @@ const filteredPlans = computed(() => {
                                                 <Server class="h-4 w-4" style="color: var(--primary);" />
                                             </div>
                                             <div>
-                                                <div class="text-sm font-semibold" style="color: #000000;">{{ plan.plan_name }}</div>
+                                                <div class="flex items-center gap-2">
+                                                    <div class="text-sm font-semibold" style="color: #000000;">{{ plan.plan_name }}</div>
+                                                    <span
+                                                        class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase"
+                                                        :style="plan.service_type === 'vps'
+                                                            ? 'background-color: #ede9fe; color: #6d28d9;'
+                                                            : 'background-color: #ecfdf5; color: #047857;'"
+                                                    >{{ plan.service_type === 'vps' ? 'VPS' : 'Shared Hosting' }}</span>
+                                                </div>
                                                 <div v-if="!plan.use_bulk_pricing && plan.discount_percent > 0" class="text-xs" style="color: var(--primary);">Diskon {{ plan.discount_percent }}%</div>
                                             </div>
                                         </div>
@@ -247,7 +238,7 @@ const filteredPlans = computed(() => {
                                             style="background-color: var(--primary); color: #ffffff; border-radius: 16px;"
                                         >
                                             <a
-                                                :href="getWhatsappLink(`Halo, saya ingin beli Hosting ${plan.plan_name}.`)"
+                                                :href="getWhatsappLink(`Halo, saya ingin beli ${plan.service_type.toUpperCase()} ${plan.plan_name}.`)"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >
@@ -266,9 +257,9 @@ const filteredPlans = computed(() => {
             <!-- Empty State -->
             <div v-if="filteredPlans.length === 0" class="py-12 text-center">
                 <Server class="mx-auto mb-4 h-12 w-12" style="color: #91918c;" />
-                <h3 class="mb-2 text-xl font-semibold" style="color: #000000;">Tidak ada paket hosting ditemukan</h3>
+                <h3 class="mb-2 text-xl font-semibold" style="color: #000000;">Tidak ada paket ditemukan</h3>
                 <p class="text-sm" style="color: #62625b;">
-                    {{ search ? 'Coba sesuaikan kriteria pencarian Anda.' : 'Tidak ada paket hosting yang tersedia saat ini.' }}
+                    {{ search ? 'Coba sesuaikan kriteria pencarian Anda.' : 'Tidak ada paket hosting & VPS yang tersedia saat ini.' }}
                 </p>
             </div>
 

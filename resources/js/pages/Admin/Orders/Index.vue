@@ -606,6 +606,7 @@ const getSortIcon = (field: string) => {
                             >
                                 <option value="">Semua Tipe</option>
                                 <option value="hosting">Hosting</option>
+                                <option value="vps">VPS</option>
                                 <option value="domain">Domain</option>
                                 <option value="service">Layanan</option>
                                 <option value="app">Aplikasi</option>

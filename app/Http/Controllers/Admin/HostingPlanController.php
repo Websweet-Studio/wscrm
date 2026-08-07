@@ -18,13 +18,14 @@ class HostingPlanController extends Controller
             ->when(request('search'), function ($query, $search) {
                 $query->where('plan_name', 'like', "%{$search}%");
             })
+            ->when(request('service_type'), fn($query, $type) => $query->where('service_type', $type))
             ->orderBy('plan_name')
             ->paginate(20)
             ->withQueryString();
 
         return Inertia::render('Admin/HostingPlans/Index', [
             'hostingPlans' => $hostingPlans,
-            'filters' => request()->only(['search']),
+            'filters' => request()->only(['search', 'service_type']),
         ]);
     }
 
@@ -37,6 +38,7 @@ class HostingPlanController extends Controller
     {
         $validated = $request->validate([
             'plan_name' => 'required|string|unique:hosting_plans,plan_name',
+            'service_type' => 'required|in:hosting,vps',
             'storage_gb' => 'required|numeric|min:0',
             'cpu_cores' => 'required|numeric|min:1',
             'ram_gb' => 'required|numeric|min:0',
@@ -73,6 +75,7 @@ class HostingPlanController extends Controller
     {
         $validated = $request->validate([
             'plan_name' => 'required|string|unique:hosting_plans,plan_name,'.$hostingPlan->id,
+            'service_type' => 'required|in:hosting,vps',
             'storage_gb' => 'required|numeric|min:0',
             'cpu_cores' => 'required|numeric|min:1',
             'ram_gb' => 'required|numeric|min:0',
