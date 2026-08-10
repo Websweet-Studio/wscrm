@@ -152,11 +152,6 @@ const mainNavItems: NavItem[] = [
                 icon: BarChart3,
             },
             {
-                title: 'AI Agent',
-                href: '/admin/websites/ai',
-                icon: Bot,
-            },
-            {
                 title: 'Plugins',
                 href: '/admin/websites/plugins',
                 icon: Package,
@@ -195,6 +190,11 @@ const mainNavItems: NavItem[] = [
         href: '#',
         icon: Cpu,
         children: [
+            {
+                title: 'AI Agent',
+                href: '/admin/websites/ai',
+                icon: Bot,
+            },
             {
                 title: 'Providers',
                 href: '/admin/ai/providers',

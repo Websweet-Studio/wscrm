@@ -89,14 +89,23 @@ class AiAgentController extends Controller
                 'success' => false,
                 'ai_response' => 'Maaf, terjadi error: ' . $e->getMessage(),
                 'actions' => [],
+                'pending_actions' => [],
             ];
+        }
+
+        $pendingActions = $result['pending_actions'] ?? [];
+        if ($pendingActions) {
+            session([self::sessionKey($conversation->id) => $pendingActions]);
         }
 
         AiMessage::create([
             'conversation_id' => $conversation->id,
             'role' => 'agent',
             'content' => $result['ai_response'] ?? '',
-            'actions' => $result['actions'] ?? [],
+            'actions' => array_merge(
+                $result['actions'] ?? [],
+                array_map(fn ($p) => ['action' => $p['action'], 'params' => $p['params'], 'result' => ['pending' => true, 'message' => 'Menunggu konfirmasi']], $pendingActions)
+            ),
         ]);
 
         return response()->json(['conversation_id' => $conversation->id] + $result);
@@ -163,14 +172,24 @@ class AiAgentController extends Controller
                     'success' => false,
                     'ai_response' => 'Maaf, terjadi error: ' . $e->getMessage(),
                     'actions' => [],
+                    'pending_actions' => [],
                 ];
+            }
+
+            // Simpan aksi berisiko tinggi menunggu konfirmasi ke session (server-side, anti-manipulasi)
+            $pendingActions = $result['pending_actions'] ?? [];
+            if ($pendingActions) {
+                session([self::sessionKey($conversationId) => $pendingActions]);
             }
 
             AiMessage::create([
                 'conversation_id' => $conversationId,
                 'role' => 'agent',
                 'content' => $result['ai_response'] ?? '',
-                'actions' => $result['actions'] ?? [],
+                'actions' => array_merge(
+                    $result['actions'] ?? [],
+                    array_map(fn ($p) => ['action' => $p['action'], 'params' => $p['params'], 'result' => ['pending' => true, 'message' => 'Menunggu konfirmasi']], $pendingActions)
+                ),
             ]);
 
             $send([
@@ -178,6 +197,7 @@ class AiAgentController extends Controller
                 'conversation_id' => $conversationId,
                 'ai_response' => $result['ai_response'] ?? '',
                 'actions' => $result['actions'] ?? [],
+                'pending_actions' => $pendingActions,
             ]);
 
             echo "data: [DONE]\n\n";
@@ -191,5 +211,130 @@ class AiAgentController extends Controller
             'X-Accel-Buffering' => 'no',
             'Connection' => 'keep-alive',
         ]);
+    }
+
+    /**
+     * Konfirmasi & eksekusi aksi berisiko tinggi yang sebelumnya ditunda (pending).
+     * Aksi dibaca dari session, bukan dari body request — client tidak bisa memanipulasi.
+     */
+    public function confirmActions(Request $request, AiAgentService $agent)
+    {
+        $this->checkAdmin();
+
+        $validated = $request->validate([
+            'conversation_id' => 'required|integer',
+        ]);
+
+        $conversation = AiConversation::find($validated['conversation_id']);
+        abort_unless($conversation && $conversation->user_id === auth()->id(), 403, 'Unauthorized access.');
+
+        $conversationId = $conversation->id;
+        $sessionKey = self::sessionKey($conversationId);
+        $pendingActions = session($sessionKey, []);
+
+        return response()->stream(function () use ($agent, $conversationId, $pendingActions, $sessionKey) {
+            ini_set('output_buffering', 'off');
+            ini_set('zlib.output_compression', 'off');
+
+            $send = function (array $payload) {
+                echo 'data: ' . json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
+                if (ob_get_level() > 0) {
+                    ob_flush();
+                }
+                flush();
+            };
+
+            set_time_limit(300);
+
+            $send(['type' => 'start', 'conversation_id' => $conversationId]);
+
+            if (!$pendingActions) {
+                $send(['type' => 'done', 'conversation_id' => $conversationId, 'ai_response' => 'Tidak ada aksi menunggu konfirmasi.', 'actions' => []]);
+                echo "data: [DONE]\n\n";
+                if (ob_get_level() > 0) {
+                    ob_flush();
+                }
+                flush();
+
+                return;
+            }
+
+            try {
+                $executed = $agent->executePendingActions($pendingActions, function (string $progressMessage, string $status = 'done', string $agentName = '') use ($send) {
+                    $send(['type' => 'progress', 'message' => $progressMessage, 'status' => $status, 'agent' => $agentName]);
+                });
+            } catch (\Exception $e) {
+                $executed = [['action' => 'unknown', 'params' => [], 'result' => ['error' => $e->getMessage()]]];
+            }
+
+            $lines = [];
+            foreach ($executed as $r) {
+                $res = $r['result'];
+                if (isset($res['error'])) {
+                    $lines[] = '[GAGAL] ' . $r['action'] . ': ' . $res['error'];
+                } else {
+                    $lines[] = '[OK] ' . ($res['message'] ?? 'Aksi ' . $r['action'] . ' selesai');
+                }
+            }
+            $message = "Aksi dikonfirmasi dan dijalankan:\n\n" . implode("\n", $lines);
+
+            AiMessage::create([
+                'conversation_id' => $conversationId,
+                'role' => 'agent',
+                'content' => $message,
+                'actions' => $executed,
+            ]);
+
+            session()->forget($sessionKey);
+
+            $send([
+                'type' => 'done',
+                'conversation_id' => $conversationId,
+                'ai_response' => $message,
+                'actions' => $executed,
+            ]);
+
+            echo "data: [DONE]\n\n";
+            if (ob_get_level() > 0) {
+                ob_flush();
+            }
+            flush();
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache',
+            'X-Accel-Buffering' => 'no',
+            'Connection' => 'keep-alive',
+        ]);
+    }
+
+    /**
+     * Batalkan aksi berisiko tinggi yang menunggu konfirmasi.
+     */
+    public function cancelActions(Request $request): JsonResponse
+    {
+        $this->checkAdmin();
+
+        $validated = $request->validate([
+            'conversation_id' => 'required|integer',
+        ]);
+
+        $conversation = AiConversation::find($validated['conversation_id']);
+        abort_unless($conversation && $conversation->user_id === auth()->id(), 403, 'Unauthorized access.');
+
+        session()->forget(self::sessionKey($conversation->id));
+
+        AiMessage::create([
+            'conversation_id' => $conversation->id,
+            'role' => 'agent',
+            'content' => 'Aksi dibatalkan.',
+            'actions' => [],
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    private static function sessionKey(int $conversationId): string
+    {
+        return 'ai_pending_actions_' . $conversationId;
     }
 }

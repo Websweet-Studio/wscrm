@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
-import { Bot, CheckCircle2, ExternalLink, Loader2, MessageSquare, Plus, Send, Sparkles, Trash2, XCircle, Zap } from 'lucide-vue-next';
+import { Bot, CheckCircle2, ExternalLink, Loader2, MessageSquare, PanelLeft, PanelLeftClose, Plus, Send, Trash2, XCircle, Zap } from 'lucide-vue-next';
 import { nextTick, onMounted, ref } from 'vue';
 import ConfirmModal from '@/components/ConfirmModal.vue';
 
@@ -42,7 +42,7 @@ const props = defineProps<{
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Manage Website', href: '/admin/websites' },
+    { title: 'AI', href: '/admin/ai/models' },
     { title: 'AI Agent', href: '/admin/websites/ai' },
 ];
 
@@ -54,14 +54,7 @@ const messages = ref<Message[]>([]);
 const inputMessage = ref('');
 const isLoading = ref(false);
 const chatContainer = ref<HTMLElement>();
-
-const suggestions = [
-    'Cek website mana yang perlu update WP core',
-    'Audit SEO halaman utama semua website',
-    'Buatkan artikel tentang tips digital marketing untuk web pertama',
-    'Website mana saja yang plugin-nya perlu update?',
-    'Tampilkan ringkasan kondisi semua website',
-];
+const historyExpanded = ref(true);
 
 const agentBadge = (agent: string) => {
     const map: Record<string, string> = {
@@ -70,12 +63,26 @@ const agentBadge = (agent: string) => {
         'Content Auditor': 'bg-amber-100 text-amber-700',
         'Publisher': 'bg-green-100 text-green-700',
         'Orchestrator': 'bg-slate-200 text-slate-700',
+        'Task Agent': 'bg-teal-100 text-teal-700',
+        'Customer Agent': 'bg-indigo-100 text-indigo-700',
     };
     return map[agent] || 'bg-slate-200 text-slate-700';
 };
 
+interface PendingAction {
+    action: string;
+    params: any;
+    description?: string;
+}
+
+const pendingActions = ref<PendingAction[]>([]);
+const pendingConversationId = ref<number | null>(null);
+const isConfirming = ref(false);
+
 const loadConversation = async (id: number) => {
     activeConversationId.value = id;
+    pendingActions.value = [];
+    pendingConversationId.value = null;
     isLoading.value = true;
 
     try {
@@ -100,6 +107,8 @@ const loadConversation = async (id: number) => {
 const newChat = () => {
     activeConversationId.value = null;
     messages.value = [];
+    pendingActions.value = [];
+    pendingConversationId.value = null;
 };
 
 const showConfirm = ref(false);
@@ -140,6 +149,108 @@ const upsertConversation = (id: number, firstMessage: string) => {
     }
 };
 
+type StreamEventHandler = (payload: any) => void;
+
+const streamRequest = async (url: string, body: any, handleEvent: StreamEventHandler): Promise<void> => {
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify(body),
+    });
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    if (!res.body) throw new Error('Stream tidak tersedia');
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let sep: number;
+        while ((sep = buffer.indexOf('\n\n')) !== -1) {
+            const raw = buffer.slice(0, sep);
+            buffer = buffer.slice(sep + 2);
+
+            for (const line of raw.split('\n')) {
+                if (!line.startsWith('data: ')) continue;
+                const data = line.slice(6);
+                if (data.trim() === '[DONE]') continue;
+                try {
+                    handleEvent(JSON.parse(data));
+                } catch {
+                    // event malformed — abaikan
+                }
+            }
+        }
+    }
+};
+
+const confirmActions = async () => {
+    if (!pendingConversationId.value || isConfirming.value) return;
+    isConfirming.value = true;
+
+    const agentMsg: Message = { role: 'agent', content: '', pending: true, progress: [] };
+    messages.value.push(agentMsg);
+    pendingActions.value = [];
+    scrollToBottom();
+
+    const handleEvent = (payload: any) => {
+        if (payload.type === 'progress') {
+            agentMsg.progress!.push({ message: payload.message, status: payload.status, agent: payload.agent });
+            scrollToBottom();
+        } else if (payload.type === 'done') {
+            agentMsg.content = payload.ai_response || 'Tidak ada respons.';
+            agentMsg.actions = payload.actions || [];
+            agentMsg.pending = false;
+            agentMsg.progress = [];
+            scrollToBottom();
+        } else if (payload.type === 'error') {
+            agentMsg.content = payload.message || 'Terjadi error saat mengeksekusi aksi.';
+            agentMsg.pending = false;
+            agentMsg.progress = [];
+            scrollToBottom();
+        }
+    };
+
+    try {
+        await streamRequest('/admin/websites/ai/chat/confirm', { conversation_id: pendingConversationId.value }, handleEvent);
+    } catch {
+        agentMsg.content = 'Maaf, terjadi error saat mengeksekusi aksi.';
+        agentMsg.pending = false;
+        agentMsg.progress = [];
+    } finally {
+        isConfirming.value = false;
+        await nextTick();
+        scrollToBottom();
+    }
+};
+
+const cancelActions = async () => {
+    if (!pendingConversationId.value) return;
+
+    try {
+        await fetch('/admin/websites/ai/chat/cancel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+            body: JSON.stringify({ conversation_id: pendingConversationId.value }),
+        });
+    } catch {
+        // abaikan — cukup bersihkan kartu
+    }
+
+    pendingActions.value = [];
+    pendingConversationId.value = null;
+    messages.value.push({ role: 'agent', content: 'Aksi dibatalkan.' });
+    scrollToBottom();
+};
+
 const sendMessage = async () => {
     const text = inputMessage.value.trim();
     if (!text || isLoading.value) return;
@@ -166,6 +277,10 @@ const sendMessage = async () => {
             agentMsg.actions = payload.actions || [];
             agentMsg.pending = false;
             agentMsg.progress = [];
+            if (payload.pending_actions?.length) {
+                pendingActions.value = payload.pending_actions;
+                pendingConversationId.value = payload.conversation_id;
+            }
             scrollToBottom();
         } else if (payload.type === 'error') {
             agentMsg.content = payload.message || 'Terjadi error saat memproses permintaan.';
@@ -176,44 +291,7 @@ const sendMessage = async () => {
     };
 
     try {
-        const res = await fetch('/admin/websites/ai/chat/stream', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-            },
-            body: JSON.stringify({ message: text, conversation_id: activeConversationId.value }),
-        });
-
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        if (!res.body) throw new Error('Stream tidak tersedia');
-
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-
-            let sep: number;
-            while ((sep = buffer.indexOf('\n\n')) !== -1) {
-                const raw = buffer.slice(0, sep);
-                buffer = buffer.slice(sep + 2);
-
-                for (const line of raw.split('\n')) {
-                    if (!line.startsWith('data: ')) continue;
-                    const data = line.slice(6);
-                    if (data.trim() === '[DONE]') continue;
-                    try {
-                        handleEvent(JSON.parse(data));
-                    } catch {
-                        // event malformed — abaikan
-                    }
-                }
-            }
-        }
+        await streamRequest('/admin/websites/ai/chat/stream', { message: text, conversation_id: activeConversationId.value }, handleEvent);
     } catch (e) {
         agentMsg.content = 'Maaf, terjadi error saat menghubungi AI Agent.';
         agentMsg.pending = false;
@@ -235,6 +313,30 @@ const scrollToBottom = () => {
     }
 };
 
+const statusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+    const map: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+        todo: 'secondary',
+        in_progress: 'default',
+        done: 'outline',
+        cancelled: 'destructive',
+    };
+    return map[status] || 'secondary';
+};
+
+const customerStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+    const map: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+        active: 'default',
+        inactive: 'secondary',
+        suspended: 'destructive',
+    };
+    return map[status] || 'secondary';
+};
+
+const formatRupiah = (value: any): string => {
+    const num = Number(value) || 0;
+    return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(num);
+};
+
 const formatActionName = (action: string): string => {
     const names: Record<string, string> = {
         check_updates: 'Cek Update',
@@ -244,6 +346,15 @@ const formatActionName = (action: string): string => {
         audit_seo: 'Audit SEO',
         check_expiring_orders: 'Order Berakhir',
         renew_order: 'Perpanjang Order',
+        list_tasks: 'Daftar Tugas',
+        create_task: 'Buat Tugas',
+        update_task_status: 'Ubah Status Tugas',
+        list_customers: 'Daftar Customer',
+        create_customer: 'Buat Customer',
+        update_customer_status: 'Ubah Status Customer',
+        list_unpaid_invoices: 'Invoice Belum Bayar',
+        mark_invoice_paid: 'Tandai Invoice Lunas',
+        business_summary: 'Ringkasan Bisnis',
     };
     return names[action] || action;
 };
@@ -272,11 +383,14 @@ onMounted(() => {
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Head title="AI Agent - Manage Website" />
+        <Head title="AI Agent" />
 
         <div class="flex gap-6 h-[calc(100vh-120px)]">
             <!-- Sidebar: Riwayat Percakapan -->
-            <aside class="w-64 flex-shrink-0 flex flex-col border rounded-lg bg-card overflow-hidden">
+            <aside
+                class="flex-shrink-0 flex flex-col border rounded-lg bg-card overflow-hidden transition-all duration-300"
+                :class="historyExpanded ? 'w-64' : 'w-0 border-transparent'"
+            >
                 <div class="p-3 border-b">
                     <Button class="w-full cursor-pointer justify-start" @click="newChat">
                         <Plus class="mr-2 h-4 w-4" /> Percakapan Baru
@@ -311,6 +425,10 @@ onMounted(() => {
                 <!-- Header -->
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3">
+                        <Button variant="ghost" size="icon" class="cursor-pointer" :title="historyExpanded ? 'Sembunyikan riwayat chat' : 'Tampilkan riwayat chat'" @click="historyExpanded = !historyExpanded">
+                            <PanelLeftClose v-if="historyExpanded" class="h-4 w-4" />
+                            <PanelLeft v-else class="h-4 w-4" />
+                        </Button>
                         <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                             <Bot class="h-5 w-5 text-primary" />
                         </div>
@@ -323,22 +441,28 @@ onMounted(() => {
 
                 <!-- Chat Area -->
                 <div class="flex-1 overflow-y-auto space-y-4 mb-4" ref="chatContainer">
-                    <!-- Welcome -->
-                    <div v-if="messages.length === 0" class="text-center py-12">
-                        <Sparkles class="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <h2 class="text-lg font-medium mb-2">Halo! Saya AI Agent untuk Manage Website</h2>
-                        <p class="text-sm text-muted-foreground mb-6">
-                            Saya bisa membantu mengecek update, membuat artikel, audit SEO, dan lainnya.
-                        </p>
-                        <div class="flex flex-wrap justify-center gap-2 max-w-lg mx-auto">
-                            <button
-                                v-for="s in suggestions"
-                                :key="s"
-                                class="text-xs text-left bg-muted/50 hover:bg-muted border rounded-md px-3 py-2 cursor-pointer transition-colors"
-                                @click="inputMessage = s; sendMessage()"
-                            >
-                                {{ s }}
-                            </button>
+                    <!-- Confirmation card (pending high-risk actions) -->
+                    <div v-if="pendingActions.length > 0 && !isConfirming" class="border-2 border-amber-400 rounded-xl bg-amber-50 p-4 space-y-3">
+                        <div class="flex items-center gap-2 text-amber-800">
+                            <Zap class="h-4 w-4" />
+                            <p class="text-sm font-semibold">AI ingin mengeksekusi aksi berikut:</p>
+                        </div>
+                        <ul class="space-y-1.5">
+                            <li v-for="(pa, i) in pendingActions" :key="i" class="text-sm text-amber-900 flex items-start gap-2">
+                                <span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-amber-500 flex-shrink-0"></span>
+                                <span>
+                                    <span class="font-medium">{{ formatActionName(pa.action) }}</span>
+                                    <span v-if="pa.description" class="text-amber-700"> — {{ pa.description }}</span>
+                                </span>
+                            </li>
+                        </ul>
+                        <div class="flex gap-2">
+                            <Button size="sm" class="cursor-pointer" :disabled="isLoading" @click="confirmActions">
+                                Jalankan
+                            </Button>
+                            <Button size="sm" variant="outline" class="cursor-pointer" :disabled="isLoading" @click="cancelActions">
+                                Batal
+                            </Button>
                         </div>
                     </div>
 
@@ -477,6 +601,119 @@ onMounted(() => {
                                             </div>
                                         </div>
 
+                                        <!-- list_tasks result -->
+                                        <div v-if="action.action === 'list_tasks' && action.result?.tasks !== undefined">
+                                            <p v-if="action.result.tasks.length === 0" class="text-green-600 flex items-center gap-1">
+                                                <CheckCircle2 class="h-3.5 w-3.5" /> Tidak ada tugas ditemukan
+                                            </p>
+                                            <div v-else class="space-y-2">
+                                                <div v-for="t in action.result.tasks" :key="t.id" class="border-l-2 border-primary/50 pl-3">
+                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                        <p class="font-medium">{{ t.title }}</p>
+                                                        <Badge :variant="statusVariant(t.status)" class="text-xs">{{ t.status_label }}</Badge>
+                                                        <Badge v-if="t.priority === 'high'" variant="destructive" class="text-xs">High</Badge>
+                                                        <Badge v-else-if="t.priority === 'medium'" variant="secondary" class="text-xs">Medium</Badge>
+                                                    </div>
+                                                    <p class="text-xs text-muted-foreground">
+                                                        <template v-if="t.category">{{ t.category }} · </template>
+                                                        <template v-if="t.assignee">Assignee: {{ t.assignee }} · </template>
+                                                        <template v-if="t.due_date">Tenggat: {{ t.due_date }}</template>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- create_task / update_task_status result -->
+                                        <div v-if="['create_task', 'update_task_status'].includes(action.action) && action.result?.success">
+                                            <p class="text-green-600 flex items-center gap-1">
+                                                <CheckCircle2 class="h-3.5 w-3.5" /> {{ action.result.message }}
+                                            </p>
+                                        </div>
+
+                                        <!-- list_customers result -->
+                                        <div v-if="action.action === 'list_customers' && action.result?.customers !== undefined">
+                                            <p v-if="action.result.customers.length === 0" class="text-green-600 flex items-center gap-1">
+                                                <CheckCircle2 class="h-3.5 w-3.5" /> Tidak ada customer ditemukan
+                                            </p>
+                                            <div v-else class="space-y-2">
+                                                <div v-for="c in action.result.customers" :key="c.id" class="border-l-2 border-primary/50 pl-3">
+                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                        <p class="font-medium">{{ c.name }}</p>
+                                                        <Badge :variant="customerStatusVariant(c.status)" class="text-xs">{{ c.status_label }}</Badge>
+                                                    </div>
+                                                    <p class="text-xs text-muted-foreground">
+                                                        {{ c.email }}<template v-if="c.phone"> · {{ c.phone }}</template><template v-if="c.city"> · {{ c.city }}</template>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- create_customer / update_customer_status result -->
+                                        <div v-if="['create_customer', 'update_customer_status'].includes(action.action) && action.result?.success">
+                                            <p class="text-green-600 flex items-center gap-1">
+                                                <CheckCircle2 class="h-3.5 w-3.5" /> {{ action.result.message }}
+                                            </p>
+                                        </div>
+
+                                        <!-- list_unpaid_invoices result -->
+                                        <div v-if="action.action === 'list_unpaid_invoices' && action.result?.invoices !== undefined">
+                                            <p v-if="action.result.invoices.length === 0" class="text-green-600 flex items-center gap-1">
+                                                <CheckCircle2 class="h-3.5 w-3.5" /> Tidak ada invoice belum dibayar
+                                            </p>
+                                            <div v-else class="space-y-2">
+                                                <div class="flex gap-2 flex-wrap mb-2">
+                                                    <Badge variant="secondary" class="text-xs">{{ action.result.total }} invoice</Badge>
+                                                    <Badge variant="secondary" class="text-xs">Total: Rp {{ formatRupiah(action.result.total_amount) }}</Badge>
+                                                    <Badge v-if="action.result.overdue_count" variant="destructive" class="text-xs">{{ action.result.overdue_count }} terlambat</Badge>
+                                                </div>
+                                                <div v-for="inv in action.result.invoices" :key="inv.id" class="border-l-2 border-primary/50 pl-3">
+                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                        <p class="font-medium">{{ inv.invoice_number }}</p>
+                                                        <Badge :variant="inv.status === 'overdue' ? 'destructive' : 'secondary'" class="text-xs">{{ inv.status_label }}</Badge>
+                                                    </div>
+                                                    <p class="text-xs text-muted-foreground">
+                                                        {{ inv.customer }} · Rp {{ formatRupiah(inv.amount) }}<template v-if="inv.due_date"> · Jatuh tempo: {{ inv.due_date }}</template>
+                                                        <template v-if="inv.days_late"> · Telat {{ inv.days_late }} hari</template>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- mark_invoice_paid result -->
+                                        <div v-if="action.action === 'mark_invoice_paid' && action.result?.success">
+                                            <p class="text-green-600 flex items-center gap-1">
+                                                <CheckCircle2 class="h-3.5 w-3.5" /> {{ action.result.message }}
+                                            </p>
+                                        </div>
+
+                                        <!-- business_summary result -->
+                                        <div v-if="action.action === 'business_summary' && action.result?.customers" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                            <div class="rounded-lg border bg-muted/40 p-2.5">
+                                                <p class="text-[10px] uppercase tracking-wide text-muted-foreground">Customer</p>
+                                                <p class="font-semibold">{{ action.result.customers.total }} <span class="text-xs text-muted-foreground">({{ action.result.customers.active }} aktif)</span></p>
+                                            </div>
+                                            <div class="rounded-lg border bg-muted/40 p-2.5">
+                                                <p class="text-[10px] uppercase tracking-wide text-muted-foreground">Tugas</p>
+                                                <p class="font-semibold">{{ action.result.tasks.total }} <span class="text-xs text-muted-foreground">({{ action.result.tasks.in_progress }} berjalan)</span></p>
+                                            </div>
+                                            <div class="rounded-lg border bg-muted/40 p-2.5">
+                                                <p class="text-[10px] uppercase tracking-wide text-muted-foreground">Invoice Belum Bayar</p>
+                                                <p class="font-semibold">{{ action.result.invoices.unpaid_total }} <span class="text-xs text-muted-foreground">· Rp {{ formatRupiah(action.result.invoices.unpaid_sum) }}</span></p>
+                                            </div>
+                                            <div v-if="action.result.invoices.overdue_total > 0" class="rounded-lg border bg-muted/40 p-2.5">
+                                                <p class="text-[10px] uppercase tracking-wide text-muted-foreground">Overdue</p>
+                                                <p class="font-semibold text-destructive">{{ action.result.invoices.overdue_total }}</p>
+                                            </div>
+                                            <div class="rounded-lg border bg-muted/40 p-2.5">
+                                                <p class="text-[10px] uppercase tracking-wide text-muted-foreground">Karyawan</p>
+                                                <p class="font-semibold">{{ action.result.employees.total }}</p>
+                                            </div>
+                                            <div class="rounded-lg border bg-muted/40 p-2.5">
+                                                <p class="text-[10px] uppercase tracking-wide text-muted-foreground">Revenue Order Aktif</p>
+                                                <p class="font-semibold">Rp {{ formatRupiah(action.result.active_order_revenue) }}</p>
+                                            </div>
+                                        </div>
+
                                         <!-- Generic result -->
                                         <p v-if="action.result?.message" class="text-xs text-muted-foreground mt-1">{{ action.result.message }}</p>
                                     </div>
@@ -502,23 +739,19 @@ onMounted(() => {
                         <Textarea
                             v-model="inputMessage"
                             placeholder="Ketik perintah... contoh: cek website yang perlu update wp core"
-                            :disabled="isLoading"
+                            :disabled="isLoading || isConfirming"
                             class="min-h-[52px] max-h-32 resize-none"
                             rows="2"
                             @keydown="handleKeydown"
                         />
                         <Button
                             @click="sendMessage"
-                            :disabled="isLoading || !inputMessage.trim()"
+                            :disabled="isLoading || isConfirming || !inputMessage.trim()"
                             class="cursor-pointer flex-shrink-0 h-[52px] w-[52px]"
                         >
                             <Send class="h-4 w-4" />
                         </Button>
                     </div>
-                    <p class="text-xs text-muted-foreground mt-2">
-                        Tips: Kamu bisa minta cek update, buat artikel, audit SEO, atau tanya kondisi website.
-                        <span class="text-primary">Enter</span> untuk kirim, <span class="text-primary">Shift+Enter</span> untuk baris baru.
-                    </p>
                 </div>
             </div>
         </div>

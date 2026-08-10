@@ -3,11 +3,21 @@
 namespace App\Services;
 
 use App\Enums\ActivityType;
+use App\Models\BlogPost;
+use App\Models\Customer;
+use App\Models\DemoWebsite;
+use App\Models\Employee;
+use App\Models\Expense;
+use App\Models\HostingPlan;
+use App\Models\Invoice;
 use App\Models\JournalEntry;
 use App\Models\Order;
+use App\Models\Task;
 use App\Models\WebsiteClient;
 use App\Services\AiAgents\ArticleAgent;
+use App\Services\AiAgents\CustomerAgent;
 use App\Services\AiAgents\OrderAgent;
+use App\Services\AiAgents\TaskAgent;
 use App\Services\AiAgents\WebsiteAgent;
 use Illuminate\Support\Facades\Log;
 
@@ -16,20 +26,37 @@ use Illuminate\Support\Facades\Log;
  */
 class AiAgentService
 {
+    /**
+     * Aksi berisiko tinggi — TIDAK dieksekusi langsung, menunggu konfirmasi user.
+     * Aksi di luar daftar ini (baca & tulis ringan) dieksekusi otomatis.
+     */
+    private const HIGH_RISK_ACTIONS = [
+        'update_wp',
+        'update_plugins',
+        'create_article',
+        'renew_order',
+        'mark_invoice_paid',
+        'update_customer_status',
+        'create_customer',
+    ];
+
     public function __construct(
         private AiClient $aiClient,
         private WebsiteAgent $websiteAgent,
         private ArticleAgent $articleAgent,
         private OrderAgent $orderAgent,
+        private TaskAgent $taskAgent,
+        private CustomerAgent $customerAgent,
     ) {}
 
     /**
      * Process a user command and return the AI response + actions taken.
+     * Aksi aman dieksekusi; aksi berisiko tinggi dikembalikan sebagai pending_actions.
      * $onEvent dipanggil tiap tahap workflow: fn(string $message, string $status, string $agent).
      */
     public function process(string $userMessage, ?callable $onEvent = null): array
     {
-        // 1. Gather context: all websites & orders with their current state
+        // 1. Gather context: all websites & orders with their current state + ringkasan bisnis
         $context = $this->buildContext();
 
         if ($onEvent) {
@@ -39,14 +66,14 @@ class AiAgentService
         // 2. Send to AI to determine intent and required actions
         $aiResponse = $this->callAI($userMessage, $context);
 
-        // 3. Parse & execute actions
-        $results = $this->executeActions($aiResponse, $onEvent);
+        // 3. Execute safe actions & collect high-risk as pending
+        [$executed, $pending] = $this->executeActions($aiResponse, $onEvent);
 
         // 4. Lampirkan hasil eksekusi nyata ke pesan agar AI tidak mengklaim sukses sebelum aksi dijalankan
         $message = $aiResponse['message'] ?? '';
-        if ($results) {
+        if ($executed) {
             $lines = [];
-            foreach ($results as $r) {
+            foreach ($executed as $r) {
                 $res = $r['result'];
                 if (isset($res['error'])) {
                     $lines[] = '[GAGAL] ' . $r['action'] . ': ' . $res['error'];
@@ -57,11 +84,44 @@ class AiAgentService
             $message = trim($message) . "\n\n" . implode("\n", $lines);
         }
 
+        if ($pending) {
+            $pendings = array_map(fn ($p) => $p['action'] . ($p['description'] ? " ({$p['description']})" : ''), $pending);
+            $message = trim($message) . "\n\nMenunggu konfirmasi: " . implode(', ', $pendings) . '.';
+        }
+
         return [
             'ai_response' => $message,
-            'actions' => $results,
+            'actions' => $executed,
+            'pending_actions' => $pending,
             'success' => true,
         ];
+    }
+
+    /**
+     * Eksekusi aksi berisiko tinggi yang sudah dikonfirmasi user (dari session).
+     */
+    public function executePendingActions(array $pendingActions, ?callable $onEvent = null): array
+    {
+        $executed = [];
+
+        foreach ($pendingActions as $action) {
+            $actionName = $action['action'] ?? '';
+            $params = $action['params'] ?? [];
+
+            $result = $this->runAction($actionName, $params, $onEvent);
+
+            if (!isset($result['error'])) {
+                $this->logJournal($actionName, $params, $result);
+            }
+
+            $executed[] = [
+                'action' => $actionName,
+                'params' => $params,
+                'result' => $result,
+            ];
+        }
+
+        return $executed;
     }
 
     private function buildContext(): array
@@ -98,9 +158,75 @@ class AiAgentService
         ])->values()->all();
 
         return [
+            'summary' => $this->buildBusinessSummary(),
             'websites' => $websiteData,
             'orders' => $orderData,
+            'task_categories' => TaskAgent::categoriesBrief(),
+            'users' => TaskAgent::usersBrief(),
         ];
+    }
+
+    /**
+     * Ringkasan agregat bisnis (hemat token vs kirim semua record).
+     */
+    private function buildBusinessSummary(): array
+    {
+        $customers = Customer::selectRaw("COUNT(*) total, SUM(status='active') active, SUM(status='inactive') inactive, SUM(status='suspended') suspended")->first();
+        $tasks = Task::selectRaw("COUNT(*) total, SUM(status='todo') todo, SUM(status='in_progress') in_progress, SUM(status='done') done, SUM(status='cancelled') cancelled")->first();
+        $invoices = Invoice::whereIn('status', ['sent', 'overdue'])->get();
+        $unpaidSum = $invoices->sum(fn ($i) => $i->getFinalAmountAttribute());
+        $overdueInvoices = $invoices->where('status', 'overdue');
+        $overdueSum = $overdueInvoices->sum(fn ($i) => $i->getFinalAmountAttribute());
+        $employees = Employee::selectRaw("COUNT(*) total, SUM(status='active') active")->first();
+        $blog = BlogPost::selectRaw("COUNT(*) total, SUM(status='published') published")->first();
+        $hosting = HostingPlan::selectRaw("COUNT(*) total, SUM(is_active) active")->first();
+        $demoCount = DemoWebsite::count();
+        $sales = Order::where('status', 'active')->sum('total_amount');
+
+        $summary = [
+            'customers' => [
+                'total' => (int) $customers->total,
+                'active' => (int) ($customers->active ?? 0),
+                'inactive' => (int) ($customers->inactive ?? 0),
+                'suspended' => (int) ($customers->suspended ?? 0),
+            ],
+            'tasks' => [
+                'total' => (int) $tasks->total,
+                'todo' => (int) ($tasks->todo ?? 0),
+                'in_progress' => (int) ($tasks->in_progress ?? 0),
+                'done' => (int) ($tasks->done ?? 0),
+                'cancelled' => (int) ($tasks->cancelled ?? 0),
+            ],
+            'invoices' => [
+                'unpaid_total' => $invoices->count(),
+                'unpaid_sum' => round($unpaidSum, 2),
+                'overdue_total' => $overdueInvoices->count(),
+                'overdue_sum' => round($overdueSum, 2),
+            ],
+            'employees' => [
+                'total' => (int) $employees->total,
+                'active' => (int) ($employees->active ?? 0),
+            ],
+            'blog_posts' => [
+                'total' => (int) $blog->total,
+                'published' => (int) ($blog->published ?? 0),
+            ],
+            'hosting_plans' => [
+                'total' => (int) $hosting->total,
+                'active' => (int) ($hosting->active ?? 0),
+            ],
+            'demo_websites' => $demoCount,
+            'active_order_revenue' => round((float) $sales, 2),
+        ];
+
+        // Expense bulan ini — hanya untuk super admin (data keuangan sensitif)
+        if (auth()->user()?->isSuperAdmin()) {
+            $summary['expenses_this_month'] = round(Expense::whereMonth('expense_date', now()->month)
+                ->whereYear('expense_date', now()->year)
+                ->sum('amount'), 2);
+        }
+
+        return $summary;
     }
 
     private function callAI(string $userMessage, array $context): array
@@ -128,30 +254,53 @@ class AiAgentService
         $contextJson = json_encode($context, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         return <<<PROMPT
-Kamu adalah AI Agent untuk mengelola aplikasi WSCRM (website WordPress, layanan hosting/domain, dan order klien). Kamu BISA menjalankan aksi nyata di sistem.
+Kamu adalah AI Agent untuk mengelola aplikasi WSCRM (website WordPress, layanan hosting/domain, order klien, tugas tim, customer, dan invoice). Kamu BISA menjalankan aksi nyata di sistem.
 
-## Data Saat Ini:
+## Data Saat Ini (termasuk ringkasan bisnis di blok "summary"):
 ```json
 {$contextJson}
 ```
 
 ## Aksi yang Bisa Kamu Lakukan:
+**Website & Konten:**
 1. **check_updates** - Cek website mana yang perlu update WP core/plugin/tema (sertakan website_id jika user menyebut website/domain tertentu, cari id-nya di data websites)
-2. **update_wp** - Update WordPress core untuk website tertentu (perlu id)
-3. **update_plugins** - Update plugin spesifik di website tertentu (perlu id, plugin_slugs[])
-4. **create_article** - Buat artikel SEO lengkap otomatis: generate konten, sisipkan 2 gambar, audit SEO, publish jika skor >= 80, revisi otomatis jika gagal (perlu website_id, title/topik, opsional keyword)
+2. **update_wp** - Update WordPress core untuk website tertentu (perlu id) — membutuhkan konfirmasi user
+3. **update_plugins** - Update plugin spesifik di website tertentu (perlu id, plugin_slugs[]) — membutuhkan konfirmasi user
+4. **create_article** - Buat artikel SEO lengkap otomatis ke WP klien: generate konten, sisipkan 2 gambar, audit SEO, publish jika skor >= 80 (perlu website_id, title/topik, opsional keyword) — membutuhkan konfirmasi user
 5. **audit_seo** - Audit SEO halaman website (perlu id, url)
+
+**Order:**
 6. **check_expiring_orders** - Cek berapa order/layanan aktif yang akan berakhir (kadaluarsa) bulan ini
-7. **renew_order** - Perpanjang masa aktif order/layanan dan/atau tandai sudah dibayar (perlu id dari data orders, months (jumlah bulan, default 3), mark_paid (true/false))
+7. **renew_order** - Perpanjang masa aktif order/layanan dan/atau tandai sudah dibayar (perlu id dari data orders, months (jumlah bulan, default 3), mark_paid (true/false)) — membutuhkan konfirmasi user
+
+**Tugas (Tasks):**
+8. **list_tasks** - Daftar tugas (opsional status, task_category_id, assigned_user_id). Cari id user di data "users", id kategori di "task_categories"
+9. **create_task** - Buat tugas baru (perlu title; opsional description, priority low/medium/high, due_date YYYY-MM-DD, task_category_id, assigned_user_id, assigned_department). Eksekusi langsung tanpa konfirmasi
+10. **update_task_status** - Ubah status tugas (perlu id, status todo/in_progress/done/cancelled). Eksekusi langsung
+
+**Customer & Invoice:**
+11. **list_customers** - Daftar customer (opsional search, status active/inactive/suspended)
+12. **create_customer** - Buat customer baru (perlu name, email; opsional username, phone, address, city, country, postal_code) — membutuhkan konfirmasi user
+13. **update_customer_status** - Ubah status customer active/inactive/suspended (perlu id, status) — membutuhkan konfirmasi user
+14. **list_unpaid_invoices** - Daftar invoice belum dibayar/terlambat
+15. **mark_invoice_paid** - Tandai invoice lunas (perlu id) — membutuhkan konfirmasi user
+
+**Laporan:**
+16. **business_summary** - Ringkasan agregat bisnis: penjualan aktif, invoice belum bayar, tugas, customer, karyawan, hosting plan, blog, demo website
 
 ## Aturan:
-- Selalu analisis data website & order terlebih dahulu
+- Selalu analisis data (summary + website/order/task_categories/users) terlebih dahulu
 - Jika user minta "cek update", gunakan aksi **check_updates** dan sebutkan website mana saja
-- Jika user menyebut website/domain tertentu (misal "cek demo1.sweet.web.id" atau "website 3"), cari id website itu di data websites lalu SERTAKAN **website_id** (atau **id**) pada SEMUA aksi yang membutuhkan website: check_updates, update_wp, update_plugins, audit_seo, dan create_article — jangan jalankan aksi website tanpa website_id
+- Jika user menyebut website/domain tertentu (misal "cek demo1.sweet.web.id" atau "website 3"), cari id website itu di data websites lalu SERTAKAN **website_id** (atau **id**) pada SEMUA aksi yang membutuhkan website — jangan jalankan aksi website tanpa website_id
 - Jika user minta "update", jalankan aksi update
-- Jika user minta "buat artikel" (dengan/tanpa menyebut gambar, audit, publish), jalankan aksi **create_article** — sistem otomatis generate konten, sisipkan gambar, audit, dan publish jika skor lolos
-- Jika user tanya order yang akan mati/berakhir/kadaluarsa/habis masa aktif bulan ini, gunakan aksi **check_expiring_orders**
-- Jika user bilang order sudah bayar / minta perpanjang / "set expired N bulan" / tandai lunas, cari order di data orders berdasarkan nama customer/domain lalu gunakan aksi **renew_order** dengan id yang sesuai, months sesuai permintaan (default 3 jika tidak disebut), dan mark_paid true jika user menyebut sudah bayar
+- Jika user minta "buat artikel", jalankan aksi **create_article** — sistem otomatis generate konten, sisipkan gambar, audit, dan publish jika skor lolos
+- Jika user tanya order yang akan mati/berakhir/kadaluarsa bulan ini, gunakan aksi **check_expiring_orders**
+- Jika user bilang order sudah bayar / minta perpanjang / tandai lunas, cari order di data orders lalu gunakan aksi **renew_order** dengan id sesuai, months sesuai permintaan (default 3), dan mark_paid true jika user menyebut sudah bayar
+- Jika user tanya tugas/PR/pekerjaan tim, gunakan **list_tasks** (untuk laporan) atau **create_task** (untuk membuat tugas). Assignee: cari id user di data "users" berdasarkan nama, isi assigned_user_id; bila user tidak menyebut, jangan isi
+- Jika user tanya customer, gunakan **list_customers**; buat customer baru pakai **create_customer**
+- Jika user tanya invoice belum bayar/terlambat/tunggakan, gunakan **list_unpaid_invoices**
+- Jika user minta ringkasan/condition penjualan/laporan kondisi bisnis, gunakan **business_summary** — jawab langsung dari datanya
+- Aksi yang bertanda "membutuhkan konfirmasi user" TIDAK langsung jalan; sistem akan menampilkan konfirmasi ke user. Kamu tetap kirim aksi tersebut di JSON, sistem yang menangani konfirmasi
 - Balas dalam bahasa Indonesia yang natural dan informatif
 - Di akhir respons, sertakan JSON aksi yang perlu dijalankan dalam format:
 ```json
@@ -183,10 +332,14 @@ PROMPT;
         return ['message' => $content, 'actions' => []];
     }
 
+    /**
+     * Pisahkan aksi: aman dieksekusi sekarang, berisiko tinggi jadi pending.
+     */
     private function executeActions(array $aiResponse, ?callable $onEvent = null): array
     {
         $actions = $aiResponse['actions'] ?? [];
-        $results = [];
+        $executed = [];
+        $pending = [];
         $seen = [];
 
         foreach ($actions as $action) {
@@ -200,34 +353,76 @@ PROMPT;
 
             $params = $action['params'] ?? [];
 
-            try {
-                $result = match ($actionName) {
-                    'check_updates' => $this->websiteAgent->checkUpdates($params['website_id'] ?? $params['id'] ?? null, $onEvent),
-                    'update_wp' => $this->websiteAgent->updateWp($params['id'] ?? null, $onEvent),
-                    'update_plugins' => $this->websiteAgent->updatePlugins($params['id'] ?? null, $params['plugin_slugs'] ?? [], $onEvent),
-                    'audit_seo' => $this->websiteAgent->auditSeo($params['id'] ?? null, $params['url'] ?? '', $onEvent),
-                    'create_article' => $this->articleAgent->createArticle($params['website_id'] ?? $params['id'] ?? null, $params['title'] ?? '', $params['content'] ?? '', $params['keyword'] ?? '', $onEvent),
-                    'check_expiring_orders' => $this->orderAgent->checkExpiringOrders($onEvent),
-                    'renew_order' => $this->orderAgent->renewOrder($params['id'] ?? null, (int) ($params['months'] ?? 3), (bool) ($params['mark_paid'] ?? false), $onEvent),
-                    default => ['error' => "Aksi tidak dikenal: {$actionName}"],
-                };
-            } catch (\Exception $e) {
-                $result = ['error' => $e->getMessage()];
+            if (in_array($actionName, self::HIGH_RISK_ACTIONS, true)) {
+                $pending[] = [
+                    'action' => $actionName,
+                    'params' => $params,
+                    'description' => $this->describeAction($actionName, $params),
+                ];
+                if ($onEvent) {
+                    $onEvent("Aksi {$actionName} menunggu konfirmasi user", 'pending', 'Orchestrator');
+                }
+                continue;
             }
 
-            // Catat aktivitas AI yang sukses ke jurnal maintenance (untuk report)
+            $result = $this->runAction($actionName, $params, $onEvent);
+
             if (!isset($result['error'])) {
                 $this->logJournal($actionName, $params, $result);
             }
 
-            $results[] = [
+            $executed[] = [
                 'action' => $actionName,
                 'params' => $params,
                 'result' => $result,
             ];
         }
 
-        return $results;
+        return [$executed, $pending];
+    }
+
+    private function runAction(string $actionName, array $params, ?callable $onEvent = null): array
+    {
+        try {
+            return match ($actionName) {
+                'check_updates' => $this->websiteAgent->checkUpdates($params['website_id'] ?? $params['id'] ?? null, $onEvent),
+                'update_wp' => $this->websiteAgent->updateWp($params['id'] ?? null, $onEvent),
+                'update_plugins' => $this->websiteAgent->updatePlugins($params['id'] ?? null, $params['plugin_slugs'] ?? [], $onEvent),
+                'audit_seo' => $this->websiteAgent->auditSeo($params['id'] ?? null, $params['url'] ?? '', $onEvent),
+                'create_article' => $this->articleAgent->createArticle($params['website_id'] ?? $params['id'] ?? null, $params['title'] ?? '', $params['content'] ?? '', $params['keyword'] ?? '', $onEvent),
+                'check_expiring_orders' => $this->orderAgent->checkExpiringOrders($onEvent),
+                'renew_order' => $this->orderAgent->renewOrder($params['id'] ?? null, (int) ($params['months'] ?? 3), (bool) ($params['mark_paid'] ?? false), $onEvent),
+                'list_tasks' => $this->taskAgent->listTasks($params['status'] ?? null, $params['task_category_id'] ?? null, $params['assigned_user_id'] ?? null, $onEvent),
+                'create_task' => $this->taskAgent->createTask($params, $onEvent),
+                'update_task_status' => $this->taskAgent->updateTaskStatus((int) ($params['id'] ?? 0), $params['status'] ?? '', $onEvent),
+                'list_customers' => $this->customerAgent->listCustomers($params['search'] ?? null, $params['status'] ?? null, $onEvent),
+                'create_customer' => $this->customerAgent->createCustomer($params, $onEvent),
+                'update_customer_status' => $this->customerAgent->updateCustomerStatus((int) ($params['id'] ?? 0), $params['status'] ?? '', $onEvent),
+                'list_unpaid_invoices' => $this->customerAgent->listUnpaidInvoices($onEvent),
+                'mark_invoice_paid' => $this->customerAgent->markInvoicePaid((int) ($params['id'] ?? 0), $params['payment_method'] ?? null, $onEvent),
+                'business_summary' => $this->buildBusinessSummary(),
+                default => ['error' => "Aksi tidak dikenal: {$actionName}"],
+            };
+        } catch (\Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Deskripsi ringkas aksi untuk kartu konfirmasi user.
+     */
+    private function describeAction(string $action, array $params): string
+    {
+        return match ($action) {
+            'update_wp' => 'Update WP core',
+            'update_plugins' => 'Update plugin: ' . implode(', ', $params['plugin_slugs'] ?? ['semua']),
+            'create_article' => 'Publikasi artikel: ' . ($params['title'] ?? $params['keyword'] ?? 'topik'),
+            'renew_order' => 'Perpanjang order #' . ($params['id'] ?? '?') . ' selama ' . ($params['months'] ?? 3) . ' bulan' . (!empty($params['mark_paid']) ? ' + tandai lunas' : ''),
+            'mark_invoice_paid' => 'Tandai invoice #' . ($params['id'] ?? '?') . ' lunas',
+            'update_customer_status' => 'Ubah status customer #' . ($params['id'] ?? '?') . ' → ' . ($params['status'] ?? '?'),
+            'create_customer' => 'Buat customer baru: ' . ($params['name'] ?? '?'),
+            default => '',
+        };
     }
 
     /**
