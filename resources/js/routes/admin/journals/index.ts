@@ -314,7 +314,7 @@ edit.head = (args: { journal: number | { id: number } } | [journal: number | { i
     edit.form = editForm
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::update
- * @see app/Http/Controllers/Admin/JournalEntryController.php:81
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:85
  * @route '/admin/journals/{journal}'
  */
 export const update = (args: { journal: number | { id: number } } | [journal: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -329,7 +329,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::update
- * @see app/Http/Controllers/Admin/JournalEntryController.php:81
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:85
  * @route '/admin/journals/{journal}'
  */
 update.url = (args: { journal: number | { id: number } } | [journal: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -362,7 +362,7 @@ update.url = (args: { journal: number | { id: number } } | [journal: number | { 
 
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::update
- * @see app/Http/Controllers/Admin/JournalEntryController.php:81
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:85
  * @route '/admin/journals/{journal}'
  */
 update.put = (args: { journal: number | { id: number } } | [journal: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -371,7 +371,7 @@ update.put = (args: { journal: number | { id: number } } | [journal: number | { 
 })
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::update
- * @see app/Http/Controllers/Admin/JournalEntryController.php:81
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:85
  * @route '/admin/journals/{journal}'
  */
 update.patch = (args: { journal: number | { id: number } } | [journal: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -381,7 +381,7 @@ update.patch = (args: { journal: number | { id: number } } | [journal: number | 
 
     /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::update
- * @see app/Http/Controllers/Admin/JournalEntryController.php:81
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:85
  * @route '/admin/journals/{journal}'
  */
     const updateForm = (args: { journal: number | { id: number } } | [journal: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -396,7 +396,7 @@ update.patch = (args: { journal: number | { id: number } } | [journal: number | 
 
             /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::update
- * @see app/Http/Controllers/Admin/JournalEntryController.php:81
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:85
  * @route '/admin/journals/{journal}'
  */
         updateForm.put = (args: { journal: number | { id: number } } | [journal: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -410,7 +410,7 @@ update.patch = (args: { journal: number | { id: number } } | [journal: number | 
         })
             /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::update
- * @see app/Http/Controllers/Admin/JournalEntryController.php:81
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:85
  * @route '/admin/journals/{journal}'
  */
         updateForm.patch = (args: { journal: number | { id: number } } | [journal: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -426,7 +426,7 @@ update.patch = (args: { journal: number | { id: number } } | [journal: number | 
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::destroy
- * @see app/Http/Controllers/Admin/JournalEntryController.php:89
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:93
  * @route '/admin/journals/{journal}'
  */
 export const destroy = (args: { journal: number | { id: number } } | [journal: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -441,7 +441,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::destroy
- * @see app/Http/Controllers/Admin/JournalEntryController.php:89
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:93
  * @route '/admin/journals/{journal}'
  */
 destroy.url = (args: { journal: number | { id: number } } | [journal: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -474,7 +474,7 @@ destroy.url = (args: { journal: number | { id: number } } | [journal: number | {
 
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::destroy
- * @see app/Http/Controllers/Admin/JournalEntryController.php:89
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:93
  * @route '/admin/journals/{journal}'
  */
 destroy.delete = (args: { journal: number | { id: number } } | [journal: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -484,7 +484,7 @@ destroy.delete = (args: { journal: number | { id: number } } | [journal: number 
 
     /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::destroy
- * @see app/Http/Controllers/Admin/JournalEntryController.php:89
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:93
  * @route '/admin/journals/{journal}'
  */
     const destroyForm = (args: { journal: number | { id: number } } | [journal: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -499,7 +499,7 @@ destroy.delete = (args: { journal: number | { id: number } } | [journal: number 
 
             /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::destroy
- * @see app/Http/Controllers/Admin/JournalEntryController.php:89
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:93
  * @route '/admin/journals/{journal}'
  */
         destroyForm.delete = (args: { journal: number | { id: number } } | [journal: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -515,7 +515,7 @@ destroy.delete = (args: { journal: number | { id: number } } | [journal: number 
     destroy.form = destroyForm
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::report
- * @see app/Http/Controllers/Admin/JournalEntryController.php:97
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:101
  * @route '/admin/journals/report'
  */
 export const report = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -530,7 +530,7 @@ report.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::report
- * @see app/Http/Controllers/Admin/JournalEntryController.php:97
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:101
  * @route '/admin/journals/report'
  */
 report.url = (options?: RouteQueryOptions) => {
@@ -539,7 +539,7 @@ report.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::report
- * @see app/Http/Controllers/Admin/JournalEntryController.php:97
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:101
  * @route '/admin/journals/report'
  */
 report.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -548,7 +548,7 @@ report.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::report
- * @see app/Http/Controllers/Admin/JournalEntryController.php:97
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:101
  * @route '/admin/journals/report'
  */
 report.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -558,7 +558,7 @@ report.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::report
- * @see app/Http/Controllers/Admin/JournalEntryController.php:97
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:101
  * @route '/admin/journals/report'
  */
     const reportForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -568,7 +568,7 @@ report.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::report
- * @see app/Http/Controllers/Admin/JournalEntryController.php:97
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:101
  * @route '/admin/journals/report'
  */
         reportForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -577,7 +577,7 @@ report.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::report
- * @see app/Http/Controllers/Admin/JournalEntryController.php:97
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:101
  * @route '/admin/journals/report'
  */
         reportForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -593,7 +593,7 @@ report.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     report.form = reportForm
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::exportMethod
- * @see app/Http/Controllers/Admin/JournalEntryController.php:121
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:125
  * @route '/admin/journals/export'
  */
 export const exportMethod = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -608,7 +608,7 @@ exportMethod.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::exportMethod
- * @see app/Http/Controllers/Admin/JournalEntryController.php:121
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:125
  * @route '/admin/journals/export'
  */
 exportMethod.url = (options?: RouteQueryOptions) => {
@@ -617,7 +617,7 @@ exportMethod.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::exportMethod
- * @see app/Http/Controllers/Admin/JournalEntryController.php:121
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:125
  * @route '/admin/journals/export'
  */
 exportMethod.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -626,7 +626,7 @@ exportMethod.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::exportMethod
- * @see app/Http/Controllers/Admin/JournalEntryController.php:121
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:125
  * @route '/admin/journals/export'
  */
 exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -636,7 +636,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::exportMethod
- * @see app/Http/Controllers/Admin/JournalEntryController.php:121
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:125
  * @route '/admin/journals/export'
  */
     const exportMethodForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -646,7 +646,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::exportMethod
- * @see app/Http/Controllers/Admin/JournalEntryController.php:121
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:125
  * @route '/admin/journals/export'
  */
         exportMethodForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -655,7 +655,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::exportMethod
- * @see app/Http/Controllers/Admin/JournalEntryController.php:121
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:125
  * @route '/admin/journals/export'
  */
         exportMethodForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -671,7 +671,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     exportMethod.form = exportMethodForm
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::exportExcel
- * @see app/Http/Controllers/Admin/JournalEntryController.php:163
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:167
  * @route '/admin/journals/export-excel'
  */
 export const exportExcel = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -686,7 +686,7 @@ exportExcel.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::exportExcel
- * @see app/Http/Controllers/Admin/JournalEntryController.php:163
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:167
  * @route '/admin/journals/export-excel'
  */
 exportExcel.url = (options?: RouteQueryOptions) => {
@@ -695,7 +695,7 @@ exportExcel.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::exportExcel
- * @see app/Http/Controllers/Admin/JournalEntryController.php:163
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:167
  * @route '/admin/journals/export-excel'
  */
 exportExcel.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -704,7 +704,7 @@ exportExcel.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::exportExcel
- * @see app/Http/Controllers/Admin/JournalEntryController.php:163
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:167
  * @route '/admin/journals/export-excel'
  */
 exportExcel.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -714,7 +714,7 @@ exportExcel.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::exportExcel
- * @see app/Http/Controllers/Admin/JournalEntryController.php:163
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:167
  * @route '/admin/journals/export-excel'
  */
     const exportExcelForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -724,7 +724,7 @@ exportExcel.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::exportExcel
- * @see app/Http/Controllers/Admin/JournalEntryController.php:163
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:167
  * @route '/admin/journals/export-excel'
  */
         exportExcelForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -733,7 +733,7 @@ exportExcel.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\JournalEntryController::exportExcel
- * @see app/Http/Controllers/Admin/JournalEntryController.php:163
+ * @see app/Http/Controllers/Admin/JournalEntryController.php:167
  * @route '/admin/journals/export-excel'
  */
         exportExcelForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

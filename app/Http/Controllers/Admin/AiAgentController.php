@@ -136,6 +136,21 @@ class AiAgentController extends Controller
             ]);
         }
 
+        // Riwayat percakapan sebelumnya (tanpa pesan yang baru ditulis) — dikirim ke AI
+        // supaya konteks multi-langkah terjaga (misal alur "/jurnal ..." → "hari ini").
+        // Dibatasi 20 pesan terakhir & 400 karakter/pesan untuk menghemat token.
+        $history = $conversation->messages()
+            ->orderByDesc('id')
+            ->take(20)
+            ->get(['role', 'content'])
+            ->reverse()
+            ->map(fn ($m) => [
+                'role' => $m->role === 'agent' ? 'assistant' : 'user',
+                'content' => mb_strimwidth($m->content, 0, 400, '…'),
+            ])
+            ->values()
+            ->all();
+
         AiMessage::create([
             'conversation_id' => $conversation->id,
             'role' => 'user',
@@ -145,7 +160,7 @@ class AiAgentController extends Controller
         $conversationId = $conversation->id;
         $message = $validated['message'];
 
-        return response()->stream(function () use ($agent, $message, $conversationId) {
+        return response()->stream(function () use ($agent, $message, $conversationId, $history) {
             // SSE: matikan buffering & kompresi PHP (zlib/output_buffering) supaya
             // tiap event progress langsung terkirim, tidak menumpuk sampai respons selesai.
             ini_set('output_buffering', 'off');
@@ -166,7 +181,7 @@ class AiAgentController extends Controller
             try {
                 $result = $agent->process($message, function (string $progressMessage, string $status = 'done', string $agentName = '') use ($send) {
                     $send(['type' => 'progress', 'message' => $progressMessage, 'status' => $status, 'agent' => $agentName]);
-                });
+                }, $history);
             } catch (\Exception $e) {
                 $result = [
                     'success' => false,
@@ -231,6 +246,22 @@ class AiAgentController extends Controller
         $conversationId = $conversation->id;
         $sessionKey = self::sessionKey($conversationId);
         $pendingActions = session($sessionKey, []);
+
+        // Fallback bila session tidak tersimpan (mis. request streaming): baca dari
+        // pesan AI terakhir yang berisi aksi berstatus pending. Data berasal dari DB,
+        // bukan dari client — tetap aman.
+        if (!$pendingActions) {
+            $lastAgentMessage = $conversation->messages()
+                ->where('role', 'agent')
+                ->latest('id')
+                ->first();
+
+            $pendingActions = collect($lastAgentMessage->actions ?? [])
+                ->filter(fn ($a) => !empty($a['result']['pending']))
+                ->map(fn ($a) => ['action' => $a['action'], 'params' => $a['params']])
+                ->values()
+                ->all();
+        }
 
         return response()->stream(function () use ($agent, $conversationId, $pendingActions, $sessionKey) {
             ini_set('output_buffering', 'off');

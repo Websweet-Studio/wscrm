@@ -75,6 +75,10 @@ class JournalEntryController extends Controller
 
         JournalEntry::create($data);
 
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Jurnal berhasil dicatat.']);
+        }
+
         return redirect()->route('admin.journals.index')->with('success', 'Jurnal berhasil dicatat.');
     }
 

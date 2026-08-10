@@ -16,6 +16,7 @@ use App\Models\Task;
 use App\Models\WebsiteClient;
 use App\Services\AiAgents\ArticleAgent;
 use App\Services\AiAgents\CustomerAgent;
+use App\Services\AiAgents\JournalAgent;
 use App\Services\AiAgents\OrderAgent;
 use App\Services\AiAgents\TaskAgent;
 use App\Services\AiAgents\WebsiteAgent;
@@ -38,6 +39,8 @@ class AiAgentService
         'mark_invoice_paid',
         'update_customer_status',
         'create_customer',
+        'update_journal',
+        'delete_journal',
     ];
 
     public function __construct(
@@ -47,6 +50,7 @@ class AiAgentService
         private OrderAgent $orderAgent,
         private TaskAgent $taskAgent,
         private CustomerAgent $customerAgent,
+        private JournalAgent $journalAgent,
     ) {}
 
     /**
@@ -54,7 +58,7 @@ class AiAgentService
      * Aksi aman dieksekusi; aksi berisiko tinggi dikembalikan sebagai pending_actions.
      * $onEvent dipanggil tiap tahap workflow: fn(string $message, string $status, string $agent).
      */
-    public function process(string $userMessage, ?callable $onEvent = null): array
+    public function process(string $userMessage, ?callable $onEvent = null, array $history = []): array
     {
         // 1. Gather context: all websites & orders with their current state + ringkasan bisnis
         $context = $this->buildContext();
@@ -63,8 +67,12 @@ class AiAgentService
             $onEvent('Menganalisis permintaan dan menyusun konteks data...', 'loading', 'Orchestrator');
         }
 
+        // 1b. /jurnal = catat jurnal maintenance. Tulis ulang jadi instruksi eksplisit
+        // agar AI tidak salah tafsir jadi check_updates / create_article.
+        $userMessage = $this->normalizeJournalCommand($userMessage);
+
         // 2. Send to AI to determine intent and required actions
-        $aiResponse = $this->callAI($userMessage, $context);
+        $aiResponse = $this->callAI($userMessage, $context, $history);
 
         // 3. Execute safe actions & collect high-risk as pending
         [$executed, $pending] = $this->executeActions($aiResponse, $onEvent);
@@ -85,7 +93,7 @@ class AiAgentService
         }
 
         if ($pending) {
-            $pendings = array_map(fn ($p) => $p['action'] . ($p['description'] ? " ({$p['description']})" : ''), $pending);
+            $pendings = array_map(fn($p) => $p['action'] . ($p['description'] ? " ({$p['description']})" : ''), $pending);
             $message = trim($message) . "\n\nMenunggu konfirmasi: " . implode(', ', $pendings) . '.';
         }
 
@@ -122,6 +130,31 @@ class AiAgentService
         }
 
         return $executed;
+    }
+
+    /**
+     * Perintah /jurnal (mis. "/jurnal cek update plugin, tema, core") adalah permintaan
+     * MENCATAT jurnal maintenance, bukan menjalankan aksi. Rewrite jadi instruksi
+     * menulis jurnal agar AI tidak salah mengeksekusi check_updates / create_article.
+     */
+    private function normalizeJournalCommand(string $message): string
+    {
+        $trimmed = trim($message);
+
+        if (str_starts_with($trimmed, '/jurnal')) {
+            $detail = trim(substr($trimmed, strlen('/jurnal')));
+            $today = now()->toDateString();
+            $instr = 'CATAT JURNAL MAINTENANCE. Ini permintaan menulis catatan jurnal harian, BUKAN perintah menjalankan aksi. '
+                . 'Periksa dulu data "journals" pada konteks: jika sudah ada entry dengan website_id DAN entry_date yang sama, gunakan aksi update_journal (sertakan id jurnal itu + activities baru). Jika belum ada, gunakan create_journal. '
+                . "entry_date otomatis hari ini ($today) — jangan tanya tanggal. "
+                . 'Identifikasi website yang dimaksud dari detail user (cari nama/domain di data websites, wajib sertakan website_id atau website_client_id). '
+                . 'Susun activities[] dari detail yang disebut. Contoh petunjuk tipe: "cek update plugin/tema/core" bisa berarti aktivitas wp_update/plugin_update/theme_update TANPA dari/to versi bila tidak disebutkan; buat satu aktivitas per hal yang disebut. '
+                . 'Jika detail terlalu kabur sehingga tidak bisa menyusun activities, tanyakan HAL SPESIFIK yang kurang saja (misal "website mana?"), tetap dalam konteks jurnal. '
+                . 'Jangan gunakan check_updates, update_wp, update_plugins, atau create_article. Jangan tawarkan menu lain (tugas/order/dll).';
+            return $instr . "\n\nDetail dari user: " . ($detail !== '' ? $detail : '(belum ada detail)');
+        }
+
+        return $message;
     }
 
     private function buildContext(): array
@@ -161,6 +194,14 @@ class AiAgentService
             'summary' => $this->buildBusinessSummary(),
             'websites' => $websiteData,
             'orders' => $orderData,
+            'journals' => JournalEntry::orderBy('entry_date', 'desc')
+                ->limit(30)
+                ->get(['id', 'website_client_id', 'entry_date'])
+                ->map(fn(JournalEntry $j) => [
+                    'id' => $j->id,
+                    'website_id' => $j->website_client_id,
+                    'entry_date' => $j->entry_date?->format('Y-m-d'),
+                ])->values()->all(),
             'task_categories' => TaskAgent::categoriesBrief(),
             'users' => TaskAgent::usersBrief(),
         ];
@@ -174,9 +215,9 @@ class AiAgentService
         $customers = Customer::selectRaw("COUNT(*) total, SUM(status='active') active, SUM(status='inactive') inactive, SUM(status='suspended') suspended")->first();
         $tasks = Task::selectRaw("COUNT(*) total, SUM(status='todo') todo, SUM(status='in_progress') in_progress, SUM(status='done') done, SUM(status='cancelled') cancelled")->first();
         $invoices = Invoice::whereIn('status', ['sent', 'overdue'])->get();
-        $unpaidSum = $invoices->sum(fn ($i) => $i->getFinalAmountAttribute());
+        $unpaidSum = $invoices->sum(fn($i) => $i->getFinalAmountAttribute());
         $overdueInvoices = $invoices->where('status', 'overdue');
-        $overdueSum = $overdueInvoices->sum(fn ($i) => $i->getFinalAmountAttribute());
+        $overdueSum = $overdueInvoices->sum(fn($i) => $i->getFinalAmountAttribute());
         $employees = Employee::selectRaw("COUNT(*) total, SUM(status='active') active")->first();
         $blog = BlogPost::selectRaw("COUNT(*) total, SUM(status='published') published")->first();
         $hosting = HostingPlan::selectRaw("COUNT(*) total, SUM(is_active) active")->first();
@@ -217,6 +258,7 @@ class AiAgentService
             ],
             'demo_websites' => $demoCount,
             'active_order_revenue' => round((float) $sales, 2),
+            'journals_today' => JournalEntry::where('entry_date', now()->toDateString())->count(),
         ];
 
         // Expense bulan ini — hanya untuk super admin (data keuangan sensitif)
@@ -229,17 +271,28 @@ class AiAgentService
         return $summary;
     }
 
-    private function callAI(string $userMessage, array $context): array
+    private function callAI(string $userMessage, array $context, array $history = []): array
     {
         if (!$this->aiClient->hasApiKey()) {
             return ['message' => "AI tidak dikonfigurasi. Tambahkan AI_API_KEY di .env"];
         }
 
         try {
-            $content = $this->aiClient->chat([
+            $messages = [
                 ['role' => 'system', 'content' => $this->getSystemPrompt($context)],
-                ['role' => 'user', 'content' => $userMessage],
-            ], 0.3, 2000);
+            ];
+
+            // Riwayat percakapan (riwayat_chat) supaya AI ingat konteks multi-langkah,
+            // misal alur "/jurnal ..." lalu user jawab "hari ini".
+            foreach ($history as $h) {
+                $messages[] = [
+                    'role' => in_array($h['role'] ?? '', ['user', 'assistant'], true) ? ($h['role'] === 'assistant' ? 'assistant' : 'user') : 'user',
+                    'content' => (string) ($h['content'] ?? ''),
+                ];
+            }
+            $messages[] = ['role' => 'user', 'content' => $userMessage];
+
+            $content = $this->aiClient->chat($messages, 0.3, 2000);
 
             // Parse JSON from response (AI should return JSON with actions)
             return $this->parseAiResponse($content);
@@ -287,6 +340,22 @@ Kamu adalah AI Agent untuk mengelola aplikasi WSCRM (website WordPress, layanan 
 
 **Laporan:**
 16. **business_summary** - Ringkasan agregat bisnis: penjualan aktif, invoice belum bayar, tugas, customer, karyawan, hosting plan, blog, demo website
+
+**Jurnal Maintenance (catatan aktivitas harian per website di halaman /admin/journals):**
+17. **list_journals** - Daftar jurnal maintenance (opsional website_id, date_from, date_to). Eksekusi langsung tanpa konfirmasi
+18. **create_journal** - Catat jurnal maintenance harian untuk website (perlu website_client_id + entry_date + activities). Satu entry per website per tanggal. Tipe aktivitas: wp_update, plugin_update, theme_update, article, page_optimization, other — sesuaikan field detailnya. Contoh activity: {"type":"article","title":"...","url":"...","word_count":N}; {"type":"wp_update","from_version":"6.5","to_version":"6.6"}; {"type":"plugin_update","plugin":"...","from_version":"...","to_version":"..."}; {"type":"page_optimization","page":"...","detail":"..."}; {"type":"other","description":"..."}. Eksekusi langsung tanpa konfirmasi
+19. **update_journal** - Update jurnal maintenance yang sudah ada (perlu id + data baru). Gunakan ini UNTUK MENAMBAH aktivitas baru ke jurnal yang SUDAH ADA (cukup isi activities baru, entry_date & website_client_id opsional) — membutuhkan konfirmasi user
+20. **delete_journal** - Hapus jurnal maintenance (perlu id) — membutuhkan konfirmasi user
+
+## Penting: Perbedaan "JURNAL" vs "ARTIKEL"
+- Jika user bilang **"tulis jurnal"**, **"catat jurnal"**, **"jurnal maintenance"**, **"jurnal harian"**, atau menyebut aktivitas maintenance harian (update WP, update plugin, buat artikel, optimasi halaman) UNTUK DICATAT — itu artinya **jurnal maintenance** → gunakan aksi **create_journal** (atau **update_journal** jika jurnal untuk website & tanggal itu SUDAH ADA) atau list_journals untuk melihat
+- Jika user bilang **"buat artikel"**, **"tulis artikel"**, **"publish artikel"**, atau **"artikel SEO"** ke website WP klien — itu artinya **artikel blog** → gunakan aksi **create_article**
+- Jangan tertukar: "tulis jurnal" = catat catatan harian, bukan membuat artikel blog
+
+## Aturan Khusus Jurnal (Wajib):
+- Sebelum create_journal, cek data "journals" pada konteks di atas: jika sudah ada entry dengan **website_id DAN entry_date yang sama**, jangan pakai create_journal (akan gagal), gunakan **update_journal** dengan id dari data itu dan activities baru — aktivitas baru akan DITAMBAHKAN ke entry yang ada. update_journal butuh konfirmasi user
+- entry_date default hari ini (tanggal server), jangan tanya ke user kecuali user menyebut tanggal lain
+- Jika user menyebut "update WP/plugin/tema" dalam konteks jurnal, itu aktivitas yang DICATAT (create_journal/update_journal), bukan aksi update_wp/update_plugins yang benar-benar mengupdate — kecuali user secara eksplisit minta menjalankan update
 
 ## Aturan:
 - Selalu analisis data (summary + website/order/task_categories/users) terlebih dahulu
@@ -400,12 +469,33 @@ PROMPT;
                 'update_customer_status' => $this->customerAgent->updateCustomerStatus((int) ($params['id'] ?? 0), $params['status'] ?? '', $onEvent),
                 'list_unpaid_invoices' => $this->customerAgent->listUnpaidInvoices($onEvent),
                 'mark_invoice_paid' => $this->customerAgent->markInvoicePaid((int) ($params['id'] ?? 0), $params['payment_method'] ?? null, $onEvent),
+                'list_journals' => $this->journalAgent->listJournals($params['website_id'] ?? $params['id'] ?? null, $params['date_from'] ?? null, $params['date_to'] ?? null, $onEvent),
+                'create_journal' => $this->journalAgent->createJournal($this->journalParams($params), $onEvent),
+                'update_journal' => $this->journalAgent->updateJournal((int) ($params['id'] ?? 0), $this->journalParams($params, useIdAsWebsite: false), $onEvent),
+                'delete_journal' => $this->journalAgent->deleteJournal((int) ($params['id'] ?? 0), $onEvent),
                 'business_summary' => $this->buildBusinessSummary(),
                 default => ['error' => "Aksi tidak dikenal: {$actionName}"],
             };
         } catch (\Exception $e) {
             return ['error' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Normalisasi params jurnal: AI biasanya kirim "website_id"/"id", sedangkan
+     * JournalAgent butuh "website_client_id". Kunci lain (entry_date, activities) diteruskan apa adanya.
+     * Untuk update/delete, "id" adalah ID JURNAL, bukan website id — jadi jangan dipakai sebagai website.
+     */
+    private function journalParams(array $params, bool $useIdAsWebsite = true): array
+    {
+        $normalized = $params;
+        unset($normalized['website_id'], $normalized['id']);
+
+        if (!isset($normalized['website_client_id'])) {
+            $normalized['website_client_id'] = $params['website_id'] ?? ($useIdAsWebsite ? ($params['id'] ?? null) : null);
+        }
+
+        return $normalized;
     }
 
     /**
@@ -421,6 +511,8 @@ PROMPT;
             'mark_invoice_paid' => 'Tandai invoice #' . ($params['id'] ?? '?') . ' lunas',
             'update_customer_status' => 'Ubah status customer #' . ($params['id'] ?? '?') . ' → ' . ($params['status'] ?? '?'),
             'create_customer' => 'Buat customer baru: ' . ($params['name'] ?? '?'),
+            'update_journal' => 'Update jurnal #' . ($params['id'] ?? '?') . ' (' . ($params['entry_date'] ?? 'tanggal lama') . ')',
+            'delete_journal' => 'Hapus jurnal #' . ($params['id'] ?? '?'),
             default => '',
         };
     }

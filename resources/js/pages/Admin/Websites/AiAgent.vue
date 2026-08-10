@@ -7,7 +7,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import { Bot, CheckCircle2, ExternalLink, Loader2, MessageSquare, PanelLeft, PanelLeftClose, Plus, Send, Trash2, XCircle, Zap } from 'lucide-vue-next';
-import { nextTick, onMounted, ref } from 'vue';
+import { nextTick, onMounted, ref, computed, watch } from 'vue';
 import ConfirmModal from '@/components/ConfirmModal.vue';
 
 interface ProgressItem {
@@ -16,12 +16,19 @@ interface ProgressItem {
     agent?: string;
 }
 
+interface PendingAction {
+    action: string;
+    params: any;
+    description?: string;
+}
+
 interface Message {
     role: 'user' | 'agent';
     content: string;
     actions?: ActionResult[];
     progress?: ProgressItem[];
     pending?: boolean;
+    pendingActions?: PendingAction[];
 }
 
 interface ActionResult {
@@ -69,15 +76,72 @@ const agentBadge = (agent: string) => {
     return map[agent] || 'bg-slate-200 text-slate-700';
 };
 
-interface PendingAction {
-    action: string;
-    params: any;
-    description?: string;
-}
-
 const pendingActions = ref<PendingAction[]>([]);
 const pendingConversationId = ref<number | null>(null);
 const isConfirming = ref(false);
+
+// Slash commands autocomplete
+interface SlashCommand {
+    cmd: string;
+    desc: string;
+}
+
+const slashCommands: SlashCommand[] = [
+    { cmd: '/help', desc: 'Tampilkan daftar perintah' },
+    { cmd: '/updates', desc: 'Cek website yang perlu update WP core' },
+    { cmd: '/article', desc: 'Buat artikel SEO ke website klien' },
+    { cmd: '/audit', desc: 'Audit SEO halaman website' },
+    { cmd: '/expiring', desc: 'Cek order yang berakhir bulan ini' },
+    { cmd: '/renew', desc: 'Perpanjang order layanan' },
+    { cmd: '/tasks', desc: 'Daftar tugas tim' },
+    { cmd: '/create-task', desc: 'Buat tugas baru' },
+    { cmd: '/customers', desc: 'Daftar customer' },
+    { cmd: '/invoices', desc: 'Daftar invoice belum dibayar' },
+    { cmd: '/summary', desc: 'Ringkasan kondisi bisnis' },
+    { cmd: '/jurnal', desc: 'Catat jurnal maintenance harian' },
+    { cmd: '/list-jurnal', desc: 'Lihat daftar jurnal maintenance' },
+];
+
+const textareaRef = ref<HTMLElement>();
+const showSlashMenu = ref(false);
+const activeSlashIndex = ref(0);
+
+const filteredSlashCommands = computed(() => {
+    const t = inputMessage.value.trim();
+    if (!t.startsWith('/')) return [];
+    const q = t.toLowerCase();
+    const filtered = slashCommands.filter(c => c.cmd.toLowerCase().includes(q));
+    if (filtered.length === 0 && t !== '/help') {
+        filtered.push({ cmd: '/help', desc: 'Tampilkan daftar perintah' });
+    }
+    return filtered;
+});
+
+const selectSlashCommand = (cmd: string) => {
+    inputMessage.value = cmd + ' ';
+    showSlashMenu.value = false;
+    nextTick(() => (textareaRef.value as any)?.$el?.focus());
+};
+
+watch(inputMessage, (val) => {
+    if (val.startsWith('/') && !isLoading.value && !isConfirming.value) {
+        showSlashMenu.value = true;
+        activeSlashIndex.value = 0;
+    } else {
+        showSlashMenu.value = false;
+    }
+});
+
+const showHelp = () => {
+    messages.value.push({ role: 'user', content: '/help' });
+    const helpText = 'Berikut perintah yang bisa kamu gunakan:\n\n' +
+        slashCommands.map(c => `• **${c.cmd}** — ${c.desc}`).join('\n') +
+        '\n\nKetik **/** di kolom chat untuk autocomplete perintah.';
+    messages.value.push({ role: 'agent', content: helpText });
+    inputMessage.value = '';
+    showSlashMenu.value = false;
+    scrollToBottom();
+};
 
 const loadConversation = async (id: number) => {
     activeConversationId.value = id;
@@ -195,6 +259,8 @@ const streamRequest = async (url: string, body: any, handleEvent: StreamEventHan
 const confirmActions = async () => {
     if (!pendingConversationId.value || isConfirming.value) return;
     isConfirming.value = true;
+    // Hapus kartu konfirmasi dari percakapan — diganti bubble status progress
+    messages.value.forEach(m => (m.pendingActions = []));
 
     const agentMsg: Message = { role: 'agent', content: '', pending: true, progress: [] };
     messages.value.push(agentMsg);
@@ -247,6 +313,7 @@ const cancelActions = async () => {
 
     pendingActions.value = [];
     pendingConversationId.value = null;
+    messages.value.forEach(m => (m.pendingActions = []));
     messages.value.push({ role: 'agent', content: 'Aksi dibatalkan.' });
     scrollToBottom();
 };
@@ -255,8 +322,25 @@ const sendMessage = async () => {
     const text = inputMessage.value.trim();
     if (!text || isLoading.value) return;
 
+    if (text === '/help') {
+        showHelp();
+        return;
+    }
+
+    // Intercept slash command jurnal — arahkan langsung ke halaman, tanpa AI
+    if (text === '/list-jurnal') {
+        messages.value.push({ role: 'user', content: text });
+        inputMessage.value = '';
+        messages.value.push({
+            role: 'agent',
+            content: 'Buka halaman [Daftar Jurnal](/admin/journals) untuk melihat semua jurnal maintenance.',
+        });
+        return;
+    }
+
     messages.value.push({ role: 'user', content: text });
     inputMessage.value = '';
+    showSlashMenu.value = false;
     isLoading.value = true;
 
     await nextTick();
@@ -280,6 +364,7 @@ const sendMessage = async () => {
             if (payload.pending_actions?.length) {
                 pendingActions.value = payload.pending_actions;
                 pendingConversationId.value = payload.conversation_id;
+                agentMsg.pendingActions = payload.pending_actions;
             }
             scrollToBottom();
         } else if (payload.type === 'error') {
@@ -354,6 +439,10 @@ const formatActionName = (action: string): string => {
         update_customer_status: 'Ubah Status Customer',
         list_unpaid_invoices: 'Invoice Belum Bayar',
         mark_invoice_paid: 'Tandai Invoice Lunas',
+        list_journals: 'Daftar Jurnal',
+        create_journal: 'Catat Jurnal',
+        update_journal: 'Update Jurnal',
+        delete_journal: 'Hapus Jurnal',
         business_summary: 'Ringkasan Bisnis',
     };
     return names[action] || action;
@@ -368,6 +457,29 @@ const formatMarkdown = (text: string): string => {
 };
 
 const handleKeydown = (e: KeyboardEvent) => {
+    if (showSlashMenu.value && filteredSlashCommands.value.length > 0) {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeSlashIndex.value = (activeSlashIndex.value + 1) % filteredSlashCommands.value.length;
+            return;
+        }
+        if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeSlashIndex.value = (activeSlashIndex.value - 1 + filteredSlashCommands.value.length) % filteredSlashCommands.value.length;
+            return;
+        }
+        if (e.key === 'Tab' || e.key === 'Enter') {
+            e.preventDefault();
+            selectSlashCommand(filteredSlashCommands.value[activeSlashIndex.value].cmd);
+            return;
+        }
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            showSlashMenu.value = false;
+            return;
+        }
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
@@ -441,31 +553,6 @@ onMounted(() => {
 
                 <!-- Chat Area -->
                 <div class="flex-1 overflow-y-auto space-y-4 mb-4" ref="chatContainer">
-                    <!-- Confirmation card (pending high-risk actions) -->
-                    <div v-if="pendingActions.length > 0 && !isConfirming" class="border-2 border-amber-400 rounded-xl bg-amber-50 p-4 space-y-3">
-                        <div class="flex items-center gap-2 text-amber-800">
-                            <Zap class="h-4 w-4" />
-                            <p class="text-sm font-semibold">AI ingin mengeksekusi aksi berikut:</p>
-                        </div>
-                        <ul class="space-y-1.5">
-                            <li v-for="(pa, i) in pendingActions" :key="i" class="text-sm text-amber-900 flex items-start gap-2">
-                                <span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-amber-500 flex-shrink-0"></span>
-                                <span>
-                                    <span class="font-medium">{{ formatActionName(pa.action) }}</span>
-                                    <span v-if="pa.description" class="text-amber-700"> — {{ pa.description }}</span>
-                                </span>
-                            </li>
-                        </ul>
-                        <div class="flex gap-2">
-                            <Button size="sm" class="cursor-pointer" :disabled="isLoading" @click="confirmActions">
-                                Jalankan
-                            </Button>
-                            <Button size="sm" variant="outline" class="cursor-pointer" :disabled="isLoading" @click="cancelActions">
-                                Batal
-                            </Button>
-                        </div>
-                    </div>
-
                     <!-- Messages -->
                     <div v-for="(msg, idx) in messages" :key="idx" class="flex gap-3" :class="msg.role === 'user' ? 'justify-end' : ''">
                         <!-- User message -->
@@ -479,6 +566,14 @@ onMounted(() => {
                                 <Bot class="h-4 w-4 text-primary" />
                             </div>
                             <div class="space-y-2">
+                                <!-- Typing indicator (while processing) -->
+                                <div v-if="msg.pending" class="bg-muted/50 rounded-2xl rounded-bl-md px-4 py-3 text-sm inline-flex items-center gap-2">
+                                    <span class="typing-dots" aria-label="AI sedang mengetik">
+                                        <span></span><span></span><span></span>
+                                    </span>
+                                    <span v-if="!msg.progress?.length" class="text-xs text-muted-foreground">Sedang memproses...</span>
+                                </div>
+
                                 <!-- Progress real-time (streaming) -->
                                 <div v-if="msg.pending && msg.progress?.length" class="bg-muted/50 rounded-2xl rounded-bl-md px-4 py-2.5 text-sm space-y-1.5">
                                     <p v-for="(log, i) in msg.progress" :key="i" class="text-xs flex items-center gap-1.5" :class="log.status === 'loading' ? 'text-muted-foreground' : ''">
@@ -503,8 +598,8 @@ onMounted(() => {
                                         <div class="flex items-center gap-2 mb-2">
                                             <Zap class="h-3.5 w-3.5 text-primary" />
                                             <span class="font-medium">{{ formatActionName(action.action) }}</span>
-                                            <Badge :variant="action.result?.success !== false ? 'default' : 'destructive'" class="text-xs">
-                                                {{ action.result?.success !== false ? 'Sukses' : 'Gagal' }}
+                                            <Badge :variant="action.result?.error ? 'destructive' : 'default'" class="text-xs">
+                                                {{ action.result?.error ? 'Gagal' : 'Sukses' }}
                                             </Badge>
                                         </div>
 
@@ -714,8 +809,60 @@ onMounted(() => {
                                             </div>
                                         </div>
 
+                                        <!-- list_journals result -->
+                                        <div v-if="action.action === 'list_journals' && action.result?.journals !== undefined">
+                                            <p v-if="action.result.journals.length === 0" class="text-green-600 flex items-center gap-1">
+                                                <CheckCircle2 class="h-3.5 w-3.5" /> Tidak ada jurnal ditemukan
+                                            </p>
+                                            <div v-else class="space-y-2">
+                                                <div v-for="j in action.result.journals" :key="j.id" class="border-l-2 border-primary/50 pl-3">
+                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                        <p class="font-medium">{{ j.website }}</p>
+                                                        <Badge variant="secondary" class="text-xs">{{ j.activity_count }} aktivitas</Badge>
+                                                    </div>
+                                                    <p class="text-xs text-muted-foreground">
+                                                        <template v-if="j.customer">{{ j.customer }} · </template>{{ j.entry_date }}
+                                                        <template v-if="j.summary"> — {{ j.summary }}</template>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- create_journal / update_journal / delete_journal result -->
+                                        <div v-if="['create_journal', 'update_journal', 'delete_journal'].includes(action.action) && action.result?.success">
+                                            <p class="text-green-600 flex items-center gap-1">
+                                                <CheckCircle2 class="h-3.5 w-3.5" /> {{ action.result.message }}
+                                            </p>
+                                        </div>
+
                                         <!-- Generic result -->
+                                        <p v-if="action.result?.error" class="text-xs text-red-600 mt-1">{{ action.result.error }}</p>
                                         <p v-if="action.result?.message" class="text-xs text-muted-foreground mt-1">{{ action.result.message }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Konfirmasi aksi (percakapan) -->
+                                <div v-if="msg.pendingActions && msg.pendingActions.length > 0 && !isConfirming" class="border-2 border-amber-400 rounded-xl bg-amber-50 p-4 space-y-3">
+                                    <div class="flex items-center gap-2 text-amber-800">
+                                        <Zap class="h-4 w-4" />
+                                        <p class="text-sm font-semibold">AI ingin mengeksekusi aksi berikut:</p>
+                                    </div>
+                                    <ul class="space-y-1.5">
+                                        <li v-for="(pa, i) in msg.pendingActions" :key="i" class="text-sm text-amber-900 flex items-start gap-2">
+                                            <span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-amber-500 flex-shrink-0"></span>
+                                            <span>
+                                                <span class="font-medium">{{ formatActionName(pa.action) }}</span>
+                                                <span v-if="pa.description" class="text-amber-700"> — {{ pa.description }}</span>
+                                            </span>
+                                        </li>
+                                    </ul>
+                                    <div class="flex gap-2">
+                                        <Button size="sm" class="cursor-pointer" :disabled="isLoading" @click="confirmActions">
+                                            Jalankan
+                                        </Button>
+                                        <Button size="sm" variant="outline" class="cursor-pointer" :disabled="isLoading" @click="cancelActions">
+                                            Batal
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
@@ -734,11 +881,31 @@ onMounted(() => {
                 </div>
 
                 <!-- Input -->
-                <div class="border-t pt-4">
+                <div class="border-t pt-4 relative">
+                    <!-- Slash command autocomplete -->
+                    <div
+                        v-if="showSlashMenu && filteredSlashCommands.length > 0"
+                        class="absolute bottom-full left-0 right-0 mb-2 z-20 rounded-lg border bg-card shadow-lg overflow-hidden"
+                    >
+                        <ul class="max-h-56 overflow-y-auto py-1">
+                            <li
+                                v-for="(c, i) in filteredSlashCommands"
+                                :key="c.cmd"
+                                class="flex items-center gap-3 px-3 py-2 cursor-pointer text-sm transition-colors"
+                                :class="i === activeSlashIndex ? 'bg-primary/10' : 'hover:bg-muted'"
+                                @mouseenter="activeSlashIndex = i"
+                                @click="selectSlashCommand(c.cmd)"
+                            >
+                                <span class="font-mono text-primary flex-shrink-0">{{ c.cmd }}</span>
+                                <span class="text-muted-foreground truncate">{{ c.desc }}</span>
+                            </li>
+                        </ul>
+                    </div>
                     <div class="flex gap-3">
                         <Textarea
+                            ref="textareaRef"
                             v-model="inputMessage"
-                            placeholder="Ketik perintah... contoh: cek website yang perlu update wp core"
+                            placeholder="Ada yang bisa dibantu?"
                             :disabled="isLoading || isConfirming"
                             class="min-h-[52px] max-h-32 resize-none"
                             rows="2"
@@ -758,3 +925,39 @@ onMounted(() => {
         <ConfirmModal :show="showConfirm" :message="confirmMessage" confirmText="Hapus" variant="destructive" @confirm="handleConfirm" @cancel="showConfirm = false" />
     </AppLayout>
 </template>
+
+<style scoped>
+.typing-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.typing-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.3;
+    animation: typing-bounce 1.2s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.typing-dots span:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes typing-bounce {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.3;
+    }
+    30% {
+        transform: translateY(-4px);
+        opacity: 1;
+    }
+}
+</style>
