@@ -17,6 +17,7 @@ import tasks from './tasks'
 import taskCategories from './task-categories'
 import websites from './websites'
 import journals from './journals'
+import notifications from './notifications'
 import branding from './branding'
 import database from './database'
 import tools from './tools'
@@ -183,6 +184,7 @@ tasks: Object.assign(tasks, tasks),
 taskCategories: Object.assign(taskCategories, taskCategories),
 websites: Object.assign(websites, websites),
 journals: Object.assign(journals, journals),
+notifications: Object.assign(notifications, notifications),
 branding: Object.assign(branding, branding),
 database: Object.assign(database, database),
 tools: Object.assign(tools, tools),

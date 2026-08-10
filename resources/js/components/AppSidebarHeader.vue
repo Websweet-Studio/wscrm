@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import NotificationBell from '@/components/NotificationBell.vue';
 import { Button } from '@/components/ui/button';
 import { useSidebar as useRekaSidebar } from '@/components/ui/sidebar';
 import type { BreadcrumbItemType } from '@/types';
@@ -60,6 +61,7 @@ const toggleSidebar = () => {
         </template>
 
         <div v-if="props.showAppearanceTabs" class="ml-auto flex items-center gap-2">
+            <NotificationBell />
             <AppearanceTabs />
         </div>
     </header>

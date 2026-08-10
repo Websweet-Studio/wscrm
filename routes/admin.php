@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\HostingPlanController;
 use App\Http\Controllers\Admin\ImpersonateController;
 use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PaymentAccountController;
 use App\Http\Controllers\Admin\ServiceController;
@@ -119,6 +120,11 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::get('journals/report', [JournalEntryController::class, 'report'])->name('journals.report');
     Route::get('journals/export', [JournalEntryController::class, 'export'])->name('journals.export');
     Route::get('journals/export-excel', [JournalEntryController::class, 'exportExcel'])->name('journals.export-excel');
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('notifications/latest', [NotificationController::class, 'latestJson'])->name('notifications.latest');
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::delete('notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
     // Branding Settings
     Route::middleware('no.cache')->group(function () {

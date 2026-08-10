@@ -6,6 +6,7 @@ import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 import {
     BarChart3,
+    Bell,
     BookOpen,
     BookText,
     Bot,
@@ -72,6 +73,9 @@ const todoAssignedCount = computed(() => {
 const inProgressCount = computed(() => {
     return ((($page.props as any)?.adminBadges?.tasks_in_progress as number) ?? 0);
 });
+const unreadNotificationsCount = computed(() => {
+    return ((($page.props as any)?.adminBadges?.unread_notifications as number) ?? 0);
+});
 
 // Track expanded state for menu groups with persistence
 const expandedGroups = ref(new Set<string>());
@@ -112,6 +116,12 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: '/dashboard',
         icon: LayoutGrid,
+    },
+    {
+        title: 'Notifikasi',
+        href: '/admin/notifications',
+        icon: Bell,
+        badge: unreadNotificationsCount.value,
     },
     {
         title: 'Tugas',

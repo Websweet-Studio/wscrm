@@ -93,6 +93,7 @@ class HandleInertiaRequests extends Middleware
                 'tasks_unassigned_todo' => $unassignedTodoCount,
                 'tasks_in_progress' => $inProgressCount,
                 'tasks_todo_assigned' => $todoAssignedToMeCount,
+                'unread_notifications' => $user->unreadNotifications()->count(),
             ];
         }
 
