@@ -155,7 +155,7 @@ const toggleAll = () => {
                             </select>
                         </div>
                         <Button variant="outline" @click="handleSearch" class="cursor-pointer">Filter</Button>
-                        <Button variant="ghost" @click="() => { search = ''; isActiveFilter = ''; handleSearch(); }" class="cursor-pointer">
+                        <Button variant="ghost" v-if="search || isActiveFilter" @click="() => { search = ''; isActiveFilter = ''; handleSearch(); }" class="cursor-pointer">
                             <X class="mr-2 h-4 w-4" /> Reset
                         </Button>
                     </div>

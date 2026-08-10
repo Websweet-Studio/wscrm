@@ -109,9 +109,10 @@ const activeSlashIndex = ref(0);
 const filteredSlashCommands = computed(() => {
     const t = inputMessage.value.trim();
     if (!t.startsWith('/')) return [];
-    const q = t.toLowerCase();
+    // Match kata pertama saja, sehingga "/expiring xxx" tetap dikenali sebagai /expiring
+    const q = t.split(/\s+/)[0].toLowerCase();
     const filtered = slashCommands.filter(c => c.cmd.toLowerCase().includes(q));
-    if (filtered.length === 0 && t !== '/help') {
+    if (filtered.length === 0 && q !== '/help') {
         filtered.push({ cmd: '/help', desc: 'Tampilkan daftar perintah' });
     }
     return filtered;
@@ -468,9 +469,22 @@ const handleKeydown = (e: KeyboardEvent) => {
             activeSlashIndex.value = (activeSlashIndex.value - 1 + filteredSlashCommands.value.length) % filteredSlashCommands.value.length;
             return;
         }
-        if (e.key === 'Tab' || e.key === 'Enter') {
+        if (e.key === 'Tab') {
             e.preventDefault();
             selectSlashCommand(filteredSlashCommands.value[activeSlashIndex.value].cmd);
+            return;
+        }
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            // Enter hanya autocomplete kalau input command murni (satu kata).
+            // Kalau ada teks tambahan (mis. "/expiring cek order"), kirim apa adanya, jangan timpa input.
+            const bareCommand = inputMessage.value.trim().split(/\s+/).length === 1;
+            if (bareCommand) {
+                selectSlashCommand(filteredSlashCommands.value[activeSlashIndex.value].cmd);
+            } else {
+                showSlashMenu.value = false;
+                sendMessage();
+            }
             return;
         }
         if (e.key === 'Escape') {
@@ -500,28 +514,36 @@ onMounted(() => {
         <div class="flex gap-6 h-[calc(100vh-120px)]">
             <!-- Sidebar: Riwayat Percakapan -->
             <aside
-                class="flex-shrink-0 flex flex-col border rounded-lg bg-card overflow-hidden transition-all duration-300"
-                :class="historyExpanded ? 'w-64' : 'w-0 border-transparent'"
+                class="flex-shrink-0 flex flex-col border rounded-lg bg-card overflow-hidden min-w-0 transition-all duration-300"
+                :class="historyExpanded ? 'w-64' : 'w-12'"
             >
-                <div class="p-3 border-b">
-                    <Button class="w-full cursor-pointer justify-start" @click="newChat">
-                        <Plus class="mr-2 h-4 w-4" /> Percakapan Baru
+                <div class="p-2.5 border-b">
+                    <Button
+                        class="w-full cursor-pointer h-9"
+                        :class="historyExpanded ? 'justify-start' : 'justify-center'"
+                        @click="newChat"
+                        :title="historyExpanded ? 'Percakapan Baru' : 'Buat chat baru'"
+                    >
+                        <Plus class="h-4 w-4" :class="historyExpanded ? 'mr-2' : ''" />
+                        <span v-if="historyExpanded">Percakapan Baru</span>
                     </Button>
                 </div>
                 <div class="flex-1 overflow-y-auto p-2 space-y-1">
-                    <p v-if="conversations.length === 0" class="text-xs text-muted-foreground text-center py-8">
+                    <p v-if="historyExpanded && conversations.length === 0" class="text-xs text-muted-foreground text-center py-8">
                         Belum ada percakapan
                     </p>
                     <div
                         v-for="c in conversations"
                         :key="c.id"
                         class="group flex items-center gap-2 rounded-md px-3 py-2 cursor-pointer text-sm transition-colors"
-                        :class="activeConversationId === c.id ? 'bg-primary/10 text-primary' : 'hover:bg-muted'"
+                        :class="[activeConversationId === c.id ? 'bg-primary/10 text-primary' : 'hover:bg-muted', historyExpanded ? '' : 'justify-center px-0']"
+                        :title="c.title"
                         @click="loadConversation(c.id)"
                     >
                         <MessageSquare class="h-4 w-4 flex-shrink-0" />
-                        <span class="flex-1 truncate">{{ c.title }}</span>
+                        <span v-if="historyExpanded" class="flex-1 truncate">{{ c.title }}</span>
                         <button
+                            v-if="historyExpanded"
                             class="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive cursor-pointer flex-shrink-0"
                             title="Hapus"
                             @click.stop="deleteConversation(c.id)"

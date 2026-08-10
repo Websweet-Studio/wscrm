@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
+import { formatDate } from '@/lib/utils';
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowLeft, CheckCircle2, ExternalLink, Calendar, FileText, Key, XCircle } from 'lucide-vue-next';
 
@@ -80,18 +81,6 @@ const activityTypeLabels: Record<string, string> = {
     other: 'Lainnya',
 };
 
-const getBadgeVariant = (type: string): "default" | "secondary" | "destructive" | "outline" | null | undefined => {
-    const m: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-        wp_update: 'default',
-        plugin_update: 'secondary',
-        theme_update: 'secondary',
-        article: 'outline',
-        page_optimization: 'destructive',
-        other: 'outline',
-    };
-    return m[type] || 'outline';
-};
-
 const formatDetail = (a: JournalActivity): string => {
     switch (a.type) {
         case 'wp_update': return `WP ${a.from_version || '-'} → ${a.to_version || '-'}${a.note ? ' (' + a.note + ')' : ''}`;
@@ -101,6 +90,11 @@ const formatDetail = (a: JournalActivity): string => {
         case 'page_optimization': return `${a.page || '-'}: ${a.detail || '-'}`;
         default: return a.description || '-';
     }
+};
+
+// Ringkas aktivitas jadi satu baris, seperti di halaman Jurnal
+const activitySummary = (j: Journal): string => {
+    return j.activities.map(a => `${activityTypeLabels[a.type] || a.type}: ${formatDetail(a)}`).join(' | ');
 };
 </script>
 
@@ -232,15 +226,10 @@ const formatDetail = (a: JournalActivity): string => {
                                     </TableCell>
                                 </TableRow>
                                 <TableRow v-for="j in journals.data" :key="j.id">
-                                    <TableCell class="font-medium whitespace-nowrap">{{ j.entry_date }}</TableCell>
+                                    <TableCell class="font-medium whitespace-nowrap">{{ formatDate(j.entry_date, 'long') }}</TableCell>
                                     <TableCell>
-                                        <div class="space-y-1">
-                                            <div v-for="(a, idx) in j.activities" :key="idx" class="flex items-start gap-2 text-sm">
-                                                <Badge :variant="getBadgeVariant(a.type)" class="whitespace-nowrap text-xs">{{ activityTypeLabels[a.type] || a.type }}</Badge>
-                                                <span class="text-muted-foreground">{{ formatDetail(a) }}</span>
-                                            </div>
-                                            <p v-if="j.summary" class="text-xs text-muted-foreground mt-2 italic">{{ j.summary }}</p>
-                                        </div>
+                                        <p class="text-sm text-muted-foreground">{{ activitySummary(j) }}</p>
+                                        <p v-if="j.summary" class="text-xs text-muted-foreground mt-1 italic">{{ j.summary }}</p>
                                     </TableCell>
                                     <TableCell class="text-sm text-muted-foreground whitespace-nowrap">{{ j.user?.name || '-' }}</TableCell>
                                 </TableRow>
