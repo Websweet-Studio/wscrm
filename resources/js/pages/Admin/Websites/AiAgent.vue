@@ -444,6 +444,10 @@ const formatActionName = (action: string): string => {
         create_journal: 'Catat Jurnal',
         update_journal: 'Update Jurnal',
         delete_journal: 'Hapus Jurnal',
+        list_domain_prices: 'Daftar Harga Domain',
+        update_domain_price: 'Ubah Harga Domain',
+        list_hosting_prices: 'Daftar Harga Hosting',
+        update_hosting_price: 'Ubah Harga Hosting',
         business_summary: 'Ringkasan Bisnis',
     };
     return names[action] || action;
@@ -798,6 +802,57 @@ onMounted(() => {
 
                                         <!-- mark_invoice_paid result -->
                                         <div v-if="action.action === 'mark_invoice_paid' && action.result?.success">
+                                            <p class="text-green-600 flex items-center gap-1">
+                                                <CheckCircle2 class="h-3.5 w-3.5" /> {{ action.result.message }}
+                                            </p>
+                                        </div>
+
+                                        <!-- list_domain_prices result -->
+                                        <div v-if="action.action === 'list_domain_prices' && action.result?.domain_prices !== undefined">
+                                            <p v-if="action.result.domain_prices.length === 0" class="text-green-600 flex items-center gap-1">
+                                                <CheckCircle2 class="h-3.5 w-3.5" /> Tidak ada harga domain ditemukan
+                                            </p>
+                                            <div v-else class="space-y-2">
+                                                <div v-for="d in action.result.domain_prices" :key="d.id" class="border-l-2 border-primary/50 pl-3">
+                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                        <p class="font-medium">{{ d.extension }}</p>
+                                                        <Badge :variant="d.is_active ? 'default' : 'secondary'" class="text-xs">{{ d.is_active ? 'Aktif' : 'Nonaktif' }}</Badge>
+                                                    </div>
+                                                    <p class="text-xs text-muted-foreground">
+                                                        Harga jual: Rp {{ formatRupiah(d.selling_price) }}<template v-if="d.renewal_price_with_tax"> · Perpanjang: Rp {{ formatRupiah(d.renewal_price_with_tax) }}</template>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- update_domain_price result -->
+                                        <div v-if="action.action === 'update_domain_price' && action.result?.success">
+                                            <p class="text-green-600 flex items-center gap-1">
+                                                <CheckCircle2 class="h-3.5 w-3.5" /> {{ action.result.message }}
+                                            </p>
+                                        </div>
+
+                                        <!-- list_hosting_prices result -->
+                                        <div v-if="action.action === 'list_hosting_prices' && action.result?.hosting_plans !== undefined">
+                                            <p v-if="action.result.hosting_plans.length === 0" class="text-green-600 flex items-center gap-1">
+                                                <CheckCircle2 class="h-3.5 w-3.5" /> Tidak ada paket hosting ditemukan
+                                            </p>
+                                            <div v-else class="space-y-2">
+                                                <div v-for="h in action.result.hosting_plans" :key="h.id" class="border-l-2 border-primary/50 pl-3">
+                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                        <p class="font-medium">{{ h.plan_name }}</p>
+                                                        <Badge variant="secondary" class="text-xs">{{ h.service_type }}</Badge>
+                                                        <Badge :variant="h.is_active ? 'default' : 'secondary'" class="text-xs">{{ h.is_active ? 'Aktif' : 'Nonaktif' }}</Badge>
+                                                    </div>
+                                                    <p class="text-xs text-muted-foreground">
+                                                        Rp {{ formatRupiah(h.final_price || h.selling_price) }}<template v-if="h.storage_gb"> · {{ h.storage_gb }} GB</template><template v-if="h.discount_percent"> · Diskon {{ h.discount_percent }}%</template>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- update_hosting_price result -->
+                                        <div v-if="action.action === 'update_hosting_price' && action.result?.success">
                                             <p class="text-green-600 flex items-center gap-1">
                                                 <CheckCircle2 class="h-3.5 w-3.5" /> {{ action.result.message }}
                                             </p>

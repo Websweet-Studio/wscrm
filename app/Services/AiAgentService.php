@@ -6,6 +6,7 @@ use App\Enums\ActivityType;
 use App\Models\BlogPost;
 use App\Models\Customer;
 use App\Models\DemoWebsite;
+use App\Models\DomainPrice;
 use App\Models\Employee;
 use App\Models\Expense;
 use App\Models\HostingPlan;
@@ -18,6 +19,7 @@ use App\Services\AiAgents\ArticleAgent;
 use App\Services\AiAgents\CustomerAgent;
 use App\Services\AiAgents\JournalAgent;
 use App\Services\AiAgents\OrderAgent;
+use App\Services\AiAgents\PricelistAgent;
 use App\Services\AiAgents\TaskAgent;
 use App\Services\AiAgents\WebsiteAgent;
 use Illuminate\Support\Facades\Log;
@@ -41,6 +43,39 @@ class AiAgentService
         'create_customer',
         'update_journal',
         'delete_journal',
+        'update_domain_price',
+        'update_hosting_price',
+    ];
+
+    /**
+     * Semua nama aksi valid yang dikenali sistem. Dipakai untuk validasi respons AI
+     * dan menyusun pesan koreksi bila AI mengarang aksi yang tidak ada.
+     */
+    private const KNOWN_ACTIONS = [
+        'check_updates',
+        'update_wp',
+        'update_plugins',
+        'create_article',
+        'audit_seo',
+        'check_expiring_orders',
+        'renew_order',
+        'list_tasks',
+        'create_task',
+        'update_task_status',
+        'list_customers',
+        'create_customer',
+        'update_customer_status',
+        'list_unpaid_invoices',
+        'mark_invoice_paid',
+        'business_summary',
+        'list_journals',
+        'create_journal',
+        'update_journal',
+        'delete_journal',
+        'list_domain_prices',
+        'update_domain_price',
+        'list_hosting_prices',
+        'update_hosting_price',
     ];
 
     public function __construct(
@@ -51,6 +86,7 @@ class AiAgentService
         private TaskAgent $taskAgent,
         private CustomerAgent $customerAgent,
         private JournalAgent $journalAgent,
+        private PricelistAgent $pricelistAgent,
     ) {}
 
     /**
@@ -202,6 +238,21 @@ class AiAgentService
                     'website_id' => $j->website_client_id,
                     'entry_date' => $j->entry_date?->format('Y-m-d'),
                 ])->values()->all(),
+            'domain_prices' => DomainPrice::orderBy('extension')->get()->map(fn(DomainPrice $d) => [
+                'id' => $d->id,
+                'extension' => $d->extension,
+                'selling_price' => (float) $d->selling_price,
+                'renewal_price_with_tax' => (float) $d->renewal_price_with_tax,
+                'is_active' => (bool) $d->is_active,
+            ])->values()->all(),
+            'hosting_plans' => HostingPlan::orderBy('plan_name')->get()->map(fn(HostingPlan $h) => [
+                'id' => $h->id,
+                'plan_name' => $h->plan_name,
+                'service_type' => $h->service_type,
+                'selling_price' => (float) $h->selling_price,
+                'final_price' => round($h->finalPrice(), 2),
+                'is_active' => (bool) $h->is_active,
+            ])->values()->all(),
             'task_categories' => TaskAgent::categoriesBrief(),
             'users' => TaskAgent::usersBrief(),
         ];
@@ -263,9 +314,15 @@ class AiAgentService
 
         // Expense bulan ini — hanya untuk super admin (data keuangan sensitif)
         if (auth()->user()?->isSuperAdmin()) {
-            $summary['expenses_this_month'] = round(Expense::whereMonth('expense_date', now()->month)
-                ->whereYear('expense_date', now()->year)
-                ->sum('amount'), 2);
+            $summary['expenses_this_month'] = round(Expense::where(function ($q) {
+                // Tagihan berulang jatuh tempo bulan ini (next_billing) atau
+                // pengeluaran one-time yang dibayar bulan ini (paid_date).
+                $q->whereYear('next_billing', now()->year)
+                    ->whereMonth('next_billing', now()->month)
+                    ->orWhere(fn($q2) => $q2
+                        ->whereYear('paid_date', now()->year)
+                        ->whereMonth('paid_date', now()->month));
+            })->sum('amount'), 2);
         }
 
         return $summary;
@@ -293,13 +350,66 @@ class AiAgentService
             $messages[] = ['role' => 'user', 'content' => $userMessage];
 
             $content = $this->aiClient->chat($messages, 0.3, 2000);
+            $response = $this->parseAiResponse($content);
 
-            // Parse JSON from response (AI should return JSON with actions)
-            return $this->parseAiResponse($content);
+            // Koreksi diri: bila AI mengarang aksi yang tidak dikenal / respons tak ter-parse,
+            // kirim umpan balik dan minta sekali lagi. Membuat agen lebih andal tanpa nambah fitur.
+            $issues = $this->validateResponse($response);
+            if ($issues) {
+                $messages[] = ['role' => 'assistant', 'content' => mb_strimwidth($content, 0, 500)];
+                $messages[] = ['role' => 'user', 'content' => $this->correctionPrompt($issues)];
+                $retryContent = $this->aiClient->chat($messages, 0.2, 2000);
+                $retryResponse = $this->parseAiResponse($retryContent);
+
+                // Pakai hasil retry bila valid; kalau tetap bermasalah, pertahankan pesan asli AI
+                // (jangan buang konteks jawaban hanya karena aksi yang dihasilkan kurang tepat).
+                $retryIssues = $this->validateResponse($retryResponse);
+                $response = $retryIssues ? $response : $retryResponse;
+            }
+
+            return $response;
         } catch (\Exception $e) {
             Log::error('AI call failed: ' . $e->getMessage());
             return ['message' => "Gagal menghubungi AI: " . $e->getMessage()];
         }
+    }
+
+    /**
+     * Cek respons AI: wajib punya message (kecuali memang tanpa aksi) dan semua aksi
+     * harus dikenal sistem. Mengembalikan daftar masalah (kosong = valid).
+     */
+    private function validateResponse(array $response): array
+    {
+        $issues = [];
+
+        $message = trim((string) ($response['message'] ?? ''));
+        $actions = $response['actions'] ?? [];
+
+        if ($message === '' && empty($actions)) {
+            $issues[] = 'Respons tidak berisi message maupun actions.';
+        }
+
+        if (!is_array($actions)) {
+            $issues[] = 'Field "actions" harus berupa array.';
+        }
+
+        foreach ((array) $actions as $action) {
+            $name = $action['action'] ?? '';
+            if ($name === '' || !in_array($name, self::KNOWN_ACTIONS, true)) {
+                $issues[] = "Aksi \"{$name}\" tidak dikenal.";
+            }
+        }
+
+        return $issues;
+    }
+
+    private function correctionPrompt(array $issues): string
+    {
+        $valid = implode(', ', self::KNOWN_ACTIONS);
+
+        return "Respons JSON kamu sebelumnya bermasalah:\n- " . implode("\n- ", $issues) .
+            "\n\nPerbaiki dan ulangi. Hanya gunakan salah satu aksi ini: {$valid}. " .
+            "Kembalikan JSON valid dengan format: {\"message\": \"...\", \"actions\": [{\"action\": \"...\", \"params\": {...}}]}";
     }
 
     private function getSystemPrompt(array $context): string
@@ -347,6 +457,12 @@ Kamu adalah AI Agent untuk mengelola aplikasi WSCRM (website WordPress, layanan 
 19. **update_journal** - Update jurnal maintenance yang sudah ada (perlu id + data baru). Gunakan ini UNTUK MENAMBAH aktivitas baru ke jurnal yang SUDAH ADA (cukup isi activities baru, entry_date & website_client_id opsional) — membutuhkan konfirmasi user
 20. **delete_journal** - Hapus jurnal maintenance (perlu id) — membutuhkan konfirmasi user
 
+**Pricelist (harga domain & hosting):**
+21. **list_domain_prices** - Daftar harga domain (opsional extension untuk filter, misal ".com"). Eksekusi langsung tanpa konfirmasi
+22. **update_domain_price** - Ubah harga domain (perlu id dari data list_domain_prices; isi field yang berubah saja: selling_price, base_cost, renewal_cost, renewal_price_with_tax, is_active). Gunakan UNTUK EDIT HARGA — membutuhkan konfirmasi user
+23. **list_hosting_prices** - Daftar paket hosting & harganya (opsional plan_name untuk filter). Eksekusi langsung tanpa konfirmasi
+24. **update_hosting_price** - Ubah harga paket hosting (perlu id dari data list_hosting_prices; isi field yang berubah saja: selling_price, modal_cost, maintenance_cost, discount_percent, is_active). Gunakan UNTUK EDIT HARGA — membutuhkan konfirmasi user
+
 ## Penting: Perbedaan "JURNAL" vs "ARTIKEL"
 - Jika user bilang **"tulis jurnal"**, **"catat jurnal"**, **"jurnal maintenance"**, **"jurnal harian"**, atau menyebut aktivitas maintenance harian (update WP, update plugin, buat artikel, optimasi halaman) UNTUK DICATAT — itu artinya **jurnal maintenance** → gunakan aksi **create_journal** (atau **update_journal** jika jurnal untuk website & tanggal itu SUDAH ADA) atau list_journals untuk melihat
 - Jika user bilang **"buat artikel"**, **"tulis artikel"**, **"publish artikel"**, atau **"artikel SEO"** ke website WP klien — itu artinya **artikel blog** → gunakan aksi **create_article**
@@ -358,7 +474,7 @@ Kamu adalah AI Agent untuk mengelola aplikasi WSCRM (website WordPress, layanan 
 - Jika user menyebut "update WP/plugin/tema" dalam konteks jurnal, itu aktivitas yang DICATAT (create_journal/update_journal), bukan aksi update_wp/update_plugins yang benar-benar mengupdate — kecuali user secara eksplisit minta menjalankan update
 
 ## Aturan:
-- Selalu analisis data (summary + website/order/task_categories/users) terlebih dahulu
+- Selalu analisis data (summary + website/order/domain_prices/hosting_plans/task_categories/users) terlebih dahulu
 - Jika user minta "cek update", gunakan aksi **check_updates** dan sebutkan website mana saja
 - Jika user menyebut website/domain tertentu (misal "cek demo1.sweet.web.id" atau "website 3"), cari id website itu di data websites lalu SERTAKAN **website_id** (atau **id**) pada SEMUA aksi yang membutuhkan website — jangan jalankan aksi website tanpa website_id
 - Jika user minta "update", jalankan aksi update
@@ -369,6 +485,10 @@ Kamu adalah AI Agent untuk mengelola aplikasi WSCRM (website WordPress, layanan 
 - Jika user tanya customer, gunakan **list_customers**; buat customer baru pakai **create_customer**
 - Jika user tanya invoice belum bayar/terlambat/tunggakan, gunakan **list_unpaid_invoices**
 - Jika user minta ringkasan/condition penjualan/laporan kondisi bisnis, gunakan **business_summary** — jawab langsung dari datanya
+- Jika user minta lihat harga domain, pakai **list_domain_prices**; ubah harga domain pakai **update_domain_price** (cari id dari hasil list, dan tanyakan/ikuti angka yang diminta user)
+- Jika user minta lihat harga hosting/paket, pakai **list_hosting_prices**; ubah harga hosting pakai **update_hosting_price** (cari id dari hasil list)
+- Saat mengubah harga, hanya sertakan field yang benar-benar berubah, dan SERTAKAN id — jangan ubah harga tanpa id yang jelas
+- Harga domain & hosting juga tersedia langsung di konteks (data "domain_prices" dan "hosting_plans") — kamu bisa menjawab pertanyaan harga TANPA aksi list, tapi untuk MENGUBAH harga tetap wajib pakai update_domain_price / update_hosting_price dengan id dari konteks
 - Aksi yang bertanda "membutuhkan konfirmasi user" TIDAK langsung jalan; sistem akan menampilkan konfirmasi ke user. Kamu tetap kirim aksi tersebut di JSON, sistem yang menangani konfirmasi
 - Balas dalam bahasa Indonesia yang natural dan informatif
 - Di akhir respons, sertakan JSON aksi yang perlu dijalankan dalam format:
@@ -383,22 +503,87 @@ PROMPT;
 
     private function parseAiResponse(string $content): array
     {
-        // Try to extract JSON from the response
-        if (preg_match('/```json\s*([\s\S]*?)\s*```/', $content, $m)) {
-            $json = json_decode($m[1], true);
-            if ($json && isset($json['message'])) {
-                return $json;
+        // 1. Seluruh konten adalah JSON murni (objek atau array aksi)
+        $parsed = $this->decodeJsonBlock($content);
+        if ($parsed !== null) {
+            return $this->normalizeParsed($parsed, $content);
+        }
+
+        // 2. Blok JSON dalam code fence (```json ... ``` atau ``` ... ```)
+        if (preg_match('/```(?:json)?\s*([\s\S]*?)\s*```/', $content, $m)) {
+            $parsed = $this->decodeJsonBlock($m[1]);
+            if ($parsed !== null) {
+                return $this->normalizeParsed($parsed, $content);
             }
         }
 
-        if (preg_match('/\{[\s\S]*"message"[\s\S]*\}/', $content, $m)) {
-            $json = json_decode($m[0], true);
-            if ($json && isset($json['message'])) {
-                return $json;
+        // 3. Array aksi mentah: coba dulu agar tidak tertelan objek bagian dalam
+        if (preg_match('/\[[\s\S]*\]/', $content, $m)) {
+            $parsed = $this->decodeJsonBlock($m[0]);
+            if ($parsed !== null) {
+                return $this->normalizeParsed($parsed, $content);
             }
         }
 
+        // 4. Objek JSON mentah di mana pun dalam respons
+        if (preg_match('/\{[\s\S]*\}/', $content, $m)) {
+            $parsed = $this->decodeJsonBlock($m[0]);
+            if ($parsed !== null) {
+                return $this->normalizeParsed($parsed, $content);
+            }
+        }
+
+        // 5. Gagal di-parse: anggap seluruh respons sebagai message tanpa aksi
         return ['message' => $content, 'actions' => []];
+    }
+
+    private function decodeJsonBlock(string $raw): ?array
+    {
+        // Bila ada trailing comma atau teks sisa, coba potong dari karakter `{`/`[` pertama
+        $candidates = [$raw];
+        if (preg_match('/[\{\[][\s\S]*[\}\]]/', $raw, $m)) {
+            $candidates[] = $m[0];
+        }
+
+        foreach (array_unique($candidates) as $candidate) {
+            $decoded = json_decode(trim($candidate), true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Normalisasi hasil parse: dukung {message, actions}, {actions}, atau array aksi polos.
+     * Saat AI hanya mengirim aksi tanpa message, pesan asli AI tetap dipertahankan.
+     */
+    private function normalizeParsed(array $parsed, string $originalContent): array
+    {
+        if (isset($parsed['message'])) {
+            return [
+                'message' => (string) $parsed['message'],
+                'actions' => $parsed['actions'] ?? [],
+            ];
+        }
+
+        if (isset($parsed['actions']) && is_array($parsed['actions'])) {
+            return [
+                'message' => $originalContent,
+                'actions' => $parsed['actions'],
+            ];
+        }
+
+        // Array polos berisi aksi: [{action, params}, ...]
+        if (array_is_list($parsed)) {
+            return [
+                'message' => $originalContent,
+                'actions' => $parsed,
+            ];
+        }
+
+        return ['message' => $originalContent, 'actions' => []];
     }
 
     /**
@@ -473,6 +658,10 @@ PROMPT;
                 'create_journal' => $this->journalAgent->createJournal($this->journalParams($params), $onEvent),
                 'update_journal' => $this->journalAgent->updateJournal((int) ($params['id'] ?? 0), $this->journalParams($params, useIdAsWebsite: false), $onEvent),
                 'delete_journal' => $this->journalAgent->deleteJournal((int) ($params['id'] ?? 0), $onEvent),
+                'list_domain_prices' => $this->pricelistAgent->listDomainPrices($params['extension'] ?? null, $onEvent),
+                'update_domain_price' => $this->pricelistAgent->updateDomainPrice((int) ($params['id'] ?? 0), $params, $onEvent),
+                'list_hosting_prices' => $this->pricelistAgent->listHostingPlans($params['plan_name'] ?? null, $onEvent),
+                'update_hosting_price' => $this->pricelistAgent->updateHostingPrice((int) ($params['id'] ?? 0), $params, $onEvent),
                 'business_summary' => $this->buildBusinessSummary(),
                 default => ['error' => "Aksi tidak dikenal: {$actionName}"],
             };
@@ -513,6 +702,8 @@ PROMPT;
             'create_customer' => 'Buat customer baru: ' . ($params['name'] ?? '?'),
             'update_journal' => 'Update jurnal #' . ($params['id'] ?? '?') . ' (' . ($params['entry_date'] ?? 'tanggal lama') . ')',
             'delete_journal' => 'Hapus jurnal #' . ($params['id'] ?? '?'),
+            'update_domain_price' => 'Ubah harga domain #' . ($params['id'] ?? '?') . ' (harga jual: Rp ' . ($params['selling_price'] ?? '?') . ')',
+            'update_hosting_price' => 'Ubah harga hosting #' . ($params['id'] ?? '?') . ' (harga jual: Rp ' . ($params['selling_price'] ?? '?') . ')',
             default => '',
         };
     }
