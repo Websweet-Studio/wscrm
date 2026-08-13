@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\Task;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -43,58 +44,56 @@ class HandleInertiaRequests extends Middleware
 
         $customerBadges = [];
         if ($customer = $request->user('customer')) {
-            // Count unpaid invoices (pending, sent, overdue)
-            $unpaidInvoicesCount = $customer->invoices()
-                ->whereIn('status', ['pending', 'sent', 'overdue'])
-                ->count();
-
-            // Count orders needing followup (pending, processing)
-            $pendingOrdersCount = $customer->orders()
-                ->whereIn('status', ['pending', 'processing'])
-                ->count();
-
-            $customerBadges = [
-                'unpaid_invoices' => $unpaidInvoicesCount,
-                'pending_orders' => $pendingOrdersCount,
-            ];
+            $customerBadges = Cache::remember('badges:customer:'.$customer->id, now()->addSeconds(30), function () use ($customer) {
+                return [
+                    'unpaid_invoices' => $customer->invoices()
+                        ->whereIn('status', ['pending', 'sent', 'overdue'])
+                        ->count(),
+                    'pending_orders' => $customer->orders()
+                        ->whereIn('status', ['pending', 'processing'])
+                        ->count(),
+                ];
+            });
         }
 
         $adminBadges = [];
         if ($user = $request->user()) {
-            $department = Employee::where('user_id', $user->id)->value('department');
-            $pendingTasksCount = Task::query()
-                ->where('status', '!=', 'done')
-                ->where(function ($q) use ($user, $department) {
-                    $q->where('assigned_user_id', $user->id);
-                    if ($department) {
-                        $q->orWhere('assigned_department', $department);
-                    }
-                })
-                ->count();
-            $unassignedTodoCount = Task::query()
-                ->where('status', 'todo')
-                ->whereNull('assigned_user_id')
-                ->where('created_by_user_id', $user->id)
-                ->count();
-            $inProgressCount = Task::query()
-                ->where('status', 'in_progress')
-                ->where(function ($q) use ($user) {
-                    $q->where('assigned_user_id', $user->id)
-                        ->orWhere('created_by_user_id', $user->id);
-                })
-                ->count();
-            $todoAssignedToMeCount = Task::query()
-                ->where('status', 'todo')
-                ->where('assigned_user_id', $user->id)
-                ->count();
+            $adminBadges = Cache::remember('badges:admin:'.$user->id, now()->addSeconds(30), function () use ($user) {
+                $department = Employee::where('user_id', $user->id)->value('department');
+                $pendingTasksCount = Task::query()
+                    ->where('status', '!=', 'done')
+                    ->where(function ($q) use ($user, $department) {
+                        $q->where('assigned_user_id', $user->id);
+                        if ($department) {
+                            $q->orWhere('assigned_department', $department);
+                        }
+                    })
+                    ->count();
+                $unassignedTodoCount = Task::query()
+                    ->where('status', 'todo')
+                    ->whereNull('assigned_user_id')
+                    ->where('created_by_user_id', $user->id)
+                    ->count();
+                $inProgressCount = Task::query()
+                    ->where('status', 'in_progress')
+                    ->where(function ($q) use ($user) {
+                        $q->where('assigned_user_id', $user->id)
+                            ->orWhere('created_by_user_id', $user->id);
+                    })
+                    ->count();
+                $todoAssignedToMeCount = Task::query()
+                    ->where('status', 'todo')
+                    ->where('assigned_user_id', $user->id)
+                    ->count();
 
-            $adminBadges = [
-                'pending_tasks' => $pendingTasksCount,
-                'tasks_unassigned_todo' => $unassignedTodoCount,
-                'tasks_in_progress' => $inProgressCount,
-                'tasks_todo_assigned' => $todoAssignedToMeCount,
-                'unread_notifications' => $user->unreadNotifications()->count(),
-            ];
+                return [
+                    'pending_tasks' => $pendingTasksCount,
+                    'tasks_unassigned_todo' => $unassignedTodoCount,
+                    'tasks_in_progress' => $inProgressCount,
+                    'tasks_todo_assigned' => $todoAssignedToMeCount,
+                    'unread_notifications' => $user->unreadNotifications()->count(),
+                ];
+            });
         }
 
         return [

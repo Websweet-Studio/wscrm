@@ -28,6 +28,10 @@ class InvoiceEmail extends Mailable
 
   public function content(): Content
   {
+    $this->invoice->loadMissing(['aiPackage', 'order.orderItems' => function ($q) {
+      $q->with(['hostingPlan', 'domainPrice', 'servicePlan']);
+    }]);
+
     return new Content(
       view: 'emails.invoices.invoice-email',
       with: [

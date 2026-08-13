@@ -71,7 +71,7 @@ class JournalReportService
             return [
                 'website_client_id' => $first->website_client_id,
                 'website_name' => $first->websiteClient?->name,
-                'entry_date' => Carbon::parse($group->min('entry_date'))->startOfMonth()->toDateString() . ' s/d ' . Carbon::parse($group->min('entry_date'))->endOfMonth()->toDateString(),
+                'entry_date' => Carbon::parse($group->min('entry_date'))->startOfMonth()->toDateString() . ' s/d ' . Carbon::parse($group->max('entry_date'))->endOfMonth()->toDateString(),
                 'activities' => $allActivities,
                 'user_name' => $first->user?->name,
             ];

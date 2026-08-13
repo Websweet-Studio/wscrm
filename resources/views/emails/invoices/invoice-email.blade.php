@@ -64,7 +64,14 @@
                                     <td style="width: 50%; vertical-align: top;">
                                         <table width="100%" cellpadding="0" cellspacing="0" border="0">
                                             <tr><td style="padding: 5px 0; font-size: 13px; color: #666666; width: 110px;">No. Tagihan</td><td style="padding: 5px 0; font-size: 13px; color: #000000;">: {{ $invoice->invoice_number }}</td></tr>
-                                            <tr><td style="padding: 5px 0; font-size: 13px; color: #666666;">Jenis</td><td style="padding: 5px 0; font-size: 13px; color: #000000;">: {{ $invoice->invoice_type === 'setup' ? 'Pembukaan' : 'Perpanjangan' }}</td></tr>
+                                            <tr><td style="padding: 5px 0; font-size: 13px; color: #666666;">Jenis</td><td style="padding: 5px 0; font-size: 13px; color: #000000;">: {{ match($invoice->invoice_type) {
+                                                'setup' => 'Pembukaan',
+                                                'renewal' => 'Perpanjangan',
+                                                'upgrade' => 'Upgrade',
+                                                'downgrade' => 'Downgrade',
+                                                'topup' => 'Topup Kredit AI',
+                                                default => $invoice->invoice_type,
+                                            } }}</td></tr>
                                             <tr><td style="padding: 5px 0; font-size: 13px; color: #666666;">Siklus</td><td style="padding: 5px 0; font-size: 13px; color: #000000;">: {{ match($invoice->billing_cycle) {
                                                 'monthly' => 'Bulanan',
                                                 'quarterly' => 'Triwulan',
@@ -158,6 +165,17 @@
                         @endphp
                     <tr>
                         <td style="padding: 0 32px 24px;">
+                            @if($invoice->invoice_type === 'topup' && $invoice->aiPackage)
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 12px;">
+                                <tr>
+                                    <td style="padding: 10px; font-size: 13px; color: #000000; border: 1px solid #dddddd;">
+                                        <strong>{{ $invoice->aiPackage->name }}</strong>
+                                        <br><span style="font-size: 12px; color: #888888;">{{ number_format($invoice->aiPackage->credits, 0, ',', '.') }} kredit AI</span>
+                                    </td>
+                                    <td style="padding: 10px; font-size: 13px; color: #000000; border: 1px solid #dddddd; text-align: right; width: 120px;">Rp {{ number_format($invoice->amount, 0, ',', '.') }}</td>
+                                </tr>
+                            </table>
+                            @endif
                             <table width="100%" cellpadding="0" cellspacing="0" border="0">
                                 @if($discountAmount > 0)
                                 <tr>
@@ -221,17 +239,10 @@
                             @endif
                         </td>
                     </tr>
-                    @elseif($invoice->status !== 'paid' && !$paymentAccounts->isNotEmpty())
-                    <tr>
-                        <td align="center" style="padding: 8px 32px 0;">
-                            <a href="{{ url('/customer/invoices/' . $invoice->id) }}" style="display: inline-block; background-color: {{ $branding->get('primary_color', '#007bff') }}; color: #ffffff; text-decoration: none; padding: 12px 36px; font-size: 14px; font-weight: 700;">
-                                BAYAR TAGIHAN
-                            </a>
-                        </td>
-                    </tr>
                     @endif
 
-                    {{-- CTA --}}
+                    {{-- CTA (hanya bila belum lunas) --}}
+                    @if($invoice->status !== 'paid')
                     <tr>
                         <td align="center" style="padding: 8px 32px 24px;">
                             <a href="{{ url('/customer/invoices/' . $invoice->id) }}" style="display: inline-block; background-color: {{ $branding->get('primary_color', '#000000') }}; color: #ffffff; text-decoration: none; padding: 12px 36px; font-size: 14px; font-weight: 700;">
@@ -239,6 +250,7 @@
                             </a>
                         </td>
                     </tr>
+                    @endif
 
                     {{-- Footer --}}
                     <tr>
