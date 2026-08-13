@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { Bot, CheckCircle2, ExternalLink, Loader2, MessageSquare, PanelLeft, PanelLeftClose, Plus, Send, Trash2, XCircle, Zap } from 'lucide-vue-next';
 import { nextTick, onMounted, ref, computed, watch } from 'vue';
 import ConfirmModal from '@/components/ConfirmModal.vue';
@@ -505,6 +505,11 @@ const handleKeydown = (e: KeyboardEvent) => {
 };
 
 onMounted(() => {
+    const prompt = (usePage().url as string)?.split('?')[1]?.split('&')
+        ?.find(p => p.startsWith('prompt='))?.split('=')[1];
+    if (prompt) {
+        inputMessage.value = decodeURIComponent(prompt);
+    }
     if (conversations.value.length > 0) {
         loadConversation(conversations.value[0].id);
     }

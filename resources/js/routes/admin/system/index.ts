@@ -205,7 +205,7 @@ performUpdate.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => (
     performUpdate.form = performUpdateForm
 /**
 * @see \App\Http\Controllers\UpdateController::restoreBackup
- * @see app/Http/Controllers/UpdateController.php:115
+ * @see app/Http/Controllers/UpdateController.php:119
  * @route '/admin/system/restore-backup'
  */
 export const restoreBackup = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -220,7 +220,7 @@ restoreBackup.definition = {
 
 /**
 * @see \App\Http\Controllers\UpdateController::restoreBackup
- * @see app/Http/Controllers/UpdateController.php:115
+ * @see app/Http/Controllers/UpdateController.php:119
  * @route '/admin/system/restore-backup'
  */
 restoreBackup.url = (options?: RouteQueryOptions) => {
@@ -229,7 +229,7 @@ restoreBackup.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\UpdateController::restoreBackup
- * @see app/Http/Controllers/UpdateController.php:115
+ * @see app/Http/Controllers/UpdateController.php:119
  * @route '/admin/system/restore-backup'
  */
 restoreBackup.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -239,7 +239,7 @@ restoreBackup.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => (
 
     /**
 * @see \App\Http\Controllers\UpdateController::restoreBackup
- * @see app/Http/Controllers/UpdateController.php:115
+ * @see app/Http/Controllers/UpdateController.php:119
  * @route '/admin/system/restore-backup'
  */
     const restoreBackupForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -249,7 +249,7 @@ restoreBackup.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => (
 
             /**
 * @see \App\Http\Controllers\UpdateController::restoreBackup
- * @see app/Http/Controllers/UpdateController.php:115
+ * @see app/Http/Controllers/UpdateController.php:119
  * @route '/admin/system/restore-backup'
  */
         restoreBackupForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

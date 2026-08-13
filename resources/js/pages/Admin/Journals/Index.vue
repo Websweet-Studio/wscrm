@@ -9,7 +9,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { formatDate } from '@/lib/utils';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { BarChart3, Calendar, Download, Edit, Plus, Search, Trash2, X } from 'lucide-vue-next';
+import { BarChart3, Bot, Calendar, Download, Edit, Plus, Search, Trash2, X } from 'lucide-vue-next';
 import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import { computed, ref } from 'vue';
 
@@ -118,6 +118,9 @@ const confirmDelete = () => {
                     <a :href="exportExcelUrl">
                         <Button variant="outline" class="cursor-pointer"><Download class="mr-2 h-4 w-4" /> Export Excel</Button>
                     </a>
+                    <Link href="/admin/websites/ai?prompt=/jurnal">
+                        <Button variant="outline" class="cursor-pointer"><Bot class="mr-2 h-4 w-4" /> Tulis via AI</Button>
+                    </Link>
                     <Link href="/admin/journals/create">
                         <Button class="cursor-pointer"><Plus class="mr-2 h-4 w-4" /> Catat Jurnal</Button>
                     </Link>
