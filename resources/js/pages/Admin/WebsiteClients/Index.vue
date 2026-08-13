@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Edit, ExternalLink, Plus, RefreshCw, Search, Trash2, X } from 'lucide-vue-next';
+import { Edit, ExternalLink, Eye, Plus, RefreshCw, Search, Trash2, X } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface Customer {
@@ -221,7 +221,7 @@ const toggleAll = () => {
                                     <TableHead>WP Version</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Auto Update</TableHead>
-                                    <TableHead class="w-[100px]">Aksi</TableHead>
+                                    <TableHead class="w-[160px]">Aksi</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -265,6 +265,11 @@ const toggleAll = () => {
                                     </TableCell>
                                     <TableCell>
                                         <div class="flex items-center gap-1">
+                                            <Link :href="`/admin/websites/${website.id}`" title="View">
+                                                <Button size="sm" variant="outline" class="cursor-pointer">
+                                                    <Eye class="h-3.5 w-3.5" />
+                                                </Button>
+                                            </Link>
                                             <Button
                                                 size="sm"
                                                 variant="outline"

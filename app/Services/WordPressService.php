@@ -73,7 +73,11 @@ class WordPressService
 
                     // Check for version in different response formats
                     if (isset($body['namespaces'])) {
-                        return $this->extractVersionFromResponse($resp);
+                        $version = $this->extractVersionFromResponse($resp);
+                        if ($version) {
+                            return $version;
+                        }
+                        continue;
                     }
                     if (isset($body['result'])) {
                         return $body['result'] ?? null;
@@ -84,22 +88,26 @@ class WordPressService
             }
         }
 
+        // Fallback: parse the generator meta tag from the homepage
+        try {
+            $resp = Http::timeout(10)->get(rtrim($website->url, '/') . '/');
+            if ($resp->successful() && preg_match('/<meta[^>]+name=["\']generator["\'][^>]+content=["\']WordPress\s+([\d.]+)/i', $resp->body(), $m)) {
+                return $m[1];
+            }
+        } catch (\Exception $e) {
+            // ignore, return null below
+        }
+
         return null;
     }
 
     private function extractVersionFromResponse($resp): ?string
     {
-        // WP returns version in headers or body
-        $headers = $resp->headers();
-        // Some WP setups return version via custom header
-        foreach ($headers as $key => $val) {
-            if (stripos($key, 'x-content') === 0 || stripos($key, 'x-wp') === 0) {
-                $headerBody = $resp->body();
-                // Try to extract from generator meta
-                if (preg_match('/content="WordPress\s+([\d.]+)/i', $headerBody, $m)) {
-                    return $m[1];
-                }
-            }
+        $body = $resp->body();
+
+        // Try to extract from generator meta tag
+        if (preg_match('/content=["\']WordPress\s+([\d.]+)/i', $body, $m)) {
+            return $m[1];
         }
 
         return null;
@@ -117,7 +125,7 @@ class WordPressService
                 if (!empty($themes) && is_array($themes)) {
                     $active = $themes[0];
                     return [
-                        'active' => $active['name'] ?? ($active['title']['rendered'] ?? null),
+                        'active' => $this->stringify($active['name'] ?? null) ?: ($this->stringify($active['title']['rendered'] ?? null)),
                         'active_version' => $active['version'] ?? null,
                     ];
                 }
@@ -141,7 +149,7 @@ class WordPressService
                 if (is_array($plugins)) {
                     return array_map(function ($p) {
                         return [
-                            'name' => $p['name'] ?? ($p['title']['rendered'] ?? 'Unknown'),
+                            'name' => $this->stringify($p['name'] ?? null) ?: ($this->stringify($p['title']['rendered'] ?? null) ?: 'Unknown'),
                             'version' => $p['version'] ?? null,
                             'active' => $p['status'] === 'active',
                             'slug' => $p['textdomain'] ?? ($p['slug'] ?? null),
@@ -281,7 +289,7 @@ class WordPressService
         return array_map(function ($p) {
             return [
                 'plugin' => $p['plugin'] ?? null,
-                'name' => $p['name'] ?? ($p['title']['rendered'] ?? 'Unknown'),
+                'name' => $this->stringify($p['name'] ?? null) ?: ($this->stringify($p['title']['rendered'] ?? null) ?: 'Unknown'),
                 'version' => $p['version'] ?? null,
                 'active' => ($p['status'] ?? '') === 'active',
             ];
@@ -467,5 +475,17 @@ class WordPressService
     private function normalizeVersion(string $version): string
     {
         return preg_replace('/[^0-9.].*$/', '', $version) ?: $version;
+    }
+
+    /**
+     * WP REST API sometimes returns { raw, rendered } objects instead of plain strings.
+     */
+    private function stringify($value): ?string
+    {
+        if (is_array($value)) {
+            return $value['rendered'] ?? ($value['raw'] ?? null);
+        }
+
+        return is_string($value) ? $value : null;
     }
 }
