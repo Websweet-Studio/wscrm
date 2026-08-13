@@ -13,6 +13,24 @@ class JournalAgent
 {
     private const VALID_TYPES = ['wp_update', 'plugin_update', 'theme_update', 'article', 'page_optimization', 'other'];
 
+    /**
+     * Sub-field aktivitas wajib didaftarkan agar validasi (excludeUnvalidatedArrayKeys)
+     * tidak membuang field lain selain "type" dari activities.
+     */
+    private const ACTIVITY_FIELD_RULES = [
+        'activities.*.title' => 'nullable|string',
+        'activities.*.url' => 'nullable|string',
+        'activities.*.word_count' => 'nullable|integer',
+        'activities.*.plugin' => 'nullable|string',
+        'activities.*.theme' => 'nullable|string',
+        'activities.*.page' => 'nullable|string',
+        'activities.*.detail' => 'nullable|string',
+        'activities.*.description' => 'nullable|string',
+        'activities.*.from_version' => 'nullable|string',
+        'activities.*.to_version' => 'nullable|string',
+        'activities.*.note' => 'nullable|string',
+    ];
+
     public function listJournals(?int $websiteId = null, ?string $dateFrom = null, ?string $dateTo = null, ?callable $onEvent = null): array
     {
         if ($onEvent) {
@@ -59,7 +77,7 @@ class JournalAgent
             'activities' => 'required|array|min:1',
             'activities.*.type' => 'required|string|in:' . implode(',', self::VALID_TYPES),
             'summary' => 'nullable|string|max:5000',
-        ])->validate();
+        ] + self::ACTIVITY_FIELD_RULES)->validate();
 
         // Satu entry per website per tanggal
         $exists = JournalEntry::where('website_client_id', $validated['website_client_id'])
@@ -108,7 +126,7 @@ class JournalAgent
             'activities' => 'required_without_all:website_client_id,entry_date,summary|array|min:1',
             'activities.*.type' => 'required|string|in:' . implode(',', self::VALID_TYPES),
             'summary' => 'nullable|string|max:5000',
-        ])->validate();
+        ] + self::ACTIVITY_FIELD_RULES)->validate();
 
         // Cek duplikat bila tanggal/website berubah
         $websiteId = $validated['website_client_id'] ?? $entry->website_client_id;

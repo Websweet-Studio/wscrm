@@ -151,6 +151,10 @@ const setType = (i: number, type: string) => { form.activities[i] = { ...form.ac
                             <template v-if="a.type === 'other'">
                                 <div><Label>Deskripsi</Label><Textarea v-model="a.description" rows="2" placeholder="Deskripsikan aktivitas..." /></div>
                             </template>
+
+                            <template v-if="a.type && a.type !== 'other'">
+                                <div><Label>Deskripsi</Label><Textarea v-model="a.description" rows="2" placeholder="Deskripsikan aktivitas..." /></div>
+                            </template>
                         </div>
                     </CardContent>
                 </Card>

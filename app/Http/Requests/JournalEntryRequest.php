@@ -29,6 +29,19 @@ class JournalEntryRequest extends FormRequest
             ],
             'activities' => 'required|array|min:1',
             'activities.*.type' => 'required|string|in:wp_update,plugin_update,theme_update,article,page_optimization,other',
+            // Sub-field wajib didaftarkan agar validasi (excludeUnvalidatedArrayKeys)
+            // tidak membuang field lain selain "type" dari activities.
+            'activities.*.title' => 'nullable|string',
+            'activities.*.url' => 'nullable|string',
+            'activities.*.word_count' => 'nullable|integer',
+            'activities.*.plugin' => 'nullable|string',
+            'activities.*.theme' => 'nullable|string',
+            'activities.*.page' => 'nullable|string',
+            'activities.*.detail' => 'nullable|string',
+            'activities.*.description' => 'nullable|string',
+            'activities.*.from_version' => 'nullable|string',
+            'activities.*.to_version' => 'nullable|string',
+            'activities.*.note' => 'nullable|string',
             'summary' => 'nullable|string|max:5000',
         ];
     }
