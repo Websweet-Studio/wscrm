@@ -122,14 +122,13 @@ class JournalAgent
             return ['error' => "Sudah ada jurnal untuk website dan tanggal tersebut. Ubah tanggal/website atau edit entry yang benar."];
         }
 
-        // Update jurnal: aktivitas baru DITAMBAHKAN ke yang sudah ada (bukan mengganti),
-        // lalu di-dedupe berdasarkan tipe+judul agar tidak duplikat saat AI kirim ulang.
+        // Update jurnal: aktivitas baru di-MERGE dengan yang sudah ada.
+        // Cocokkan berdasar identitas (tipe + judul/plugin/halaman). Jika identitas sama,
+        // field yang dikirim AI menimpa yang lama (misal perbaikan description),
+        // bukan membuat duplikat. Aktivitas dengan identitas baru di-append.
         $existing = $entry->activities ?? [];
         $newActivities = $validated['activities'] ?? [];
-        $validated['activities'] = collect(array_merge($existing, $newActivities))
-            ->unique(fn ($a) => ($a['type'] ?? '') . '|' . ($a['title'] ?? $a['plugin'] ?? $a['description'] ?? ''))
-            ->values()
-            ->all();
+        $validated['activities'] = $this->mergeActivities($existing, $newActivities);
 
         $entry->update(array_merge($validated, [
             'website_client_id' => $websiteId,
@@ -145,6 +144,47 @@ class JournalAgent
             'journal_id' => $entry->id,
             'message' => "Jurnal #{$entry->id} berhasil diperbarui.",
         ];
+    }
+
+    /**
+     * Merge aktivitas lama + baru. Aktivitas dengan identitas sama (tipe + title/plugin/page)
+     * di-overwrite field-nya; yang baru di-append.
+     */
+    private function mergeActivities(array $existing, array $incoming): array
+    {
+        foreach ($incoming as $new) {
+            $key = $this->activityIdentity($new);
+            $matched = false;
+
+            foreach ($existing as $i => $old) {
+                if ($this->activityIdentity($old) === $key) {
+                    // Field baru menimpa, field lama yang tidak dikirim tetap dipertahankan
+                    $existing[$i] = array_merge($old, $new);
+                    $matched = true;
+                    break;
+                }
+            }
+
+            if (!$matched) {
+                $existing[] = $new;
+            }
+        }
+
+        return array_values($existing);
+    }
+
+    /**
+     * Identitas aktivitas: tipe + (title|plugin|page). Untuk "other" tanpa identitas
+     * lanjutan, description dijadikan pembeda agar beberapa aktivitas "other" tidak saling timpa.
+     */
+    private function activityIdentity(array $a): string
+    {
+        $type = $a['type'] ?? '';
+        if ($type === 'other' && empty($a['title']) && empty($a['plugin']) && empty($a['page'])) {
+            return 'other|' . ($a['description'] ?? '');
+        }
+
+        return $type . '|' . ($a['title'] ?? $a['plugin'] ?? $a['page'] ?? '');
     }
 
     public function deleteJournal(int $journalId, ?callable $onEvent = null): array

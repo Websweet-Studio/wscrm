@@ -48,7 +48,7 @@ const submitUrl = computed(() => isEdit.value ? `/admin/journals/${props.journal
 
 const addActivity = () => { form.activities.push({ type: '' }); };
 const removeActivity = (i: number) => { form.activities.splice(i, 1); };
-const setType = (i: number, type: string) => { form.activities[i] = { type }; };
+const setType = (i: number, type: string) => { form.activities[i] = { ...form.activities[i], type }; };
 </script>
 
 <template>
