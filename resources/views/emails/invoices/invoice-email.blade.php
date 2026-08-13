@@ -9,10 +9,30 @@
         <tr>
             <td align="center" style="padding: 32px 16px;">
                 <table width="580" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border: 1px solid #cccccc;">
-                    {{-- Logo / App Name Header --}}
+                    {{-- Logo / App Name Header (mengikuti branding) --}}
                     <tr>
                         <td style="padding: 24px 32px 16px; border-bottom: 3px solid #000000;">
-                            <span style="font-size: 20px; font-weight: 700; color: #000000;">{{ config('app.name') }}</span>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td style="width: 60%;">
+                                        @php
+                                            $companyName = $branding->get('app_name', config('app.name', 'WSCRM'));
+                                            $appLogo = $branding->get('app_logo');
+                                        @endphp
+                                        @if($appLogo)
+                                            <img src="{{ \Illuminate\Support\Facades\URL::to('/storage/' . (str_replace('/storage/', '', $appLogo))) }}" alt="{{ $companyName }}" style="max-height: 60px;">
+                                        @else
+                                            <span style="font-size: 20px; font-weight: 700; color: #000000;">{{ $companyName }}</span>
+                                        @endif
+                                    </td>
+                                    <td style="width: 40%; text-align: right;">
+                                        @php
+                                            $primaryColor = $branding->get('primary_color', '#3b82f6');
+                                        @endphp
+                                        <span style="display: inline-block; width: 16px; height: 16px; border-radius: 50%; background-color: {{ $primaryColor }};"></span>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
 
@@ -61,7 +81,7 @@
                                         <table width="100%" cellpadding="0" cellspacing="0" border="0">
                                             <tr><td style="padding: 5px 0; font-size: 13px; color: #666666; width: 100px;">Tgl Terbit</td><td style="padding: 5px 0; font-size: 13px; color: #000000;">: {{ $invoice->issue_date->format('d M Y') }}</td></tr>
                                             <tr><td style="padding: 5px 0; font-size: 13px; color: #666666;">Jatuh Tempo</td><td style="padding: 5px 0; font-size: 13px; color: #000000; font-weight: 700;">: {{ $invoice->due_date->format('d M Y') }}</td></tr>
-                                            <tr><td style="padding: 5px 0; font-size: 13px; color: #666666;">Status</td><td style="padding: 5px 0; font-size: 13px; color: #000000;">: <strong>BELUM DIBAYAR</strong></td></tr>
+                                            <tr><td style="padding: 5px 0; font-size: 13px; color: #666666;">Status</td><td style="padding: 5px 0; font-size: 13px; color: #000000;">: <strong>{{ $invoice->status === 'paid' ? 'LUNAS' : 'BELUM DIBAYAR' }}</strong></td></tr>
                                         </table>
                                     </td>
                                 </tr>
@@ -158,10 +178,63 @@
                     </tr>
                     @endif
 
+                    {{-- Payment Information (mengikuti setting akun pembayaran) --}}
+                    @if($invoice->status !== 'paid' && $paymentAccounts->isNotEmpty())
+                    <tr>
+                        <td style="padding: 0 32px 24px;">
+                            <h3 style="margin: 0 0 10px 0; color: #007bff; font-size: 16px;">INFORMASI PEMBAYARAN</h3>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                @foreach($paymentAccounts->chunk(2) as $chunk)
+                                    <tr>
+                                        @foreach($chunk as $account)
+                                            <td style="width: {{ 100 / min(2, $chunk->count()) }}%; padding: 0; padding-right: 20px; vertical-align: top;">
+                                                @if($account->type === 'bank')
+                                                    <strong>{{ $account->name ?: 'Bank' }}</strong><br>
+                                                    <span style="font-size: 13px; color: #555;">No. Rek: {{ $account->account_number }}</span><br>
+                                                    <span style="font-size: 13px; color: #555;">A/n: {{ $account->account_name }}</span>
+                                                @elseif($account->type === 'ewallet')
+                                                    <strong>{{ $account->name ?: 'E-Wallet' }}</strong><br>
+                                                    <span style="font-size: 13px; color: #555;">No: {{ $account->account_number }}</span><br>
+                                                    <span style="font-size: 13px; color: #555;">A/n: {{ $account->account_name }}</span>
+                                                @elseif($account->type === 'qris')
+                                                    <strong>{{ $account->name ?: 'QRIS' }}</strong><br>
+                                                    @if($account->qris_image_path)
+                                                        <img src="{{ \Illuminate\Support\Facades\URL::to('/storage/' . (str_replace('/storage/', '', $account->qris_image_path))) }}" alt="QRIS" style="max-width: 150px; max-height: 150px;">
+                                                    @endif
+                                                    @if($account->account_name)
+                                                        <br><span style="font-size: 13px; color: #555;">A/n: {{ $account->account_name }}</span>
+                                                    @endif
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                        @for($i = $chunk->count(); $i < 2; $i++)
+                                            <td style="padding: 0;"></td>
+                                        @endfor
+                                    </tr>
+                                @endforeach
+                            </table>
+                            @php $primaryPhone = $branding->get('company_whatsapp') ?: $branding->get('company_phone'); @endphp
+                            @if($primaryPhone)
+                                <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">
+                                    Silakan transfer sesuai nominal dan konfirmasi pembayaran ke WhatsApp: {{ $primaryPhone }}
+                                </p>
+                            @endif
+                        </td>
+                    </tr>
+                    @elseif($invoice->status !== 'paid' && !$paymentAccounts->isNotEmpty())
+                    <tr>
+                        <td align="center" style="padding: 8px 32px 0;">
+                            <a href="{{ url('/customer/invoices/' . $invoice->id) }}" style="display: inline-block; background-color: {{ $branding->get('primary_color', '#007bff') }}; color: #ffffff; text-decoration: none; padding: 12px 36px; font-size: 14px; font-weight: 700;">
+                                BAYAR TAGIHAN
+                            </a>
+                        </td>
+                    </tr>
+                    @endif
+
                     {{-- CTA --}}
                     <tr>
                         <td align="center" style="padding: 8px 32px 24px;">
-                            <a href="{{ url('/customer/invoices/' . $invoice->id) }}" style="display: inline-block; background-color: #000000; color: #ffffff; text-decoration: none; padding: 12px 36px; font-size: 14px; font-weight: 700;">
+                            <a href="{{ url('/customer/invoices/' . $invoice->id) }}" style="display: inline-block; background-color: {{ $branding->get('primary_color', '#000000') }}; color: #ffffff; text-decoration: none; padding: 12px 36px; font-size: 14px; font-weight: 700;">
                                 BAYAR TAGIHAN
                             </a>
                         </td>
@@ -171,11 +244,28 @@
                     <tr>
                         <td style="padding: 20px 32px; background-color: #f5f5f5; border-top: 1px solid #dddddd;">
                             <p style="font-size: 13px; color: #666666; margin: 0; line-height: 1.6;">
-                                Ada pertanyaan? Hubungi kami di <a href="mailto:{{ config('mail.from.address') }}" style="color: #000000;">{{ config('mail.from.address') }}</a>
+                                @php
+                                    $footerParts = [];
+                                    $companyEmail = $branding->get('company_email');
+                                    $companyPhone = $branding->get('company_phone');
+                                    $companyWhatsapp = $branding->get('company_whatsapp');
+                                    if ($companyEmail) $footerParts[] = 'Email: ' . $companyEmail;
+                                    $priNo = $companyWhatsapp ?: $companyPhone;
+                                    if ($priNo) $footerParts[] = 'WhatsApp: ' . $priNo;
+                                    if ($companyPhone && $companyPhone !== $priNo) $footerParts[] = 'Tel: ' . $companyPhone;
+                                @endphp
+                                @if(count($footerParts))
+                                    Hubungi kami: {{ implode(' | ', $footerParts) }}
+                                @else
+                                    Ada pertanyaan? Hubungi kami.
+                                @endif
                             </p>
                             <p style="font-size: 12px; color: #999999; margin: 16px 0 0;">
-                                {{ config('app.name') }} &mdash; {{ date('Y') }}
+                                {{ $branding->get('app_name', config('app.name', 'WSCRM')) }} &mdash; {{ date('Y') }}
                             </p>
+                            @if($branding->get('footer_text'))
+                                <p style="font-size: 11px; color: #999999; margin: 4px 0 0;">{{ $branding->get('footer_text') }}</p>
+                            @endif
                         </td>
                     </tr>
                 </table>

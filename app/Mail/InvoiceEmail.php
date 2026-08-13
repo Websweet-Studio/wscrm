@@ -3,6 +3,8 @@
 namespace App\Mail;
 
 use App\Models\Invoice;
+use App\Models\PaymentAccount;
+use App\Models\BrandingSetting;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -30,6 +32,8 @@ class InvoiceEmail extends Mailable
       view: 'emails.invoices.invoice-email',
       with: [
         'orderItems' => $this->invoice->order?->orderItems()->with(['hostingPlan', 'domainPrice', 'servicePlan'])->get() ?? collect(),
+        'branding' => BrandingSetting::getAllActive()->pluck('value', 'key'),
+        'paymentAccounts' => PaymentAccount::active()->orderBy('sort')->get(),
       ],
     );
   }

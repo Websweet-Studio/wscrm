@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Estimasi Biaya - WebSweetStudio</title>
+    <title>Estimasi Biaya - {{ $branding['app_name'] ?? config('app.name', 'WSCRM') }}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,13 +16,13 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 30px;
-            border-bottom: 2px solid #3b82f6;
+            border-bottom: 3px solid {{ $branding['primary_color'] ?? '#3b82f6' }};
             padding-bottom: 20px;
         }
         .company-logo {
             font-size: 24px;
             font-weight: bold;
-            color: #3b82f6;
+            color: {{ $branding['primary_color'] ?? '#3b82f6' }};
             margin-bottom: 5px;
         }
         .company-info {
@@ -105,7 +105,7 @@
             font-size: 16px;
         }
         .total-row .amount {
-            color: #3b82f6;
+            color: {{ $branding['primary_color'] ?? '#3b82f6' }};
         }
         
         /* Footer */
@@ -126,13 +126,14 @@
     </style>
 </head>
 <body>
+    @php $branding = $branding ?? []; @endphp
     <div class="header">
         <div>
-            <div class="company-logo">WebSweetStudio</div>
+            <div class="company-logo">{{ $branding['app_name'] ?? config('app.name', 'WSCRM') }}</div>
             <div class="company-info">
-                websweetstudio.com<br>
-                Jasa Pembuatan Website Profesional<br>
-                hello@websweetstudio.com
+                {{ $branding['company_website'] ?? 'websweetstudio.com' }}<br>
+                {{ $branding['company_tagline'] ?? 'Jasa Pembuatan Website Profesional' }}<br>
+                {{ $branding['company_email'] ?? 'hello@websweetstudio.com' }}
             </div>
         </div>
         <div class="doc-info">
@@ -231,7 +232,7 @@
         @endif
         
         <div class="contact">
-            <strong>WebSweetStudio</strong> - Jasa Pembuatan Website Profesional<br>
+            <strong>{{ $branding['app_name'] ?? config('app.name', 'WSCRM') }}</strong> - {{ $branding['company_tagline'] ?? 'Jasa Pembuatan Website Profesional' }}<br>
             Terima kasih atas kepercayaan Anda!
         </div>
     </div>
