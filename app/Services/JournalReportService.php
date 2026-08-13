@@ -90,6 +90,7 @@ class JournalReportService
             'theme_updates' => $allActivities->where('type', ActivityType::THEME_UPDATE->value)->count(),
             'articles' => $allActivities->where('type', ActivityType::ARTICLE->value)->count(),
             'page_optimizations' => $allActivities->where('type', ActivityType::PAGE_OPTIMIZATION->value)->count(),
+            'plugin_removes' => $allActivities->where('type', ActivityType::PLUGIN_REMOVE->value)->count(),
             'others' => $allActivities->where('type', ActivityType::OTHER->value)->count(),
         ];
     }
@@ -163,6 +164,11 @@ class JournalReportService
                 '%s: %s',
                 $activity['page'] ?? '-',
                 $activity['detail'] ?? ''
+            ),
+            ActivityType::PLUGIN_REMOVE->value => sprintf(
+                'Hapus plugin: %s%s',
+                $activity['plugin'] ?? '-',
+                !empty($activity['note']) ? ' (' . $activity['note'] . ')' : ''
             ),
             default => $activity['description'] ?? '-',
         };

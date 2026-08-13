@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Edit, ExternalLink, Plus, Search, Trash2, X } from 'lucide-vue-next';
+import { Edit, ExternalLink, Plus, RefreshCw, Search, Trash2, X } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface Customer {
@@ -21,6 +21,8 @@ interface WebsiteClient {
     customer_id: number | null;
     name: string;
     url: string;
+    wp_username: string | null;
+    wp_app_password: string | null;
     wp_version: string | null;
     theme_name: string | null;
     theme_version: string | null;
@@ -58,6 +60,10 @@ const showDeleteModal = ref(false);
 const websiteToDelete = ref<WebsiteClient | null>(null);
 const selectedIds = ref<number[]>([]);
 const showBulkDeleteModal = ref(false);
+const syncingId = ref<number | null>(null);
+const showSyncModal = ref(false);
+const syncResult = ref<any>(null);
+const syncError = ref<string | null>(null);
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -96,6 +102,35 @@ const confirmBulkDelete = () => {
             selectedIds.value = [];
         },
     });
+};
+
+const handleSync = async (website: WebsiteClient) => {
+    syncingId.value = website.id;
+    syncError.value = null;
+    syncResult.value = null;
+    try {
+        const res = await fetch(`/admin/websites/${website.id}/sync`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+            },
+        });
+        const body = await res.json();
+        if (!res.ok || !body.success) {
+            syncError.value = body.message || 'Gagal sync.';
+            showSyncModal.value = true;
+            return;
+        }
+        syncResult.value = body;
+        showSyncModal.value = true;
+        router.reload({ only: ['websites'] });
+    } catch {
+        syncError.value = 'Terjadi kesalahan saat sync.';
+        showSyncModal.value = true;
+    } finally {
+        syncingId.value = null;
+    }
 };
 
 const toggleSelect = (id: number) => {
@@ -230,6 +265,16 @@ const toggleAll = () => {
                                     </TableCell>
                                     <TableCell>
                                         <div class="flex items-center gap-1">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                class="cursor-pointer"
+                                                title="Sync data WordPress & cek update"
+                                                :disabled="syncingId === website.id || !website.wp_username || !website.wp_app_password"
+                                                @click="handleSync(website)"
+                                            >
+                                                <RefreshCw :class="['h-3.5 w-3.5', syncingId === website.id && 'animate-spin']" />
+                                            </Button>
                                             <Link :href="`/admin/websites/${website.id}/edit`">
                                                 <Button size="sm" variant="outline" class="cursor-pointer" title="Edit">
                                                     <Edit class="h-3.5 w-3.5" />
@@ -287,6 +332,81 @@ const toggleAll = () => {
                 <div class="flex justify-end gap-3">
                     <Button variant="outline" @click="showBulkDeleteModal = false" class="cursor-pointer">Batal</Button>
                     <Button variant="destructive" @click="confirmBulkDelete" class="cursor-pointer">Hapus Semua</Button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sync Result Modal -->
+        <div v-if="showSyncModal" class="fixed inset-0 z-50 flex items-center justify-center">
+            <div class="fixed inset-0 bg-black/50" @click="showSyncModal = false"></div>
+            <div class="relative mx-4 w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
+                <div class="mb-4 flex items-center justify-between">
+                    <h2 class="text-lg font-semibold">{{ syncError ? 'Sync Gagal' : 'Hasil Sync' }}</h2>
+                    <Button size="sm" variant="ghost" @click="showSyncModal = false" class="cursor-pointer">
+                        <X class="h-4 w-4" />
+                    </Button>
+                </div>
+
+                <div v-if="syncError" class="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+                    {{ syncError }}
+                </div>
+
+                <template v-else-if="syncResult">
+                    <div class="mb-4 grid grid-cols-2 gap-3">
+                        <div class="rounded-md border p-3">
+                            <p class="text-xs text-muted-foreground">WP Version</p>
+                            <p class="font-semibold">{{ syncResult.data.wp_version || '-' }}</p>
+                        </div>
+                        <div class="rounded-md border p-3">
+                            <p class="text-xs text-muted-foreground">Theme</p>
+                            <p class="font-semibold truncate">{{ syncResult.data.theme_name || '-' }} <span v-if="syncResult.data.theme_version" class="text-muted-foreground">v{{ syncResult.data.theme_version }}</span></p>
+                        </div>
+                    </div>
+
+                    <div v-if="syncResult.updates?.core" class="mb-3 flex items-center justify-between gap-3 rounded-md border p-3">
+                        <span class="text-sm font-medium">WordPress Core</span>
+                        <Badge :variant="syncResult.updates.core.needs_update ? 'destructive' : 'default'">
+                            {{ syncResult.updates.core.needs_update
+                                ? `Update tersedia: v${syncResult.updates.core.installed} → v${syncResult.updates.core.latest}`
+                                : `Up-to-date (v${syncResult.updates.core.installed})` }}
+                        </Badge>
+                    </div>
+
+                    <div class="mb-3 rounded-md border p-3">
+                        <div class="mb-2 flex items-center justify-between">
+                            <span class="text-sm font-medium">Plugins</span>
+                            <Badge :variant="(syncResult.updates?.plugins?.length || 0) ? 'destructive' : 'default'">
+                                {{ syncResult.updates?.plugins?.length || 0 }} perlu update
+                            </Badge>
+                        </div>
+                        <ul v-if="syncResult.updates?.plugins?.length" class="space-y-1">
+                            <li v-for="p in syncResult.updates.plugins" :key="p.slug" class="flex justify-between gap-2 text-sm">
+                                <span class="truncate">{{ p.name }}</span>
+                                <span class="shrink-0 text-muted-foreground">v{{ p.installed }} → v{{ p.available }}</span>
+                            </li>
+                        </ul>
+                        <p v-else class="text-sm text-muted-foreground">Semua plugin up-to-date.</p>
+                    </div>
+
+                    <div class="rounded-md border p-3">
+                        <div class="mb-2 flex items-center justify-between">
+                            <span class="text-sm font-medium">Themes</span>
+                            <Badge :variant="(syncResult.updates?.themes?.length || 0) ? 'destructive' : 'default'">
+                                {{ syncResult.updates?.themes?.length || 0 }} perlu update
+                            </Badge>
+                        </div>
+                        <ul v-if="syncResult.updates?.themes?.length" class="space-y-1">
+                            <li v-for="t in syncResult.updates.themes" :key="t.slug" class="flex justify-between gap-2 text-sm">
+                                <span class="truncate">{{ t.name }}</span>
+                                <span class="shrink-0 text-muted-foreground">v{{ t.installed }} → v{{ t.available }}</span>
+                            </li>
+                        </ul>
+                        <p v-else class="text-sm text-muted-foreground">Semua theme up-to-date.</p>
+                    </div>
+                </template>
+
+                <div class="mt-4 flex justify-end">
+                    <Button variant="outline" @click="showSyncModal = false" class="cursor-pointer">Tutup</Button>
                 </div>
             </div>
         </div>

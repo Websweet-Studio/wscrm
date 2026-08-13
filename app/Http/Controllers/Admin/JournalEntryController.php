@@ -181,6 +181,7 @@ class JournalEntryController extends Controller
             'theme_update' => 'Update Tema',
             'article' => 'Artikel',
             'page_optimization' => 'Optimasi Halaman',
+            'plugin_remove' => 'Hapus Plugin',
             'other' => 'Lainnya',
         ];
 

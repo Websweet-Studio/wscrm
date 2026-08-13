@@ -9,6 +9,7 @@ enum ActivityType: string
     case THEME_UPDATE = 'theme_update';
     case ARTICLE = 'article';
     case PAGE_OPTIMIZATION = 'page_optimization';
+    case PLUGIN_REMOVE = 'plugin_remove';
     case OTHER = 'other';
 
     public function label(): string
@@ -19,6 +20,7 @@ enum ActivityType: string
             self::THEME_UPDATE => 'Update Tema',
             self::ARTICLE => 'Artikel',
             self::PAGE_OPTIMIZATION => 'Optimasi Halaman',
+            self::PLUGIN_REMOVE => 'Hapus Plugin',
             self::OTHER => 'Lainnya',
         };
     }

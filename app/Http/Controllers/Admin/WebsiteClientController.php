@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\WebsiteClientRequest;
 use App\Models\Customer;
+use App\Models\JournalEntry;
 use App\Models\WebsiteClient;
 use App\Services\WordPressService;
 use Inertia\Inertia;
@@ -135,10 +136,80 @@ class WebsiteClientController extends Controller
             ], 422);
         }
 
+        $updates = $wpService->checkAllUpdates($website);
+
         return response()->json([
             'success' => true,
             'message' => 'Berhasil sync data WordPress.',
             'data' => $result,
+            'updates' => $updates,
+        ]);
+    }
+
+    public function plugins(WebsiteClient $website, WordPressService $wpService): JsonResponse
+    {
+        $this->checkAdmin();
+
+        if (!$website->wp_username || !$website->wp_app_password) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kredensial WordPress belum dikonfigurasi.',
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'plugins' => $wpService->getLivePlugins($website),
+        ]);
+    }
+
+    public function destroyPlugin(WebsiteClient $website, WordPressService $wpService): JsonResponse
+    {
+        $this->checkAdmin();
+
+        $pluginFile = (string) request('plugin');
+        if (!$pluginFile) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Parameter plugin tidak valid.',
+            ], 422);
+        }
+
+        if (!$website->wp_username || !$website->wp_app_password) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kredensial WordPress belum dikonfigurasi.',
+            ], 422);
+        }
+
+        $result = $wpService->deletePlugin($website, $pluginFile);
+
+        if (!$result['success']) {
+            return response()->json($result, 422);
+        }
+
+        // Refresh stored plugin data so the synced list stays accurate.
+        $wpService->syncSiteInfo($website);
+
+        $pluginName = (string) request('name') ?: $pluginFile;
+
+        JournalEntry::create([
+            'website_client_id' => $website->id,
+            'user_id' => auth()->id(),
+            'entry_date' => now()->toDateString(),
+            'activities' => [[
+                'type' => 'plugin_remove',
+                'title' => 'Hapus Plugin',
+                'plugin' => $pluginName,
+                'detail' => 'Plugin dihapus dari website WordPress',
+                'note' => $result['message'],
+            ]],
+            'summary' => 'Hapus plugin: ' . $pluginName,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => $result['message'],
         ]);
     }
 }

@@ -49,13 +49,13 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const activityTypeLabels: Record<string, string> = {
     wp_update: 'WP Update', plugin_update: 'Update Plugin', theme_update: 'Update Tema',
-    article: 'Artikel', page_optimization: 'Optimasi Halaman', other: 'Lainnya',
+    article: 'Artikel', page_optimization: 'Optimasi Halaman', plugin_remove: 'Hapus Plugin', other: 'Lainnya',
 };
 
 const getBadgeVariant = (type: string): "default" | "secondary" | "destructive" | "outline" | null | undefined => {
     const m: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
         wp_update: 'default', plugin_update: 'secondary', theme_update: 'secondary',
-        article: 'outline', page_optimization: 'destructive', other: 'outline',
+        article: 'outline', page_optimization: 'destructive', plugin_remove: 'destructive', other: 'outline',
     };
     return m[type] || 'outline';
 };
@@ -67,6 +67,7 @@ const formatDetail = (a: JournalActivity): string => {
         case 'theme_update': return `${a.theme || '-'}: ${a.from_version || '-'} → ${a.to_version || '-'}`;
         case 'article': return `${a.title || '-'} (${a.word_count || 0} kata)`;
         case 'page_optimization': return `${a.page || '-'}: ${a.detail || '-'}`;
+        case 'plugin_remove': return `Hapus ${a.plugin || '-'}${a.note ? ' (' + a.note + ')' : ''}`;
         default: return a.description || '-';
     }
 };

@@ -114,6 +114,8 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::delete('websites/plugins/{plugin}', [ThirdPartyPluginController::class, 'destroy'])->name('websites.plugins.destroy');
     Route::resource('websites', WebsiteClientController::class);
     Route::post('websites/{website}/sync', [WebsiteClientController::class, 'sync'])->name('websites.sync');
+    Route::get('websites/{website}/plugins', [WebsiteClientController::class, 'plugins'])->name('websites.plugins.list');
+    Route::delete('websites/{website}/plugins', [WebsiteClientController::class, 'destroyPlugin'])->name('websites.plugins.destroy');
     Route::delete('websites/bulk', [WebsiteClientController::class, 'bulkDelete'])->name('websites.bulk-delete');
 
     Route::resource('journals', JournalEntryController::class)->except(['show']);

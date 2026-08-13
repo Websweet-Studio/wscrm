@@ -33,6 +33,7 @@ const activityTypes = [
     { value: 'theme_update', label: 'Update Tema' },
     { value: 'article', label: 'Artikel' },
     { value: 'page_optimization', label: 'Optimasi Halaman' },
+    { value: 'plugin_remove', label: 'Hapus Plugin' },
     { value: 'other', label: 'Lainnya' },
 ];
 
@@ -127,6 +128,11 @@ const setType = (i: number, type: string) => { form.activities[i] = { ...form.ac
                                     <div><Label>Versi Sebelum</Label><Input v-model="a.from_version" placeholder="21.0" /></div>
                                     <div><Label>Versi Sesudah</Label><Input v-model="a.to_version" placeholder="22.0" /></div>
                                 </div>
+                            </template>
+
+                            <template v-if="a.type === 'plugin_remove'">
+                                <div><Label>Nama Plugin</Label><Input v-model="a.plugin" placeholder="Elementor" /></div>
+                                <div><Label>Catatan</Label><Input v-model="a.note" placeholder="Alasan penghapusan, opsional..." /></div>
                             </template>
 
                             <template v-if="a.type === 'theme_update'">

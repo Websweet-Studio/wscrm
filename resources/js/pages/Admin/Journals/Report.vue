@@ -7,14 +7,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
-import { BarChart3, Download, FileText, PenTool, RefreshCw, Search, Settings, Activity, FileEdit } from 'lucide-vue-next';
+import { Activity, BarChart3, Download, FileEdit, FileText, PenTool, RefreshCw, Search, Settings, Trash2 } from 'lucide-vue-next';
 import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import { computed, ref } from 'vue';
 
 interface ActivityTypeLabel { value: string; label: string; }
 interface JournalActivity { type: string; type_label: string; [key: string]: any; }
 interface ReportEntry { website_name: string; entry_date: string; activities: JournalActivity[]; user_name?: string; }
-interface ReportStats { total_entries: number; total_activities: number; wp_updates: number; plugin_updates: number; theme_updates: number; articles: number; page_optimizations: number; others: number; }
+interface ReportStats { total_entries: number; total_activities: number; wp_updates: number; plugin_updates: number; theme_updates: number; articles: number; page_optimizations: number; plugin_removes: number; others: number; }
 
 interface Props {
     reportData: { entries: ReportEntry[]; stats: ReportStats; activity_type_labels: ActivityTypeLabel[]; };
@@ -47,7 +47,7 @@ const exportUrl = computed(() => {
 const getBadgeVariant = (type: string): "default" | "secondary" | "destructive" | "outline" | null | undefined => {
     const m: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
         wp_update: 'default', plugin_update: 'secondary', theme_update: 'secondary',
-        article: 'outline', page_optimization: 'destructive', other: 'outline',
+        article: 'outline', page_optimization: 'destructive', plugin_remove: 'destructive', other: 'outline',
     };
     return m[type] || 'outline';
 };
@@ -59,6 +59,7 @@ const formatDetail = (a: JournalActivity): string => {
         case 'theme_update': return `${a.theme || '-'}: ${a.from_version || '-'} → ${a.to_version || '-'}`;
         case 'article': return `${a.title || '-'} (${a.word_count || 0} kata)`;
         case 'page_optimization': return `${a.page || '-'}: ${a.detail || '-'}`;
+        case 'plugin_remove': return `Hapus ${a.plugin || '-'}${a.note ? '(' + a.note + ')' : ''}`;
         default: return a.description || '-';
     }
 };
@@ -69,6 +70,7 @@ const statCards = [
     { label: 'Update Tema', value: props.reportData.stats.theme_updates, icon: RefreshCw, color: 'text-indigo-600', bg: 'bg-indigo-50' },
     { label: 'Artikel', value: props.reportData.stats.articles, icon: PenTool, color: 'text-green-600', bg: 'bg-green-50' },
     { label: 'Optimasi', value: props.reportData.stats.page_optimizations, icon: FileEdit, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { label: 'Hapus Plugin', value: props.reportData.stats.plugin_removes, icon: Trash2, color: 'text-red-600', bg: 'bg-red-50' },
     { label: 'Lainnya', value: props.reportData.stats.others, icon: Activity, color: 'text-gray-600', bg: 'bg-gray-50' },
 ];
 
