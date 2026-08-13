@@ -26,6 +26,12 @@ class AiGateway
 
         $models = $this->candidateModels($modelKey);
 
+        // Estimasi biaya maksimum berdasarkan model & maxTokens, dan pastikan
+        // saldo mencukupi SEBELUM memanggil provider (mencegah usage gratis saat
+        // output melebihi saldo).
+        $maxCredits = $this->estimateMaxCredits($models, $messages, $maxTokens);
+        $this->ensureSufficientBalance($customerId, $maxCredits);
+
         $attempts = [];
         $lastError = null;
         $result = null;
@@ -100,6 +106,36 @@ class AiGateway
         }
 
         return $credits;
+    }
+
+    /**
+     * Estimasi biaya maksimum (kredit) utk request ini: input token diestimasi dari
+     * panjang messages, output token memakai maxTokens. Diambil nilai terbesar dari
+     * semua kandidat model (sebab fallback bisa mendarat di model mana pun).
+     */
+    private function estimateMaxCredits(array $models, array $messages, int $maxTokens): int
+    {
+        if (count($models) === 0) {
+            return 1;
+        }
+
+        $inputTokens = max(1, $this->estimateTokens(mb_strlen($this->inputPayload($messages))));
+
+        $max = 0;
+        foreach ($models as $model) {
+            $max = max($max, $this->calculateCredits($model, $inputTokens, $maxTokens));
+        }
+
+        return max(1, $max);
+    }
+
+    private function ensureSufficientBalance(int $customerId, int $requiredCredits): void
+    {
+        $credit = AiCredit::where('customer_id', $customerId)->lockForUpdate()->first();
+
+        if (! $credit || $credit->balance < $requiredCredits) {
+            throw new \RuntimeException('Saldo AI tidak mencukupi. Silakan beli paket kredit.');
+        }
     }
 
     private function deduct(int $customerId, AiModel $model, int $inputTokens, int $outputTokens, int $creditsUsed): int

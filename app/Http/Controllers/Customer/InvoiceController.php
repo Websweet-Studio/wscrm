@@ -107,7 +107,8 @@ class InvoiceController extends Controller
     }
 
     /**
-     * Confirm payment for the invoice.
+     * Konfirmasi pembayaran oleh customer: hanya mengirim bukti & menunggu verifikasi admin.
+     * Kredit TIDAK ditambahkan di sini — admin yang akan menandai lunas setelah verifikasi.
      */
     public function confirmPayment(Request $request, Invoice $invoice): RedirectResponse
     {
@@ -119,14 +120,15 @@ class InvoiceController extends Controller
         }
 
         $request->validate([
-            'payment_proof' => 'nullable|string|max:1000',
+            'payment_proof' => 'required|string|max:2000',
         ]);
 
-        // In a real application, you might want to upload payment proof files
-        // For now, we'll just mark it as paid
-        $invoice->markAsPaid($invoice->payment_method);
+        $invoice->update([
+            'status' => 'pending',
+            'payment_proof' => $request->payment_proof,
+        ]);
 
         return redirect()->route('customer.invoices.show', $invoice)
-            ->with('success', 'Pembayaran berhasil dikonfirmasi. Terima kasih!');
+            ->with('success', 'Bukti pembayaran berhasil dikirim. Menunggu verifikasi admin.');
     }
 }

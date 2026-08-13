@@ -155,6 +155,12 @@ class WebsiteAgent
 
         $targetUrl = $url ?: $website->url;
 
+        // SSRF guard: hanya izinkan URL publik dengan skema http/https, dan pastikan
+        // domain target milik website klien itu sendiri (mencegah audit URL internal/metadata).
+        if (!$this->isSafeAuditUrl($targetUrl, $website)) {
+            return ['error' => "URL audit tidak valid atau tidak termasuk domain website ini."];
+        }
+
         // Fetch the page and analyze
         try {
             if ($onEvent) {
@@ -178,6 +184,34 @@ class WebsiteAgent
         } catch (\Exception $e) {
             return ['error' => "Gagal mengakses {$targetUrl}: " . $e->getMessage()];
         }
+    }
+
+    /**
+     * Validasi URL audit SEO: hanya http/https, host publik, dan host harus sama
+     * dengan host website klien (atau subdomain-nya). Mencegah SSRF ke alamat
+     * internal seperti localhost/169.254.169.254.
+     */
+    private function isSafeAuditUrl(string $url, WebsiteClient $website): bool
+    {
+        $parts = parse_url($url);
+        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+        $host = strtolower((string) ($parts['host'] ?? ''));
+
+        if (!in_array($scheme, ['http', 'https'], true) || $host === '') {
+            return false;
+        }
+
+        // Tolak alamat IP private / loopback / link-local / metadata.
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+                return false;
+            }
+        }
+
+        $siteHost = strtolower((string) parse_url((string) $website->url, PHP_URL_HOST));
+
+        // Host persis sama, atau subdomain dari domain website klien.
+        return $host === $siteHost || str_ends_with($host, '.' . $siteHost);
     }
 
     private function analyzeSeo(string $html, string $url): array

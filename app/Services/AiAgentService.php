@@ -599,13 +599,14 @@ PROMPT;
         foreach ($actions as $action) {
             $actionName = $action['action'] ?? '';
 
-            // Skip duplicate actions the AI may send twice
-            if (in_array($actionName, $seen, true)) {
+            // Skip duplicate actions: dedupe berdasarkan nama + params, sehingga AI yang
+            // mengirim 2x create_journal untuk website berbeda tetap dieksekusi keduanya.
+            $params = $action['params'] ?? [];
+            $dedupeKey = $actionName . '|' . md5(json_encode($params));
+            if (in_array($dedupeKey, $seen, true)) {
                 continue;
             }
-            $seen[] = $actionName;
-
-            $params = $action['params'] ?? [];
+            $seen[] = $dedupeKey;
 
             if (in_array($actionName, self::HIGH_RISK_ACTIONS, true)) {
                 $pending[] = [
@@ -638,6 +639,10 @@ PROMPT;
     private function runAction(string $actionName, array $params, ?callable $onEvent = null): array
     {
         try {
+            if ($invalid = $this->validateActionParams($actionName, $params)) {
+                return ['error' => $invalid];
+            }
+
             return match ($actionName) {
                 'check_updates' => $this->websiteAgent->checkUpdates($params['website_id'] ?? $params['id'] ?? null, $onEvent),
                 'update_wp' => $this->websiteAgent->updateWp($params['id'] ?? null, $onEvent),
@@ -668,6 +673,24 @@ PROMPT;
         } catch (\Exception $e) {
             return ['error' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Validasi minimal params tiap aksi agar AI tidak mengirim aksi rusak
+     * (mis. update/delete tanpa id). Mengembalikan pesan error atau null bila valid.
+     */
+    private function validateActionParams(string $action, array $params): ?string
+    {
+        $needsId = ['update_wp', 'update_plugins', 'audit_seo', 'create_article', 'renew_order', 'update_task_status', 'update_customer_status', 'mark_invoice_paid', 'update_journal', 'delete_journal', 'update_domain_price', 'update_hosting_price'];
+
+        if (in_array($action, $needsId, true)) {
+            $id = $params['id'] ?? $params['website_id'] ?? $params['website_client_id'] ?? null;
+            if ($id === null || $id === '' || $id === 0) {
+                return "Aksi {$action} membutuhkan id.";
+            }
+        }
+
+        return null;
     }
 
     /**

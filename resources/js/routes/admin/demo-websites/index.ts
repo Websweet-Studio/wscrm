@@ -215,7 +215,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:91
  * @route '/admin/demo-websites/{demo_website}/edit'
  */
-export const edit = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const edit = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: edit.url(args, options),
     method: 'get',
 })
@@ -230,7 +230,7 @@ edit.definition = {
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:91
  * @route '/admin/demo-websites/{demo_website}/edit'
  */
-edit.url = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+edit.url = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { demo_website: args }
     }
@@ -263,7 +263,7 @@ edit.url = (args: { demo_website: string | number | { id: string | number } } | 
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:91
  * @route '/admin/demo-websites/{demo_website}/edit'
  */
-edit.get = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+edit.get = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: edit.url(args, options),
     method: 'get',
 })
@@ -272,7 +272,7 @@ edit.get = (args: { demo_website: string | number | { id: string | number } } | 
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:91
  * @route '/admin/demo-websites/{demo_website}/edit'
  */
-edit.head = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+edit.head = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: edit.url(args, options),
     method: 'head',
 })
@@ -282,7 +282,7 @@ edit.head = (args: { demo_website: string | number | { id: string | number } } |
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:91
  * @route '/admin/demo-websites/{demo_website}/edit'
  */
-    const editForm = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const editForm = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: edit.url(args, options),
         method: 'get',
     })
@@ -292,7 +292,7 @@ edit.head = (args: { demo_website: string | number | { id: string | number } } |
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:91
  * @route '/admin/demo-websites/{demo_website}/edit'
  */
-        editForm.get = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        editForm.get = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: edit.url(args, options),
             method: 'get',
         })
@@ -301,7 +301,7 @@ edit.head = (args: { demo_website: string | number | { id: string | number } } |
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:91
  * @route '/admin/demo-websites/{demo_website}/edit'
  */
-        editForm.head = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        editForm.head = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: edit.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',
@@ -317,7 +317,7 @@ edit.head = (args: { demo_website: string | number | { id: string | number } } |
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:105
  * @route '/admin/demo-websites/{demo_website}'
  */
-export const update = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -332,7 +332,7 @@ update.definition = {
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:105
  * @route '/admin/demo-websites/{demo_website}'
  */
-update.url = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+update.url = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { demo_website: args }
     }
@@ -365,7 +365,7 @@ update.url = (args: { demo_website: string | number | { id: string | number } } 
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:105
  * @route '/admin/demo-websites/{demo_website}'
  */
-update.put = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -374,7 +374,7 @@ update.put = (args: { demo_website: string | number | { id: string | number } } 
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:105
  * @route '/admin/demo-websites/{demo_website}'
  */
-update.patch = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+update.patch = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: update.url(args, options),
     method: 'patch',
 })
@@ -384,7 +384,7 @@ update.patch = (args: { demo_website: string | number | { id: string | number } 
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:105
  * @route '/admin/demo-websites/{demo_website}'
  */
-    const updateForm = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const updateForm = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: update.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'PUT',
@@ -399,7 +399,7 @@ update.patch = (args: { demo_website: string | number | { id: string | number } 
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:105
  * @route '/admin/demo-websites/{demo_website}'
  */
-        updateForm.put = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        updateForm.put = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: update.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PUT',
@@ -413,7 +413,7 @@ update.patch = (args: { demo_website: string | number | { id: string | number } 
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:105
  * @route '/admin/demo-websites/{demo_website}'
  */
-        updateForm.patch = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        updateForm.patch = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: update.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PATCH',
@@ -429,7 +429,7 @@ update.patch = (args: { demo_website: string | number | { id: string | number } 
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:141
  * @route '/admin/demo-websites/{demo_website}'
  */
-export const destroy = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -444,7 +444,7 @@ destroy.definition = {
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:141
  * @route '/admin/demo-websites/{demo_website}'
  */
-destroy.url = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { demo_website: args }
     }
@@ -477,7 +477,7 @@ destroy.url = (args: { demo_website: string | number | { id: string | number } }
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:141
  * @route '/admin/demo-websites/{demo_website}'
  */
-destroy.delete = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -487,7 +487,7 @@ destroy.delete = (args: { demo_website: string | number | { id: string | number 
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:141
  * @route '/admin/demo-websites/{demo_website}'
  */
-    const destroyForm = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const destroyForm = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: destroy.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'DELETE',
@@ -502,7 +502,7 @@ destroy.delete = (args: { demo_website: string | number | { id: string | number 
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:141
  * @route '/admin/demo-websites/{demo_website}'
  */
-        destroyForm.delete = (args: { demo_website: string | number | { id: string | number } } | [demo_website: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        destroyForm.delete = (args: { demo_website: number | { id: number } } | [demo_website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: destroy.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'DELETE',
@@ -518,7 +518,7 @@ destroy.delete = (args: { demo_website: string | number | { id: string | number 
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:153
  * @route '/admin/demo-websites/{demoWebsite}/toggle-status'
  */
-export const toggleStatus = (args: { demoWebsite: string | number | { id: string | number } } | [demoWebsite: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+export const toggleStatus = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: toggleStatus.url(args, options),
     method: 'patch',
 })
@@ -533,7 +533,7 @@ toggleStatus.definition = {
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:153
  * @route '/admin/demo-websites/{demoWebsite}/toggle-status'
  */
-toggleStatus.url = (args: { demoWebsite: string | number | { id: string | number } } | [demoWebsite: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+toggleStatus.url = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { demoWebsite: args }
     }
@@ -566,7 +566,7 @@ toggleStatus.url = (args: { demoWebsite: string | number | { id: string | number
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:153
  * @route '/admin/demo-websites/{demoWebsite}/toggle-status'
  */
-toggleStatus.patch = (args: { demoWebsite: string | number | { id: string | number } } | [demoWebsite: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+toggleStatus.patch = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: toggleStatus.url(args, options),
     method: 'patch',
 })
@@ -576,7 +576,7 @@ toggleStatus.patch = (args: { demoWebsite: string | number | { id: string | numb
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:153
  * @route '/admin/demo-websites/{demoWebsite}/toggle-status'
  */
-    const toggleStatusForm = (args: { demoWebsite: string | number | { id: string | number } } | [demoWebsite: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const toggleStatusForm = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: toggleStatus.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'PATCH',
@@ -591,7 +591,7 @@ toggleStatus.patch = (args: { demoWebsite: string | number | { id: string | numb
  * @see app/Http/Controllers/Admin/DemoWebsiteController.php:153
  * @route '/admin/demo-websites/{demoWebsite}/toggle-status'
  */
-        toggleStatusForm.patch = (args: { demoWebsite: string | number | { id: string | number } } | [demoWebsite: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        toggleStatusForm.patch = (args: { demoWebsite: number | { id: number } } | [demoWebsite: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: toggleStatus.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PATCH',

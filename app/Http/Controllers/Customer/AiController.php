@@ -82,7 +82,10 @@ class AiController extends Controller
 
         $key = 'wsk-'.Str::random(48);
 
-        $credit->update(['api_key' => Crypt::encryptString($key)]);
+        $credit->update([
+            'api_key' => Crypt::encryptString($key),
+            'api_key_hash' => hash('sha256', $key),
+        ]);
 
         return response()->json(['api_key' => $key]);
     }
@@ -109,8 +112,22 @@ class AiController extends Controller
     {
         abort_unless($package->is_active, 404, 'Paket tidak tersedia.');
 
+        $customer = $this->customer();
+
+        // Cegah invoice topup ganda (pending/sent) utk paket yang sama.
+        $existing = Invoice::where('customer_id', $customer->id)
+            ->where('ai_package_id', $package->id)
+            ->where('invoice_type', 'topup')
+            ->whereIn('status', ['pending', 'sent'])
+            ->first();
+
+        if ($existing) {
+            return redirect()->route('customer.invoices.payment', $existing)
+                ->with('info', 'Anda sudah memiliki invoice aktif untuk paket ini.');
+        }
+
         $invoice = Invoice::create([
-            'customer_id' => $this->customer()->id,
+            'customer_id' => $customer->id,
             'invoice_number' => $generator->generateInvoiceNumber(),
             'invoice_type' => 'topup',
             'amount' => $package->price,

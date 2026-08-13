@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AiCredit extends Model
 {
-    protected $fillable = ['customer_id', 'balance', 'api_key'];
+    protected $fillable = ['customer_id', 'balance', 'api_key', 'api_key_hash'];
 
     protected function casts(): array
     {

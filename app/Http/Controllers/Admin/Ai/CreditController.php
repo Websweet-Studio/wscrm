@@ -7,6 +7,7 @@ use App\Models\AiCredit;
 use App\Models\AiTransaction;
 use App\Models\Customer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,29 +45,45 @@ class CreditController extends Controller
             'description' => 'nullable|string|max:255',
         ]);
 
-        $credit = AiCredit::firstOrCreate(['customer_id' => $validated['customer_id']]);
-        $current = (int) $credit->balance;
+        $delta = DB::transaction(function () use ($validated) {
+            $credit = AiCredit::where('customer_id', $validated['customer_id'])
+                ->lockForUpdate()
+                ->first();
 
-        $delta = match ($validated['action']) {
-            'add' => $validated['credits'],
-            'subtract' => -$validated['credits'],
-            'set' => $validated['credits'] - $current,
-        };
+            if (! $credit) {
+                $credit = AiCredit::create(['customer_id' => $validated['customer_id'], 'balance' => 0]);
+            }
 
-        $delta = max(-$current, $delta);
+            $current = (int) $credit->balance;
+
+            $delta = match ($validated['action']) {
+                'add' => $validated['credits'],
+                'subtract' => -$validated['credits'],
+                'set' => $validated['credits'] - $current,
+            };
+
+            $delta = max(-$current, $delta);
+
+            if ($delta === 0) {
+                return 0;
+            }
+
+            AiTransaction::create([
+                'customer_id' => $validated['customer_id'],
+                'type' => $delta > 0 ? 'in' : 'out',
+                'source' => 'manual_adjust',
+                'credits' => $delta,
+                'description' => $validated['description'] ?: 'Penyesuaian manual oleh admin',
+            ]);
+
+            $credit->update(['balance' => $current + $delta]);
+
+            return $delta;
+        });
+
         if ($delta === 0) {
             return redirect()->back()->with('info', 'Tidak ada perubahan saldo.');
         }
-
-        AiTransaction::create([
-            'customer_id' => $validated['customer_id'],
-            'type' => $delta > 0 ? 'in' : 'out',
-            'source' => 'manual_adjust',
-            'credits' => $delta,
-            'description' => $validated['description'] ?: 'Penyesuaian manual oleh admin',
-        ]);
-
-        $credit->update(['balance' => $current + $delta]);
 
         return redirect()->back()->with('success', 'Saldo kredit berhasil disesuaikan.');
     }

@@ -59,7 +59,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
  * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:85
  * @route '/admin/websites/plugins/{plugin}'
  */
-export const update = (args: { plugin: string | number | { id: string | number } } | [plugin: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const update = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: update.url(args, options),
     method: 'post',
 })
@@ -74,7 +74,7 @@ update.definition = {
  * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:85
  * @route '/admin/websites/plugins/{plugin}'
  */
-update.url = (args: { plugin: string | number | { id: string | number } } | [plugin: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+update.url = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { plugin: args }
     }
@@ -107,7 +107,7 @@ update.url = (args: { plugin: string | number | { id: string | number } } | [plu
  * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:85
  * @route '/admin/websites/plugins/{plugin}'
  */
-update.post = (args: { plugin: string | number | { id: string | number } } | [plugin: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+update.post = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: update.url(args, options),
     method: 'post',
 })
@@ -117,7 +117,7 @@ update.post = (args: { plugin: string | number | { id: string | number } } | [pl
  * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:85
  * @route '/admin/websites/plugins/{plugin}'
  */
-    const updateForm = (args: { plugin: string | number | { id: string | number } } | [plugin: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const updateForm = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: update.url(args, options),
         method: 'post',
     })
@@ -127,7 +127,7 @@ update.post = (args: { plugin: string | number | { id: string | number } } | [pl
  * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:85
  * @route '/admin/websites/plugins/{plugin}'
  */
-        updateForm.post = (args: { plugin: string | number | { id: string | number } } | [plugin: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        updateForm.post = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: update.url(args, options),
             method: 'post',
         })
@@ -138,7 +138,7 @@ update.post = (args: { plugin: string | number | { id: string | number } } | [pl
  * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:122
  * @route '/admin/websites/plugins/{plugin}'
  */
-export const destroy = (args: { plugin: string | number | { id: string | number } } | [plugin: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -153,7 +153,7 @@ destroy.definition = {
  * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:122
  * @route '/admin/websites/plugins/{plugin}'
  */
-destroy.url = (args: { plugin: string | number | { id: string | number } } | [plugin: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { plugin: args }
     }
@@ -186,7 +186,7 @@ destroy.url = (args: { plugin: string | number | { id: string | number } } | [pl
  * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:122
  * @route '/admin/websites/plugins/{plugin}'
  */
-destroy.delete = (args: { plugin: string | number | { id: string | number } } | [plugin: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -196,7 +196,7 @@ destroy.delete = (args: { plugin: string | number | { id: string | number } } | 
  * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:122
  * @route '/admin/websites/plugins/{plugin}'
  */
-    const destroyForm = (args: { plugin: string | number | { id: string | number } } | [plugin: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const destroyForm = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: destroy.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'DELETE',
@@ -211,7 +211,7 @@ destroy.delete = (args: { plugin: string | number | { id: string | number } } | 
  * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:122
  * @route '/admin/websites/plugins/{plugin}'
  */
-        destroyForm.delete = (args: { plugin: string | number | { id: string | number } } | [plugin: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        destroyForm.delete = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: destroy.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'DELETE',

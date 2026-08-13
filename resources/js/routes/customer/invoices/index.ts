@@ -362,7 +362,7 @@ processPayment.post = (args: { invoice: number | { id: number } } | [invoice: nu
     processPayment.form = processPaymentForm
 /**
 * @see \App\Http\Controllers\Customer\InvoiceController::confirmPayment
- * @see app/Http/Controllers/Customer/InvoiceController.php:112
+ * @see app/Http/Controllers/Customer/InvoiceController.php:113
  * @route '/customer/invoices/{invoice}/confirm-payment'
  */
 export const confirmPayment = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -377,7 +377,7 @@ confirmPayment.definition = {
 
 /**
 * @see \App\Http\Controllers\Customer\InvoiceController::confirmPayment
- * @see app/Http/Controllers/Customer/InvoiceController.php:112
+ * @see app/Http/Controllers/Customer/InvoiceController.php:113
  * @route '/customer/invoices/{invoice}/confirm-payment'
  */
 confirmPayment.url = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -410,7 +410,7 @@ confirmPayment.url = (args: { invoice: number | { id: number } } | [invoice: num
 
 /**
 * @see \App\Http\Controllers\Customer\InvoiceController::confirmPayment
- * @see app/Http/Controllers/Customer/InvoiceController.php:112
+ * @see app/Http/Controllers/Customer/InvoiceController.php:113
  * @route '/customer/invoices/{invoice}/confirm-payment'
  */
 confirmPayment.post = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -420,7 +420,7 @@ confirmPayment.post = (args: { invoice: number | { id: number } } | [invoice: nu
 
     /**
 * @see \App\Http\Controllers\Customer\InvoiceController::confirmPayment
- * @see app/Http/Controllers/Customer/InvoiceController.php:112
+ * @see app/Http/Controllers/Customer/InvoiceController.php:113
  * @route '/customer/invoices/{invoice}/confirm-payment'
  */
     const confirmPaymentForm = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -430,7 +430,7 @@ confirmPayment.post = (args: { invoice: number | { id: number } } | [invoice: nu
 
             /**
 * @see \App\Http\Controllers\Customer\InvoiceController::confirmPayment
- * @see app/Http/Controllers/Customer/InvoiceController.php:112
+ * @see app/Http/Controllers/Customer/InvoiceController.php:113
  * @route '/customer/invoices/{invoice}/confirm-payment'
  */
         confirmPaymentForm.post = (args: { invoice: number | { id: number } } | [invoice: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

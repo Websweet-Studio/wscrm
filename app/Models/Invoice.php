@@ -28,6 +28,7 @@ class Invoice extends Model
         'payment_account_id',
         'ai_package_id',
         'notes',
+        'payment_proof',
     ];
 
     protected function casts(): array

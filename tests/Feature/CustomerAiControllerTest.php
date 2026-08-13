@@ -58,7 +58,7 @@ it('creates a topup invoice when customer buys a package', function () {
     ]);
 });
 
-it('adds credit balance after customer confirms payment', function () {
+it('does not add credit when customer confirms payment (waits admin verification)', function () {
     $package = AiPackage::create([
         'name' => 'Starter 10K',
         'credits' => 5000,
@@ -78,8 +78,15 @@ it('adds credit balance after customer confirms payment', function () {
     ]);
 
     $this->actingAs($this->customer, 'customer')
-        ->post("/customer/invoices/{$invoice->id}/confirm-payment")
+        ->post("/customer/invoices/{$invoice->id}/confirm-payment", [
+            'payment_proof' => 'Bukti transfer 123',
+        ])
         ->assertRedirect();
 
-    expect(AiCredit::currentBalance($this->customer->id))->toBe($package->credits);
+    // Kredit tidak boleh bertambah; hanya status berubah jadi pending (menunggu verifikasi).
+    expect(AiCredit::currentBalance($this->customer->id))->toBe(0);
+
+    $invoice->refresh();
+    expect($invoice->status)->toBe('pending')
+        ->and($invoice->payment_proof)->toBe('Bukti transfer 123');
 });

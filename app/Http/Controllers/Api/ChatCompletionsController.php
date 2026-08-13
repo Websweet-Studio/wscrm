@@ -48,6 +48,10 @@ class ChatCompletionsController extends Controller
         $temperature = (float) ($payload['temperature'] ?? 0.3);
         $maxTokens = (int) ($payload['max_tokens'] ?? 2000);
 
+        // Batasi parameter untuk mencegah abuse biaya provider.
+        $temperature = min(2.0, max(0.0, $temperature));
+        $maxTokens = min(4096, max(1, $maxTokens));
+
         try {
             $result = $gateway->chat($customerId, $modelKey, $messages, $temperature, $maxTokens);
         } catch (\RuntimeException $e) {
@@ -91,11 +95,22 @@ class ChatCompletionsController extends Controller
         }
 
         $token = trim($matches[1]);
+        $hash = hash('sha256', $token);
 
-        foreach (AiCredit::whereNotNull('api_key')->get() as $credit) {
+        // Lookup O(1) via hash index; fallback ke dekripsi utk key lama tanpa hash.
+        $credit = AiCredit::where('api_key_hash', $hash)->first();
+
+        if ($credit) {
+            return $credit;
+        }
+
+        foreach (AiCredit::whereNotNull('api_key')->whereNull('api_key_hash')->get() as $legacy) {
             try {
-                if (hash_equals(Crypt::decryptString($credit->api_key), $token)) {
-                    return $credit;
+                if (hash_equals(Crypt::decryptString($legacy->api_key), $token)) {
+                    // Backfill hash utk lookup cepat berikutnya.
+                    $legacy->update(['api_key_hash' => $hash]);
+
+                    return $legacy;
                 }
             } catch (\Throwable $e) {
                 continue;
