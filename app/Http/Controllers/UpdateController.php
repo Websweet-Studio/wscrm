@@ -70,6 +70,10 @@ class UpdateController extends Controller
             }
 
             $version = $this->normalizeVersion((string) $version);
+
+            if (! $this->isTrustedDownloadUrl($downloadUrl)) {
+                return response()->json(['error' => 'URL download tidak valid'], 400);
+            }
             $publicRoot = $this->normalizePath((string) ($request->server('DOCUMENT_ROOT') ?? ''));
             if ($publicRoot === '' || ! is_dir($publicRoot)) {
                 return response()->json(['error' => 'Document root tidak valid'], 500);
@@ -132,6 +136,23 @@ class UpdateController extends Controller
 
             return response()->json(['error' => 'Restore backup gagal: '.$e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Hanya izinkan URL download dari domain GitHub resmi (release assets/zipball).
+     * Mencegah SSRF / menimpa file dengan URL dari domain lain.
+     */
+    private function isTrustedDownloadUrl(string $url): bool
+    {
+        $url = trim($url);
+
+        if ($url === '' || ! filter_var($url, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+
+        return in_array($host, ['github.com', 'api.github.com', 'objects.githubusercontent.com', 'codeload.github.com'], true);
     }
 
     private function getCurrentVersion(): string

@@ -12,6 +12,11 @@
 .env
 .env.backup
 .env.production
+/cookies.txt
+/debug-deployment.php
+/public/admin-tools.php
+/public/install/debug.php
+/public/install/old.php
 .phpactor.json
 .phpunit.result.cache
 Homestead.json

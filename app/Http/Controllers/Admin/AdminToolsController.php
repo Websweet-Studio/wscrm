@@ -10,10 +10,25 @@ use Inertia\Response;
 
 class AdminToolsController extends Controller
 {
+    /**
+     * Aksi berbahaya yang hanya boleh dijalankan oleh Super Admin.
+     */
+    private const DESTRUCTIVE_ACTIONS = [
+        'migrate_fresh',
+        'key_generate',
+    ];
+
     private function checkAdmin(): void
     {
         if (!auth()->user()?->isAdmin()) {
             abort(403, 'Unauthorized access.');
+        }
+    }
+
+    private function checkSuperAdmin(): void
+    {
+        if (!auth()->user()?->isSuperAdmin()) {
+            abort(403, 'Aksi ini hanya tersedia untuk Super Admin.');
         }
     }
 
@@ -43,6 +58,10 @@ class AdminToolsController extends Controller
         $this->checkAdmin();
 
         $action = $request->input('action');
+
+        if (in_array($action, self::DESTRUCTIVE_ACTIONS, true)) {
+            $this->checkSuperAdmin();
+        }
 
         try {
             $output = match ($action) {

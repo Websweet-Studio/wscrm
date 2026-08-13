@@ -278,7 +278,6 @@ class BuildPackage extends Command
             '.env.example' => base_path('.env.example'),
             'artisan' => base_path('artisan'),
             'index.php' => base_path('deployment-index.php'), // Use deployment version
-            'debug.php' => base_path('debug-deployment.php'), // Debug script
             'install/htaccess-template.txt' => base_path('install-htaccess-template.txt'), // Template untuk installer
             // NOTE: .htaccess akan di-generate oleh installer setelah instalasi selesai
         ];

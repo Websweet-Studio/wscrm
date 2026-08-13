@@ -52,12 +52,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 // API endpoints
 Route::post('/api/domains/availability', [App\Http\Controllers\DomainPriceController::class, 'checkAvailability'])
+    ->middleware('throttle:30,1')
     ->name('api.domains.availability');
 
 Route::get('/api/username/check', [App\Http\Controllers\Api\UsernameController::class, 'checkAvailability'])
+    ->middleware('throttle:60,1')
     ->name('api.username.check');
 
 Route::get('/api/customer/username/check', [App\Http\Controllers\Api\CustomerUsernameController::class, 'checkAvailability'])
+    ->middleware('throttle:60,1')
     ->name('api.customer.username.check');
 
 Route::get('dashboard', [App\Http\Controllers\DashboardController::class, 'index'])

@@ -14,10 +14,6 @@
     # Allow installer directory access
     RewriteCond %{REQUEST_URI} ^/install/
     RewriteRule .* - [L]
-    
-    # Allow debug.php for troubleshooting
-    RewriteCond %{REQUEST_URI} ^/debug\.php
-    RewriteRule .* - [L]
 
     # Redirect Trailing Slashes If Not A Folder
     RewriteCond %{REQUEST_FILENAME} !-d
