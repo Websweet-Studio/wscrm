@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::stream
- * @see app/Http/Controllers/Admin/AiAgentController.php:118
+ * @see app/Http/Controllers/Admin/AiAgentController.php:121
  * @route '/admin/websites/ai/chat/stream'
  */
 export const stream = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ stream.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::stream
- * @see app/Http/Controllers/Admin/AiAgentController.php:118
+ * @see app/Http/Controllers/Admin/AiAgentController.php:121
  * @route '/admin/websites/ai/chat/stream'
  */
 stream.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ stream.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::stream
- * @see app/Http/Controllers/Admin/AiAgentController.php:118
+ * @see app/Http/Controllers/Admin/AiAgentController.php:121
  * @route '/admin/websites/ai/chat/stream'
  */
 stream.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -35,7 +35,7 @@ stream.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\AiAgentController::stream
- * @see app/Http/Controllers/Admin/AiAgentController.php:118
+ * @see app/Http/Controllers/Admin/AiAgentController.php:121
  * @route '/admin/websites/ai/chat/stream'
  */
     const streamForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -45,7 +45,7 @@ stream.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\AiAgentController::stream
- * @see app/Http/Controllers/Admin/AiAgentController.php:118
+ * @see app/Http/Controllers/Admin/AiAgentController.php:121
  * @route '/admin/websites/ai/chat/stream'
  */
         streamForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -56,7 +56,7 @@ stream.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     stream.form = streamForm
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::confirm
- * @see app/Http/Controllers/Admin/AiAgentController.php:235
+ * @see app/Http/Controllers/Admin/AiAgentController.php:242
  * @route '/admin/websites/ai/chat/confirm'
  */
 export const confirm = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -71,7 +71,7 @@ confirm.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::confirm
- * @see app/Http/Controllers/Admin/AiAgentController.php:235
+ * @see app/Http/Controllers/Admin/AiAgentController.php:242
  * @route '/admin/websites/ai/chat/confirm'
  */
 confirm.url = (options?: RouteQueryOptions) => {
@@ -80,7 +80,7 @@ confirm.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::confirm
- * @see app/Http/Controllers/Admin/AiAgentController.php:235
+ * @see app/Http/Controllers/Admin/AiAgentController.php:242
  * @route '/admin/websites/ai/chat/confirm'
  */
 confirm.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -90,7 +90,7 @@ confirm.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\AiAgentController::confirm
- * @see app/Http/Controllers/Admin/AiAgentController.php:235
+ * @see app/Http/Controllers/Admin/AiAgentController.php:242
  * @route '/admin/websites/ai/chat/confirm'
  */
     const confirmForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -100,7 +100,7 @@ confirm.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\AiAgentController::confirm
- * @see app/Http/Controllers/Admin/AiAgentController.php:235
+ * @see app/Http/Controllers/Admin/AiAgentController.php:242
  * @route '/admin/websites/ai/chat/confirm'
  */
         confirmForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -111,7 +111,7 @@ confirm.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     confirm.form = confirmForm
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::cancel
- * @see app/Http/Controllers/Admin/AiAgentController.php:344
+ * @see app/Http/Controllers/Admin/AiAgentController.php:351
  * @route '/admin/websites/ai/chat/cancel'
  */
 export const cancel = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -126,7 +126,7 @@ cancel.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::cancel
- * @see app/Http/Controllers/Admin/AiAgentController.php:344
+ * @see app/Http/Controllers/Admin/AiAgentController.php:351
  * @route '/admin/websites/ai/chat/cancel'
  */
 cancel.url = (options?: RouteQueryOptions) => {
@@ -135,7 +135,7 @@ cancel.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::cancel
- * @see app/Http/Controllers/Admin/AiAgentController.php:344
+ * @see app/Http/Controllers/Admin/AiAgentController.php:351
  * @route '/admin/websites/ai/chat/cancel'
  */
 cancel.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -145,7 +145,7 @@ cancel.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\AiAgentController::cancel
- * @see app/Http/Controllers/Admin/AiAgentController.php:344
+ * @see app/Http/Controllers/Admin/AiAgentController.php:351
  * @route '/admin/websites/ai/chat/cancel'
  */
     const cancelForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -155,7 +155,7 @@ cancel.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\AiAgentController::cancel
- * @see app/Http/Controllers/Admin/AiAgentController.php:344
+ * @see app/Http/Controllers/Admin/AiAgentController.php:351
  * @route '/admin/websites/ai/chat/cancel'
  */
         cancelForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

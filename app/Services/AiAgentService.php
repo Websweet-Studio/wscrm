@@ -94,10 +94,18 @@ class AiAgentService
      * Aksi aman dieksekusi; aksi berisiko tinggi dikembalikan sebagai pending_actions.
      * $onEvent dipanggil tiap tahap workflow: fn(string $message, string $status, string $agent).
      */
-    public function process(string $userMessage, ?callable $onEvent = null, array $history = []): array
+    public function process(string $userMessage, ?callable $onEvent = null, array $history = [], array $pageContext = []): array
     {
         // 1. Gather context: all websites & orders with their current state + ringkasan bisnis
         $context = $this->buildContext();
+
+        // Sertakan konteks halaman aktif agar AI paham "sedang di halaman apa".
+        if (!empty($pageContext['url'])) {
+            $context['current_page'] = [
+                'url' => $pageContext['url'],
+                'label' => $pageContext['label'] ?? '',
+            ];
+        }
 
         if ($onEvent) {
             $onEvent('Menganalisis permintaan dan menyusun konteks data...', 'loading', 'Orchestrator');
@@ -426,6 +434,8 @@ Kamu adalah AI Agent untuk mengelola aplikasi WSCRM (website WordPress, layanan 
 ```json
 {$contextJson}
 ```
+
+Blok "current_page" (jika ada) menunjukkan halaman yang sedang dibuka user. Gunakan untuk menyesuaikan jawaban/aksi dengan konteks halaman itu (misal user sedang di /admin/orders lalu bilang "perpanjang yang ini", rujuk ke data orders).
 
 ## Aksi yang Bisa Kamu Lakukan:
 **Website & Konten:**

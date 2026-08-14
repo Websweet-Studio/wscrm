@@ -61,6 +61,9 @@ class AiAgentController extends Controller
         $validated = $request->validate([
             'conversation_id' => 'nullable|integer',
             'message' => 'required|string|max:2000',
+            'page' => 'nullable|array',
+            'page.url' => 'nullable|string|max:500',
+            'page.label' => 'nullable|string|max:200',
         ]);
 
         // Reuse existing conversation, or create a new one on first message
@@ -83,7 +86,7 @@ class AiAgentController extends Controller
         ]);
 
         try {
-            $result = $agent->process($validated['message']);
+            $result = $agent->process($validated['message'], null, [], $validated['page'] ?? []);
         } catch (\Exception $e) {
             $result = [
                 'success' => false,
@@ -122,6 +125,9 @@ class AiAgentController extends Controller
         $validated = $request->validate([
             'conversation_id' => 'nullable|integer',
             'message' => 'required|string|max:2000',
+            'page' => 'nullable|array',
+            'page.url' => 'nullable|string|max:500',
+            'page.label' => 'nullable|string|max:200',
         ]);
 
         $conversation = null;
@@ -159,8 +165,9 @@ class AiAgentController extends Controller
 
         $conversationId = $conversation->id;
         $message = $validated['message'];
+        $pageContext = $validated['page'] ?? [];
 
-        return response()->stream(function () use ($agent, $message, $conversationId, $history) {
+        return response()->stream(function () use ($agent, $message, $conversationId, $history, $pageContext) {
             // SSE: matikan buffering & kompresi PHP (zlib/output_buffering) supaya
             // tiap event progress langsung terkirim, tidak menumpuk sampai respons selesai.
             ini_set('output_buffering', 'off');
@@ -181,7 +188,7 @@ class AiAgentController extends Controller
             try {
                 $result = $agent->process($message, function (string $progressMessage, string $status = 'done', string $agentName = '') use ($send) {
                     $send(['type' => 'progress', 'message' => $progressMessage, 'status' => $status, 'agent' => $agentName]);
-                }, $history);
+                }, $history, $pageContext);
             } catch (\Exception $e) {
                 $result = [
                     'success' => false,
