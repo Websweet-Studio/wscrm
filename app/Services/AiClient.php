@@ -17,9 +17,52 @@ class AiClient
 
     public function __construct()
     {
-        $this->endpoint = config('services.ai.endpoint', env('AI_ENDPOINT', 'https://api.openai.com/v1'));
-        $this->apiKey = config('services.ai.api_key', env('AI_API_KEY', ''));
-        $this->model = config('services.ai.model', env('AI_MODEL', 'gpt-4o-mini'));
+        $s = self::settings();
+
+        $this->endpoint = $s['endpoint'];
+        $this->apiKey = $s['api_key'];
+        $this->model = $s['model'];
+    }
+
+    /**
+     * Baca pengaturan AI dari DB (admin bisa ubah via /admin/ai/settings).
+     * Bila DB kosong, fallback ke config/services.ai lalu env.
+     */
+    public static function settings(): array
+    {
+        try {
+            $db = \App\Models\AiSetting::allSettings();
+        } catch (\Throwable) {
+            $db = [];
+        }
+
+        $endpoint = $db['endpoint'] ?? '';
+        if ($endpoint === '') {
+            $endpoint = config('services.ai.endpoint', env('AI_ENDPOINT', 'https://api.openai.com/v1'));
+        }
+
+        $model = $db['model'] ?? '';
+        if ($model === '') {
+            $model = config('services.ai.model', env('AI_MODEL', 'gpt-4o-mini'));
+        }
+
+        $apiKey = '';
+        if (! empty($db['api_key'])) {
+            try {
+                $apiKey = Crypt::decryptString($db['api_key']);
+            } catch (\Throwable) {
+                // Fallback: nilai disimpan plain (migrasi lama) — pakai langsung.
+                $apiKey = $db['api_key'];
+            }
+        } else {
+            $apiKey = config('services.ai.api_key', env('AI_API_KEY', ''));
+        }
+
+        return [
+            'endpoint' => rtrim((string) $endpoint, '/'),
+            'api_key' => (string) $apiKey,
+            'model' => (string) $model,
+        ];
     }
 
     /**

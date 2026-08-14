@@ -33,6 +33,7 @@ use App\Http\Controllers\Admin\Ai\CreditController as AiCreditController;
 use App\Http\Controllers\Admin\Ai\ModelController as AiModelController;
 use App\Http\Controllers\Admin\Ai\PackageController as AiPackageController;
 use App\Http\Controllers\Admin\Ai\ProviderController as AiProviderController;
+use App\Http\Controllers\Admin\Ai\SettingController as AiSettingController;
 use App\Http\Controllers\Admin\Ai\TransactionController as AiTransactionController;
 use Illuminate\Support\Facades\Route;
 
@@ -157,6 +158,8 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
 
     // AI Management (provider, model, paket kredit, saldo, transaksi)
     Route::prefix('ai')->name('ai.')->group(function () {
+        Route::get('settings', [AiSettingController::class, 'index'])->name('settings.index');
+        Route::patch('settings', [AiSettingController::class, 'save'])->name('settings.save');
         Route::resource('providers', AiProviderController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('models', AiModelController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('packages', AiPackageController::class)->only(['index', 'store', 'update', 'destroy']);

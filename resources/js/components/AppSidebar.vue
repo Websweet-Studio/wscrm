@@ -196,6 +196,11 @@ const mainNavItems: NavItem[] = [
                 icon: Bot,
             },
             {
+                title: 'Pengaturan AI',
+                href: '/admin/ai/settings',
+                icon: Settings,
+            },
+            {
                 title: 'Providers',
                 href: '/admin/ai/providers',
                 icon: Cpu,
