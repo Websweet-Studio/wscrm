@@ -144,16 +144,28 @@ class AiAgentController extends Controller
 
         // Riwayat percakapan sebelumnya (tanpa pesan yang baru ditulis) — dikirim ke AI
         // supaya konteks multi-langkah terjaga (misal alur "/jurnal ..." → "hari ini").
-        // Dibatasi 20 pesan terakhir & 400 karakter/pesan untuk menghemat token.
+        // Dibatasi 30 pesan terakhir & 1000 karakter/pesan untuk menghemat token.
+        // Selain teks, sertakan "resolved context" (website_id/id/entry_date) dari aksi
+        // AI sebelumnya agar AI TIDAK lupa entitas yang sudah disepakati (mis. domain).
         $history = $conversation->messages()
             ->orderByDesc('id')
-            ->take(20)
-            ->get(['role', 'content'])
+            ->take(30)
+            ->get(['role', 'content', 'actions'])
             ->reverse()
-            ->map(fn ($m) => [
-                'role' => $m->role === 'agent' ? 'assistant' : 'user',
-                'content' => mb_strimwidth($m->content, 0, 400, '…'),
-            ])
+            ->map(function ($m) {
+                $role = $m->role === 'agent' ? 'assistant' : 'user';
+                $content = mb_strimwidth((string) $m->content, 0, 1000, '…');
+
+                if ($m->role === 'agent' && !empty($m->actions)) {
+                    $resolved = $this->extractResolvedContext($m->actions);
+                    if ($resolved) {
+                        $content .= "\n[Konteks entitas yang sudah disepakati AI sebelumnya: "
+                            . json_encode($resolved, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . ']';
+                    }
+                }
+
+                return ['role' => $role, 'content' => $content];
+            })
             ->values()
             ->all();
 
@@ -374,5 +386,37 @@ class AiAgentController extends Controller
     private static function sessionKey(int $conversationId): string
     {
         return 'ai_pending_actions_' . $conversationId;
+    }
+
+    /**
+     * Ekstrak entitas yang sudah disepakati AI dari aksi-aksi sebelumnya, supaya
+     * konteks multi-langkah tidak hilang (mis. domain sudah disebut → AI tidak
+     * minta lagi saat user hanya menyebut judul).
+     */
+    private function extractResolvedContext(array $actions): array
+    {
+        $ctx = [];
+
+        foreach ($actions as $a) {
+            $params = $a['params'] ?? [];
+
+            if (!empty($params['website_id'])) {
+                $ctx['website_id'] = $params['website_id'];
+            }
+            if (!empty($params['website_client_id'])) {
+                $ctx['website_client_id'] = $params['website_client_id'];
+            }
+            if (!empty($params['id'])) {
+                $ctx['id'] = $params['id'];
+            }
+            if (!empty($params['entry_date'])) {
+                $ctx['entry_date'] = $params['entry_date'];
+            }
+            if (!empty($params['title'])) {
+                $ctx['title'] = $params['title'];
+            }
+        }
+
+        return $ctx;
     }
 }

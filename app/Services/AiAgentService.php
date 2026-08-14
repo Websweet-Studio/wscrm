@@ -76,6 +76,7 @@ class AiAgentService
         'update_domain_price',
         'list_hosting_prices',
         'update_hosting_price',
+        'apply_filter',
     ];
 
     public function __construct(
@@ -104,6 +105,7 @@ class AiAgentService
             $context['current_page'] = [
                 'url' => $pageContext['url'],
                 'label' => $pageContext['label'] ?? '',
+                'focused_entity' => $this->resolveFocusEntity((string) $pageContext['url']),
             ];
         }
 
@@ -202,10 +204,48 @@ class AiAgentService
         return $message;
     }
 
+    /**
+     * Dari URL halaman aktif, tentukan entitas yang sedang "difokus" user, sehingga
+     * frasa relatif seperti "yang ini" / "perpanjang yang ini" bisa dirujuk ke id yang tepat.
+     */
+    private function resolveFocusEntity(string $url): ?array
+    {
+        $path = parse_url($url, PHP_URL_PATH) ?: '';
+        $path = trim($path, '/');
+
+        if (!preg_match('#^admin/([a-z0-9_-]+)(?:/([0-9]+))?#i', $path, $m)) {
+            return null;
+        }
+
+        $resource = $m[1];
+        $id = isset($m[2]) ? (int) $m[2] : null;
+
+        // Pemetaan segmen URL → jenis entitas + sumber data pada konteks.
+        $map = [
+            'websites' => 'website',
+            'orders' => 'order',
+            'customers' => 'customer',
+            'invoices' => 'invoice',
+            'journals' => 'journal',
+            'tasks' => 'task',
+        ];
+
+        if (!isset($map[$resource])) {
+            return null;
+        }
+
+        $focus = ['resource' => $resource, 'type' => $map[$resource]];
+
+        if ($id !== null) {
+            $focus['id'] = $id;
+        }
+
+        return $focus;
+    }
+
     private function buildContext(): array
     {
         $websites = WebsiteClient::with('customer')->get();
-
         $websiteData = [];
         foreach ($websites as $w) {
             $websiteData[] = [
@@ -435,7 +475,7 @@ Kamu adalah AI Agent untuk mengelola aplikasi WSCRM (website WordPress, layanan 
 {$contextJson}
 ```
 
-Blok "current_page" (jika ada) menunjukkan halaman yang sedang dibuka user. Gunakan untuk menyesuaikan jawaban/aksi dengan konteks halaman itu (misal user sedang di /admin/orders lalu bilang "perpanjang yang ini", rujuk ke data orders).
+Blok "current_page" (jika ada) menunjukkan halaman yang sedang dibuka user. Gunakan untuk menyesuaikan jawaban/aksi dengan konteks halaman itu (misal user sedang di /admin/orders lalu bilang "perpanjang yang ini", rujuk ke data orders). Field "focused_entity" (jika ada) berisi resource + id dari URL halaman detail — misal /admin/orders/12 → {"resource":"orders","type":"order","id":12}. Saat user bilang "yang ini"/"perpanjang yang ini" di halaman detail, GUNAKAN focused_entity.id sebagai id entitas (jangan tanya id lagi).
 
 ## Aksi yang Bisa Kamu Lakukan:
 **Website & Konten:**
@@ -476,6 +516,9 @@ Blok "current_page" (jika ada) menunjukkan halaman yang sedang dibuka user. Guna
 23. **list_hosting_prices** - Daftar paket hosting & harganya (opsional plan_name untuk filter). Eksekusi langsung tanpa konfirmasi
 24. **update_hosting_price** - Ubah harga paket hosting (perlu id dari data list_hosting_prices; isi field yang berubah saja: selling_price, modal_cost, maintenance_cost, discount_percent, is_active). Gunakan UNTUK EDIT HARGA — membutuhkan konfirmasi user
 
+**Navigasi / Filter Halaman:**
+25. **apply_filter** - Arahkan user ke halaman/filter tertentu dengan mengubah query string. Gunakan saat user minta "urutkan", "filter", "tampilkan", atau "arahkan ke ...". Params: `url` (path + query string, misal "/admin/services?direction=desc&sort=expires_at&status=active"). WAJIB internal (dimulai "/"). Untuk "kadaluarsa terdekat" gunakan sort=expires_at&direction=desc; untuk status aktif tambahkan status=active.
+
 ## Penting: Perbedaan "JURNAL" vs "ARTIKEL"
 - Jika user bilang **"tulis jurnal"**, **"catat jurnal"**, **"jurnal maintenance"**, **"jurnal harian"**, atau menyebut aktivitas maintenance harian (update WP, update plugin, buat artikel, optimasi halaman) UNTUK DICATAT — itu artinya **jurnal maintenance** → gunakan aksi **create_journal** (atau **update_journal** jika jurnal untuk website & tanggal itu SUDAH ADA) atau list_journals untuk melihat
 - Jika user bilang **"buat artikel"**, **"tulis artikel"**, **"publish artikel"**, atau **"artikel SEO"** ke website WP klien — itu artinya **artikel blog** → gunakan aksi **create_article**
@@ -488,6 +531,7 @@ Blok "current_page" (jika ada) menunjukkan halaman yang sedang dibuka user. Guna
 
 ## Aturan:
 - Selalu analisis data (summary + website/order/domain_prices/hosting_plans/task_categories/users) terlebih dahulu
+- **Konteks multi-langkah (PENTING):** riwayat percakapan di atas bisa memuat "[Konteks entitas yang sudah disepakati AI sebelumnya]" berisi website_id/id/entry_date/title yang SUDAH ditentukan di giliran sebelumnya. JANGAN tanya ulang hal yang sudah disepakati — pakai langsung entitas itu untuk melengkapi aksi. Contoh: user sudah menyebut domain "rogers-portfolio.com" → sudah ada website_id-nya → saat user kemudian memberi judul artikel, langsung pakai website_id itu, jangan minta "sebutkan website tujuan".
 - Jika user minta "cek update", gunakan aksi **check_updates** dan sebutkan website mana saja
 - Jika user menyebut website/domain tertentu (misal "cek demo1.sweet.web.id" atau "website 3"), cari id website itu di data websites lalu SERTAKAN **website_id** (atau **id**) pada SEMUA aksi yang membutuhkan website — jangan jalankan aksi website tanpa website_id
 - Jika user minta "update", jalankan aksi update
@@ -501,6 +545,7 @@ Blok "current_page" (jika ada) menunjukkan halaman yang sedang dibuka user. Guna
 - Jika user minta lihat harga domain, pakai **list_domain_prices**; ubah harga domain pakai **update_domain_price** (cari id dari hasil list, dan tanyakan/ikuti angka yang diminta user)
 - Jika user minta lihat harga hosting/paket, pakai **list_hosting_prices**; ubah harga hosting pakai **update_hosting_price** (cari id dari hasil list)
 - Saat mengubah harga, hanya sertakan field yang benar-benar berubah, dan SERTAKAN id — jangan ubah harga tanpa id yang jelas
+- Jika user minta "urutkan/filter/tampilkan/arahkan ke" sesuatu di halaman (misal "urutkan berdasarkan kadaluarsa terdekat", "filter status aktif"), gunakan aksi **apply_filter** dengan `url` berupa path+query string yang sesuai — jangan cuma menjawab teks. Sesuaikan resource halaman dengan `current_page.url` (misal sedang di /admin/services maka url filter-nya juga /admin/services?...).
 - Harga domain & hosting juga tersedia langsung di konteks (data "domain_prices" dan "hosting_plans") — kamu bisa menjawab pertanyaan harga TANPA aksi list, tapi untuk MENGUBAH harga tetap wajib pakai update_domain_price / update_hosting_price dengan id dari konteks
 - Aksi yang bertanda "membutuhkan konfirmasi user" TIDAK langsung jalan; sistem akan menampilkan konfirmasi ke user. Kamu tetap kirim aksi tersebut di JSON, sistem yang menangani konfirmasi
 - Balas dalam bahasa Indonesia yang natural dan informatif
@@ -681,6 +726,7 @@ PROMPT;
                 'list_hosting_prices' => $this->pricelistAgent->listHostingPlans($params['plan_name'] ?? null, $onEvent),
                 'update_hosting_price' => $this->pricelistAgent->updateHostingPrice((int) ($params['id'] ?? 0), $params, $onEvent),
                 'business_summary' => $this->buildBusinessSummary(),
+                'apply_filter' => $this->applyFilterAction($params),
                 default => ['error' => "Aksi tidak dikenal: {$actionName}"],
             };
         } catch (\Exception $e) {
@@ -704,6 +750,30 @@ PROMPT;
         }
 
         return null;
+    }
+
+    /**
+     * Aksi apply_filter: hasilnya berupa instruksi navigasi yang dieksekusi di
+     * frontend (mengubah query string halaman, misal sort/filter). Backend hanya
+     * memvalidasi & meneruskan — eksekusi navigasi dilakukan FloatingAiAssistant.
+     */
+    private function applyFilterAction(array $params): array
+    {
+        $url = trim((string) ($params['url'] ?? ''));
+        if ($url === '') {
+            return ['error' => 'apply_filter membutuhkan url.'];
+        }
+
+        // Hanya izinkan path internal (relatif), hindari open-redirect.
+        if (!str_starts_with($url, '/')) {
+            return ['error' => 'apply_filter hanya menerima path internal (dimulai "/").'];
+        }
+
+        return [
+            'success' => true,
+            'navigate' => $url,
+            'message' => 'Menerapkan filter: ' . $url,
+        ];
     }
 
     /**

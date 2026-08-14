@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { usePage } from '@inertiajs/vue3';
-import { Bot, Loader2, Send, X } from 'lucide-vue-next';
-import { nextTick, onMounted, ref } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
+import { Bot, Loader2, RotateCcw, Send, X } from 'lucide-vue-next';
+import { nextTick, onMounted, ref, watch } from 'vue';
 
 interface Message {
     role: 'user' | 'agent';
@@ -16,6 +16,53 @@ const messages = ref<Message[]>([]);
 const input = ref('');
 const loading = ref(false);
 const container = ref<HTMLElement>();
+const conversationId = ref<number | null>(null);
+
+// Riwayat disimpan di sessionStorage per halaman, supaya tidak hilang saat user
+// menutup panel / berpindah sub-halaman (Inertia partial reload) di resource yang sama.
+const storageKey = () => 'floating_ai_' + (usePage().url as string || '/').split('?')[0];
+
+const loadHistory = () => {
+    try {
+        const raw = sessionStorage.getItem(storageKey());
+        if (!raw) return;
+        const saved = JSON.parse(raw) as { messages?: Message[]; conversationId?: number | null };
+        if (Array.isArray(saved.messages) && saved.messages.length) {
+            messages.value = saved.messages;
+        }
+        if (saved.conversationId) {
+            conversationId.value = saved.conversationId;
+        }
+    } catch {
+        // abaikan data korup
+    }
+};
+
+const persistHistory = () => {
+    try {
+        sessionStorage.setItem(storageKey(), JSON.stringify({
+            messages: messages.value,
+            conversationId: conversationId.value,
+        }));
+    } catch {
+        // abaikan bila storage penuh/tak tersedia
+    }
+};
+
+const resetConversation = () => {
+    conversationId.value = null;
+    messages.value = [];
+    try {
+        sessionStorage.removeItem(storageKey());
+    } catch {
+        // abaikan
+    }
+    messages.value.push({
+        role: 'agent',
+        content: 'Percakapan di-reset. Saya asisten AI — saat ini kamu di halaman **' + (currentPage().label || currentPage().url) + '**. Ada yang bisa saya bantu?',
+    });
+    scrollToBottom();
+};
 
 const csrfToken = () => (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
 
@@ -101,9 +148,17 @@ const send = async () => {
     const text = input.value.trim();
     if (!text || loading.value) return;
 
+    // Perintah /reset: mulai percakapan baru tanpa memanggil backend.
+    if (text === '/reset') {
+        input.value = '';
+        resetConversation();
+        return;
+    }
+
     messages.value.push({ role: 'user', content: text });
     input.value = '';
     loading.value = true;
+    persistHistory();
     scrollToBottom();
 
     const agentMsg: Message = { role: 'agent', content: '', pending: true };
@@ -116,13 +171,24 @@ const send = async () => {
                 agentMsg.content = p.message;
             }
             scrollToBottom();
+        } else if (p.type === 'start') {
+            if (p.conversation_id) {
+                conversationId.value = p.conversation_id;
+            }
         } else if (p.type === 'done') {
             agentMsg.content = p.ai_response || 'Tidak ada respons.';
             agentMsg.pending = false;
             scrollToBottom();
+            persistHistory();
+            // Aksi apply_filter → navigasi ke URL filter yang diminta AI.
+            navigateIfNeeded(p.actions || []);
+            // Refresh halaman aktif bila AI menjalankan aksi yang mengubah data
+            // (misal create_journal), supaya tabel/dashboard langsung ter-update.
+            reloadIfNeeded(p.actions || []);
         } else if (p.type === 'error') {
             agentMsg.content = p.message || 'Terjadi error.';
             agentMsg.pending = false;
+            persistHistory();
             scrollToBottom();
         }
     };
@@ -131,6 +197,7 @@ const send = async () => {
         await streamRequest('/admin/websites/ai/chat/stream', {
             message: text,
             page: currentPage(),
+            conversation_id: conversationId.value,
         }, onEvent);
     } catch {
         agentMsg.content = 'Maaf, terjadi error saat menghubungi AI Agent.';
@@ -149,11 +216,54 @@ const handleKeydown = (e: KeyboardEvent) => {
     }
 };
 
+// Aksi yang mengubah data (mutasi). Setelah sukses, reload halaman aktif agar
+// tampilan (tabel/list) menampilkan data terbaru tanpa perlu refresh manual.
+const MUTATING_ACTIONS = new Set([
+    'create_journal',
+    'update_journal',
+    'delete_journal',
+    'create_task',
+    'update_task_status',
+    'create_customer',
+    'update_customer_status',
+    'mark_invoice_paid',
+    'update_domain_price',
+    'update_hosting_price',
+    'update_wp',
+    'update_plugins',
+    'create_article',
+]);
+
+const reloadIfNeeded = (actions: any[]) => {
+    const hasMutation = actions.some((a) => MUTATING_ACTIONS.has(a.action) && !a.result?.error);
+    if (hasMutation) {
+        router.reload({ only: ['journals', 'stats', 'recentActivities', 'expiringServices', 'chartData', 'myPendingTasks', 'customers', 'invoices', 'orders', 'domainPrices', 'hostingPlans'] });
+    }
+};
+
+// Aksi apply_filter membawa instruksi navigasi (path+query). Eksekusi via router.visit
+// dengan preserveState agar chat (state komponen) TIDAK hilang saat filter berubah.
+const navigateIfNeeded = (actions: any[]) => {
+    const filterAction = actions.find((a) => a.action === 'apply_filter' && !a.result?.error && a.result?.navigate);
+    if (filterAction) {
+        router.visit(filterAction.result.navigate, { preserveState: true, preserveScroll: true });
+    }
+};
+
 onMounted(() => {
-    messages.value.push({
-        role: 'agent',
-        content: 'Halo! Saya asisten AI. Saat ini kamu berada di halaman **' + (currentPage().label || currentPage().url) + '**. Ada yang bisa saya bantu?',
-    });
+    loadHistory();
+    if (messages.value.length === 0) {
+        messages.value.push({
+            role: 'agent',
+            content: 'Halo! Saya asisten AI. Saat ini kamu berada di halaman **' + (currentPage().label || currentPage().url) + '**. Ada yang bisa saya bantu?',
+        });
+    }
+});
+
+// Jika Inertia navigasi ke sub-halaman dalam resource yang sama, muat ulang riwayat
+// agar chat tidak hilang (komponen floating umumnya tidak di-unmount).
+watch(() => usePage().url, () => {
+    loadHistory();
 });
 </script>
 
@@ -178,6 +288,9 @@ onMounted(() => {
                         <p class="text-sm font-semibold leading-tight">AI Assistant</p>
                         <p class="text-xs text-muted-foreground truncate">{{ currentPage().label || currentPage().url }}</p>
                     </div>
+                    <Button variant="ghost" size="icon" class="h-8 w-8 cursor-pointer" title="Reset percakapan" @click="resetConversation">
+                        <RotateCcw class="h-4 w-4" />
+                    </Button>
                     <Button variant="ghost" size="icon" class="h-8 w-8 cursor-pointer" @click="open = false">
                         <X class="h-4 w-4" />
                     </Button>
