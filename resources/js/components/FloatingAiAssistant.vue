@@ -2,8 +2,8 @@
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { router, usePage } from '@inertiajs/vue3';
-import { Bot, Loader2, RotateCcw, Send, X } from 'lucide-vue-next';
-import { nextTick, onMounted, ref, watch } from 'vue';
+import { Bot, Command, Loader2, RotateCcw, Send, X } from 'lucide-vue-next';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 
 interface Message {
     role: 'user' | 'agent';
@@ -68,21 +68,147 @@ const csrfToken = () => (document.querySelector('meta[name="csrf-token"]') as HT
 
 const currentPage = () => {
     const url = (usePage().url as string) || '/';
-    // Label diambil dari breadcrumb global bila tersedia; kalau tidak, turunkan dari path.
+    const props = usePage().props as any;
+
+    // 1) Coba dari breadcrumb global (bila tersedia).
     let label = '';
-    const breadcrumbs = (usePage().props as any).breadcrumbs;
+    const breadcrumbs = props.breadcrumbs;
     if (Array.isArray(breadcrumbs) && breadcrumbs.length) {
         label = breadcrumbs[breadcrumbs.length - 1]?.title || '';
     }
+
+    // 2) Bila belum ada, turunkan dari nama entitas di props halaman (mis. website.name).
+    if (!label) {
+        const entityName =
+            props.website?.name ||
+            props.order?.domain_name ||
+            props.customer?.name ||
+            props.invoice?.invoice_number ||
+            props.task?.title;
+        if (entityName) {
+            label = entityName;
+        }
+    }
+
+    // 3) Fallback terakhir: dari segmen path, tapi buang segmen angka murni.
     if (!label) {
         const segments = url.split('?')[0].split('/').filter(Boolean);
-        const last = segments[segments.length - 1] || '';
+        // Ambil segmen terakhir yang BUKAN angka (id), supaya "8" tidak jadi label.
+        const last = [...segments].reverse().find((s) => !/^\d+$/.test(s));
         label = last
             ? last.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
             : 'Dashboard';
     }
+
     return { url, label };
 };
+
+// ---------------------------------------------------------------------------
+// Command palette "/" — daftar aksi yang tersedia sesuai halaman aktif.
+// Setiap command punya "text" (yang dikirim ke AI) dan "hint" (deskripsi singkat).
+// ---------------------------------------------------------------------------
+interface AiCommand {
+    command: string;
+    text: string;
+    hint: string;
+}
+
+const COMMAND_LIBRARY: AiCommand[] = [
+    { command: '/reset', text: '/reset', hint: 'Mulai percakapan baru' },
+    { command: '/journal', text: '/jurnal ', hint: 'Catat aktivitas/jurnal maintenance' },
+    { command: '/cek-update', text: 'cek update semua website', hint: 'Cek update WordPress/plugin' },
+    { command: '/cek-kadaluarsa', text: 'cek order yang harus diperpanjang bulan ini', hint: 'Cek order kadaluarsa terdekat' },
+    { command: '/tugas', text: 'list tugas tim', hint: 'Lihat daftar tugas/PR' },
+    { command: '/customer', text: 'list customer', hint: 'Lihat daftar customer' },
+    { command: '/invoice', text: 'list invoice belum bayar', hint: 'Cek invoice menunggak' },
+    { command: '/ringkasan', text: 'ringkasan kondisi bisnis', hint: 'Ringkasan penjualan & kondisi bisnis' },
+    { command: '/harga-domain', text: 'list harga domain', hint: 'Lihat harga domain' },
+    { command: '/harga-hosting', text: 'list harga hosting', hint: 'Lihat harga paket hosting' },
+    { command: '/artikel', text: 'buat artikel untuk website ', hint: 'Generate artikel SEO' },
+];
+
+// Aksi spesifik tiap resource halaman (diprioritaskan lebih dulu).
+const PAGE_COMMANDS: Record<string, AiCommand[]> = {
+    journals: [
+        { command: '/jurnal', text: '/jurnal ', hint: 'Catat aktivitas jurnal hari ini' },
+        { command: '/jurnal-bulan', text: 'tampilkan jurnal bulan ini', hint: 'Lihat jurnal bulan ini' },
+        { command: '/jurnal-website', text: 'list jurnal untuk website ', hint: 'Lihat jurnal website tertentu' },
+    ],
+    websites: [
+        { command: '/cek-update', text: 'cek update website ini', hint: 'Cek update website ini' },
+        { command: '/update-wp', text: 'update WordPress website ini', hint: 'Update core WordPress' },
+        { command: '/audit-seo', text: 'audit SEO website ini', hint: 'Audit SEO website ini' },
+        { command: '/artikel', text: 'buat artikel untuk website ini', hint: 'Generate artikel SEO' },
+        { command: '/jurnal', text: '/jurnal website ini ', hint: 'Catat jurnal website ini' },
+    ],
+    orders: [
+        { command: '/cek-kadaluarsa', text: 'cek order yang harus diperpanjang bulan ini', hint: 'Cek kadaluarsa terdekat' },
+        { command: '/urutkan-kadaluarsa', text: 'urutkan berdasarkan kadaluarsa terdekat', hint: 'Urutkan by kadaluarsa' },
+    ],
+    services: [
+        { command: '/cek-kadaluarsa', text: 'cek order yang harus diperpanjang bulan ini', hint: 'Cek kadaluarsa terdekat' },
+        { command: '/urutkan-kadaluarsa', text: 'urutkan berdasarkan kadaluarsa terdekat', hint: 'Urutkan by kadaluarsa' },
+    ],
+    customers: [
+        { command: '/customer', text: 'list customer', hint: 'Lihat daftar customer' },
+        { command: '/customer-baru', text: 'buat customer baru', hint: 'Tambah customer' },
+    ],
+    invoices: [
+        { command: '/invoice', text: 'list invoice belum bayar', hint: 'Cek invoice menunggak' },
+        { command: '/invoice-bulan', text: 'list invoice bulan ini', hint: 'Invoice bulan ini' },
+    ],
+    tasks: [
+        { command: '/tugas', text: 'list tugas tim', hint: 'Lihat daftar tugas' },
+        { command: '/tugas-baru', text: 'buat tugas baru', hint: 'Tambah tugas' },
+    ],
+};
+
+const resourceFromUrl = (url: string): string => {
+    const seg = url.split('?')[0].split('/').filter(Boolean);
+    // URL admin: /admin/{resource} atau /admin/{resource}/{id}
+    if (seg[0] === 'admin' && seg[1]) {
+        return seg[1];
+    }
+    return seg[seg.length - 1] || '';
+};
+
+// Daftar command yang relevan dengan halaman aktif (spesifik dulu, lalu umum + /reset).
+const availableCommands = computed<AiCommand[]>(() => {
+    const resource = resourceFromUrl(usePage().url as string || '/');
+    const specific = PAGE_COMMANDS[resource] || [];
+    const generic = COMMAND_LIBRARY.filter((c) => !specific.some((s) => s.command === c.command));
+    return [...specific, ...generic];
+});
+
+// Input saat ini dimulai dengan "/" tapi bukan command lengkap yang terpilih.
+const slashMenuOpen = ref(false);
+const filteredCommands = computed<AiCommand[]>(() => {
+    const v = input.value;
+    if (!v.startsWith('/')) return [];
+    const q = v.slice(1).toLowerCase();
+    return availableCommands.value.filter((c) => c.command.toLowerCase().startsWith(q));
+});
+
+const selectCommand = (cmd: AiCommand) => {
+    input.value = cmd.text;
+    slashMenuOpen.value = false;
+};
+
+const handleKeydown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        // Jangan submit saat menu slash terbuka; biarkan user memilih dulu.
+        if (slashMenuOpen.value && filteredCommands.value.length > 0) {
+            e.preventDefault();
+            return;
+        }
+        e.preventDefault();
+        send();
+    }
+};
+
+watch(input, (v) => {
+    slashMenuOpen.value = v.startsWith('/') && filteredCommands.value.length > 0;
+});
 
 const scrollToBottom = () => {
     nextTick(() => {
@@ -209,12 +335,6 @@ const send = async () => {
     }
 };
 
-const handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        send();
-    }
-};
 
 // Aksi yang mengubah data (mutasi). Setelah sukses, reload halaman aktif agar
 // tampilan (tabel/list) menampilkan data terbaru tanpa perlu refresh manual.
@@ -324,10 +444,28 @@ watch(() => usePage().url, () => {
 
                 <!-- Input -->
                 <div class="border-t p-3">
+                    <!-- Slash command menu -->
+                    <div
+                        v-if="slashMenuOpen && filteredCommands.length"
+                        class="mb-2 max-h-48 overflow-y-auto rounded-lg border bg-popover p-1 shadow-md"
+                    >
+                        <button
+                            v-for="cmd in filteredCommands"
+                            :key="cmd.command"
+                            type="button"
+                            class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+                            @click="selectCommand(cmd)"
+                        >
+                            <Command class="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <span class="font-medium">{{ cmd.command }}</span>
+                            <span class="ml-auto truncate text-xs text-muted-foreground">{{ cmd.hint }}</span>
+                        </button>
+                    </div>
+
                     <div class="flex gap-2">
                         <Textarea
                             v-model="input"
-                            placeholder="Tanya atau perintahkan AI..."
+                            placeholder="Tanya atau perintahkan AI... (ketik / untuk aksi)"
                             :disabled="loading"
                             class="min-h-[44px] max-h-28 resize-none text-sm"
                             rows="1"

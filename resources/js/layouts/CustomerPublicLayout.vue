@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CustomerFooter from '@/components/CustomerFooter.vue';
 import CustomerHeader from '@/components/CustomerHeader.vue';
+import PublicFloatingChat from '@/components/PublicFloatingChat.vue';
 import { Head } from '@inertiajs/vue3';
 
 interface Props {
@@ -23,5 +24,8 @@ withDefaults(defineProps<Props>(), {
         </main>
 
         <CustomerFooter />
+
+        <!-- Chatbot customer service untuk pengunjung -->
+        <PublicFloatingChat />
     </div>
 </template>

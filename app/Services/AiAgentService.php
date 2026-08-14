@@ -238,9 +238,27 @@ class AiAgentService
 
         if ($id !== null) {
             $focus['id'] = $id;
+            $focus['name'] = $this->resolveEntityName($map[$resource], $id);
         }
 
         return $focus;
+    }
+
+    /**
+     * Resolve nama entitas yang sedang difokus dari DB, agar AI/UI bisa menyebut
+     * "website X" / "order #N" alih-alih hanya angka id.
+     */
+    private function resolveEntityName(string $type, int $id): ?string
+    {
+        return match ($type) {
+            'website' => WebsiteClient::whereKey($id)->value('name'),
+            'order' => Order::whereKey($id)->value('domain_name'),
+            'customer' => Customer::whereKey($id)->value('name'),
+            'invoice' => Invoice::whereKey($id)->value('invoice_number'),
+            'journal' => null,
+            'task' => null,
+            default => null,
+        };
     }
 
     private function buildContext(): array
@@ -475,7 +493,7 @@ Kamu adalah AI Agent untuk mengelola aplikasi WSCRM (website WordPress, layanan 
 {$contextJson}
 ```
 
-Blok "current_page" (jika ada) menunjukkan halaman yang sedang dibuka user. Gunakan untuk menyesuaikan jawaban/aksi dengan konteks halaman itu (misal user sedang di /admin/orders lalu bilang "perpanjang yang ini", rujuk ke data orders). Field "focused_entity" (jika ada) berisi resource + id dari URL halaman detail — misal /admin/orders/12 → {"resource":"orders","type":"order","id":12}. Saat user bilang "yang ini"/"perpanjang yang ini" di halaman detail, GUNAKAN focused_entity.id sebagai id entitas (jangan tanya id lagi).
+Blok "current_page" (jika ada) menunjukkan halaman yang sedang dibuka user. Gunakan untuk menyesuaikan jawaban/aksi dengan konteks halaman itu (misal user sedang di /admin/orders lalu bilang "perpanjang yang ini", rujuk ke data orders). Field "focused_entity" (jika ada) berisi resource + id + name dari URL halaman detail — misal /admin/orders/12 → {"resource":"orders","type":"order","id":12,"name":"domain.com"}. Saat user bilang "yang ini"/"perpanjang yang ini" di halaman detail, GUNAKAN focused_entity.id sebagai id entitas (jangan tanya id lagi), dan SEBUTKAN nama entitas (focused_entity.name) alih-alih angka id.
 
 ## Aksi yang Bisa Kamu Lakukan:
 **Website & Konten:**

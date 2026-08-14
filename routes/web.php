@@ -44,6 +44,10 @@ Route::get('/blog/category/{category:slug}', [App\Http\Controllers\BlogControlle
 Route::post('/api/agent/blog', [App\Http\Controllers\Api\AgentBlogController::class, 'store'])
     ->middleware('agent.auth');
 
+// Chatbot AI publik untuk pengunjung (customer service)
+Route::post('/api/public/ai-chat', [App\Http\Controllers\Api\PublicAiChatController::class, 'chat'])
+    ->middleware('throttle:30,1');
+
 // Services catalog (require authentication)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/services', [App\Http\Controllers\ServicePlanController::class, 'index'])->name('services.index');

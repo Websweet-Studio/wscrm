@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ChevronDown, ChevronUp, Edit, Package, Plus, Search, Trash2 } from 'lucide-vue-next';
 import { computed, onMounted, ref, watch } from 'vue';
@@ -664,24 +665,24 @@ const getSortIcon = (field: string) => {
                         </div>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="w-full table-auto">
-                            <thead>
-                                <tr class="border-b">
-                                    <th class="pb-3 pr-3 text-left font-medium">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead class="w-10">
                                         <input
                                             type="checkbox"
                                             :checked="isAllSelected"
                                             class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
                                             @change="toggleSelectAll"
                                         />
-                                    </th>
-                                    <th class="pb-3 text-left font-medium">
-                                        <button @click="sortBy('id')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
+                                    </TableHead>
+                                    <TableHead class="w-16 text-right">
+                                        <button @click="sortBy('id')" class="inline-flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>ID</span>
                                             <component :is="getSortIcon('id')" v-if="getSortIcon('id')" class="h-4 w-4" />
                                         </button>
-                                    </th>
-                                    <th class="pb-3 text-left font-medium">
+                                    </TableHead>
+                                    <TableHead>
                                         <button
                                             @click="sortBy('customer_name')"
                                             class="flex cursor-pointer items-center space-x-1 hover:text-primary"
@@ -689,55 +690,55 @@ const getSortIcon = (field: string) => {
                                             <span>Pelanggan</span>
                                             <component :is="getSortIcon('customer_name')" v-if="getSortIcon('customer_name')" class="h-4 w-4" />
                                         </button>
-                                    </th>
-                                    <th class="pb-3 text-left font-medium">Layanan & Item</th>
-                                    <th class="pb-3 text-left font-medium">
-                                        <button @click="sortBy('total_amount')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
+                                    </TableHead>
+                                    <TableHead>Layanan & Item</TableHead>
+                                    <TableHead class="text-right">
+                                        <button @click="sortBy('total_amount')" class="inline-flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Total</span>
                                             <component :is="getSortIcon('total_amount')" v-if="getSortIcon('total_amount')" class="h-4 w-4" />
                                         </button>
-                                    </th>
-                                    <th class="pb-3 text-left font-medium">
+                                    </TableHead>
+                                    <TableHead class="whitespace-nowrap">
                                         <button @click="sortBy('status')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Status Order</span>
                                             <component :is="getSortIcon('status')" v-if="getSortIcon('status')" class="h-4 w-4" />
                                         </button>
-                                    </th>
-                                    <th v-if="currentView !== 'services'" class="pb-3 text-left font-medium">
+                                    </TableHead>
+                                    <TableHead v-if="currentView !== 'services'" class="whitespace-nowrap">
                                         <button @click="sortBy('created_at')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
-                                            <span>{{ currentView === 'services' ? 'Dibuat' : 'Tanggal' }}</span>
+                                            <span>Tanggal</span>
                                             <component :is="getSortIcon('created_at')" v-if="getSortIcon('created_at')" class="h-4 w-4" />
                                         </button>
-                                    </th>
-                                    <th class="pb-3 text-left font-medium">
+                                    </TableHead>
+                                    <TableHead class="whitespace-nowrap">
                                         <button @click="sortBy('expires_at')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
                                             <span>Tgl. Kadaluarsa</span>
                                             <component :is="getSortIcon('expires_at')" v-if="getSortIcon('expires_at')" class="h-4 w-4" />
                                         </button>
-                                    </th>
-                                    <th class="pb-3 text-center font-medium">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="order in orders.data" :key="order.id" class="border-b hover:bg-muted/50">
-                                    <td class="py-3 pr-3">
+                                    </TableHead>
+                                    <TableHead class="text-center">Aksi</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow v-for="order in orders.data" :key="order.id">
+                                    <TableCell class="w-10">
                                         <input
                                             type="checkbox"
                                             :checked="selectedOrderIds.includes(order.id)"
                                             class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
                                             @change="toggleOrderSelection(order.id)"
                                         />
-                                    </td>
-                                    <td class="py-3">
-                                        <div class="font-medium">#{{ order.id }}</div>
-                                    </td>
-                                    <td class="py-3">
+                                    </TableCell>
+                                    <TableCell class="text-right font-medium">
+                                        #{{ order.id }}
+                                    </TableCell>
+                                    <TableCell class="align-top">
                                         <div>
                                             <div class="font-medium">{{ order.customer.name }}</div>
                                             <div class="text-sm text-muted-foreground">{{ order.customer.email }}</div>
                                         </div>
-                                    </td>
-                                    <td class="py-3">
+                                    </TableCell>
+                                    <TableCell class="align-top">
                                         <div class="flex flex-col gap-1">
                                             <div
                                                 v-for="orderItem in order.order_items"
@@ -745,7 +746,7 @@ const getSortIcon = (field: string) => {
                                                 class="flex items-center gap-2"
                                             >
                                                 <span
-                                                    :class="`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${getServiceTypeColor(orderItem.item_type)}`"
+                                                    :class="`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${getServiceTypeColor(orderItem.item_type)}`"
                                                 >
                                                     {{ getServiceTypeText(orderItem.item_type) }}
                                                 </span>
@@ -754,8 +755,8 @@ const getSortIcon = (field: string) => {
                                                 </span>
                                             </div>
                                         </div>
-                                    </td>
-                                    <td class="py-3">
+                                    </TableCell>
+                                    <TableCell class="align-top text-right">
                                         <template v-if="order.discount_amount && order.discount_amount > 0">
                                             <div class="text-xs text-muted-foreground line-through">
                                                 {{ formatPrice(Number(order.total_amount) + Number(order.discount_amount)) }}
@@ -770,8 +771,8 @@ const getSortIcon = (field: string) => {
                                         <template v-else>
                                             <div class="font-medium">{{ formatPrice(order.total_amount) }}</div>
                                         </template>
-                                    </td>
-                                    <td class="py-3">
+                                    </TableCell>
+                                    <TableCell class="align-top whitespace-nowrap">
                                         <span
                                             :class="[
                                                 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
@@ -780,9 +781,11 @@ const getSortIcon = (field: string) => {
                                         >
                                             {{ getStatusText(order.status) }}
                                         </span>
-                                    </td>
-                                    <td v-if="currentView !== 'services'" class="py-3 text-sm text-muted-foreground">{{ formatDate(order.created_at) }}</td>
-                                    <td class="py-3 text-sm">
+                                    </TableCell>
+                                    <TableCell v-if="currentView !== 'services'" class="align-top whitespace-nowrap text-sm text-muted-foreground">
+                                        {{ formatDate(order.created_at) }}
+                                    </TableCell>
+                                    <TableCell class="align-top whitespace-nowrap text-sm">
                                         <div v-if="order.expires_at">
                                             {{ formatDate(order.expires_at) }}
                                             <div
@@ -798,31 +801,31 @@ const getSortIcon = (field: string) => {
                                             </div>
                                         </div>
                                         <span v-else class="text-muted-foreground">-</span>
-                                    </td>
-                                    <td class="py-3">
+                                    </TableCell>
+                                    <TableCell class="align-top">
                                         <div class="flex items-center justify-center gap-1">
-                                            <Button size="sm" variant="outline" asChild class="cursor-pointer" title="Lihat Detail">
+                                            <Button size="sm" variant="outline" asChild class="cursor-pointer h-8 w-8 p-0" title="Lihat Detail">
                                                 <Link :href="`/admin/orders/${order.id}`">
                                                     <Package class="h-3.5 w-3.5" />
                                                 </Link>
                                             </Button>
-                                            <Button size="sm" variant="outline" @click="openEditModal(order)" class="cursor-pointer" title="Edit">
+                                            <Button size="sm" variant="outline" @click="openEditModal(order)" class="cursor-pointer h-8 w-8 p-0" title="Edit">
                                                 <Edit class="h-3.5 w-3.5" />
                                             </Button>
                                             <Button
                                                 size="sm"
                                                 variant="outline"
                                                 @click="confirmDelete(order)"
-                                                class="cursor-pointer text-destructive hover:bg-muted hover:text-red-700"
+                                                class="cursor-pointer h-8 w-8 p-0 text-destructive hover:bg-muted hover:text-red-700"
                                                 title="Hapus"
                                             >
                                                 <Trash2 class="h-3.5 w-3.5" />
                                             </Button>
                                         </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
                     </div>
 
                     <!-- Pagination -->
