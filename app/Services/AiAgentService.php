@@ -225,6 +225,8 @@ class AiAgentService
             'expires_at' => $o->expires_at?->format('Y-m-d'),
             'auto_renew' => (bool) $o->auto_renew,
             'status' => $o->status,
+            'billing_cycle' => $o->billing_cycle,
+            'total_amount' => round((float) ($o->total_amount ?? 0), 2),
         ])->values()->all();
 
         return [
@@ -434,8 +436,8 @@ Kamu adalah AI Agent untuk mengelola aplikasi WSCRM (website WordPress, layanan 
 5. **audit_seo** - Audit SEO halaman website (perlu id, url)
 
 **Order:**
-6. **check_expiring_orders** - Cek berapa order/layanan aktif yang akan berakhir (kadaluarsa) bulan ini
-7. **renew_order** - Perpanjang masa aktif order/layanan dan/atau tandai sudah dibayar (perlu id dari data orders, months (jumlah bulan, default 3), mark_paid (true/false)) — membutuhkan konfirmasi user
+6. **check_expiring_orders** - Cek order aktif yang akan berakhir (kadaluarsa) bulan ini + yang SUDAH lewat jatuh tempo (overdue). Hasil mencakup estimasi nilai perpanjangan & siklus billing tiap order
+7. **renew_order** - Perpanjang masa aktif order/layanan dari tanggal jatuh tempo saat ini dan/atau tandai sudah dibayar (perlu id dari data orders, months (jumlah bulan, default 3), mark_paid (true/false)) — membutuhkan konfirmasi user
 
 **Tugas (Tasks):**
 8. **list_tasks** - Daftar tugas (opsional status, task_category_id, assigned_user_id). Cari id user di data "users", id kategori di "task_categories"
@@ -646,9 +648,9 @@ PROMPT;
 
             return match ($actionName) {
                 'check_updates' => $this->websiteAgent->checkUpdates($params['website_id'] ?? $params['id'] ?? null, $onEvent),
-                'update_wp' => $this->websiteAgent->updateWp($params['id'] ?? null, $onEvent),
-                'update_plugins' => $this->websiteAgent->updatePlugins($params['id'] ?? null, $params['plugin_slugs'] ?? [], $onEvent),
-                'audit_seo' => $this->websiteAgent->auditSeo($params['id'] ?? null, $params['url'] ?? '', $onEvent),
+                'update_wp' => $this->websiteAgent->updateWp($params['website_id'] ?? $params['id'] ?? null, $onEvent),
+                'update_plugins' => $this->websiteAgent->updatePlugins($params['website_id'] ?? $params['id'] ?? null, $params['plugin_slugs'] ?? [], $onEvent),
+                'audit_seo' => $this->websiteAgent->auditSeo($params['website_id'] ?? $params['id'] ?? null, $params['url'] ?? '', $onEvent),
                 'create_article' => $this->articleAgent->createArticle($params['website_id'] ?? $params['id'] ?? null, $params['title'] ?? '', $params['content'] ?? '', $params['keyword'] ?? '', $onEvent),
                 'check_expiring_orders' => $this->orderAgent->checkExpiringOrders($onEvent),
                 'renew_order' => $this->orderAgent->renewOrder($params['id'] ?? null, (int) ($params['months'] ?? 3), (bool) ($params['mark_paid'] ?? false), $onEvent),

@@ -222,10 +222,202 @@ destroy.delete = (args: { plugin: number | { id: number } } | [plugin: number | 
         })
     
     destroy.form = destroyForm
+/**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::destroy
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:166
+ * @route '/admin/websites/{website}/plugins'
+ */
+export const destroy = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+    url: destroy.url(args, options),
+    method: 'delete',
+})
+
+destroy.definition = {
+    methods: ["delete"],
+    url: '/admin/websites/{website}/plugins',
+} satisfies RouteDefinition<["delete"]>
+
+/**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::destroy
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:166
+ * @route '/admin/websites/{website}/plugins'
+ */
+destroy.url = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { website: args }
+    }
+
+            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+            args = { website: args.id }
+        }
+    
+    if (Array.isArray(args)) {
+        args = {
+                    website: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        website: typeof args.website === 'object'
+                ? args.website.id
+                : args.website,
+                }
+
+    return destroy.definition.url
+            .replace('{website}', parsedArgs.website.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::destroy
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:166
+ * @route '/admin/websites/{website}/plugins'
+ */
+destroy.delete = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+    url: destroy.url(args, options),
+    method: 'delete',
+})
+
+    /**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::destroy
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:166
+ * @route '/admin/websites/{website}/plugins'
+ */
+    const destroyForm = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: destroy.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'DELETE',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::destroy
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:166
+ * @route '/admin/websites/{website}/plugins'
+ */
+        destroyForm.delete = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: destroy.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'DELETE',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    destroy.form = destroyForm
+/**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::list
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:149
+ * @route '/admin/websites/{website}/plugins'
+ */
+export const list = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: list.url(args, options),
+    method: 'get',
+})
+
+list.definition = {
+    methods: ["get","head"],
+    url: '/admin/websites/{website}/plugins',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::list
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:149
+ * @route '/admin/websites/{website}/plugins'
+ */
+list.url = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { website: args }
+    }
+
+            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+            args = { website: args.id }
+        }
+    
+    if (Array.isArray(args)) {
+        args = {
+                    website: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        website: typeof args.website === 'object'
+                ? args.website.id
+                : args.website,
+                }
+
+    return list.definition.url
+            .replace('{website}', parsedArgs.website.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::list
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:149
+ * @route '/admin/websites/{website}/plugins'
+ */
+list.get = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: list.url(args, options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::list
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:149
+ * @route '/admin/websites/{website}/plugins'
+ */
+list.head = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: list.url(args, options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::list
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:149
+ * @route '/admin/websites/{website}/plugins'
+ */
+    const listForm = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: list.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::list
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:149
+ * @route '/admin/websites/{website}/plugins'
+ */
+        listForm.get = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: list.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Admin\WebsiteClientController::list
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:149
+ * @route '/admin/websites/{website}/plugins'
+ */
+        listForm.head = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: list.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    list.form = listForm
 const plugins = {
     store: Object.assign(store, store),
 update: Object.assign(update, update),
 destroy: Object.assign(destroy, destroy),
+list: Object.assign(list, list),
 }
 
 export default plugins

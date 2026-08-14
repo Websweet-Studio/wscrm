@@ -19,10 +19,18 @@ class OrderAgent
         $start = now()->startOfMonth();
         $end = now()->endOfMonth();
 
-        $orders = Order::with('customer')
+        $orders = Order::with('customer', 'hostingPlan')
             ->where('status', 'active')
             ->whereNotNull('expires_at')
             ->whereBetween('expires_at', [$start, $end])
+            ->orderBy('expires_at')
+            ->get();
+
+        // Order yang sudah lewat jatuh tempo tapi status masih aktif (belum di-update sistem).
+        $overdueOrders = Order::with('customer', 'hostingPlan')
+            ->where('status', 'active')
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<', now()->startOfDay())
             ->orderBy('expires_at')
             ->get();
 
@@ -35,7 +43,7 @@ class OrderAgent
             'maintenance' => 'Maintenance',
         ];
 
-        $list = $orders->map(fn (Order $o) => [
+        $mapOrder = fn(Order $o) => [
             'id' => $o->id,
             'customer' => $o->customer?->name ?? 'Tanpa customer',
             'service_type' => $typeLabels[$o->service_type] ?? $o->service_type,
@@ -43,21 +51,30 @@ class OrderAgent
             'expires_at' => $o->expires_at?->format('d M Y'),
             'auto_renew' => (bool) $o->auto_renew,
             'days_left' => $o->expires_at ? max(0, (int) $o->expires_at->diffInDays(now())) : 0,
-        ])->values()->all();
+            'billing_cycle' => $o->billing_cycle,
+            'renewal_value' => round((float) ($o->total_amount ?? 0), 2),
+        ];
+
+        $list = $orders->map($mapOrder)->values()->all();
+        $overdueList = $overdueOrders->map($mapOrder)->values()->all();
 
         $monthLabel = now()->translatedFormat('F Y');
+        $total = count($list) + count($overdueList);
 
         if ($onEvent) {
-            $onEvent(count($list) > 0 ? "Ditemukan " . count($list) . " order berakhir bulan ini" : 'Tidak ada order aktif yang berakhir bulan ini', 'done', 'Order Agent');
+            $onEvent($total > 0 ? "Ditemukan {$total} order perlu perpanjangan (" . count($list) . " bulan ini, " . count($overdueList) . " sudah lewat)" : 'Tidak ada order yang perlu perpanjangan bulan ini', 'done', 'Order Agent');
         }
 
         return [
             'orders_expiring' => $list,
-            'total' => count($list),
+            'orders_overdue' => $overdueList,
+            'total' => $total,
+            'expiring_count' => count($list),
+            'overdue_count' => count($overdueList),
             'month' => $monthLabel,
-            'summary' => count($list) > 0
-                ? count($list) . ' order aktif akan berakhir bulan ini (' . $monthLabel . ').'
-                : 'Tidak ada order aktif yang berakhir bulan ini (' . $monthLabel . ').',
+            'summary' => $total > 0
+                ? "{$total} order perlu perpanjangan: " . count($list) . " berakhir bulan ini (" . $monthLabel . ") dan " . count($overdueList) . " sudah lewat jatuh tempo."
+                : 'Tidak ada order yang perlu perpanjangan bulan ini (' . $monthLabel . ').',
         ];
     }
 
@@ -77,7 +94,10 @@ class OrderAgent
         }
 
         $months = max(1, $months);
-        $newExpiry = now()->addMonths($months);
+        // Perpanjang dari tanggal jatuh tempo saat ini (bukan now), agar tidak "menelan"
+        // sisa masa aktif bila order diperpanjang sebelum jatuh tempo.
+        $base = $order->expires_at && $order->expires_at->isFuture() ? $order->expires_at : now();
+        $newExpiry = $base->copy()->addMonths($months);
         $order->update(['expires_at' => $newExpiry]);
 
         $invoiceMessage = '';
