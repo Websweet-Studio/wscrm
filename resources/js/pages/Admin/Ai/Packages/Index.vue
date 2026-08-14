@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
@@ -118,44 +119,42 @@ const formatPrice = (price: number): string =>
                         </Button>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="border-b text-left text-muted-foreground">
-                                    <th class="px-3 py-3">Nama</th>
-                                    <th class="px-3 py-3">Kredit</th>
-                                    <th class="px-3 py-3">Harga</th>
-                                    <th class="px-3 py-3">Diskon</th>
-                                    <th class="px-3 py-3">Total</th>
-                                    <th class="px-3 py-3">Status</th>
-                                    <th class="px-3 py-3 text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="p in packages.data" :key="p.id" class="border-b last:border-0">
-                                    <td class="px-3 py-3 font-medium">{{ p.name }}</td>
-                                    <td class="px-3 py-3">
-                                        <span class="inline-flex items-center gap-1"><Coins class="h-3.5 w-3.5 text-amber-500" /> {{ p.credits }}</span>
-                                    </td>
-                                    <td class="px-3 py-3">{{ formatPrice(Number(p.price)) }}</td>
-                                    <td class="px-3 py-3 text-muted-foreground">{{ p.discount_amount !== null ? formatPrice(Number(p.discount_amount)) : '-' }}</td>
-                                    <td class="px-3 py-3 font-semibold">{{ formatPrice(p.final_price) }}</td>
-                                    <td class="px-3 py-3">
-                                        <Badge :variant="p.is_active ? 'default' : 'secondary'">{{ p.is_active ? 'Aktif' : 'Nonaktif' }}</Badge>
-                                    </td>
-                                    <td class="px-3 py-3 text-right">
-                                        <div class="flex justify-end gap-1">
-                                            <Button size="sm" variant="outline" class="cursor-pointer" @click="openEdit(p)"><Edit class="h-3 w-3" /></Button>
-                                            <Button size="sm" variant="outline" class="cursor-pointer" @click="confirmDelete(p)"><Trash2 class="h-3 w-3" /></Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr v-if="packages.data.length === 0">
-                                    <td colspan="7" class="px-3 py-10 text-center text-muted-foreground">Belum ada paket kredit.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Nama</TableHead>
+                                <TableHead>Kredit</TableHead>
+                                <TableHead>Harga</TableHead>
+                                <TableHead>Diskon</TableHead>
+                                <TableHead>Total</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead class="text-right">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="p in packages.data" :key="p.id">
+                                <TableCell class="font-medium">{{ p.name }}</TableCell>
+                                <TableCell>
+                                    <span class="inline-flex items-center gap-1"><Coins class="h-3.5 w-3.5 text-amber-500" /> {{ p.credits }}</span>
+                                </TableCell>
+                                <TableCell>{{ formatPrice(Number(p.price)) }}</TableCell>
+                                <TableCell class="text-muted-foreground">{{ p.discount_amount !== null ? formatPrice(Number(p.discount_amount)) : '-' }}</TableCell>
+                                <TableCell class="font-semibold">{{ formatPrice(p.final_price) }}</TableCell>
+                                <TableCell>
+                                    <Badge :variant="p.is_active ? 'default' : 'secondary'">{{ p.is_active ? 'Aktif' : 'Nonaktif' }}</Badge>
+                                </TableCell>
+                                <TableCell class="text-right">
+                                    <div class="flex justify-end gap-1">
+                                        <Button size="sm" variant="outline" class="cursor-pointer" @click="openEdit(p)"><Edit class="h-3 w-3" /></Button>
+                                        <Button size="sm" variant="outline" class="cursor-pointer" @click="confirmDelete(p)"><Trash2 class="h-3 w-3" /></Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                            <TableRow v-if="packages.data.length === 0">
+                                <TableCell colspan="7" class="py-10 text-center text-muted-foreground">Belum ada paket kredit.</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
         </div>

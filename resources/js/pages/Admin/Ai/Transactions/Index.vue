@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
@@ -99,50 +100,48 @@ const formatDate = (d: string) => new Date(d).toLocaleString('id-ID', { dateStyl
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="border-b text-left text-muted-foreground">
-                                    <th class="px-3 py-3">Customer</th>
-                                    <th class="px-3 py-3">Tipe</th>
-                                    <th class="px-3 py-3">Sumber</th>
-                                    <th class="px-3 py-3">Kredit</th>
-                                    <th class="px-3 py-3">Detail</th>
-                                    <th class="px-3 py-3">Waktu</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="t in transactions.data" :key="t.id" class="border-b last:border-0">
-                                    <td class="px-3 py-3">
-                                        <div class="font-medium">{{ t.customer?.name || '#' + '?' }}</div>
-                                        <div class="text-xs text-muted-foreground">{{ t.customer?.email }}</div>
-                                    </td>
-                                    <td class="px-3 py-3">
-                                        <Badge :variant="t.type === 'in' ? 'default' : 'destructive'">
-                                            {{ t.type === 'in' ? 'Masuk' : 'Keluar' }}
-                                        </Badge>
-                                    </td>
-                                    <td class="px-3 py-3 text-muted-foreground">{{ sourceLabel[t.source] }}</td>
-                                    <td class="px-3 py-3">
-                                        <span class="inline-flex items-center gap-1 font-semibold" :class="t.credits > 0 ? 'text-green-600' : 'text-red-500'">
-                                            <ArrowUpCircle v-if="t.credits > 0" class="h-4 w-4" />
-                                            <ArrowDownCircle v-else class="h-4 w-4" />
-                                            {{ t.credits > 0 ? '+' : '' }}{{ t.credits }}
-                                        </span>
-                                    </td>
-                                    <td class="px-3 py-3 text-xs text-muted-foreground">
-                                        <template v-if="t.package">{{ t.package.name }} · </template>
-                                        <template v-if="t.model">{{ t.model.model_key }}<template v-if="t.tokens_input !== null"> ({{ t.tokens_input }} in / {{ t.tokens_output }} out)</template> · </template>
-                                        {{ t.description || '-' }}
-                                    </td>
-                                    <td class="px-3 py-3 text-xs text-muted-foreground">{{ formatDate(t.created_at) }}</td>
-                                </tr>
-                                <tr v-if="transactions.data.length === 0">
-                                    <td colspan="6" class="px-3 py-10 text-center text-muted-foreground">Belum ada transaksi.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Customer</TableHead>
+                                <TableHead>Tipe</TableHead>
+                                <TableHead>Sumber</TableHead>
+                                <TableHead>Kredit</TableHead>
+                                <TableHead>Detail</TableHead>
+                                <TableHead>Waktu</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="t in transactions.data" :key="t.id">
+                                <TableCell>
+                                    <div class="font-medium">{{ t.customer?.name || '#' + '?' }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ t.customer?.email }}</div>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge :variant="t.type === 'in' ? 'default' : 'destructive'">
+                                        {{ t.type === 'in' ? 'Masuk' : 'Keluar' }}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell class="text-muted-foreground">{{ sourceLabel[t.source] }}</TableCell>
+                                <TableCell>
+                                    <span class="inline-flex items-center gap-1 font-semibold" :class="t.credits > 0 ? 'text-green-600' : 'text-red-500'">
+                                        <ArrowUpCircle v-if="t.credits > 0" class="h-4 w-4" />
+                                        <ArrowDownCircle v-else class="h-4 w-4" />
+                                        {{ t.credits > 0 ? '+' : '' }}{{ t.credits }}
+                                    </span>
+                                </TableCell>
+                                <TableCell class="text-xs text-muted-foreground">
+                                    <template v-if="t.package">{{ t.package.name }} · </template>
+                                    <template v-if="t.model">{{ t.model.model_key }}<template v-if="t.tokens_input !== null"> ({{ t.tokens_input }} in / {{ t.tokens_output }} out)</template> · </template>
+                                    {{ t.description || '-' }}
+                                </TableCell>
+                                <TableCell class="text-xs text-muted-foreground">{{ formatDate(t.created_at) }}</TableCell>
+                            </TableRow>
+                            <TableRow v-if="transactions.data.length === 0">
+                                <TableCell colspan="6" class="py-10 text-center text-muted-foreground">Belum ada transaksi.</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
         </div>

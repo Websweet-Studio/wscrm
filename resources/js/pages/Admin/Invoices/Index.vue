@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
@@ -483,160 +484,154 @@ const markAsPaid = (invoice: Invoice) => {
                         <p class="mt-1 text-sm text-muted-foreground">Try adjusting your search criteria.</p>
                     </div>
 
-                    <div v-else class="overflow-x-auto">
-                        <table class="w-full border-collapse">
-                            <thead>
-                                <tr class="border-b border-border">
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                                        <input
-                                            type="checkbox"
-                                            :checked="isAllSelected"
-                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
-                                            @change="toggleSelectAll"
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">
+                                    <input
+                                        type="checkbox"
+                                        :checked="isAllSelected"
+                                        class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                        @change="toggleSelectAll"
+                                    >
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">
+                                    <button
+                                        @click="sortBy('invoice_number')"
+                                        class="flex cursor-pointer items-center space-x-1 hover:text-foreground"
+                                    >
+                                        <span>No. Invoice</span>
+                                        <ChevronUp v-if="props.sort === 'invoice_number' && props.direction === 'asc'" class="h-4 w-4" />
+                                        <ChevronDown v-else-if="props.sort === 'invoice_number' && props.direction === 'desc'" class="h-4 w-4" />
+                                        <div v-else class="h-4 w-4"></div>
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">
+                                    <button
+                                        @click="sortBy('customer_name')"
+                                        class="flex cursor-pointer items-center space-x-1 hover:text-foreground"
+                                    >
+                                        <span>Pelanggan</span>
+                                        <ChevronUp v-if="props.sort === 'customer_name' && props.direction === 'asc'" class="h-4 w-4" />
+                                        <ChevronDown v-else-if="props.sort === 'customer_name' && props.direction === 'desc'" class="h-4 w-4" />
+                                        <div v-else class="h-4 w-4"></div>
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">Layanan</TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">
+                                    <button
+                                        @click="sortBy('invoice_type')"
+                                        class="flex cursor-pointer items-center space-x-1 hover:text-foreground"
+                                    >
+                                        <span>Tipe</span>
+                                        <ChevronUp v-if="props.sort === 'invoice_type' && props.direction === 'asc'" class="h-4 w-4" />
+                                        <ChevronDown v-else-if="props.sort === 'invoice_type' && props.direction === 'desc'" class="h-4 w-4" />
+                                        <div v-else class="h-4 w-4"></div>
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">
+                                    <button @click="sortBy('amount')" class="flex cursor-pointer items-center space-x-1 hover:text-foreground">
+                                        <span>Jumlah</span>
+                                        <ChevronUp v-if="props.sort === 'amount' && props.direction === 'asc'" class="h-4 w-4" />
+                                        <ChevronDown v-else-if="props.sort === 'amount' && props.direction === 'desc'" class="h-4 w-4" />
+                                        <div v-else class="h-4 w-4"></div>
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">
+                                    <button
+                                        @click="sortBy('billing_cycle')"
+                                        class="flex cursor-pointer items-center space-x-1 hover:text-foreground"
+                                    >
+                                        <span>Siklus</span>
+                                        <ChevronUp v-if="props.sort === 'billing_cycle' && props.direction === 'asc'" class="h-4 w-4" />
+                                        <ChevronDown v-else-if="props.sort === 'billing_cycle' && props.direction === 'desc'" class="h-4 w-4" />
+                                        <div v-else class="h-4 w-4"></div>
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">
+                                    <button @click="sortBy('due_date')" class="flex cursor-pointer items-center space-x-1 hover:text-foreground">
+                                        <span>Jatuh Tempo</span>
+                                        <ChevronUp v-if="props.sort === 'due_date' && props.direction === 'asc'" class="h-4 w-4" />
+                                        <ChevronDown v-else-if="props.sort === 'due_date' && props.direction === 'desc'" class="h-4 w-4" />
+                                        <div v-else class="h-4 w-4"></div>
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">
+                                    <button @click="sortBy('status')" class="flex cursor-pointer items-center space-x-1 hover:text-foreground">
+                                        <span>Status</span>
+                                        <ChevronUp v-if="props.sort === 'status' && props.direction === 'asc'" class="h-4 w-4" />
+                                        <ChevronDown v-else-if="props.sort === 'status' && props.direction === 'desc'" class="h-4 w-4" />
+                                        <div v-else class="h-4 w-4"></div>
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-center text-xs tracking-wider text-muted-foreground uppercase">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="invoice in invoices.data" :key="invoice.id">
+                                <TableCell>
+                                    <input
+                                        v-model="selectedInvoiceIds"
+                                        :value="invoice.id"
+                                        type="checkbox"
+                                        class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                    >
+                                </TableCell>
+                                <TableCell class="text-sm font-medium text-foreground">{{ invoice.invoice_number }}</TableCell>
+                                <TableCell class="text-sm">
+                                    <div class="font-medium text-foreground">{{ invoice.customer.name }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ invoice.customer.email }}</div>
+                                </TableCell>
+                                <TableCell class="text-sm text-muted-foreground">
+                                    <div v-if="invoice.order?.domain_name">{{ invoice.order.domain_name }}</div>
+                                    <div v-else-if="invoice.service">{{ invoice.service.domain_name }}</div>
+                                    <div v-else>-</div>
+                                    <div v-if="invoice.order_id" class="text-xs text-muted-foreground">Order #{{ invoice.order_id }}</div>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge :class="getTypeColor(invoice.invoice_type)">
+                                        {{ invoice.invoice_type }}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell class="text-sm">
+                                    <div class="font-medium text-foreground">
+                                        {{ formatPrice(invoice.amount - (invoice.discount || 0)) }}
+                                    </div>
+                                    <div v-if="invoice.discount && invoice.discount > 0" class="text-xs text-destructive">
+                                        Potongan: {{ formatPrice(invoice.discount) }}
+                                    </div>
+                                </TableCell>
+                                <TableCell class="text-sm text-muted-foreground">{{ invoice.billing_cycle.replace('_', ' ') }}</TableCell>
+                                <TableCell class="text-sm text-muted-foreground">{{ formatDate(invoice.due_date) }}</TableCell>
+                                <TableCell>
+                                    <Badge :class="getStatusColor(invoice.status)">
+                                        {{ invoice.status }}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>
+                                    <div class="flex items-center justify-center gap-1">
+                                        <Button size="sm" variant="outline" asChild>
+                                            <Link :href="`/admin/invoices/${invoice.id}`" class="cursor-pointer" title="Lihat Detail">
+                                                <Eye class="h-3 w-3" />
+                                            </Link>
+                                        </Button>
+                                        <Button size="sm" variant="outline" @click="openEditModal(invoice)" class="cursor-pointer" title="Edit">
+                                            <Edit class="h-3 w-3" />
+                                        </Button>
+                                        <Button
+                                            v-if="invoice.status !== 'paid'"
+                                            size="sm"
+                                            @click="markAsPaid(invoice)"
+                                            class="bg-primary text-primary-foreground hover:bg-primary/90"
+                                            title="Tandai sebagai dibayar"
                                         >
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                                        <button
-                                            @click="sortBy('invoice_number')"
-                                            class="flex cursor-pointer items-center space-x-1 hover:text-foreground"
-                                        >
-                                            <span>No. Invoice</span>
-                                            <ChevronUp v-if="props.sort === 'invoice_number' && props.direction === 'asc'" class="h-4 w-4" />
-                                            <ChevronDown v-else-if="props.sort === 'invoice_number' && props.direction === 'desc'" class="h-4 w-4" />
-                                            <div v-else class="h-4 w-4"></div>
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                                        <button
-                                            @click="sortBy('customer_name')"
-                                            class="flex cursor-pointer items-center space-x-1 hover:text-foreground"
-                                        >
-                                            <span>Pelanggan</span>
-                                            <ChevronUp v-if="props.sort === 'customer_name' && props.direction === 'asc'" class="h-4 w-4" />
-                                            <ChevronDown v-else-if="props.sort === 'customer_name' && props.direction === 'desc'" class="h-4 w-4" />
-                                            <div v-else class="h-4 w-4"></div>
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Layanan</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                                        <button
-                                            @click="sortBy('invoice_type')"
-                                            class="flex cursor-pointer items-center space-x-1 hover:text-foreground"
-                                        >
-                                            <span>Tipe</span>
-                                            <ChevronUp v-if="props.sort === 'invoice_type' && props.direction === 'asc'" class="h-4 w-4" />
-                                            <ChevronDown v-else-if="props.sort === 'invoice_type' && props.direction === 'desc'" class="h-4 w-4" />
-                                            <div v-else class="h-4 w-4"></div>
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                                        <button @click="sortBy('amount')" class="flex cursor-pointer items-center space-x-1 hover:text-foreground">
-                                            <span>Jumlah</span>
-                                            <ChevronUp v-if="props.sort === 'amount' && props.direction === 'asc'" class="h-4 w-4" />
-                                            <ChevronDown v-else-if="props.sort === 'amount' && props.direction === 'desc'" class="h-4 w-4" />
-                                            <div v-else class="h-4 w-4"></div>
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                                        <button
-                                            @click="sortBy('billing_cycle')"
-                                            class="flex cursor-pointer items-center space-x-1 hover:text-foreground"
-                                        >
-                                            <span>Siklus</span>
-                                            <ChevronUp v-if="props.sort === 'billing_cycle' && props.direction === 'asc'" class="h-4 w-4" />
-                                            <ChevronDown v-else-if="props.sort === 'billing_cycle' && props.direction === 'desc'" class="h-4 w-4" />
-                                            <div v-else class="h-4 w-4"></div>
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                                        <button @click="sortBy('due_date')" class="flex cursor-pointer items-center space-x-1 hover:text-foreground">
-                                            <span>Jatuh Tempo</span>
-                                            <ChevronUp v-if="props.sort === 'due_date' && props.direction === 'asc'" class="h-4 w-4" />
-                                            <ChevronDown v-else-if="props.sort === 'due_date' && props.direction === 'desc'" class="h-4 w-4" />
-                                            <div v-else class="h-4 w-4"></div>
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                                        <button @click="sortBy('status')" class="flex cursor-pointer items-center space-x-1 hover:text-foreground">
-                                            <span>Status</span>
-                                            <ChevronUp v-if="props.sort === 'status' && props.direction === 'asc'" class="h-4 w-4" />
-                                            <ChevronDown v-else-if="props.sort === 'status' && props.direction === 'desc'" class="h-4 w-4" />
-                                            <div v-else class="h-4 w-4"></div>
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-3 text-center text-xs font-medium tracking-wider text-muted-foreground uppercase">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    v-for="invoice in invoices.data"
-                                    :key="invoice.id"
-                                    class="border-b border-border transition-colors hover:bg-muted/30"
-                                >
-                                    <td class="px-3 py-4">
-                                        <input
-                                            v-model="selectedInvoiceIds"
-                                            :value="invoice.id"
-                                            type="checkbox"
-                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
-                                        >
-                                    </td>
-                                    <td class="px-3 py-4 text-sm font-medium text-foreground">{{ invoice.invoice_number }}</td>
-                                    <td class="px-3 py-4 text-sm">
-                                        <div class="font-medium text-foreground">{{ invoice.customer.name }}</div>
-                                        <div class="text-xs text-muted-foreground">{{ invoice.customer.email }}</div>
-                                    </td>
-                                    <td class="px-3 py-4 text-sm text-muted-foreground">
-                                        <div v-if="invoice.order?.domain_name">{{ invoice.order.domain_name }}</div>
-                                        <div v-else-if="invoice.service">{{ invoice.service.domain_name }}</div>
-                                        <div v-else>-</div>
-                                        <div v-if="invoice.order_id" class="text-xs text-muted-foreground">Order #{{ invoice.order_id }}</div>
-                                    </td>
-                                    <td class="px-3 py-4">
-                                        <Badge :class="getTypeColor(invoice.invoice_type)">
-                                            {{ invoice.invoice_type }}
-                                        </Badge>
-                                    </td>
-                                    <td class="px-3 py-4 text-sm">
-                                        <div class="font-medium text-foreground">
-                                            {{ formatPrice(invoice.amount - (invoice.discount || 0)) }}
-                                        </div>
-                                        <div v-if="invoice.discount && invoice.discount > 0" class="text-xs text-destructive">
-                                            Potongan: {{ formatPrice(invoice.discount) }}
-                                        </div>
-                                    </td>
-                                    <td class="px-3 py-4 text-sm text-muted-foreground">{{ invoice.billing_cycle.replace('_', ' ') }}</td>
-                                    <td class="px-3 py-4 text-sm text-muted-foreground">{{ formatDate(invoice.due_date) }}</td>
-                                    <td class="px-3 py-4">
-                                        <Badge :class="getStatusColor(invoice.status)">
-                                            {{ invoice.status }}
-                                        </Badge>
-                                    </td>
-                                    <td class="px-3 py-4">
-                                        <div class="flex items-center justify-center gap-1">
-                                            <Button size="sm" variant="outline" asChild>
-                                                <Link :href="`/admin/invoices/${invoice.id}`" class="cursor-pointer" title="Lihat Detail">
-                                                    <Eye class="h-3 w-3" />
-                                                </Link>
-                                            </Button>
-                                            <Button size="sm" variant="outline" @click="openEditModal(invoice)" class="cursor-pointer" title="Edit">
-                                                <Edit class="h-3 w-3" />
-                                            </Button>
-                                            <Button
-                                                v-if="invoice.status !== 'paid'"
-                                                size="sm"
-                                                @click="markAsPaid(invoice)"
-                                                class="bg-primary text-primary-foreground hover:bg-primary/90"
-                                                title="Tandai sebagai dibayar"
-                                            >
-                                                <CheckCircle class="h-3 w-3" />
-                                            </Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                                            <CheckCircle class="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
 
                     <!-- Pagination -->
                     <div v-if="invoices.links && invoices.links.length > 3" class="flex items-center justify-between border-t pt-6">

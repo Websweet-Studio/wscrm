@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
@@ -325,157 +326,155 @@ const deletePost = () => {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div class="overflow-x-auto">
-                        <table class="w-full table-auto">
-                            <thead>
-                                <tr class="border-b">
-                                    <th class="pb-3 text-left font-medium">
-                                        <button @click="sortBy('title')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
-                                            <span>Judul</span>
-                                            <component :is="getSortIcon('title')" v-if="getSortIcon('title')" class="h-4 w-4" />
-                                        </button>
-                                    </th>
-                                    <th class="pb-3 text-left font-medium">Kategori</th>
-                                    <th class="pb-3 text-left font-medium">Penulis</th>
-                                    <th class="pb-3 text-left font-medium">
-                                        <button @click="sortBy('status')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
-                                            <span>Status</span>
-                                            <component :is="getSortIcon('status')" v-if="getSortIcon('status')" class="h-4 w-4" />
-                                        </button>
-                                    </th>
-                                    <th class="pb-3 text-left font-medium">
-                                        <button @click="sortBy('type')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
-                                            <span>Tipe</span>
-                                            <component :is="getSortIcon('type')" v-if="getSortIcon('type')" class="h-4 w-4" />
-                                        </button>
-                                    </th>
-                                    <th class="pb-3 text-left font-medium">
-                                        <button @click="sortBy('views_count')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
-                                            <span>Views</span>
-                                            <component :is="getSortIcon('views_count')" v-if="getSortIcon('views_count')" class="h-4 w-4" />
-                                        </button>
-                                    </th>
-                                    <th class="pb-3 text-left font-medium">
-                                        <button @click="sortBy('published_at')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
-                                            <span>Tanggal</span>
-                                            <component :is="getSortIcon('published_at')" v-if="getSortIcon('published_at')" class="h-4 w-4" />
-                                        </button>
-                                    </th>
-                                    <th class="pb-3 text-center font-medium">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="post in posts.data" :key="post.id" class="border-b hover:bg-muted/50">
-                                    <td class="py-3">
-                                        <div class="flex items-start space-x-3">
-                                            <img
-                                                v-if="post.featured_image"
-                                                :src="post.featured_image_url"
-                                                :alt="post.title"
-                                                class="h-12 w-16 rounded object-cover"
-                                            />
-                                            <div class="min-w-0 flex-1">
-                                                <div class="flex items-center space-x-2">
-                                                    <h3 class="text-sm leading-tight font-medium">{{ post.title }}</h3>
-                                                    <Star v-if="post.is_featured" class="h-4 w-4 fill-primary text-primary" />
-                                                    <Pin v-if="post.is_pinned" class="h-4 w-4 text-foreground" />
-                                                </div>
-                                                <p class="mt-1 line-clamp-2 text-xs text-muted-foreground">{{ post.excerpt }}</p>
-                                                <div class="mt-1 flex items-center space-x-2">
-                                                    <span class="text-xs text-muted-foreground">{{ post.reading_time }}</span>
-                                                    <span class="text-xs text-muted-foreground">•</span>
-                                                    <span class="text-xs text-muted-foreground">{{ post.likes_count }} suka</span>
-                                                </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>
+                                    <button @click="sortBy('title')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
+                                        <span>Judul</span>
+                                        <component :is="getSortIcon('title')" v-if="getSortIcon('title')" class="h-4 w-4" />
+                                    </button>
+                                </TableHead>
+                                <TableHead>Kategori</TableHead>
+                                <TableHead>Penulis</TableHead>
+                                <TableHead>
+                                    <button @click="sortBy('status')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
+                                        <span>Status</span>
+                                        <component :is="getSortIcon('status')" v-if="getSortIcon('status')" class="h-4 w-4" />
+                                    </button>
+                                </TableHead>
+                                <TableHead>
+                                    <button @click="sortBy('type')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
+                                        <span>Tipe</span>
+                                        <component :is="getSortIcon('type')" v-if="getSortIcon('type')" class="h-4 w-4" />
+                                    </button>
+                                </TableHead>
+                                <TableHead>
+                                    <button @click="sortBy('views_count')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
+                                        <span>Views</span>
+                                        <component :is="getSortIcon('views_count')" v-if="getSortIcon('views_count')" class="h-4 w-4" />
+                                    </button>
+                                </TableHead>
+                                <TableHead>
+                                    <button @click="sortBy('published_at')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
+                                        <span>Tanggal</span>
+                                        <component :is="getSortIcon('published_at')" v-if="getSortIcon('published_at')" class="h-4 w-4" />
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-center">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="post in posts.data" :key="post.id">
+                                <TableCell>
+                                    <div class="flex items-start space-x-3">
+                                        <img
+                                            v-if="post.featured_image"
+                                            :src="post.featured_image_url"
+                                            :alt="post.title"
+                                            class="h-12 w-16 rounded object-cover"
+                                        />
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex items-center space-x-2">
+                                                <h3 class="text-sm leading-tight font-medium">{{ post.title }}</h3>
+                                                <Star v-if="post.is_featured" class="h-4 w-4 fill-primary text-primary" />
+                                                <Pin v-if="post.is_pinned" class="h-4 w-4 text-foreground" />
+                                            </div>
+                                            <p class="mt-1 line-clamp-2 text-xs text-muted-foreground">{{ post.excerpt }}</p>
+                                            <div class="mt-1 flex items-center space-x-2">
+                                                <span class="text-xs text-muted-foreground">{{ post.reading_time }}</span>
+                                                <span class="text-xs text-muted-foreground">•</span>
+                                                <span class="text-xs text-muted-foreground">{{ post.likes_count }} suka</span>
                                             </div>
                                         </div>
-                                    </td>
-                                    <td class="py-3">
-                                        <span
-                                            class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                                            :style="{ backgroundColor: post.category.color + '20', color: post.category.color }"
-                                        >
-                                            <Tag class="mr-1 h-3 w-3" />
-                                            {{ post.category.name }}
-                                        </span>
-                                    </td>
-                                    <td class="py-3">
-                                        <div class="flex items-center space-x-2">
-                                            <User class="h-4 w-4 text-muted-foreground" />
-                                            <div>
-                                                <div class="text-sm font-medium">{{ post.author.name }}</div>
-                                                <div class="text-xs text-muted-foreground">{{ post.author.email }}</div>
-                                            </div>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <span
+                                        class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                                        :style="{ backgroundColor: post.category.color + '20', color: post.category.color }"
+                                    >
+                                        <Tag class="mr-1 h-3 w-3" />
+                                        {{ post.category.name }}
+                                    </span>
+                                </TableCell>
+                                <TableCell>
+                                    <div class="flex items-center space-x-2">
+                                        <User class="h-4 w-4 text-muted-foreground" />
+                                        <div>
+                                            <div class="text-sm font-medium">{{ post.author.name }}</div>
+                                            <div class="text-xs text-muted-foreground">{{ post.author.email }}</div>
                                         </div>
-                                    </td>
-                                    <td class="py-3">
-                                        <span
-                                            :class="[
-                                                'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-                                                getStatusColor(post.status),
-                                            ]"
-                                        >
-                                            {{ getStatusText(post.status) }}
-                                        </span>
-                                    </td>
-                                    <td class="py-3">
-                                        <span
-                                            :class="[
-                                                'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-                                                getTypeColor(post.type),
-                                            ]"
-                                        >
-                                            {{ getTypeText(post.type) }}
-                                        </span>
-                                    </td>
-                                    <td class="py-3">
-                                        <div class="flex items-center space-x-1 text-sm">
-                                            <Eye class="h-4 w-4 text-muted-foreground" />
-                                            <span>{{ post.views_count.toLocaleString() }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3">
-                                        <div class="flex items-center space-x-1 text-sm text-muted-foreground">
-                                            <Calendar class="h-4 w-4" />
-                                            <span>{{ post.formatted_date || formatDate(post.created_at) }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3">
-                                        <div class="flex items-center justify-center space-x-1">
-                                            <Link :href="`/admin/blog/${post.id}`">
-                                                <Button variant="ghost" size="sm">
-                                                    <Eye class="h-4 w-4" />
-                                                </Button>
-                                            </Link>
-                                            <Link :href="`/admin/blog/${post.id}/edit`">
-                                                <Button variant="ghost" size="sm">
-                                                    <Edit class="h-4 w-4" />
-                                                </Button>
-                                            </Link>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                @click="toggleFeatured(post)"
-                                                :class="post.is_featured ? 'text-primary' : ''"
-                                            >
-                                                <Star class="h-4 w-4" :class="post.is_featured ? 'fill-current' : ''" />
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <span
+                                        :class="[
+                                            'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+                                            getStatusColor(post.status),
+                                        ]"
+                                    >
+                                        {{ getStatusText(post.status) }}
+                                    </span>
+                                </TableCell>
+                                <TableCell>
+                                    <span
+                                        :class="[
+                                            'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+                                            getTypeColor(post.type),
+                                        ]"
+                                    >
+                                        {{ getTypeText(post.type) }}
+                                    </span>
+                                </TableCell>
+                                <TableCell>
+                                    <div class="flex items-center space-x-1 text-sm">
+                                        <Eye class="h-4 w-4 text-muted-foreground" />
+                                        <span>{{ post.views_count.toLocaleString() }}</span>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <div class="flex items-center space-x-1 text-sm text-muted-foreground">
+                                        <Calendar class="h-4 w-4" />
+                                        <span>{{ post.formatted_date || formatDate(post.created_at) }}</span>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <div class="flex items-center justify-center space-x-1">
+                                        <Link :href="`/admin/blog/${post.id}`">
+                                            <Button variant="ghost" size="sm">
+                                                <Eye class="h-4 w-4" />
                                             </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                @click="togglePinned(post)"
-                                                :class="post.is_pinned ? 'text-foreground' : ''"
-                                            >
-                                                <Pin class="h-4 w-4" />
+                                        </Link>
+                                        <Link :href="`/admin/blog/${post.id}/edit`">
+                                            <Button variant="ghost" size="sm">
+                                                <Edit class="h-4 w-4" />
                                             </Button>
-                                            <Button variant="ghost" size="sm" @click="confirmDelete(post)" class="text-destructive hover:text-destructive/90">
-                                                <Trash2 class="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                                        </Link>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            @click="toggleFeatured(post)"
+                                            :class="post.is_featured ? 'text-primary' : ''"
+                                        >
+                                            <Star class="h-4 w-4" :class="post.is_featured ? 'fill-current' : ''" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            @click="togglePinned(post)"
+                                            :class="post.is_pinned ? 'text-foreground' : ''"
+                                        >
+                                            <Pin class="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="sm" @click="confirmDelete(post)" class="text-destructive hover:text-destructive/90">
+                                            <Trash2 class="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
 
                     <!-- Pagination -->
                     <div v-if="posts.links && posts.links.length > 3" class="mt-6 flex justify-center">

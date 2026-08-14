@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
@@ -130,44 +131,42 @@ const confirmDelete = (p: Provider) => {
                         </Button>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="border-b text-left text-muted-foreground">
-                                    <th class="px-3 py-3">Nama</th>
-                                    <th class="px-3 py-3">Endpoint</th>
-                                    <th class="px-3 py-3">API Key</th>
-                                    <th class="px-3 py-3">Model</th>
-                                    <th class="px-3 py-3">Status</th>
-                                    <th class="px-3 py-3 text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="p in providers.data" :key="p.id" class="border-b last:border-0">
-                                    <td class="px-3 py-3 font-medium">{{ p.name }}</td>
-                                    <td class="px-3 py-3 text-muted-foreground">{{ p.endpoint }}</td>
-                                    <td class="px-3 py-3">
-                                        <span class="inline-flex items-center gap-1 text-xs" :class="p.api_key_set ? 'text-green-600' : 'text-muted-foreground'">
-                                            <KeyRound class="h-3 w-3" /> {{ p.api_key_set ? 'Terisi' : 'Kosong' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-3 py-3">{{ p.models_count }}</td>
-                                    <td class="px-3 py-3">
-                                        <Badge :variant="p.is_active ? 'default' : 'secondary'">{{ p.is_active ? 'Aktif' : 'Nonaktif' }}</Badge>
-                                    </td>
-                                    <td class="px-3 py-3 text-right">
-                                        <div class="flex justify-end gap-1">
-                                            <Button size="sm" variant="outline" class="cursor-pointer" @click="openEdit(p)"><Edit class="h-3 w-3" /></Button>
-                                            <Button size="sm" variant="outline" class="cursor-pointer" @click="confirmDelete(p)"><Trash2 class="h-3 w-3" /></Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr v-if="providers.data.length === 0">
-                                    <td colspan="6" class="px-3 py-10 text-center text-muted-foreground">Belum ada provider. Tambahkan provider AI pertama.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Nama</TableHead>
+                                <TableHead>Endpoint</TableHead>
+                                <TableHead>API Key</TableHead>
+                                <TableHead>Model</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead class="text-right">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="p in providers.data" :key="p.id">
+                                <TableCell class="font-medium">{{ p.name }}</TableCell>
+                                <TableCell class="text-muted-foreground">{{ p.endpoint }}</TableCell>
+                                <TableCell>
+                                    <span class="inline-flex items-center gap-1 text-xs" :class="p.api_key_set ? 'text-green-600' : 'text-muted-foreground'">
+                                        <KeyRound class="h-3 w-3" /> {{ p.api_key_set ? 'Terisi' : 'Kosong' }}
+                                    </span>
+                                </TableCell>
+                                <TableCell>{{ p.models_count }}</TableCell>
+                                <TableCell>
+                                    <Badge :variant="p.is_active ? 'default' : 'secondary'">{{ p.is_active ? 'Aktif' : 'Nonaktif' }}</Badge>
+                                </TableCell>
+                                <TableCell class="text-right">
+                                    <div class="flex justify-end gap-1">
+                                        <Button size="sm" variant="outline" class="cursor-pointer" @click="openEdit(p)"><Edit class="h-3 w-3" /></Button>
+                                        <Button size="sm" variant="outline" class="cursor-pointer" @click="confirmDelete(p)"><Trash2 class="h-3 w-3" /></Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                            <TableRow v-if="providers.data.length === 0">
+                                <TableCell colspan="6" class="py-10 text-center text-muted-foreground">Belum ada provider. Tambahkan provider AI pertama.</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
         </div>

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
@@ -337,88 +338,82 @@ const removeFeature = (form: any, featureName: string) => {
                     <!-- Service Plans Table -->
                     <div v-if="servicePlans.data.length === 0" class="py-8 text-center text-muted-foreground">Paket layanan tidak ditemukan.</div>
 
-                    <div v-else class="overflow-x-auto">
-                        <table class="w-full border-collapse">
-                            <thead>
-                                <tr class="border-b border-border">
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
-                                        <input
-                                            type="checkbox"
-                                            :checked="isAllSelected"
-                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
-                                            @change="toggleSelectAll"
-                                        />
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">ID</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Nama</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Kategori</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Harga</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Deskripsi</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Fitur</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Status</th>
-                                    <th class="px-3 py-3 text-center text-xs font-medium tracking-wider text-muted-foreground uppercase">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    v-for="plan in servicePlans.data"
-                                    :key="plan.id"
-                                    class="border-b border-border transition-colors hover:bg-muted/30"
-                                >
-                                    <td class="px-3 py-4">
-                                        <input
-                                            type="checkbox"
-                                            :checked="selectedServicePlanIds.includes(plan.id)"
-                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
-                                            @change="toggleServicePlanSelection(plan.id)"
-                                        />
-                                    </td>
-                                    <td class="px-3 py-4 text-sm font-medium text-foreground">#{{ plan.id }}</td>
-                                    <td class="px-3 py-4 text-sm font-medium text-foreground">{{ plan.name }}</td>
-                                    <td class="px-3 py-4">
-                                        <Badge :class="getCategoryColor(plan.category)" class="text-xs">
-                                            {{ categories[plan.category] || plan.category }}
-                                        </Badge>
-                                    </td>
-                                    <td class="px-3 py-4 text-sm font-medium text-foreground">{{ formatPrice(plan.price) }}</td>
-                                    <td class="max-w-xs truncate px-3 py-4 text-sm text-muted-foreground" :title="plan.description">
-                                        {{ plan.description || '-' }}
-                                    </td>
-                                    <td class="max-w-xs truncate px-3 py-4 text-sm text-muted-foreground">
-                                        <span
-                                            v-if="plan.features && Object.keys(plan.features).length > 0"
-                                            :title="Object.keys(plan.features).join(', ')"
-                                        >
-                                            {{ Object.keys(plan.features).join(', ') }}
-                                        </span>
-                                        <span v-else>-</span>
-                                    </td>
-                                    <td class="px-3 py-4">
-                                        <span class="flex items-center gap-1 text-xs">
-                                            <CheckCircle v-if="plan.is_active" class="h-3 w-3 text-primary" />
-                                            <XCircle v-else class="h-3 w-3 text-destructive" />
-                                            {{ plan.is_active ? 'Aktif' : 'Nonaktif' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-3 py-4">
-                                        <div class="flex items-center justify-center gap-1">
-                                            <Button variant="outline" size="sm" asChild>
-                                                <Link :href="`/admin/service-plans/${plan.id}`" title="Lihat Detail">
-                                                    <Eye class="h-3 w-3" />
-                                                </Link>
-                                            </Button>
-                                            <Button size="sm" variant="outline" @click="openEditModal(plan)" class="cursor-pointer" title="Edit">
-                                                <Edit class="h-3 w-3" />
-                                            </Button>
-                                            <Button size="sm" variant="outline" @click="openDeleteModal(plan)" class="cursor-pointer" title="Hapus">
-                                                <Trash2 class="h-3 w-3" />
-                                            </Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground">
+                                    <input
+                                        type="checkbox"
+                                        :checked="isAllSelected"
+                                        class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                        @change="toggleSelectAll"
+                                    />
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">ID</TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">Nama</TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">Kategori</TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">Harga</TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">Deskripsi</TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">Fitur</TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">Status</TableHead>
+                                <TableHead class="text-center text-xs tracking-wider text-muted-foreground uppercase">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="plan in servicePlans.data" :key="plan.id">
+                                <TableCell>
+                                    <input
+                                        type="checkbox"
+                                        :checked="selectedServicePlanIds.includes(plan.id)"
+                                        class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                        @change="toggleServicePlanSelection(plan.id)"
+                                    />
+                                </TableCell>
+                                <TableCell class="text-sm font-medium text-foreground">#{{ plan.id }}</TableCell>
+                                <TableCell class="text-sm font-medium text-foreground">{{ plan.name }}</TableCell>
+                                <TableCell>
+                                    <Badge :class="getCategoryColor(plan.category)" class="text-xs">
+                                        {{ categories[plan.category] || plan.category }}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell class="text-sm font-medium text-foreground">{{ formatPrice(plan.price) }}</TableCell>
+                                <TableCell class="max-w-xs truncate text-sm text-muted-foreground" :title="plan.description">
+                                    {{ plan.description || '-' }}
+                                </TableCell>
+                                <TableCell class="max-w-xs truncate text-sm text-muted-foreground">
+                                    <span
+                                        v-if="plan.features && Object.keys(plan.features).length > 0"
+                                        :title="Object.keys(plan.features).join(', ')"
+                                    >
+                                        {{ Object.keys(plan.features).join(', ') }}
+                                    </span>
+                                    <span v-else>-</span>
+                                </TableCell>
+                                <TableCell>
+                                    <span class="flex items-center gap-1 text-xs">
+                                        <CheckCircle v-if="plan.is_active" class="h-3 w-3 text-primary" />
+                                        <XCircle v-else class="h-3 w-3 text-destructive" />
+                                        {{ plan.is_active ? 'Aktif' : 'Nonaktif' }}
+                                    </span>
+                                </TableCell>
+                                <TableCell>
+                                    <div class="flex items-center justify-center gap-1">
+                                        <Button variant="outline" size="sm" asChild>
+                                            <Link :href="`/admin/service-plans/${plan.id}`" title="Lihat Detail">
+                                                <Eye class="h-3 w-3" />
+                                            </Link>
+                                        </Button>
+                                        <Button size="sm" variant="outline" @click="openEditModal(plan)" class="cursor-pointer" title="Edit">
+                                            <Edit class="h-3 w-3" />
+                                        </Button>
+                                        <Button size="sm" variant="outline" @click="openDeleteModal(plan)" class="cursor-pointer" title="Hapus">
+                                            <Trash2 class="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
 
                     <!-- Pagination -->
                     <div v-if="servicePlans.links && servicePlans.links.length > 3" class="flex items-center justify-between border-t pt-6">

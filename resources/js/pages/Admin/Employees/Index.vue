@@ -5,6 +5,7 @@ import ConfirmModal from '@/components/ConfirmModal.vue';
 import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
@@ -440,93 +441,87 @@ const resetPassword = (employee: Employee) => {
                         <p class="mt-1 text-sm text-muted-foreground">Coba sesuaikan kriteria pencarian Anda.</p>
                     </div>
 
-                    <div v-else class="overflow-x-auto">
-                        <table class="w-full border-collapse">
-                            <thead>
-                                <tr class="border-b border-border">
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
-                                        <input
-                                            type="checkbox"
-                                            :checked="isAllSelected"
-                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
-                                            @change="toggleSelectAll"
-                                        />
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">NIK</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Nama</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Email</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Jabatan</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Departemen</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Telepon</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Gaji</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Status</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">Bergabung</th>
-                                    <th class="px-3 py-3 text-center text-xs font-medium tracking-wider text-muted-foreground uppercase">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    v-for="employee in employees.data"
-                                    :key="employee.id"
-                                    class="border-b border-border transition-colors hover:bg-muted/30"
-                                >
-                                    <td class="px-3 py-4">
-                                        <input
-                                            type="checkbox"
-                                            :checked="selectedEmployeeIds.includes(employee.id)"
-                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
-                                            @change="toggleEmployeeSelection(employee.id)"
-                                        />
-                                    </td>
-                                    <td class="px-3 py-4 text-sm font-medium text-foreground">{{ employee.nik }}</td>
-                                    <td class="px-3 py-4 text-sm font-medium text-foreground">{{ employee.user.name }}</td>
-                                    <td class="px-3 py-4 text-sm text-muted-foreground">{{ employee.user.email }}</td>
-                                    <td class="px-3 py-4 text-sm text-muted-foreground">{{ employee.position }}</td>
-                                    <td class="px-3 py-4 text-sm text-muted-foreground">{{ employee.department }}</td>
-                                    <td class="px-3 py-4 text-sm text-muted-foreground">{{ employee.phone || '-' }}</td>
-                                    <td class="px-3 py-4 text-sm text-muted-foreground">{{ formatCurrency(employee.salary) }}</td>
-                                    <td class="px-3 py-4">
-                                        <span
-                                            :class="`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusClass(employee.status)}`"
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground">
+                                    <input
+                                        type="checkbox"
+                                        :checked="isAllSelected"
+                                        class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                        @change="toggleSelectAll"
+                                    />
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">NIK</TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">Nama</TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">Email</TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">Jabatan</TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">Departemen</TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">Telepon</TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">Gaji</TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">Status</TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground uppercase">Bergabung</TableHead>
+                                <TableHead class="text-center text-xs tracking-wider text-muted-foreground uppercase">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="employee in employees.data" :key="employee.id">
+                                <TableCell>
+                                    <input
+                                        type="checkbox"
+                                        :checked="selectedEmployeeIds.includes(employee.id)"
+                                        class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                        @change="toggleEmployeeSelection(employee.id)"
+                                    />
+                                </TableCell>
+                                <TableCell class="text-sm font-medium text-foreground">{{ employee.nik }}</TableCell>
+                                <TableCell class="text-sm font-medium text-foreground">{{ employee.user.name }}</TableCell>
+                                <TableCell class="text-sm text-muted-foreground">{{ employee.user.email }}</TableCell>
+                                <TableCell class="text-sm text-muted-foreground">{{ employee.position }}</TableCell>
+                                <TableCell class="text-sm text-muted-foreground">{{ employee.department }}</TableCell>
+                                <TableCell class="text-sm text-muted-foreground">{{ employee.phone || '-' }}</TableCell>
+                                <TableCell class="text-sm text-muted-foreground">{{ formatCurrency(employee.salary) }}</TableCell>
+                                <TableCell>
+                                    <span
+                                        :class="`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusClass(employee.status)}`"
+                                    >
+                                        {{ getStatusText(employee.status) }}
+                                    </span>
+                                </TableCell>
+                                <TableCell class="text-sm text-muted-foreground">{{ formatDate(employee.hire_date) }}</TableCell>
+                                <TableCell>
+                                    <div class="flex items-center justify-center gap-1">
+                                        <Button size="sm" variant="outline" asChild class="cursor-pointer" title="Lihat Detail">
+                                            <Link :href="`/admin/employees/${employee.id}`">
+                                                <Users class="h-3.5 w-3.5" />
+                                            </Link>
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            @click="resetPassword(employee)"
+                                            class="cursor-pointer"
+                                            title="Reset Password"
                                         >
-                                            {{ getStatusText(employee.status) }}
-                                        </span>
-                                    </td>
-                                    <td class="px-3 py-4 text-sm text-muted-foreground">{{ formatDate(employee.hire_date) }}</td>
-                                    <td class="px-3 py-4">
-                                        <div class="flex items-center justify-center gap-1">
-                                            <Button size="sm" variant="outline" asChild class="cursor-pointer" title="Lihat Detail">
-                                                <Link :href="`/admin/employees/${employee.id}`">
-                                                    <Users class="h-3.5 w-3.5" />
-                                                </Link>
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                @click="resetPassword(employee)"
-                                                class="cursor-pointer"
-                                                title="Reset Password"
-                                            >
-                                                <Key class="h-3.5 w-3.5" />
-                                            </Button>
-                                            <Button size="sm" variant="outline" @click="openEditModal(employee)" class="cursor-pointer" title="Edit">
-                                                <Edit class="h-3.5 w-3.5" />
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                @click="openDeleteModal(employee)"
-                                                class="cursor-pointer text-destructive hover:bg-red-50 hover:text-red-700"
-                                                title="Hapus"
-                                            >
-                                                <Trash2 class="h-3.5 w-3.5" />
-                                            </Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                                            <Key class="h-3.5 w-3.5" />
+                                        </Button>
+                                        <Button size="sm" variant="outline" @click="openEditModal(employee)" class="cursor-pointer" title="Edit">
+                                            <Edit class="h-3.5 w-3.5" />
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            @click="openDeleteModal(employee)"
+                                            class="cursor-pointer text-destructive hover:bg-red-50 hover:text-red-700"
+                                            title="Hapus"
+                                        >
+                                            <Trash2 class="h-3.5 w-3.5" />
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
 
                     <!-- Pagination -->
                     <div v-if="employees?.links && employees.links.length > 3" class="flex items-center justify-between border-t pt-6">

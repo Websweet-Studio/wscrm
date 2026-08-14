@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
@@ -575,151 +576,145 @@ const getSortIcon = (field: string) => {
                         <p class="mt-1 text-sm text-muted-foreground">Coba sesuaikan kriteria pencarian Anda.</p>
                     </div>
 
-                    <div v-else class="overflow-x-auto">
-                        <table class="w-full border-collapse">
-                            <thead>
-                                <tr class="border-b border-border">
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
-                                        <input
-                                            type="checkbox"
-                                            :checked="isAllSelected"
-                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
-                                            @change="toggleSelectAll"
-                                        />
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
-                                        <button @click="sortBy('id')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
-                                            <span>ID</span>
-                                            <component :is="getSortIcon('id')" v-if="getSortIcon('id')" class="h-3 w-3" />
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
-                                        <button @click="sortBy('name')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
-                                            <span>Nama</span>
-                                            <component :is="getSortIcon('name')" v-if="getSortIcon('name')" class="h-3 w-3" />
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
-                                        <button @click="sortBy('email')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
-                                            <span>Email</span>
-                                            <component :is="getSortIcon('email')" v-if="getSortIcon('email')" class="h-3 w-3" />
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
-                                        <button @click="sortBy('username')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
-                                            <span>Username</span>
-                                            <component :is="getSortIcon('username')" v-if="getSortIcon('username')" class="h-3 w-3" />
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
-                                        <button @click="sortBy('phone')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
-                                            <span>Telepon</span>
-                                            <component :is="getSortIcon('phone')" v-if="getSortIcon('phone')" class="h-3 w-3" />
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
-                                        <button @click="sortBy('city')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
-                                            <span>Kota</span>
-                                            <component :is="getSortIcon('city')" v-if="getSortIcon('city')" class="h-3 w-3" />
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
-                                        <button @click="sortBy('status')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
-                                            <span>Status</span>
-                                            <component :is="getSortIcon('status')" v-if="getSortIcon('status')" class="h-3 w-3" />
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
-                                        <button @click="sortBy('orders_count')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
-                                            <span>Pesanan</span>
-                                            <component :is="getSortIcon('orders_count')" v-if="getSortIcon('orders_count')" class="h-3 w-3" />
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">Layanan</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground">
-                                        <button @click="sortBy('created_at')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
-                                            <span>Bergabung</span>
-                                            <component :is="getSortIcon('created_at')" v-if="getSortIcon('created_at')" class="h-3 w-3" />
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-3 text-center text-xs font-medium tracking-wider text-muted-foreground">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    v-for="customer in customers.data"
-                                    :key="customer.id"
-                                    class="border-b border-border transition-colors hover:bg-muted/30"
-                                >
-                                    <td class="px-3 py-4">
-                                        <input
-                                            type="checkbox"
-                                            :checked="selectedCustomerIds.includes(customer.id)"
-                                            class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
-                                            @change="toggleCustomerSelection(customer.id)"
-                                        />
-                                    </td>
-                                    <td class="px-3 py-4 text-sm font-medium text-foreground">#{{ customer.id }}</td>
-                                    <td class="px-3 py-4 text-sm font-medium text-foreground">{{ customer.name }}</td>
-                                    <td class="px-3 py-4 text-sm text-muted-foreground">{{ customer.email }}</td>
-                                    <td class="px-3 py-4 text-sm text-muted-foreground">{{ customer.username || '-' }}</td>
-                                    <td class="px-3 py-4 text-sm text-muted-foreground">{{ customer.phone || '-' }}</td>
-                                    <td class="px-3 py-4 text-sm text-muted-foreground">{{ customer.city || '-' }}</td>
-                                    <td class="px-3 py-4">
-                                        <span
-                                            :class="`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusClass(customer.status)}`"
-                                        >
-                                            {{ customer.status }}
-                                        </span>
-                                    </td>
-                                    <td class="px-3 py-4 text-center text-sm font-medium text-foreground">{{ customer.orders_count }}</td>
-                                    <td class="px-3 py-4 text-center text-sm font-medium text-foreground">{{ customer.services_count }}</td>
-                                    <td class="px-3 py-4 text-sm text-muted-foreground">{{ formatDate(customer.created_at) }}</td>
-                                    <td class="px-3 py-4">
-                                        <div class="flex items-center justify-end">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger as-child>
-                                                    <Button variant="ghost" class="h-8 w-8 p-0 cursor-pointer">
-                                                        <span class="sr-only">Open menu</span>
-                                                        <MoreHorizontal class="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                                                    <DropdownMenuItem @click="router.visit(`/admin/customers/${customer.id}`)" class="cursor-pointer">
-                                                        <Users class="mr-2 h-4 w-4" />
-                                                        Lihat Detail
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem @click="openEditModal(customer)" class="cursor-pointer">
-                                                        <Edit class="mr-2 h-4 w-4" />
-                                                        Edit
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem @click="impersonateCustomer(customer)" class="cursor-pointer">
-                                                        <LogIn class="mr-2 h-4 w-4" />
-                                                        Login sebagai User
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuItem @click="sendWelcomeEmail(customer)" class="cursor-pointer">
-                                                        <Mail class="mr-2 h-4 w-4" />
-                                                        Kirim Welcome Email
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem @click="resendNewPassword(customer)" class="cursor-pointer">
-                                                        <Key class="mr-2 h-4 w-4" />
-                                                        Resend New Password
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuItem @click="openDeleteModal(customer)" class="cursor-pointer text-destructive focus:text-destructive">
-                                                        <Trash2 class="mr-2 h-4 w-4" />
-                                                        Hapus
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground">
+                                    <input
+                                        type="checkbox"
+                                        :checked="isAllSelected"
+                                        class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                        @change="toggleSelectAll"
+                                    />
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground">
+                                    <button @click="sortBy('id')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
+                                        <span>ID</span>
+                                        <component :is="getSortIcon('id')" v-if="getSortIcon('id')" class="h-3 w-3" />
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground">
+                                    <button @click="sortBy('name')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
+                                        <span>Nama</span>
+                                        <component :is="getSortIcon('name')" v-if="getSortIcon('name')" class="h-3 w-3" />
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground">
+                                    <button @click="sortBy('email')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
+                                        <span>Email</span>
+                                        <component :is="getSortIcon('email')" v-if="getSortIcon('email')" class="h-3 w-3" />
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground">
+                                    <button @click="sortBy('username')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
+                                        <span>Username</span>
+                                        <component :is="getSortIcon('username')" v-if="getSortIcon('username')" class="h-3 w-3" />
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground">
+                                    <button @click="sortBy('phone')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
+                                        <span>Telepon</span>
+                                        <component :is="getSortIcon('phone')" v-if="getSortIcon('phone')" class="h-3 w-3" />
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground">
+                                    <button @click="sortBy('city')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
+                                        <span>Kota</span>
+                                        <component :is="getSortIcon('city')" v-if="getSortIcon('city')" class="h-3 w-3" />
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground">
+                                    <button @click="sortBy('status')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
+                                        <span>Status</span>
+                                        <component :is="getSortIcon('status')" v-if="getSortIcon('status')" class="h-3 w-3" />
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground">
+                                    <button @click="sortBy('orders_count')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
+                                        <span>Pesanan</span>
+                                        <component :is="getSortIcon('orders_count')" v-if="getSortIcon('orders_count')" class="h-3 w-3" />
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground">Layanan</TableHead>
+                                <TableHead class="text-xs tracking-wider text-muted-foreground">
+                                    <button @click="sortBy('created_at')" class="flex cursor-pointer items-center space-x-1 hover:text-primary">
+                                        <span>Bergabung</span>
+                                        <component :is="getSortIcon('created_at')" v-if="getSortIcon('created_at')" class="h-3 w-3" />
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-center text-xs tracking-wider text-muted-foreground">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="customer in customers.data" :key="customer.id">
+                                <TableCell>
+                                    <input
+                                        type="checkbox"
+                                        :checked="selectedCustomerIds.includes(customer.id)"
+                                        class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                        @change="toggleCustomerSelection(customer.id)"
+                                    />
+                                </TableCell>
+                                <TableCell class="text-sm font-medium text-foreground">#{{ customer.id }}</TableCell>
+                                <TableCell class="text-sm font-medium text-foreground">{{ customer.name }}</TableCell>
+                                <TableCell class="text-sm text-muted-foreground">{{ customer.email }}</TableCell>
+                                <TableCell class="text-sm text-muted-foreground">{{ customer.username || '-' }}</TableCell>
+                                <TableCell class="text-sm text-muted-foreground">{{ customer.phone || '-' }}</TableCell>
+                                <TableCell class="text-sm text-muted-foreground">{{ customer.city || '-' }}</TableCell>
+                                <TableCell>
+                                    <span
+                                        :class="`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusClass(customer.status)}`"
+                                    >
+                                        {{ customer.status }}
+                                    </span>
+                                </TableCell>
+                                <TableCell class="text-center text-sm font-medium text-foreground">{{ customer.orders_count }}</TableCell>
+                                <TableCell class="text-center text-sm font-medium text-foreground">{{ customer.services_count }}</TableCell>
+                                <TableCell class="text-sm text-muted-foreground">{{ formatDate(customer.created_at) }}</TableCell>
+                                <TableCell>
+                                    <div class="flex items-center justify-end">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger as-child>
+                                                <Button variant="ghost" class="h-8 w-8 p-0 cursor-pointer">
+                                                    <span class="sr-only">Open menu</span>
+                                                    <MoreHorizontal class="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+                                                <DropdownMenuItem @click="router.visit(`/admin/customers/${customer.id}`)" class="cursor-pointer">
+                                                    <Users class="mr-2 h-4 w-4" />
+                                                    Lihat Detail
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem @click="openEditModal(customer)" class="cursor-pointer">
+                                                    <Edit class="mr-2 h-4 w-4" />
+                                                    Edit
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem @click="impersonateCustomer(customer)" class="cursor-pointer">
+                                                    <LogIn class="mr-2 h-4 w-4" />
+                                                    Login sebagai User
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem @click="sendWelcomeEmail(customer)" class="cursor-pointer">
+                                                    <Mail class="mr-2 h-4 w-4" />
+                                                    Kirim Welcome Email
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem @click="resendNewPassword(customer)" class="cursor-pointer">
+                                                    <Key class="mr-2 h-4 w-4" />
+                                                    Resend New Password
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem @click="openDeleteModal(customer)" class="cursor-pointer text-destructive focus:text-destructive">
+                                                    <Trash2 class="mr-2 h-4 w-4" />
+                                                    Hapus
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
 
                     <!-- Pagination -->
                     <div v-if="customers?.links && customers.links.length > 3" class="flex items-center justify-between border-t pt-6">

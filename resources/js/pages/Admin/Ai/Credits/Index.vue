@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
@@ -80,40 +81,38 @@ const submit = () => {
                         </Button>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="border-b text-left text-muted-foreground">
-                                    <th class="px-3 py-3">Customer</th>
-                                    <th class="px-3 py-3">Username</th>
-                                    <th class="px-3 py-3">Saldo Kredit</th>
-                                    <th class="px-3 py-3 text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="c in customers.data" :key="c.id" class="border-b last:border-0">
-                                    <td class="px-3 py-3">
-                                        <div class="font-medium">{{ c.name }}</div>
-                                        <div class="text-xs text-muted-foreground">{{ c.email }}</div>
-                                    </td>
-                                    <td class="px-3 py-3 text-muted-foreground">{{ c.username || '-' }}</td>
-                                    <td class="px-3 py-3">
-                                        <span class="inline-flex items-center gap-1 font-semibold">
-                                            <Coins class="h-4 w-4 text-amber-500" /> {{ c.ai_balance ?? 0 }}
-                                        </span>
-                                    </td>
-                                    <td class="px-3 py-3 text-right">
-                                        <Button size="sm" variant="outline" class="cursor-pointer" @click="openAdjust(c)">
-                                            <Settings2 class="mr-1 h-3 w-3" /> Adjust
-                                        </Button>
-                                    </td>
-                                </tr>
-                                <tr v-if="customers.data.length === 0">
-                                    <td colspan="4" class="px-3 py-10 text-center text-muted-foreground">Tidak ada customer.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Customer</TableHead>
+                                <TableHead>Username</TableHead>
+                                <TableHead>Saldo Kredit</TableHead>
+                                <TableHead class="text-right">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="c in customers.data" :key="c.id">
+                                <TableCell>
+                                    <div class="font-medium">{{ c.name }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ c.email }}</div>
+                                </TableCell>
+                                <TableCell class="text-muted-foreground">{{ c.username || '-' }}</TableCell>
+                                <TableCell>
+                                    <span class="inline-flex items-center gap-1 font-semibold">
+                                        <Coins class="h-4 w-4 text-amber-500" /> {{ c.ai_balance ?? 0 }}
+                                    </span>
+                                </TableCell>
+                                <TableCell class="text-right">
+                                    <Button size="sm" variant="outline" class="cursor-pointer" @click="openAdjust(c)">
+                                        <Settings2 class="mr-1 h-3 w-3" /> Adjust
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                            <TableRow v-if="customers.data.length === 0">
+                                <TableCell colspan="4" class="py-10 text-center text-muted-foreground">Tidak ada customer.</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
         </div>

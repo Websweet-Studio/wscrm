@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
@@ -149,42 +150,40 @@ const priceOutput = (m: AiModel): string => (props.credit_price === null ? '—'
                         </select>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="border-b text-left text-muted-foreground">
-                                    <th class="px-3 py-3">Model</th>
-                                    <th class="px-3 py-3">Nama Tampilan</th>
-                                    <th class="px-3 py-3">Provider</th>
-                                    <th class="px-3 py-3">Harga Input / 1M token</th>
-                                    <th class="px-3 py-3">Harga Output / 1M token</th>
-                                    <th class="px-3 py-3">Status</th>
-                                    <th class="px-3 py-3 text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="m in models.data" :key="m.id" class="border-b last:border-0">
-                                    <td class="px-3 py-3 font-mono font-medium">{{ m.model_key }}</td>
-                                    <td class="px-3 py-3 text-muted-foreground">{{ m.display_name || '-' }}</td>
-                                    <td class="px-3 py-3">{{ m.provider?.name || '-' }}</td>
-                                    <td class="px-3 py-3">{{ priceInput(m) }}</td>
-                                    <td class="px-3 py-3">{{ priceOutput(m) }}</td>
-                                    <td class="px-3 py-3">
-                                        <Badge :variant="m.is_active ? 'default' : 'secondary'">{{ m.is_active ? 'Aktif' : 'Nonaktif' }}</Badge>
-                                    </td>
-                                    <td class="px-3 py-3 text-right">
-                                        <div class="flex justify-end gap-1">
-                                            <Button size="sm" variant="outline" class="cursor-pointer" @click="openEdit(m)"><Edit class="h-3 w-3" /></Button>
-                                            <Button size="sm" variant="outline" class="cursor-pointer" @click="confirmDelete(m)"><Trash2 class="h-3 w-3" /></Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr v-if="models.data.length === 0">
-                                    <td colspan="7" class="px-3 py-10 text-center text-muted-foreground">Belum ada model.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Model</TableHead>
+                                <TableHead>Nama Tampilan</TableHead>
+                                <TableHead>Provider</TableHead>
+                                <TableHead>Harga Input / 1M token</TableHead>
+                                <TableHead>Harga Output / 1M token</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead class="text-right">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="m in models.data" :key="m.id">
+                                <TableCell class="font-mono font-medium">{{ m.model_key }}</TableCell>
+                                <TableCell class="text-muted-foreground">{{ m.display_name || '-' }}</TableCell>
+                                <TableCell>{{ m.provider?.name || '-' }}</TableCell>
+                                <TableCell>{{ priceInput(m) }}</TableCell>
+                                <TableCell>{{ priceOutput(m) }}</TableCell>
+                                <TableCell>
+                                    <Badge :variant="m.is_active ? 'default' : 'secondary'">{{ m.is_active ? 'Aktif' : 'Nonaktif' }}</Badge>
+                                </TableCell>
+                                <TableCell class="text-right">
+                                    <div class="flex justify-end gap-1">
+                                        <Button size="sm" variant="outline" class="cursor-pointer" @click="openEdit(m)"><Edit class="h-3 w-3" /></Button>
+                                        <Button size="sm" variant="outline" class="cursor-pointer" @click="confirmDelete(m)"><Trash2 class="h-3 w-3" /></Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                            <TableRow v-if="models.data.length === 0">
+                                <TableCell colspan="7" class="py-10 text-center text-muted-foreground">Belum ada model.</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
         </div>

@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import ConfirmModal from '@/components/ConfirmModal.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
@@ -257,27 +258,27 @@ const getOrderStatusText = (status: string) => {
                             Belum ada data akun. Pastikan server sudah dikonfigurasi dan koneksi berhasil.
                         </template>
                     </div>
-                    <div v-else class="overflow-x-auto">
-                        <table class="w-full table-auto">
-                            <thead>
-                                <tr class="border-b">
-                                    <th class="pb-3 text-left font-medium">Username</th>
-                                    <th class="pb-3 text-left font-medium">Domain</th>
-                                    <th class="pb-3 text-left font-medium">Email</th>
-                                    <th class="pb-3 text-left font-medium">Status DA</th>
-                                    <th class="pb-3 text-left font-medium">Order Terhubung</th>
-                                    <th class="pb-3 text-center font-medium">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="account in accounts" :key="account.username" class="border-b hover:bg-muted/50">
-                                    <td class="py-3">
+                    <div v-else>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Username</TableHead>
+                                    <TableHead>Domain</TableHead>
+                                    <TableHead>Email</TableHead>
+                                    <TableHead>Status DA</TableHead>
+                                    <TableHead>Order Terhubung</TableHead>
+                                    <TableHead class="text-center">Aksi</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow v-for="account in accounts" :key="account.username">
+                                    <TableCell>
                                         <div class="font-medium">{{ account.username }}</div>
                                         <div class="text-xs text-muted-foreground">{{ account.package }}</div>
-                                    </td>
-                                    <td class="py-3 text-sm">{{ account.domain || '-' }}</td>
-                                    <td class="py-3 text-sm">{{ account.email || '-' }}</td>
-                                    <td class="py-3">
+                                    </TableCell>
+                                    <TableCell class="text-sm">{{ account.domain || '-' }}</TableCell>
+                                    <TableCell class="text-sm">{{ account.email || '-' }}</TableCell>
+                                    <TableCell>
                                         <span
                                             :class="account.suspended
                                                 ? 'bg-muted text-muted-foreground'
@@ -286,8 +287,8 @@ const getOrderStatusText = (status: string) => {
                                         >
                                             {{ account.suspended ? 'Ditangguhkan' : 'Aktif' }}
                                         </span>
-                                    </td>
-                                    <td class="py-3 text-sm">
+                                    </TableCell>
+                                    <TableCell class="text-sm">
                                         <template v-if="account.linked_order">
                                             <Link :href="`/admin/orders/${account.linked_order.id}`" class="font-medium text-primary hover:underline">
                                                 #{{ account.linked_order.id }}
@@ -296,8 +297,8 @@ const getOrderStatusText = (status: string) => {
                                             <span class="text-muted-foreground"> ({{ getOrderStatusText(account.linked_order.status) }})</span>
                                         </template>
                                         <span v-else class="text-muted-foreground">Tidak ada order cocok</span>
-                                    </td>
-                                    <td class="py-3">
+                                    </TableCell>
+                                    <TableCell>
                                         <div class="flex items-center justify-center gap-1">
                                             <Button
                                                 v-if="!account.suspended"
@@ -322,10 +323,10 @@ const getOrderStatusText = (status: string) => {
                                                 Unsuspend
                                             </Button>
                                         </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
                     </div>
                 </CardContent>
             </Card>
@@ -339,32 +340,30 @@ const getOrderStatusText = (status: string) => {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div class="overflow-x-auto">
-                        <table class="w-full table-auto">
-                            <thead>
-                                <tr class="border-b">
-                                    <th class="pb-3 text-left font-medium">ID</th>
-                                    <th class="pb-3 text-left font-medium">Pelanggan</th>
-                                    <th class="pb-3 text-left font-medium">Domain</th>
-                                    <th class="pb-3 text-left font-medium">Status</th>
-                                    <th class="pb-3 text-center font-medium">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="order in unlinkedOrders" :key="order.id" class="border-b hover:bg-muted/50">
-                                    <td class="py-3 font-medium">#{{ order.id }}</td>
-                                    <td class="py-3 text-sm">{{ order.customer.name }}</td>
-                                    <td class="py-3 text-sm">{{ order.domain_name }}</td>
-                                    <td class="py-3 text-sm">{{ getOrderStatusText(order.status) }}</td>
-                                    <td class="py-3 text-center">
-                                        <Button size="sm" variant="outline" asChild class="cursor-pointer">
-                                            <Link :href="`/admin/orders/${order.id}`">Lihat Order</Link>
-                                        </Button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>ID</TableHead>
+                                <TableHead>Pelanggan</TableHead>
+                                <TableHead>Domain</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead class="text-center">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="order in unlinkedOrders" :key="order.id">
+                                <TableCell class="font-medium">#{{ order.id }}</TableCell>
+                                <TableCell class="text-sm">{{ order.customer.name }}</TableCell>
+                                <TableCell class="text-sm">{{ order.domain_name }}</TableCell>
+                                <TableCell class="text-sm">{{ getOrderStatusText(order.status) }}</TableCell>
+                                <TableCell class="text-center">
+                                    <Button size="sm" variant="outline" asChild class="cursor-pointer">
+                                        <Link :href="`/admin/orders/${order.id}`">Lihat Order</Link>
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
         </div>
