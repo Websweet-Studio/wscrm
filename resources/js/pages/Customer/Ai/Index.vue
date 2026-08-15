@@ -32,6 +32,7 @@ interface Transaction {
 
 interface Props {
     balance: number;
+    total_credits: number;
     api_key: string | null;
     endpoint: string;
     models: Model[];
@@ -51,7 +52,8 @@ const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMeta
 const apiKey = ref(props.api_key);
 const showKey = ref(false);
 const copied = ref(false);
-const activeTab = ref<'endpoint' | 'pricing' | 'history'>('endpoint');
+const showRegenModal = ref(false);
+const activeTab = ref<'endpoint' | 'pricing' | 'history'>('pricing');
 
 const totalTransactions = computed(() => props.transactions.length);
 const usageTransactions = computed(() => props.transactions.filter(t => t.type === 'out').length);
@@ -93,6 +95,11 @@ const priceOutput = (m: Model): string => (props.credit_price === null ? '—' :
 const maskKey = (key: string): string => `${key.slice(0, 8)}••••••••${key.slice(-4)}`;
 
 const formatDate = (d: string) => new Date(d).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
+
+const creditPercent = computed(() => {
+    if (!props.total_credits) return 0;
+    return Math.min(100, Math.max(0, Math.round((props.balance / props.total_credits) * 100)));
+});
 </script>
 
 <template>
@@ -168,6 +175,36 @@ const formatDate = (d: string) => new Date(d).toLocaleString('id-ID', { dateStyl
                     </CardHeader>
                 </Card>
             </div>
+
+            <!-- Progress bar sisa kredit -->
+            <Card class="rounded-lg border-border/60 shadow-sm">
+                <CardContent class="pt-6">
+                    <div class="mb-2 flex items-center justify-between text-sm">
+                        <span class="font-medium">Sisa Kredit</span>
+                        <span class="font-semibold tabular-nums">{{ creditPercent }}%</span>
+                    </div>
+                    <div
+                        class="h-3 w-full overflow-hidden rounded-full"
+                        style="background-color: rgba(148, 163, 184, 0.2);"
+                    >
+                        <div
+                            class="h-full rounded-full"
+                            :style="{
+                                width: creditPercent + '%',
+                                background: creditPercent <= 20
+                                    ? 'linear-gradient(90deg, #ef4444, #f87171)'
+                                    : creditPercent <= 50
+                                        ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+                                        : 'linear-gradient(90deg, #10b981, #34d399)',
+                                transition: 'width 0.4s ease',
+                            }"
+                        />
+                    </div>
+                    <p class="mt-2 text-xs text-muted-foreground">
+                        {{ balance.toLocaleString('id-ID') }} dari {{ total_credits.toLocaleString('id-ID') }} kredit terpakai
+                    </p>
+                </CardContent>
+            </Card>
 
             <!-- Tabbed: Endpoint API / Harga Token / Riwayat -->
             <Card class="rounded-lg border-border/60 shadow-sm">

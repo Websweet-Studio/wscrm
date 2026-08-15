@@ -61,8 +61,14 @@ class AiController extends Controller
             ->limit(20)
             ->get();
 
+        // Total kredit yang pernah masuk (pembelian + penyesuaian manual), patokan 100%.
+        $totalCredits = (int) AiTransaction::where('customer_id', $customer->id)
+            ->where('type', 'in')
+            ->sum('credits');
+
         return Inertia::render('Customer/Ai/Index', [
             'balance' => (int) $credit->balance,
+            'total_credits' => $totalCredits,
             'api_key' => $apiKey,
             'endpoint' => url('/api/v1'),
             'models' => $models,

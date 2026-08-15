@@ -10,5 +10,13 @@ Route::get('plugins', [ThirdPartyPluginController::class, 'publicIndex']);
 Route::post('demo-embed/track', [App\Http\Controllers\DemoWebsiteController::class, 'trackEmbed']);
 
 // Endpoint OpenAI-compatible utk customer (Hermes agent, code editor, dsb).
+Route::get('v1', function () {
+    return response()->json([
+        'name' => 'WSCRM AI API',
+        'chat_completions' => url('/api/v1/chat/completions'),
+        'auth' => 'Authorization: Bearer <api_key customer>',
+    ]);
+});
+
 Route::post('v1/chat/completions', [ChatCompletionsController::class, 'chat'])
     ->middleware('throttle:30,1');
