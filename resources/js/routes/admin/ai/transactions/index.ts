@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\Ai\TransactionController::index
- * @see app/Http/Controllers/Admin/Ai/TransactionController.php:12
+ * @see app/Http/Controllers/Admin/Ai/TransactionController.php:13
  * @route '/admin/ai/transactions'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\TransactionController::index
- * @see app/Http/Controllers/Admin/Ai/TransactionController.php:12
+ * @see app/Http/Controllers/Admin/Ai/TransactionController.php:13
  * @route '/admin/ai/transactions'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\TransactionController::index
- * @see app/Http/Controllers/Admin/Ai/TransactionController.php:12
+ * @see app/Http/Controllers/Admin/Ai/TransactionController.php:13
  * @route '/admin/ai/transactions'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\Ai\TransactionController::index
- * @see app/Http/Controllers/Admin/Ai/TransactionController.php:12
+ * @see app/Http/Controllers/Admin/Ai/TransactionController.php:13
  * @route '/admin/ai/transactions'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\Ai\TransactionController::index
- * @see app/Http/Controllers/Admin/Ai/TransactionController.php:12
+ * @see app/Http/Controllers/Admin/Ai/TransactionController.php:13
  * @route '/admin/ai/transactions'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\Ai\TransactionController::index
- * @see app/Http/Controllers/Admin/Ai/TransactionController.php:12
+ * @see app/Http/Controllers/Admin/Ai/TransactionController.php:13
  * @route '/admin/ai/transactions'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\Ai\TransactionController::index
- * @see app/Http/Controllers/Admin/Ai/TransactionController.php:12
+ * @see app/Http/Controllers/Admin/Ai/TransactionController.php:13
  * @route '/admin/ai/transactions'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

@@ -9,8 +9,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
-import { ArrowDownCircle, ArrowUpCircle, Coins, Search } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { ArrowDownCircle, ArrowUpCircle, Coins, Search, Cpu, Hash, Zap, TrendingUp } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
+import { Bar, Doughnut } from 'vue-chartjs';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, LineController, ArcElement, Title, Tooltip, Legend, Filler } from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, LineController, ArcElement, Title, Tooltip, Legend, Filler);
 
 interface Transaction {
     id: number;
@@ -27,8 +31,19 @@ interface Transaction {
     model: { id: number; model_key: string } | null;
 }
 
+interface Analytics {
+    total_tokens: number;
+    input_tokens: number;
+    output_tokens: number;
+    total_runs: number;
+    credits_spent: number;
+    monthly: Array<{ month: string; tokens: number; runs: number }>;
+    by_model: Array<{ model_key: string; runs: number; tokens_in: number; tokens_out: number; credits: number }>;
+}
+
 interface Props {
     transactions: { data: Transaction[]; current_page: number; last_page: number; per_page: number; total: number; links: any[] };
+    analytics: Analytics;
     filters?: { customer_id?: string; type?: string; source?: string; from?: string; to?: string };
 }
 
@@ -55,6 +70,78 @@ const sourceLabel: Record<string, string> = {
 };
 
 const formatDate = (d: string) => new Date(d).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
+
+const formatNumber = (n: number) => n.toLocaleString('id-ID');
+
+const palette = ['#f59e0b', '#22d3ee', '#a78bfa', '#34d399', '#f87171', '#60a5fa', '#fb923c', '#4ade80'];
+
+const monthlyTokensData = computed(() => ({
+    labels: props.analytics.monthly.map(m => m.month),
+    datasets: [{
+        label: 'Token',
+        data: props.analytics.monthly.map(m => m.tokens),
+        backgroundColor: 'hsl(var(--primary) / 0.85)',
+        borderRadius: 6,
+    }],
+}));
+
+const monthlyRunsData = computed(() => ({
+    labels: props.analytics.monthly.map(m => m.month),
+    datasets: [{
+        label: 'Runs',
+        data: props.analytics.monthly.map(m => m.runs),
+        backgroundColor: 'hsl(var(--primary) / 0.55)',
+        borderRadius: 6,
+    }],
+}));
+
+const barOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { mode: 'index' as const, intersect: false } },
+    scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { beginAtZero: true, ticks: { font: { size: 10 } }, grid: { color: 'hsl(var(--border) / 0.6)' } },
+    },
+};
+
+const runsByModelData = computed(() => ({
+    labels: props.analytics.by_model.map(m => m.model_key),
+    datasets: [{
+        label: 'Runs',
+        data: props.analytics.by_model.map(m => m.runs),
+        backgroundColor: props.analytics.by_model.map((_, i) => palette[i % palette.length]),
+        borderRadius: 6,
+    }],
+}));
+
+const tokensByModelData = computed(() => ({
+    labels: props.analytics.by_model.map(m => m.model_key),
+    datasets: [{
+        label: 'Token',
+        data: props.analytics.by_model.map(m => m.tokens_in + m.tokens_out),
+        backgroundColor: props.analytics.by_model.map((_, i) => palette[i % palette.length]),
+        borderRadius: 6,
+    }],
+}));
+
+const spendByModelData = computed(() => ({
+    labels: props.analytics.by_model.map(m => m.model_key),
+    datasets: [{
+        label: 'Kredit',
+        data: props.analytics.by_model.map(m => m.credits),
+        backgroundColor: props.analytics.by_model.map((_, i) => palette[i % palette.length]),
+        borderWidth: 0,
+    }],
+}));
+
+const doughnutOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '60%',
+    plugins: { legend: { position: 'bottom' as const, labels: { boxWidth: 12, boxHeight: 12, font: { size: 10 } } } },
+};
+
 </script>
 
 <template>
@@ -62,6 +149,93 @@ const formatDate = (d: string) => new Date(d).toLocaleString('id-ID', { dateStyl
         <Head title="Transaksi Kredit AI" />
 
         <div class="space-y-6">
+            <!-- Statistik pemakaian -->
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                    <CardHeader class="flex flex-row items-center justify-between pb-2">
+                        <CardTitle class="text-sm font-medium">Total Tokens</CardTitle>
+                        <Hash class="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <p class="text-2xl font-bold">{{ formatNumber(analytics.total_tokens) }}</p>
+                        <p class="mt-1 text-xs text-muted-foreground">{{ formatNumber(analytics.input_tokens) }} in · {{ formatNumber(analytics.output_tokens) }} out</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader class="flex flex-row items-center justify-between pb-2">
+                        <CardTitle class="text-sm font-medium">Total Runs</CardTitle>
+                        <Zap class="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <p class="text-2xl font-bold">{{ formatNumber(analytics.total_runs) }}</p>
+                        <p class="mt-1 text-xs text-muted-foreground">Request pemakaian AI</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader class="flex flex-row items-center justify-between pb-2">
+                        <CardTitle class="text-sm font-medium">Kredit Terpakai</CardTitle>
+                        <Coins class="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <p class="text-2xl font-bold">{{ formatNumber(analytics.credits_spent) }}</p>
+                        <p class="mt-1 text-xs text-muted-foreground">Total kredit keluar (usage)</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader class="flex flex-row items-center justify-between pb-2">
+                        <CardTitle class="text-sm font-medium">Model Aktif Dipakai</CardTitle>
+                        <Cpu class="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <p class="text-2xl font-bold">{{ analytics.by_model.length }}</p>
+                        <p class="mt-1 text-xs text-muted-foreground">Model dengan riwayat usage</p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <!-- Grafik bulanan -->
+            <div class="grid gap-4 lg:grid-cols-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle class="flex items-center gap-2 text-base"><TrendingUp class="h-4 w-4 text-muted-foreground" /> Monthly Usage — Tokens</CardTitle>
+                        <CardDescription>Total token per bulan (6 bulan terakhir)</CardDescription>
+                    </CardHeader>
+                    <CardContent><div class="h-56"><Bar :data="monthlyTokensData" :options="barOptions" /></div></CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle class="flex items-center gap-2 text-base"><Zap class="h-4 w-4 text-muted-foreground" /> Monthly Usage — Runs</CardTitle>
+                        <CardDescription>Total runs per bulan (6 bulan terakhir)</CardDescription>
+                    </CardHeader>
+                    <CardContent><div class="h-56"><Bar :data="monthlyRunsData" :options="barOptions" /></div></CardContent>
+                </Card>
+            </div>
+
+            <!-- Grafik per model -->
+            <div class="grid gap-4 lg:grid-cols-3">
+                <Card>
+                    <CardHeader>
+                        <CardTitle class="flex items-center gap-2 text-base"><Zap class="h-4 w-4 text-muted-foreground" /> Requests by Model</CardTitle>
+                        <CardDescription>Jumlah runs per model</CardDescription>
+                    </CardHeader>
+                    <CardContent><div class="h-56"><Bar :data="runsByModelData" :options="barOptions" /></div></CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle class="flex items-center gap-2 text-base"><Hash class="h-4 w-4 text-muted-foreground" /> Tokens by Model</CardTitle>
+                        <CardDescription>All tokens per model</CardDescription>
+                    </CardHeader>
+                    <CardContent><div class="h-56"><Bar :data="tokensByModelData" :options="barOptions" /></div></CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle class="flex items-center gap-2 text-base"><Coins class="h-4 w-4 text-muted-foreground" /> Spend by Model</CardTitle>
+                        <CardDescription>Kredit terpakai per model</CardDescription>
+                    </CardHeader>
+                    <CardContent><div class="h-56"><Doughnut :data="spendByModelData" :options="doughnutOptions" /></div></CardContent>
+                </Card>
+            </div>
+
             <Card>
                 <CardHeader>
                     <CardTitle>Riwayat Transaksi Kredit AI</CardTitle>
