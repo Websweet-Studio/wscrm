@@ -9,6 +9,7 @@ use App\Services\AiGateway;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Endpoint OpenAI-compatible utk customer (Hermes agent, code editor, dsb).
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Crypt;
  */
 class ChatCompletionsController extends Controller
 {
-    public function chat(Request $request, AiGateway $gateway): JsonResponse
+    public function chat(Request $request, AiGateway $gateway): JsonResponse|StreamedResponse
     {
         $credit = $this->authenticate($request);
 
@@ -27,16 +28,10 @@ class ChatCompletionsController extends Controller
         $customerId = $credit->customer_id;
 
         $payload = $request->all();
-        $messages = $payload['messages'] ?? null;
+        $messages = $this->normalizeMessages($payload['messages'] ?? null);
 
-        if (! is_array($messages) || count($messages) === 0) {
-            return $this->error('messages tidak boleh kosong', 'invalid_request_error', 400);
-        }
-
-        foreach ($messages as $m) {
-            if (! isset($m['role'], $m['content']) || ! in_array($m['role'], ['system', 'user', 'assistant'], true) || ! is_string($m['content'])) {
-                return $this->error('Format messages tidak valid. Tiap pesan butuh role (system/user/assistant) dan content.', 'invalid_request_error', 400);
-            }
+        if ($messages === null) {
+            return $this->error('messages tidak boleh kosong. Kirim setidaknya satu pesan berisi role dan content.', 'invalid_request_error', 400);
         }
 
         $modelKey = $payload['model'] ?? null;
@@ -65,7 +60,87 @@ class ChatCompletionsController extends Controller
             return $this->error($message, 'server_error', 502);
         }
 
+        $completion = $this->buildCompletion($result);
+
+        // Trae / code editor mengirim stream=true dan mengharapkan SSE.
+        if (! empty($payload['stream'])) {
+            return $this->streamCompletion($completion);
+        }
+
+        return response()->json($completion);
+    }
+
+    /**
+     * Daftar model aktif, format OpenAI /v1/models — dipakai Trae/editor utk discover model.
+     */
+    public function models(): JsonResponse
+    {
+        $models = AiModel::where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get(['model_key', 'display_name']);
+
         return response()->json([
+            'object' => 'list',
+            'data' => $models->map(fn ($m) => [
+                'id' => $m->model_key,
+                'object' => 'model',
+                'created' => 0,
+                'owned_by' => 'wscrm',
+            ])->values(),
+        ]);
+    }
+
+    /**
+     * Normalisasi messages: terima content string ATAU array bagian (format Claude Code/Trae).
+     * Kembalikan null bila format tak dikenal atau kosong.
+     */
+    private function normalizeMessages(mixed $raw): ?array
+    {
+        if (! is_array($raw) || count($raw) === 0) {
+            return null;
+        }
+
+        $out = [];
+
+        foreach ($raw as $m) {
+            if (! is_array($m) || ! isset($m['role'], $m['content']) || ! in_array($m['role'], ['system', 'user', 'assistant'], true)) {
+                return null;
+            }
+
+            $content = $m['content'];
+
+            if (is_string($content)) {
+                $out[] = ['role' => $m['role'], 'content' => $content];
+                continue;
+            }
+
+            // Array bagian teks: [{"type":"text","text":"..."}] — gabungkan jadi string.
+            if (is_array($content)) {
+                $text = '';
+                foreach ($content as $part) {
+                    if (is_string($part)) {
+                        $text .= $part;
+                    } elseif (is_array($part) && isset($part['text']) && is_string($part['text'])) {
+                        $text .= $part['text'];
+                    }
+                }
+                if ($text === '') {
+                    return null;
+                }
+                $out[] = ['role' => $m['role'], 'content' => $text];
+                continue;
+            }
+
+            return null;
+        }
+
+        return $out;
+    }
+
+    private function buildCompletion(array $result): array
+    {
+        return [
             'id' => 'chatcmpl-'.bin2hex(random_bytes(8)),
             'object' => 'chat.completion',
             'created' => now()->timestamp,
@@ -83,6 +158,28 @@ class ChatCompletionsController extends Controller
             ],
             'credits_used' => $result['credits_used'],
             'balance_after' => $result['balance_after'],
+        ];
+    }
+
+    /**
+     * Emulasikan SSE: provider kita bersifat blocking, jadi kirim satu chunk lengkap
+     * lalu [DONE]. Cukup utk klien OpenAI-compatible (Trae/Claude Code, dsb).
+     * ponytail: ganti jadi streaming nyata bila provider utama sudah mendukung SSE.
+     */
+    private function streamCompletion(array $completion): StreamedResponse
+    {
+        $chunk = $completion;
+        $chunk['object'] = 'chat.completion.chunk';
+        unset($chunk['choices'][0]['message']);
+        $chunk['choices'][0]['delta'] = ['role' => 'assistant', 'content' => $completion['choices'][0]['message']['content']];
+
+        return response()->stream(function () use ($chunk) {
+            echo 'data: '.json_encode($chunk)."\n\n";
+            echo "data: [DONE]\n\n";
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache',
+            'X-Accel-Buffering' => 'no',
         ]);
     }
 

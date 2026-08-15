@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowDownCircle, ArrowRight, ArrowUpCircle, Check, Copy, Cpu, History, KeyRound, RefreshCw, Server, ShoppingCart } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 interface Model {
     id: number;
@@ -54,6 +54,27 @@ const showKey = ref(false);
 const copied = ref(false);
 const showRegenModal = ref(false);
 const activeTab = ref<'endpoint' | 'pricing' | 'history'>('pricing');
+
+const TAB_STORAGE_KEY = 'customer-ai-active-tab';
+
+onMounted(() => {
+    try {
+        const saved = sessionStorage.getItem(TAB_STORAGE_KEY);
+        if (saved === 'endpoint' || saved === 'pricing' || saved === 'history') {
+            activeTab.value = saved;
+        }
+    } catch {
+        // abaikan bila storage tak tersedia
+    }
+});
+
+watch(activeTab, (value) => {
+    try {
+        sessionStorage.setItem(TAB_STORAGE_KEY, value);
+    } catch {
+        // abaikan
+    }
+});
 
 const totalTransactions = computed(() => props.transactions.length);
 const usageTransactions = computed(() => props.transactions.filter(t => t.type === 'out').length);
@@ -259,6 +280,8 @@ const creditPercent = computed(() => {
                             <p class="mb-1 text-xs font-medium text-muted-foreground">Contoh request</p>
                             <pre class="overflow-x-auto rounded-md bg-muted px-3 py-2 text-xs font-mono">POST {{ endpoint }}/chat/completions
 Authorization: Bearer &lt;API_KEY&gt;
+Content-Type: application/json
+
 {"model": "grok-4.5", "messages": [{"role": "user", "content": "halo"}]}</pre>
                         </div>
                     </div>
