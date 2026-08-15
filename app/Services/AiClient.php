@@ -241,7 +241,7 @@ class AiClient
 
         // Provider mengabaikan stream → balas JSON penuh sekali (fallback aman).
         if (str_contains(strtolower((string) $response->header('Content-Type')), 'application/json')) {
-            $data = json_decode($response->body(), true);
+            $data = $this->decodeResponse($response);
             if (is_array($data)) {
                 $onChunk($data);
                 $choice = $data['choices'][0] ?? [];
@@ -402,7 +402,17 @@ class AiClient
             }
         }
 
-        // 3. Ambil objek JSON pertama yang mengandung "choices" dari tiap baris data:.
+        // 3. Potong di kurung tutup terakhir: beberapa gateway (mis. ai.wsd.my.id)
+        //    menempelkan "data: [DONE]" persis setelah `}` tanpa baris baru.
+        $pos = strrpos($body, '}');
+        if ($pos !== false) {
+            $decoded = json_decode(substr($body, 0, $pos + 1), true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        // 4. Ambil objek JSON pertama yang mengandung "choices" dari tiap baris data:.
         foreach ($this->extractSseDataLines($body) as $data) {
             $decoded = json_decode($data, true);
             if (is_array($decoded) && array_key_exists('choices', $decoded)) {
