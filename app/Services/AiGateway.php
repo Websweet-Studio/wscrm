@@ -64,7 +64,8 @@ class AiGateway
         }
 
         if ($result === null || $usedModel === null) {
-            throw new \RuntimeException('Semua provider AI gagal dihubungi. Coba lagi nanti. ('.implode(', ', $attempts).')');
+            $detail = $lastError ? ' ('.implode(', ', $attempts).'): '.$lastError->getMessage() : ' ('.implode(', ', $attempts).')';
+            throw new \RuntimeException('Semua provider AI gagal dihubungi. Coba lagi nanti.'.$detail);
         }
 
         $usage = $result['usage'] ?? [];

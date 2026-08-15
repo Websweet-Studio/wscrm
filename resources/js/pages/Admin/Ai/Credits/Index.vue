@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { Coins, Minus, Plus, Search, Settings2, X } from 'lucide-vue-next';
+import { Coins, Minus, Plus, Search, Settings2, X, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface CustomerRow {
@@ -21,7 +21,7 @@ interface CustomerRow {
 
 interface Props {
     customers: { data: CustomerRow[]; current_page: number; last_page: number; per_page: number; total: number; links: any[] };
-    filters?: { search?: string };
+    filters?: { search?: string; sort_by?: string; sort_dir?: string };
 }
 
 const props = defineProps<Props>();
@@ -29,8 +29,25 @@ const props = defineProps<Props>();
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Kredit AI Customer', href: '/admin/ai/credits' }];
 
 const search = ref(props.filters?.search || '');
+const sortBy = ref(props.filters?.sort_by || 'name');
+const sortDir = ref(props.filters?.sort_dir === 'desc' ? 'desc' : 'asc');
 const applySearch = () => {
-    router.get('/admin/ai/credits', { search: search.value || undefined }, { preserveState: true, replace: true });
+    router.get('/admin/ai/credits', { search: search.value || undefined, sort_by: sortBy.value, sort_dir: sortDir.value }, { preserveState: true, replace: true });
+};
+
+const toggleSort = (col: string) => {
+    if (sortBy.value === col) {
+        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortBy.value = col;
+        sortDir.value = 'asc';
+    }
+    router.get('/admin/ai/credits', { search: search.value || undefined, sort_by: sortBy.value, sort_dir: sortDir.value }, { preserveState: true, replace: true });
+};
+
+const sortIcon = (col: string) => {
+    if (sortBy.value !== col) return 'none';
+    return sortDir.value === 'asc' ? 'asc' : 'desc';
 };
 
 const showModal = ref(false);
@@ -84,9 +101,30 @@ const submit = () => {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Customer</TableHead>
-                                <TableHead>Username</TableHead>
-                                <TableHead>Saldo Kredit</TableHead>
+                                <TableHead>
+                                    <button type="button" class="inline-flex cursor-pointer items-center gap-1 hover:text-foreground" @click="toggleSort('name')">
+                                        Customer
+                                        <ChevronUp v-if="sortIcon('name') === 'asc'" class="h-3.5 w-3.5 text-primary" />
+                                        <ChevronDown v-else-if="sortIcon('name') === 'desc'" class="h-3.5 w-3.5 text-primary" />
+                                        <ArrowUpDown v-else class="h-3.5 w-3.5 opacity-40" />
+                                    </button>
+                                </TableHead>
+                                <TableHead>
+                                    <button type="button" class="inline-flex cursor-pointer items-center gap-1 hover:text-foreground" @click="toggleSort('username')">
+                                        Username
+                                        <ChevronUp v-if="sortIcon('username') === 'asc'" class="h-3.5 w-3.5 text-primary" />
+                                        <ChevronDown v-else-if="sortIcon('username') === 'desc'" class="h-3.5 w-3.5 text-primary" />
+                                        <ArrowUpDown v-else class="h-3.5 w-3.5 opacity-40" />
+                                    </button>
+                                </TableHead>
+                                <TableHead>
+                                    <button type="button" class="inline-flex cursor-pointer items-center gap-1 hover:text-foreground" @click="toggleSort('ai_balance')">
+                                        Saldo Kredit
+                                        <ChevronUp v-if="sortIcon('ai_balance') === 'asc'" class="h-3.5 w-3.5 text-primary" />
+                                        <ChevronDown v-else-if="sortIcon('ai_balance') === 'desc'" class="h-3.5 w-3.5 text-primary" />
+                                        <ArrowUpDown v-else class="h-3.5 w-3.5 opacity-40" />
+                                    </button>
+                                </TableHead>
                                 <TableHead class="text-right">Aksi</TableHead>
                             </TableRow>
                         </TableHeader>

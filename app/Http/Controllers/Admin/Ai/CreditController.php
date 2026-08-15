@@ -17,6 +17,12 @@ class CreditController extends Controller
 {
     public function index(): Response
     {
+        $sortBy = in_array(request('sort_by'), ['name', 'email', 'username', 'ai_balance'], true)
+            ? request('sort_by')
+            : 'name';
+        $sortDir = strtolower((string) request('sort_dir')) === 'desc' ? 'desc' : 'asc';
+        $sortColumn = $sortBy === 'ai_balance' ? 'ai_balance' : "customers.{$sortBy}";
+
         $customers = Customer::query()
             ->when(request('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
@@ -25,13 +31,14 @@ class CreditController extends Controller
             })
             ->leftJoin('ai_credits', 'ai_credits.customer_id', '=', 'customers.id')
             ->select('customers.*', 'ai_credits.balance as ai_balance')
-            ->orderBy('name')
+            ->orderBy($sortColumn, $sortDir)
+            ->orderBy('customers.id')
             ->paginate(20)
             ->withQueryString();
 
         return Inertia::render('Admin/Ai/Credits/Index', [
             'customers' => $customers,
-            'filters' => request()->only(['search']),
+            'filters' => request()->only(['search', 'sort_by', 'sort_dir']),
         ]);
     }
 

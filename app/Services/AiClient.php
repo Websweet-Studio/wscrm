@@ -181,10 +181,10 @@ class AiClient
                     // Status definitif gagal (mis. 401/404) → langsung lemparkan, jangan retry.
                     if (! in_array($response->status(), self::RETRYABLE_STATUSES, true)) {
                         Log::error('AI API error', ['status' => $response->status(), 'body' => $response->body()]);
-                        throw new \RuntimeException('AI API error: ' . $response->status());
+                        throw $this->statusError($response);
                     }
 
-                    $lastError = new \RuntimeException('AI API error: ' . $response->status());
+                    $lastError = $this->statusError($response);
                     Log::warning("AiClient attempt {$attempt} gagal (status {$response->status()}).");
                 }
             } catch (\Illuminate\Http\Client\ConnectionException $e) {
@@ -236,7 +236,7 @@ class AiClient
 
         if (! $response->successful()) {
             Log::error('AI API stream error', ['status' => $response->status(), 'body' => $response->body()]);
-            throw new \RuntimeException('AI API error: ' . $response->status());
+            throw $this->statusError($response);
         }
 
         // Provider mengabaikan stream → balas JSON penuh sekali (fallback aman).
@@ -347,6 +347,19 @@ class AiClient
         }
 
         return $acc;
+    }
+
+    /**
+     * Error berisi status + cuplikan body gateway, agar penyebab 502/4xx terlihat
+     * (mis. "IP not allowed", pesan Cloudflare, dsb) — bukan hanya angka status.
+     */
+    private function statusError($response): \RuntimeException
+    {
+        $body = trim((string) $response->body());
+        $body = preg_replace('/\s+/', ' ', $body);
+        $snippet = $body !== '' ? ' — ' . mb_substr($body, 0, 200) : '';
+
+        return new \RuntimeException('AI API error: ' . $response->status() . $snippet);
     }
 
     /**

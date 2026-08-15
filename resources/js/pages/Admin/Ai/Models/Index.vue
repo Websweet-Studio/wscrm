@@ -115,14 +115,20 @@ const confirmDelete = (m: AiModel) => {
 };
 
 // Harga per 1 juta token: rate kredit/1M × harga 1 kredit.
+// Jika tak ada paket kredit aktif (credit_price null), tampilkan rate kredit langsung agar kolom tetap berisi.
 const formatRupiah = (n: number): string =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 2 }).format(n);
-const priceInput = (m: AiModel): string => (props.credit_price === null ? '—' : formatRupiah(Number(m.input_rate) * props.credit_price));
-const priceOutput = (m: AiModel): string => (props.credit_price === null ? '—' : formatRupiah(Number(m.output_rate) * props.credit_price));
+const formatNum = (n: number): string => new Intl.NumberFormat('id-ID').format(n);
+const priceInput = (m: AiModel): string =>
+    props.credit_price === null ? `${formatNum(Number(m.input_rate))} kredit / 1M` : formatRupiah(Number(m.input_rate) * props.credit_price);
+const priceOutput = (m: AiModel): string =>
+    props.credit_price === null ? `${formatNum(Number(m.output_rate))} kredit / 1M` : formatRupiah(Number(m.output_rate) * props.credit_price);
 
 // Preview harga /1M token di form edit, konsisten dgn rumus tabel.
-const previewInput = (): string => (props.credit_price === null ? '—' : formatRupiah(Number(form.input_rate) * props.credit_price));
-const previewOutput = (): string => (props.credit_price === null ? '—' : formatRupiah(Number(form.output_rate) * props.credit_price));
+const previewInput = (): string =>
+    props.credit_price === null ? `${formatNum(Number(form.input_rate))} kredit / 1M` : formatRupiah(Number(form.input_rate) * props.credit_price);
+const previewOutput = (): string =>
+    props.credit_price === null ? `${formatNum(Number(form.output_rate))} kredit / 1M` : formatRupiah(Number(form.output_rate) * props.credit_price);
 </script>
 
 <template>
@@ -135,7 +141,7 @@ const previewOutput = (): string => (props.credit_price === null ? '—' : forma
                     <div>
                         <CardTitle>Model AI</CardTitle>
                         <CardDescription v-if="credit_price !== null">Harga per 1 juta token input/output, referensi 1 kredit ≈ {{ formatRupiah(credit_price) }}</CardDescription>
-                        <CardDescription v-else>Tambahkan paket kredit aktif agar harga rupiah tampil.</CardDescription>
+                        <CardDescription v-else>Belum ada paket kredit aktif — kolom harga menampilkan rate kredit per 1 juta token.</CardDescription>
                     </div>
                     <Button class="cursor-pointer" :disabled="providers.length === 0" @click="openCreate">
                         <Plus class="mr-2 h-4 w-4" /> Tambah Model

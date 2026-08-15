@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\Ai\CreditController::adjust
- * @see app/Http/Controllers/Admin/Ai/CreditController.php:41
+ * @see app/Http/Controllers/Admin/Ai/CreditController.php:48
  * @route '/admin/ai/credits/adjust'
  */
 export const adjust = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -94,7 +94,7 @@ adjust.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\CreditController::adjust
- * @see app/Http/Controllers/Admin/Ai/CreditController.php:41
+ * @see app/Http/Controllers/Admin/Ai/CreditController.php:48
  * @route '/admin/ai/credits/adjust'
  */
 adjust.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ adjust.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\CreditController::adjust
- * @see app/Http/Controllers/Admin/Ai/CreditController.php:41
+ * @see app/Http/Controllers/Admin/Ai/CreditController.php:48
  * @route '/admin/ai/credits/adjust'
  */
 adjust.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -113,7 +113,7 @@ adjust.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\Ai\CreditController::adjust
- * @see app/Http/Controllers/Admin/Ai/CreditController.php:41
+ * @see app/Http/Controllers/Admin/Ai/CreditController.php:48
  * @route '/admin/ai/credits/adjust'
  */
     const adjustForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -123,7 +123,7 @@ adjust.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\Ai\CreditController::adjust
- * @see app/Http/Controllers/Admin/Ai/CreditController.php:41
+ * @see app/Http/Controllers/Admin/Ai/CreditController.php:48
  * @route '/admin/ai/credits/adjust'
  */
         adjustForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

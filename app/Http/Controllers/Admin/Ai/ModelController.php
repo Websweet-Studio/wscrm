@@ -39,7 +39,7 @@ class ModelController extends Controller
             'models' => $models,
             'providers' => AiProvider::orderBy('name')->get(['id', 'name']),
             'filters' => request()->only(['search', 'provider_id']),
-            'credit_price' => $creditPrice ? round($creditPrice, 2) : null,
+            'credit_price' => $creditPrice !== null ? round($creditPrice, 2) : null,
         ]);
     }
 
