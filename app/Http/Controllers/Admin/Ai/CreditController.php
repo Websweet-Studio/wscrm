@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Admin\Ai;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AiCreditGrantedMail;
 use App\Models\AiCredit;
 use App\Models\AiTransaction;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -83,6 +85,25 @@ class CreditController extends Controller
 
         if ($delta === 0) {
             return redirect()->back()->with('info', 'Tidak ada perubahan saldo.');
+        }
+
+        // Kirim email notifikasi hanya saat admin MENAMBAH kredit (gratis).
+        if ($delta > 0) {
+            $customer = Customer::find($validated['customer_id']);
+            $balanceAfter = (int) AiCredit::where('customer_id', $validated['customer_id'])->value('balance');
+
+            if ($customer?->email) {
+                try {
+                    Mail::to($customer->email)->send(new AiCreditGrantedMail(
+                        $customer,
+                        $delta,
+                        $balanceAfter,
+                        $validated['description'] ?: null,
+                    ));
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
         }
 
         return redirect()->back()->with('success', 'Saldo kredit berhasil disesuaikan.');
