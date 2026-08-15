@@ -72,7 +72,7 @@ class AiController extends Controller
             'api_key' => $apiKey,
             'endpoint' => url('/api/v1'),
             'models' => $models,
-            'credit_price' => $creditPrice ? round($creditPrice, 2) : null,
+            'credit_price' => $creditPrice !== null ? round($creditPrice, 2) : null,
             'transactions' => $transactions,
         ]);
     }

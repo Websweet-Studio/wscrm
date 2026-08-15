@@ -129,8 +129,12 @@ const confirmRegen = async () => {
 const formatRupiah = (n: number): string =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 2 }).format(n);
 
-const priceInput = (m: Model): string => (props.credit_price === null ? '—' : formatRupiah(Number(m.input_rate) * props.credit_price));
-const priceOutput = (m: Model): string => (props.credit_price === null ? '—' : formatRupiah(Number(m.output_rate) * props.credit_price));
+// Tanpa paket kredit aktif (credit_price null), tampilkan rate kredit/1M agar kolom tetap berisi.
+const formatNum = (n: number): string => new Intl.NumberFormat('id-ID').format(n);
+const priceInput = (m: Model): string =>
+    props.credit_price === null ? `${formatNum(Number(m.input_rate))} kredit / 1M` : formatRupiah(Number(m.input_rate) * props.credit_price);
+const priceOutput = (m: Model): string =>
+    props.credit_price === null ? `${formatNum(Number(m.output_rate))} kredit / 1M` : formatRupiah(Number(m.output_rate) * props.credit_price);
 
 const maskKey = (key: string): string => `${key.slice(0, 8)}••••••••${key.slice(-4)}`;
 
@@ -349,7 +353,7 @@ const creditPercent = computed(() => {
                         <p v-if="credit_price !== null" class="mb-4 text-sm text-muted-foreground">
                             Harga per 1 juta token input/output, referensi 1 kredit &approx; {{ formatRupiah(credit_price) }}
                         </p>
-                        <p v-else class="mb-4 text-sm text-muted-foreground">Tambahkan paket kredit aktif di panel admin agar harga rupiah tampil.</p>
+                        <p v-else class="mb-4 text-sm text-muted-foreground">Belum ada paket kredit aktif — harga menampilkan rate kredit per 1 juta token.</p>
                         <div class="overflow-hidden rounded-lg border border-border/60">
                             <div class="overflow-x-auto">
                                 <Table>
