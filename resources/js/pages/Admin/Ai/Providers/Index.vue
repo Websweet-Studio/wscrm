@@ -20,6 +20,7 @@ interface Provider {
     sort_order: number;
     api_key_set: boolean;
     models_count: number;
+    health?: { broken: boolean; failures: number; last_failed_at: string | null };
 }
 
 interface Props {
@@ -139,6 +140,7 @@ const confirmDelete = (p: Provider) => {
                                 <TableHead>API Key</TableHead>
                                 <TableHead>Model</TableHead>
                                 <TableHead>Status</TableHead>
+                                <TableHead>Health</TableHead>
                                 <TableHead class="text-right">Aksi</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -155,6 +157,17 @@ const confirmDelete = (p: Provider) => {
                                 <TableCell>
                                     <Badge :variant="p.is_active ? 'default' : 'secondary'">{{ p.is_active ? 'Aktif' : 'Nonaktif' }}</Badge>
                                 </TableCell>
+                                <TableCell>
+                                    <span v-if="p.health?.broken" class="inline-flex items-center gap-1 text-xs font-medium text-red-600">
+                                        <span class="h-2 w-2 rounded-full bg-red-500"></span> Down ({{ p.health.failures }}x)
+                                    </span>
+                                    <span v-else-if="p.health?.failures" class="inline-flex items-center gap-1 text-xs font-medium text-amber-600">
+                                        <span class="h-2 w-2 rounded-full bg-amber-500"></span> Pernah gagal {{ p.health.failures }}x
+                                    </span>
+                                    <span v-else class="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                        <span class="h-2 w-2 rounded-full bg-green-500"></span> Sehat
+                                    </span>
+                                </TableCell>
                                 <TableCell class="text-right">
                                     <div class="flex justify-end gap-1">
                                         <Button size="sm" variant="outline" class="cursor-pointer" @click="openEdit(p)"><Edit class="h-3 w-3" /></Button>
@@ -163,7 +176,7 @@ const confirmDelete = (p: Provider) => {
                                 </TableCell>
                             </TableRow>
                             <TableRow v-if="providers.data.length === 0">
-                                <TableCell colspan="6" class="py-10 text-center text-muted-foreground">Belum ada provider. Tambahkan provider AI pertama.</TableCell>
+                                <TableCell colspan="7" class="py-10 text-center text-muted-foreground">Belum ada provider. Tambahkan provider AI pertama.</TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>

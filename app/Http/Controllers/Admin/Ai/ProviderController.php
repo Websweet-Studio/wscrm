@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Ai;
 
 use App\Http\Controllers\Controller;
 use App\Models\AiProvider;
+use App\Services\AiGateway;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -26,6 +27,7 @@ class ProviderController extends Controller
         // Jangan bocorkan api_key (terenkripsi) ke frontend — cukup status "sudah diisi".
         $providers->getCollection()->transform(fn ($provider) => $provider
             ->setAttribute('api_key_set', ! empty($provider->api_key))
+            ->setAttribute('health', AiGateway::health($provider->id))
             ->makeHidden('api_key'));
 
         return Inertia::render('Admin/Ai/Providers/Index', [

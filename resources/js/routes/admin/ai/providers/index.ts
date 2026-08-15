@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::index
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:14
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:15
  * @route '/admin/ai/providers'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::index
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:14
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:15
  * @route '/admin/ai/providers'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::index
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:14
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:15
  * @route '/admin/ai/providers'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::index
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:14
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:15
  * @route '/admin/ai/providers'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::index
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:14
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:15
  * @route '/admin/ai/providers'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::index
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:14
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:15
  * @route '/admin/ai/providers'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::index
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:14
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:15
  * @route '/admin/ai/providers'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::store
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:37
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:39
  * @route '/admin/ai/providers'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -94,7 +94,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::store
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:37
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:39
  * @route '/admin/ai/providers'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::store
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:37
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:39
  * @route '/admin/ai/providers'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -113,7 +113,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::store
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:37
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:39
  * @route '/admin/ai/providers'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -123,7 +123,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::store
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:37
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:39
  * @route '/admin/ai/providers'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -134,7 +134,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::update
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:58
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:60
  * @route '/admin/ai/providers/{provider}'
  */
 export const update = (args: { provider: number | { id: number } } | [provider: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -149,7 +149,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::update
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:58
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:60
  * @route '/admin/ai/providers/{provider}'
  */
 update.url = (args: { provider: number | { id: number } } | [provider: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -182,7 +182,7 @@ update.url = (args: { provider: number | { id: number } } | [provider: number | 
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::update
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:58
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:60
  * @route '/admin/ai/providers/{provider}'
  */
 update.put = (args: { provider: number | { id: number } } | [provider: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -191,7 +191,7 @@ update.put = (args: { provider: number | { id: number } } | [provider: number | 
 })
 /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::update
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:58
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:60
  * @route '/admin/ai/providers/{provider}'
  */
 update.patch = (args: { provider: number | { id: number } } | [provider: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -201,7 +201,7 @@ update.patch = (args: { provider: number | { id: number } } | [provider: number 
 
     /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::update
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:58
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:60
  * @route '/admin/ai/providers/{provider}'
  */
     const updateForm = (args: { provider: number | { id: number } } | [provider: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -216,7 +216,7 @@ update.patch = (args: { provider: number | { id: number } } | [provider: number 
 
             /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::update
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:58
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:60
  * @route '/admin/ai/providers/{provider}'
  */
         updateForm.put = (args: { provider: number | { id: number } } | [provider: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -230,7 +230,7 @@ update.patch = (args: { provider: number | { id: number } } | [provider: number 
         })
             /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::update
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:58
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:60
  * @route '/admin/ai/providers/{provider}'
  */
         updateForm.patch = (args: { provider: number | { id: number } } | [provider: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -246,7 +246,7 @@ update.patch = (args: { provider: number | { id: number } } | [provider: number 
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::destroy
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:83
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:85
  * @route '/admin/ai/providers/{provider}'
  */
 export const destroy = (args: { provider: number | { id: number } } | [provider: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -261,7 +261,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::destroy
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:83
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:85
  * @route '/admin/ai/providers/{provider}'
  */
 destroy.url = (args: { provider: number | { id: number } } | [provider: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -294,7 +294,7 @@ destroy.url = (args: { provider: number | { id: number } } | [provider: number |
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::destroy
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:83
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:85
  * @route '/admin/ai/providers/{provider}'
  */
 destroy.delete = (args: { provider: number | { id: number } } | [provider: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -304,7 +304,7 @@ destroy.delete = (args: { provider: number | { id: number } } | [provider: numbe
 
     /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::destroy
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:83
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:85
  * @route '/admin/ai/providers/{provider}'
  */
     const destroyForm = (args: { provider: number | { id: number } } | [provider: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -319,7 +319,7 @@ destroy.delete = (args: { provider: number | { id: number } } | [provider: numbe
 
             /**
 * @see \App\Http\Controllers\Admin\Ai\ProviderController::destroy
- * @see app/Http/Controllers/Admin/Ai/ProviderController.php:83
+ * @see app/Http/Controllers/Admin/Ai/ProviderController.php:85
  * @route '/admin/ai/providers/{provider}'
  */
         destroyForm.delete = (args: { provider: number | { id: number } } | [provider: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

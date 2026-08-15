@@ -47,8 +47,11 @@ class ChatCompletionsController extends Controller
         $temperature = min(2.0, max(0.0, $temperature));
         $maxTokens = min(4096, max(1, $maxTokens));
 
+        // Teruskan parameter OpenAI tambahan agar function calling (Trae/Claude Code) jalan.
+        $options = $this->extractOptions($payload);
+
         try {
-            $result = $gateway->chat($customerId, $modelKey, $messages, $temperature, $maxTokens);
+            $result = $gateway->chat($customerId, $modelKey, $messages, $temperature, $maxTokens, $options);
         } catch (\RuntimeException $e) {
             $message = $e->getMessage();
 
@@ -82,7 +85,7 @@ class ChatCompletionsController extends Controller
 
         return response()->json([
             'object' => 'list',
-            'data' => $models->map(fn ($m) => [
+            'data' => $models->map(fn($m) => [
                 'id' => $m->model_key,
                 'object' => 'model',
                 'created' => 0,
@@ -92,7 +95,8 @@ class ChatCompletionsController extends Controller
     }
 
     /**
-     * Normalisasi messages: terima content string ATAU array bagian (format Claude Code/Trae).
+     * Normalisasi messages: terima content string ATAU array bagian (format Claude Code/Trae),
+     * role `tool` + `tool_calls`/`tool_call_id` (function calling).
      * Kembalikan null bila format tak dikenal atau kosong.
      */
     private function normalizeMessages(mixed $raw): ?array
@@ -104,19 +108,37 @@ class ChatCompletionsController extends Controller
         $out = [];
 
         foreach ($raw as $m) {
-            if (! is_array($m) || ! isset($m['role'], $m['content']) || ! in_array($m['role'], ['system', 'user', 'assistant'], true)) {
+            if (! is_array($m) || ! isset($m['role']) || ! in_array($m['role'], ['system', 'user', 'assistant', 'tool'], true)) {
                 return null;
             }
 
-            $content = $m['content'];
+            $role = $m['role'];
 
-            if (is_string($content)) {
-                $out[] = ['role' => $m['role'], 'content' => $content];
+            // Role `tool` wajib punya tool_call_id (hasil eksekusi tool dari Trae/Claude Code).
+            if ($role === 'tool') {
+                if (! isset($m['tool_call_id']) || ! is_string($m['tool_call_id'])) {
+                    return null;
+                }
+
+                $out[] = [
+                    'role' => 'tool',
+                    'tool_call_id' => $m['tool_call_id'],
+                    'content' => is_string($m['content'] ?? '') ? $m['content'] : json_encode($m['content'] ?? ''),
+                ];
                 continue;
             }
 
-            // Array bagian teks: [{"type":"text","text":"..."}] — gabungkan jadi string.
-            if (is_array($content)) {
+            if (! isset($m['content'])) {
+                $m['content'] = null;
+            }
+
+            $content = $m['content'];
+            $normalizedContent = '';
+
+            if (is_string($content)) {
+                $normalizedContent = $content;
+            } elseif (is_array($content)) {
+                // Array bagian teks: [{"type":"text","text":"..."}] — gabungkan jadi string.
                 $text = '';
                 foreach ($content as $part) {
                     if (is_string($part)) {
@@ -125,31 +147,101 @@ class ChatCompletionsController extends Controller
                         $text .= $part['text'];
                     }
                 }
-                if ($text === '') {
-                    return null;
-                }
-                $out[] = ['role' => $m['role'], 'content' => $text];
-                continue;
+                $normalizedContent = $text;
+            } elseif ($content === null) {
+                // Assistant yang memanggil tool sering mengirim content null/'' —
+                // jangan ditolak, cukup kosongkan.
+                $normalizedContent = '';
+            } else {
+                return null;
             }
 
-            return null;
+            $normalized = ['role' => $role, 'content' => $normalizedContent];
+
+            // Pertahankan tool_calls pada pesan assistant (penting utk function calling).
+            if ($role === 'assistant' && isset($m['tool_calls']) && is_array($m['tool_calls'])) {
+                $normalized['tool_calls'] = $this->normalizeToolCalls($m['tool_calls']);
+            }
+
+            $out[] = $normalized;
         }
 
         return $out;
     }
 
+    /**
+     * Normalisasi array tool_calls (pastikan id & function.arguments valid string).
+     */
+    private function normalizeToolCalls(array $toolCalls): array
+    {
+        $out = [];
+
+        foreach ($toolCalls as $tc) {
+            if (! is_array($tc) || ! isset($tc['id'])) {
+                continue;
+            }
+
+            $function = $tc['function'] ?? [];
+            $arguments = $function['arguments'] ?? '';
+
+            if (is_array($arguments)) {
+                $arguments = json_encode($arguments, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            }
+
+            $out[] = [
+                'id' => (string) $tc['id'],
+                'type' => $tc['type'] ?? 'function',
+                'function' => [
+                    'name' => (string) ($function['name'] ?? ''),
+                    'arguments' => (string) $arguments,
+                ],
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Ambil parameter OpenAI tambahan (tools, tool_choice, response_format, dll)
+     * dari payload agar gateway bersifat transparan (function calling).
+     */
+    private function extractOptions(array $payload): array
+    {
+        $options = [];
+
+        foreach (['tools', 'tool_choice', 'response_format', 'top_p', 'frequency_penalty', 'presence_penalty', 'stop', 'seed'] as $key) {
+            if (array_key_exists($key, $payload) && $payload[$key] !== null) {
+                $options[$key] = $payload[$key];
+            }
+        }
+
+        return $options;
+    }
+
     private function buildCompletion(array $result): array
     {
+        $message = ['role' => 'assistant', 'content' => $result['content'] ?? ''];
+
+        if (! empty($result['tool_calls'])) {
+            $message['tool_calls'] = $result['tool_calls'];
+        }
+
+        $finishReason = $result['finish_reason'] ?? 'stop';
+        if ($finishReason === 'tool_calls' && ! empty($result['tool_calls'])) {
+            // Beberapa gateway memakai finish_reason yang berbeda; jaga konsistensi.
+            $finishReason = 'tool_calls';
+        }
+
         return [
-            'id' => 'chatcmpl-'.bin2hex(random_bytes(8)),
+            'id' => 'chatcmpl-' . bin2hex(random_bytes(8)),
             'object' => 'chat.completion',
             'created' => now()->timestamp,
             'model' => $result['model_key'],
             'provider' => $result['provider_name'],
             'choices' => [[
                 'index' => 0,
-                'message' => ['role' => 'assistant', 'content' => $result['content']],
-                'finish_reason' => 'stop',
+                'message' => $message,
+                'finish_reason' => $finishReason,
             ]],
             'usage' => [
                 'prompt_tokens' => $result['usage']['prompt_tokens'],
@@ -170,11 +262,24 @@ class ChatCompletionsController extends Controller
     {
         $chunk = $completion;
         $chunk['object'] = 'chat.completion.chunk';
+
+        $message = $chunk['choices'][0]['message'];
         unset($chunk['choices'][0]['message']);
-        $chunk['choices'][0]['delta'] = ['role' => 'assistant', 'content' => $completion['choices'][0]['message']['content']];
+
+        $delta = ['role' => 'assistant'];
+
+        if (array_key_exists('content', $message) && $message['content'] !== '') {
+            $delta['content'] = $message['content'];
+        }
+
+        if (! empty($message['tool_calls'])) {
+            $delta['tool_calls'] = $message['tool_calls'];
+        }
+
+        $chunk['choices'][0]['delta'] = $delta;
 
         return response()->stream(function () use ($chunk) {
-            echo 'data: '.json_encode($chunk)."\n\n";
+            echo 'data: ' . json_encode($chunk) . "\n\n";
             echo "data: [DONE]\n\n";
         }, 200, [
             'Content-Type' => 'text/event-stream',

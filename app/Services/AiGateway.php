@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AiCredit;
 use App\Models\AiModel;
 use App\Models\AiTransaction;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -14,9 +15,14 @@ use Illuminate\Support\Facades\Log;
 class AiGateway
 {
     /**
-     * @return array{content: string, usage: array, credits_used: int, balance_after: int, model_key: string, provider_name: string}
+     * Durasi (detik) provider di-"break" setelah gagal, supaya request berikutnya
+     * langsung melompat ke provider sehat (circuit breaker sederhana).
      */
-    public function chat(int $customerId, ?string $modelKey, array $messages, float $temperature = 0.3, int $maxTokens = 2000): array
+    private const CIRCUIT_BREAK_SECONDS = 30;
+    /**
+     * @return array{content: string, tool_calls: ?array, usage: array, credits_used: int, balance_after: int, model_key: string, provider_name: string}
+     */
+    public function chat(int $customerId, ?string $modelKey, array $messages, float $temperature = 0.3, int $maxTokens = 2000, array $options = []): array
     {
         $credit = AiCredit::firstOrCreate(['customer_id' => $customerId]);
 
@@ -38,14 +44,21 @@ class AiGateway
         $usedModel = null;
 
         foreach ($models as $model) {
+            if ($this->isCircuitBroken($model)) {
+                $attempts[] = $model->model_key . ' (skip)';
+                continue;
+            }
+
             try {
                 $client = AiClient::forProvider($model->provider, $model->model_key);
-                $result = $client->chatWithUsage($messages, $temperature, $maxTokens);
+                $result = $client->chatWithUsage($messages, $temperature, $maxTokens, $options);
                 $usedModel = $model;
+                $this->markHealthy($model);
                 break;
             } catch (\Throwable $e) {
                 $lastError = $e;
                 $attempts[] = $model->model_key;
+                $this->markFailed($model);
                 Log::warning("AiGateway fallback: model {$model->model_key} gagal - ".$e->getMessage());
             }
         }
@@ -64,6 +77,8 @@ class AiGateway
 
         return [
             'content' => $result['content'],
+            'tool_calls' => $result['tool_calls'] ?? null,
+            'finish_reason' => $result['finish_reason'] ?? 'stop',
             'usage' => ['prompt_tokens' => $inputTokens, 'completion_tokens' => $outputTokens],
             'credits_used' => $creditsUsed,
             'balance_after' => $balanceAfter,
@@ -167,6 +182,59 @@ class AiGateway
     private function estimateTokens(int $charLength): int
     {
         return (int) max(1, ceil($charLength / 4));
+    }
+
+    /**
+     * Circuit breaker: provider yang baru saja gagal di-skip sementara agar request
+     * berikutnya tidak menunggu timeout provider yang sama berulang kali.
+     */
+    private function circuitKey(AiModel $model): string
+    {
+        return 'ai_circuit_' . $model->provider_id;
+    }
+
+    private function isCircuitBroken(AiModel $model): bool
+    {
+        return Cache::has($this->circuitKey($model));
+    }
+
+    private function markFailed(AiModel $model): void
+    {
+        try {
+            $providerId = $model->provider_id;
+            Cache::put($this->circuitKey($model), true, self::CIRCUIT_BREAK_SECONDS);
+            Cache::increment('ai_failures_' . $providerId);
+            Cache::put('ai_last_failed_' . $providerId, now()->toIso8601String(), 3600);
+        } catch (\Throwable $e) {
+            // Cache tidak tersedia bukan blocker.
+        }
+    }
+
+    private function markHealthy(AiModel $model): void
+    {
+        try {
+            Cache::forget($this->circuitKey($model));
+            Cache::forget('ai_failures_' . $model->provider_id);
+            Cache::forget('ai_last_failed_' . $model->provider_id);
+        } catch (\Throwable $e) {
+            // noop
+        }
+    }
+
+    /**
+     * Status kesehatan provider untuk ditampilkan di Admin > AI > Providers.
+     */
+    public static function health(int $providerId): array
+    {
+        try {
+            return [
+                'broken' => Cache::has('ai_circuit_' . $providerId),
+                'failures' => (int) (Cache::get('ai_failures_' . $providerId) ?? 0),
+                'last_failed_at' => Cache::get('ai_last_failed_' . $providerId),
+            ];
+        } catch (\Throwable $e) {
+            return ['broken' => false, 'failures' => 0, 'last_failed_at' => null];
+        }
     }
 
     private function inputPayload(array $messages): string

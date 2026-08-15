@@ -2,6 +2,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { cn } from '@/lib/utils';
@@ -51,15 +52,22 @@ const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMeta
 
 const apiKey = ref(props.api_key);
 const showKey = ref(false);
-const copied = ref(false);
+const copiedEndpoint = ref(false);
+const copiedKey = ref(false);
 const showRegenModal = ref(false);
 const activeTab = ref<'endpoint' | 'pricing' | 'history'>('pricing');
+
+const tabs = [
+    { key: 'endpoint', label: 'Endpoint API', icon: Server },
+    { key: 'pricing', label: 'Harga Token', icon: Cpu },
+    { key: 'history', label: 'Riwayat Usage', icon: History },
+] as const;
 
 const TAB_STORAGE_KEY = 'customer-ai-active-tab';
 
 onMounted(() => {
     try {
-        const saved = sessionStorage.getItem(TAB_STORAGE_KEY);
+        const saved = localStorage.getItem(TAB_STORAGE_KEY);
         if (saved === 'endpoint' || saved === 'pricing' || saved === 'history') {
             activeTab.value = saved;
         }
@@ -70,7 +78,7 @@ onMounted(() => {
 
 watch(activeTab, (value) => {
     try {
-        sessionStorage.setItem(TAB_STORAGE_KEY, value);
+        localStorage.setItem(TAB_STORAGE_KEY, value);
     } catch {
         // abaikan
     }
@@ -91,8 +99,19 @@ const copyText = async (text: string) => {
         document.execCommand('copy');
         document.body.removeChild(ta);
     }
-    copied.value = true;
-    setTimeout(() => (copied.value = false), 1500);
+};
+
+const copyEndpoint = async () => {
+    await copyText(props.endpoint);
+    copiedEndpoint.value = true;
+    setTimeout(() => (copiedEndpoint.value = false), 1500);
+};
+
+const copyApiKey = async () => {
+    if (!apiKey.value) return;
+    await copyText(apiKey.value);
+    copiedKey.value = true;
+    setTimeout(() => (copiedKey.value = false), 1500);
 };
 
 const openRegenModal = () => { showRegenModal.value = true; };
@@ -228,70 +247,109 @@ const creditPercent = computed(() => {
             </Card>
 
             <!-- Tabbed: Endpoint API / Harga Token / Riwayat -->
-            <Card class="rounded-lg border-border/60 shadow-sm">
-                <CardHeader>
-                    <div class="flex items-center gap-1 rounded-lg bg-muted p-1 w-fit">
-                        <button @click="activeTab = 'endpoint'" :class="['inline-flex items-center px-3 py-1.5 text-sm rounded-md transition-colors cursor-pointer', activeTab === 'endpoint' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground']">
-                            <Server class="h-4 w-4 mr-1.5" /> Endpoint API
-                        </button>
-                        <button @click="activeTab = 'pricing'" :class="['inline-flex items-center px-3 py-1.5 text-sm rounded-md transition-colors cursor-pointer', activeTab === 'pricing' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground']">
-                            <Cpu class="h-4 w-4 mr-1.5" /> Harga Token
-                        </button>
-                        <button @click="activeTab = 'history'" :class="['inline-flex items-center px-3 py-1.5 text-sm rounded-md transition-colors cursor-pointer', activeTab === 'history' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground']">
-                            <History class="h-4 w-4 mr-1.5" /> Riwayat Usage
+            <Card class="overflow-hidden rounded-xl border-border/60 shadow-sm">
+                <CardHeader class="border-b border-border/60 pb-0">
+                    <div class="flex w-full items-center gap-1 border-b border-transparent">
+                        <button
+                            v-for="tab in tabs"
+                            :key="tab.key"
+                            @click="activeTab = tab.key"
+                            class="relative inline-flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors cursor-pointer focus-visible:outline-none"
+                            :class="activeTab === tab.key ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'"
+                        >
+                            <component :is="tab.icon" class="h-4 w-4" />
+                            {{ tab.label }}
+                            <span
+                                v-if="activeTab === tab.key"
+                                class="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-amber-600 dark:bg-amber-400"
+                            />
                         </button>
                     </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent class="p-0">
                     <!-- Endpoint API -->
-                    <div v-if="activeTab === 'endpoint'" class="space-y-4">
-                        <div>
-                            <div class="mb-1 flex items-center gap-2 text-sm font-medium">
-                                <Server class="h-4 w-4 text-muted-foreground" /> Base URL
+                    <div v-if="activeTab === 'endpoint'" class="p-4 sm:p-6">
+                        <div class="grid gap-5 lg:grid-cols-2">
+                            <!-- Base URL -->
+                            <div class="space-y-2">
+                                <Label class="text-xs font-medium text-muted-foreground">Base URL</Label>
+                                <div class="group flex items-center gap-2 rounded-lg border border-border/70 bg-muted/40 px-3 py-2.5 transition-colors focus-within:border-amber-600/50">
+                                    <Server class="h-4 w-4 shrink-0 text-muted-foreground" />
+                                    <code class="min-w-0 flex-1 truncate text-sm text-foreground">{{ endpoint }}</code>
+                                    <button
+                                        class="shrink-0 inline-flex items-center gap-1 rounded-md border border-transparent px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-border hover:bg-background hover:text-foreground cursor-pointer"
+                                        title="Salin base URL"
+                                        @click="copyEndpoint"
+                                    >
+                                        <Check v-if="copiedEndpoint" class="h-3.5 w-3.5 text-green-600" />
+                                        <Copy v-else class="h-3.5 w-3.5" />
+                                        {{ copiedEndpoint ? 'Tersalin' : 'Salin' }}
+                                    </button>
+                                </div>
                             </div>
-                            <div class="flex items-center justify-between gap-2 rounded-md bg-muted px-3 py-2 text-sm font-mono">
-                                <span class="truncate">{{ endpoint }}</span>
-                                <button class="shrink-0 cursor-pointer text-muted-foreground hover:text-foreground" title="Salin" @click="copyText(endpoint)">
-                                    <Copy v-if="!copied" class="h-4 w-4" />
-                                    <Check v-else class="h-4 w-4 text-green-600" />
-                                </button>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="mb-1 flex items-center gap-2 text-sm font-medium">
-                                <KeyRound class="h-4 w-4 text-muted-foreground" /> API Key
-                            </div>
-                            <div v-if="apiKey" class="flex items-center gap-2">
-                                <code class="flex-1 truncate rounded-md bg-muted px-3 py-2 text-sm font-mono">{{ showKey ? apiKey : maskKey(apiKey) }}</code>
-                                <Button size="sm" variant="ghost" class="cursor-pointer text-xs" @click="showKey = !showKey">{{ showKey ? 'Sembunyikan' : 'Lihat' }}</Button>
-                                <Button size="sm" variant="ghost" class="cursor-pointer text-xs" title="Salin key" @click="apiKey && copyText(apiKey)">
-                                    <Copy v-if="!copied" class="h-3.5 w-3.5" />
-                                    <Check v-else class="h-3.5 w-3.5 text-green-600" />
+
+                            <!-- API Key -->
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <Label class="text-xs font-medium text-muted-foreground">API Key</Label>
+                                    <button
+                                        v-if="apiKey"
+                                        class="text-xs font-medium text-amber-600 hover:text-amber-500 dark:text-amber-400 cursor-pointer"
+                                        @click="showKey = !showKey"
+                                    >
+                                        {{ showKey ? 'Sembunyikan' : 'Lihat' }}
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-2 rounded-lg border border-border/70 bg-muted/40 px-3 py-2.5 transition-colors focus-within:border-amber-600/50">
+                                    <KeyRound class="h-4 w-4 shrink-0 text-muted-foreground" />
+                                    <code v-if="apiKey" class="min-w-0 flex-1 truncate text-sm text-foreground">{{ showKey ? apiKey : maskKey(apiKey) }}</code>
+                                    <span v-else class="flex-1 text-sm text-muted-foreground">Belum ada API key</span>
+                                    <button
+                                        v-if="apiKey"
+                                        class="shrink-0 inline-flex items-center gap-1 rounded-md border border-transparent px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-border hover:bg-background hover:text-foreground cursor-pointer"
+                                        title="Salin API key"
+                                        @click="copyApiKey"
+                                    >
+                                        <Check v-if="copiedKey" class="h-3.5 w-3.5 text-green-600" />
+                                        <Copy v-else class="h-3.5 w-3.5" />
+                                        {{ copiedKey ? 'Tersalin' : 'Salin' }}
+                                    </button>
+                                </div>
+                                <Button size="sm" variant="outline" class="cursor-pointer" @click="openRegenModal">
+                                    <RefreshCw class="mr-1.5 h-3.5 w-3.5" /> Generate / Ganti Key
                                 </Button>
                             </div>
-                            <div v-else class="flex items-center justify-between rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
-                                Belum ada API key
-                            </div>
-                            <Button size="sm" variant="outline" class="mt-2 cursor-pointer" @click="openRegenModal">
-                                <RefreshCw class="mr-1.5 h-3.5 w-3.5" /> Generate / Ganti Key
-                            </Button>
                         </div>
-                        <div>
-                            <p class="mb-1 text-xs font-medium text-muted-foreground">Contoh request</p>
-                            <pre class="overflow-x-auto rounded-md bg-muted px-3 py-2 text-xs font-mono">POST {{ endpoint }}/chat/completions
-Authorization: Bearer &lt;API_KEY&gt;
-Content-Type: application/json
 
-{"model": "grok-4.5", "messages": [{"role": "user", "content": "halo"}]}</pre>
+                        <!-- Contoh request -->
+                        <div class="mt-6 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <Label class="text-xs font-medium text-muted-foreground">Contoh request</Label>
+                                <span class="rounded bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">cURL</span>
+                            </div>
+                            <div class="overflow-hidden rounded-lg border border-border/70 bg-zinc-950 dark:bg-zinc-900">
+                                <div class="flex items-center gap-1.5 border-b border-white/10 px-3 py-2">
+                                    <span class="h-2.5 w-2.5 rounded-full bg-red-500/80" />
+                                    <span class="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
+                                    <span class="h-2.5 w-2.5 rounded-full bg-green-500/80" />
+                                </div>
+                                <pre class="overflow-x-auto p-4 text-xs leading-relaxed text-zinc-100"><code>curl {{ endpoint }}/chat/completions \
+  -H "Authorization: Bearer &lt;API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "grok-4.5",
+    "messages": [{"role": "user", "content": "halo"}]
+  }'</code></pre>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Harga Token -->
-                    <div v-if="activeTab === 'pricing'">
-                        <p v-if="credit_price !== null" class="mb-3 text-sm text-muted-foreground">
+                    <div v-if="activeTab === 'pricing'" class="p-4 sm:p-6">
+                        <p v-if="credit_price !== null" class="mb-4 text-sm text-muted-foreground">
                             Harga per 1 juta token input/output, referensi 1 kredit &approx; {{ formatRupiah(credit_price) }}
                         </p>
-                        <p v-else class="mb-3 text-sm text-muted-foreground">Tambahkan paket kredit aktif di panel admin agar harga rupiah tampil.</p>
+                        <p v-else class="mb-4 text-sm text-muted-foreground">Tambahkan paket kredit aktif di panel admin agar harga rupiah tampil.</p>
                         <div class="overflow-hidden rounded-lg border border-border/60">
                             <div class="overflow-x-auto">
                                 <Table>
@@ -323,8 +381,8 @@ Content-Type: application/json
                     </div>
 
                     <!-- Riwayat Usage -->
-                    <div v-if="activeTab === 'history'">
-                        <p class="mb-3 text-sm text-muted-foreground">20 transaksi terakhir (pembelian &amp; pemakaian)</p>
+                    <div v-if="activeTab === 'history'" class="p-4 sm:p-6">
+                        <p class="mb-4 text-sm text-muted-foreground">20 transaksi terakhir (pembelian &amp; pemakaian)</p>
                         <div class="overflow-hidden rounded-lg border border-border/60">
                             <div class="overflow-x-auto">
                                 <Table>
