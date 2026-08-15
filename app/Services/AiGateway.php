@@ -110,8 +110,9 @@ class AiGateway
 
     private function calculateCredits(AiModel $model, int $inputTokens, int $outputTokens): int
     {
-        $credits = (int) ceil($inputTokens / 1000) * (float) $model->input_rate
-            + (int) ceil($outputTokens / 1000) * (float) $model->output_rate;
+        // Rate kini per 1M token: bagi token dengan 1.000.000.
+        $credits = ($inputTokens / 1_000_000) * (float) $model->input_rate
+            + ($outputTokens / 1_000_000) * (float) $model->output_rate;
 
         $credits = max(0, (int) round($credits));
 

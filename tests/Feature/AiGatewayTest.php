@@ -54,14 +54,14 @@ it('deducts credits based on provider usage', function () {
 
     $result = app(AiGateway::class)->chat($this->customer->id, null, [['role' => 'user', 'content' => 'tes']]);
 
-    expect($result['credits_used'])->toBe(2) // ceil(1000/1000)*1 + ceil(500/1000)*1
-        ->and($result['balance_after'])->toBe(98);
+    expect($result['credits_used'])->toBe(1) // (1000+500)/1M × rate 1 → 0.0015 → min 1 kredit
+        ->and($result['balance_after'])->toBe(99);
 
     $tx = AiTransaction::where('customer_id', $this->customer->id)->first();
     expect($tx)->not->toBeNull()
         ->and($tx->type)->toBe('out')
         ->and($tx->source)->toBe('usage')
-        ->and($tx->credits)->toBe(-2)
+        ->and($tx->credits)->toBe(-1)
         ->and($tx->tokens_input)->toBe(1000)
         ->and($tx->tokens_output)->toBe(500);
 });
@@ -93,7 +93,7 @@ it('falls back to the next active model when the first provider fails', function
 
     expect($result['model_key'])->toBe('good-model')
         ->and($result['provider_name'])->toBe('Good')
-        ->and($result['credits_used'])->toBe(1); // ceil(500/1000)*1
+        ->and($result['credits_used'])->toBe(1); // (500+0)/1M × 1 → min 1 kredit
 });
 
 it('estimates tokens when provider omits usage', function () {

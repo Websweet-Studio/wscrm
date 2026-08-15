@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('provider_id')->constrained('ai_providers')->cascadeOnDelete();
             $table->string('model_key')->comment('Nama model di provider, mis. gpt-4o-mini');
             $table->string('display_name')->nullable();
-            // Rate: kredit per 1K token (input/output).
+            // Rate: kredit per 1M token (input/output).
             $table->decimal('input_rate', 10, 4)->default(0);
             $table->decimal('output_rate', 10, 4)->default(0);
             $table->boolean('is_active')->default(true);

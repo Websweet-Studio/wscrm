@@ -114,11 +114,15 @@ const confirmDelete = (m: AiModel) => {
     openConfirm(m, `Hapus model "${m.model_key}"?`);
 };
 
-// Harga per 1 juta token: rate kredit/1K × harga 1 kredit × 1000.
+// Harga per 1 juta token: rate kredit/1M × harga 1 kredit.
 const formatRupiah = (n: number): string =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 2 }).format(n);
-const priceInput = (m: AiModel): string => (props.credit_price === null ? '—' : formatRupiah(Number(m.input_rate) * props.credit_price * 1000));
-const priceOutput = (m: AiModel): string => (props.credit_price === null ? '—' : formatRupiah(Number(m.output_rate) * props.credit_price * 1000));
+const priceInput = (m: AiModel): string => (props.credit_price === null ? '—' : formatRupiah(Number(m.input_rate) * props.credit_price));
+const priceOutput = (m: AiModel): string => (props.credit_price === null ? '—' : formatRupiah(Number(m.output_rate) * props.credit_price));
+
+// Preview harga /1M token di form edit, konsisten dgn rumus tabel.
+const previewInput = (): string => (props.credit_price === null ? '—' : formatRupiah(Number(form.input_rate) * props.credit_price));
+const previewOutput = (): string => (props.credit_price === null ? '—' : formatRupiah(Number(form.output_rate) * props.credit_price));
 </script>
 
 <template>
@@ -219,12 +223,14 @@ const priceOutput = (m: AiModel): string => (props.credit_price === null ? '—'
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <Label>Rate Input (kredit/1K)</Label>
+                            <Label>Rate Input (kredit/1M)</Label>
                             <Input v-model.number="form.input_rate" type="number" min="0" step="0.0001" required />
+                            <p class="mt-1 text-xs text-muted-foreground">≈ {{ previewInput() }} / 1M token</p>
                         </div>
                         <div>
-                            <Label>Rate Output (kredit/1K)</Label>
+                            <Label>Rate Output (kredit/1M)</Label>
                             <Input v-model.number="form.output_rate" type="number" min="0" step="0.0001" required />
+                            <p class="mt-1 text-xs text-muted-foreground">≈ {{ previewOutput() }} / 1M token</p>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">

@@ -79,10 +79,10 @@ it('returns openai-compatible response and deducts credits', function () {
         ->assertJsonPath('model', 'test-model')
         ->assertJsonPath('choices.0.message.content', 'Halo, ada yang bisa dibantu?')
         ->assertJsonPath('usage.prompt_tokens', 1000)
-        ->assertJsonPath('credits_used', 2)
-        ->assertJsonPath('balance_after', 98);
+        ->assertJsonPath('credits_used', 1)
+        ->assertJsonPath('balance_after', 99);
 
-    expect(AiCredit::currentBalance($this->customer->id))->toBe(98);
+    expect(AiCredit::currentBalance($this->customer->id))->toBe(99);
 });
 
 it('returns 429 when balance is insufficient', function () {
