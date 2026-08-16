@@ -18,17 +18,8 @@ use Inertia\Response;
 
 class InvoiceController extends Controller
 {
-    public function index(Request $request, InvoiceGeneratorService $generator): Response
+    public function index(Request $request): Response
     {
-        // Auto-generate renewal invoices for services expiring within 30 days
-        $generatedCount = $generator->generateRenewalInvoices(30);
-
-        // Add message to session if invoices were generated
-        $generationMessage = null;
-        if ($generatedCount > 0) {
-            $generationMessage = "Auto-generated {$generatedCount} renewal invoice(s) for expiring services.";
-        }
-
         $query = Invoice::with(['customer', 'order']);
 
         // Search functionality
@@ -103,7 +94,6 @@ class InvoiceController extends Controller
             'services' => Order::services()
                 ->with('customer:id,name,email')
                 ->get(['id', 'domain_name', 'service_type', 'customer_id']),
-            'generationMessage' => $generationMessage,
         ]);
     }
 

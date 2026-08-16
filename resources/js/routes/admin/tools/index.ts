@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\AdminToolsController::index
- * @see app/Http/Controllers/Admin/AdminToolsController.php:35
+ * @see app/Http/Controllers/Admin/AdminToolsController.php:31
  * @route '/admin/tools'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\AdminToolsController::index
- * @see app/Http/Controllers/Admin/AdminToolsController.php:35
+ * @see app/Http/Controllers/Admin/AdminToolsController.php:31
  * @route '/admin/tools'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\AdminToolsController::index
- * @see app/Http/Controllers/Admin/AdminToolsController.php:35
+ * @see app/Http/Controllers/Admin/AdminToolsController.php:31
  * @route '/admin/tools'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\AdminToolsController::index
- * @see app/Http/Controllers/Admin/AdminToolsController.php:35
+ * @see app/Http/Controllers/Admin/AdminToolsController.php:31
  * @route '/admin/tools'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\AdminToolsController::index
- * @see app/Http/Controllers/Admin/AdminToolsController.php:35
+ * @see app/Http/Controllers/Admin/AdminToolsController.php:31
  * @route '/admin/tools'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\AdminToolsController::index
- * @see app/Http/Controllers/Admin/AdminToolsController.php:35
+ * @see app/Http/Controllers/Admin/AdminToolsController.php:31
  * @route '/admin/tools'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\AdminToolsController::index
- * @see app/Http/Controllers/Admin/AdminToolsController.php:35
+ * @see app/Http/Controllers/Admin/AdminToolsController.php:31
  * @route '/admin/tools'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\AdminToolsController::execute
- * @see app/Http/Controllers/Admin/AdminToolsController.php:56
+ * @see app/Http/Controllers/Admin/AdminToolsController.php:50
  * @route '/admin/tools/execute'
  */
 export const execute = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -94,7 +94,7 @@ execute.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\AdminToolsController::execute
- * @see app/Http/Controllers/Admin/AdminToolsController.php:56
+ * @see app/Http/Controllers/Admin/AdminToolsController.php:50
  * @route '/admin/tools/execute'
  */
 execute.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ execute.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\AdminToolsController::execute
- * @see app/Http/Controllers/Admin/AdminToolsController.php:56
+ * @see app/Http/Controllers/Admin/AdminToolsController.php:50
  * @route '/admin/tools/execute'
  */
 execute.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -113,7 +113,7 @@ execute.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\AdminToolsController::execute
- * @see app/Http/Controllers/Admin/AdminToolsController.php:56
+ * @see app/Http/Controllers/Admin/AdminToolsController.php:50
  * @route '/admin/tools/execute'
  */
     const executeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -123,7 +123,7 @@ execute.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\AdminToolsController::execute
- * @see app/Http/Controllers/Admin/AdminToolsController.php:56
+ * @see app/Http/Controllers/Admin/AdminToolsController.php:50
  * @route '/admin/tools/execute'
  */
         executeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

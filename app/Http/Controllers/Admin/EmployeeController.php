@@ -16,21 +16,10 @@ use Illuminate\Http\RedirectResponse;
 class EmployeeController extends Controller
 {
     /**
-     * Check if user is admin.
-     */
-    private function checkAdmin()
-    {
-        if (! auth()->user()->isAdmin()) {
-            abort(403, 'Unauthorized access.');
-        }
-    }
-
-    /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $this->checkAdmin();
         $query = Employee::with('user');
 
         if ($request->filled('search')) {
@@ -220,8 +209,6 @@ class EmployeeController extends Controller
 
     public function bulkDestroy(Request $request): RedirectResponse
     {
-        $this->checkAdmin();
-
         $validated = $request->validate([
             'ids' => ['required', 'array', 'min:1'],
             'ids.*' => ['integer', 'distinct'],

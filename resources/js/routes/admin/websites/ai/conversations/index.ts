@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::show
- * @see app/Http/Controllers/Admin/AiAgentController.php:36
+ * @see app/Http/Controllers/Admin/AiAgentController.php:27
  * @route '/admin/websites/ai/conversations/{conversation}'
  */
 export const show = (args: { conversation: number | { id: number } } | [conversation: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::show
- * @see app/Http/Controllers/Admin/AiAgentController.php:36
+ * @see app/Http/Controllers/Admin/AiAgentController.php:27
  * @route '/admin/websites/ai/conversations/{conversation}'
  */
 show.url = (args: { conversation: number | { id: number } } | [conversation: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -49,7 +49,7 @@ show.url = (args: { conversation: number | { id: number } } | [conversation: num
 
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::show
- * @see app/Http/Controllers/Admin/AiAgentController.php:36
+ * @see app/Http/Controllers/Admin/AiAgentController.php:27
  * @route '/admin/websites/ai/conversations/{conversation}'
  */
 show.get = (args: { conversation: number | { id: number } } | [conversation: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -58,7 +58,7 @@ show.get = (args: { conversation: number | { id: number } } | [conversation: num
 })
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::show
- * @see app/Http/Controllers/Admin/AiAgentController.php:36
+ * @see app/Http/Controllers/Admin/AiAgentController.php:27
  * @route '/admin/websites/ai/conversations/{conversation}'
  */
 show.head = (args: { conversation: number | { id: number } } | [conversation: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -68,7 +68,7 @@ show.head = (args: { conversation: number | { id: number } } | [conversation: nu
 
     /**
 * @see \App\Http\Controllers\Admin\AiAgentController::show
- * @see app/Http/Controllers/Admin/AiAgentController.php:36
+ * @see app/Http/Controllers/Admin/AiAgentController.php:27
  * @route '/admin/websites/ai/conversations/{conversation}'
  */
     const showForm = (args: { conversation: number | { id: number } } | [conversation: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -78,7 +78,7 @@ show.head = (args: { conversation: number | { id: number } } | [conversation: nu
 
             /**
 * @see \App\Http\Controllers\Admin\AiAgentController::show
- * @see app/Http/Controllers/Admin/AiAgentController.php:36
+ * @see app/Http/Controllers/Admin/AiAgentController.php:27
  * @route '/admin/websites/ai/conversations/{conversation}'
  */
         showForm.get = (args: { conversation: number | { id: number } } | [conversation: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -87,7 +87,7 @@ show.head = (args: { conversation: number | { id: number } } | [conversation: nu
         })
             /**
 * @see \App\Http\Controllers\Admin\AiAgentController::show
- * @see app/Http/Controllers/Admin/AiAgentController.php:36
+ * @see app/Http/Controllers/Admin/AiAgentController.php:27
  * @route '/admin/websites/ai/conversations/{conversation}'
  */
         showForm.head = (args: { conversation: number | { id: number } } | [conversation: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -103,7 +103,7 @@ show.head = (args: { conversation: number | { id: number } } | [conversation: nu
     show.form = showForm
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::destroy
- * @see app/Http/Controllers/Admin/AiAgentController.php:47
+ * @see app/Http/Controllers/Admin/AiAgentController.php:37
  * @route '/admin/websites/ai/conversations/{conversation}'
  */
 export const destroy = (args: { conversation: number | { id: number } } | [conversation: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -118,7 +118,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::destroy
- * @see app/Http/Controllers/Admin/AiAgentController.php:47
+ * @see app/Http/Controllers/Admin/AiAgentController.php:37
  * @route '/admin/websites/ai/conversations/{conversation}'
  */
 destroy.url = (args: { conversation: number | { id: number } } | [conversation: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -151,7 +151,7 @@ destroy.url = (args: { conversation: number | { id: number } } | [conversation: 
 
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::destroy
- * @see app/Http/Controllers/Admin/AiAgentController.php:47
+ * @see app/Http/Controllers/Admin/AiAgentController.php:37
  * @route '/admin/websites/ai/conversations/{conversation}'
  */
 destroy.delete = (args: { conversation: number | { id: number } } | [conversation: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -161,7 +161,7 @@ destroy.delete = (args: { conversation: number | { id: number } } | [conversatio
 
     /**
 * @see \App\Http\Controllers\Admin\AiAgentController::destroy
- * @see app/Http/Controllers/Admin/AiAgentController.php:47
+ * @see app/Http/Controllers/Admin/AiAgentController.php:37
  * @route '/admin/websites/ai/conversations/{conversation}'
  */
     const destroyForm = (args: { conversation: number | { id: number } } | [conversation: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -176,7 +176,7 @@ destroy.delete = (args: { conversation: number | { id: number } } | [conversatio
 
             /**
 * @see \App\Http\Controllers\Admin\AiAgentController::destroy
- * @see app/Http/Controllers/Admin/AiAgentController.php:47
+ * @see app/Http/Controllers/Admin/AiAgentController.php:37
  * @route '/admin/websites/ai/conversations/{conversation}'
  */
         destroyForm.delete = (args: { conversation: number | { id: number } } | [conversation: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

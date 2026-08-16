@@ -14,16 +14,8 @@ use Inertia\Response;
 
 class TaskController extends Controller
 {
-    private function checkAdmin()
-    {
-        if (! auth()->user()->isAdmin()) {
-            abort(403, 'Unauthorized access.');
-        }
-    }
-
     public function index(Request $request): Response
     {
-        $this->checkAdmin();
         $userId = auth()->id();
 
         $scope = $request->get('scope'); // all | assigned | created
@@ -68,7 +60,7 @@ class TaskController extends Controller
             ->whereNotNull('department')
             ->get()
             ->pluck('department', 'user_id');
-        $services = Order::services()->with('customer')->orderBy('domain_name')->get(['id', 'domain_name', 'service_type', 'customer_id']);
+        $services = Order::services()->with('customer:id,name,email')->orderBy('domain_name')->get(['id', 'domain_name', 'service_type', 'customer_id']);
 
         $editingTask = null;
         if ($request->filled('edit')) {
@@ -89,7 +81,6 @@ class TaskController extends Controller
 
     public function store(Request $request)
     {
-        $this->checkAdmin();
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'task_category_id' => 'nullable|exists:task_categories,id',
@@ -121,7 +112,6 @@ class TaskController extends Controller
 
     public function update(Request $request, Task $task)
     {
-        $this->checkAdmin();
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
             'task_category_id' => 'nullable|exists:task_categories,id',
@@ -171,7 +161,6 @@ class TaskController extends Controller
 
     public function destroy(Task $task)
     {
-        $this->checkAdmin();
         $task->delete();
         return redirect()->route('admin.tasks.index')->with('success', 'Task berhasil dihapus.');
     }

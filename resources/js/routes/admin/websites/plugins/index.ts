@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::store
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:56
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:47
  * @route '/admin/websites/plugins'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::store
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:56
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:47
  * @route '/admin/websites/plugins'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::store
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:56
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:47
  * @route '/admin/websites/plugins'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -35,7 +35,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::store
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:56
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:47
  * @route '/admin/websites/plugins'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -45,7 +45,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::store
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:56
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:47
  * @route '/admin/websites/plugins'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -56,7 +56,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::update
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:85
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:74
  * @route '/admin/websites/plugins/{plugin}'
  */
 export const update = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -71,7 +71,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::update
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:85
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:74
  * @route '/admin/websites/plugins/{plugin}'
  */
 update.url = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -104,7 +104,7 @@ update.url = (args: { plugin: number | { id: number } } | [plugin: number | { id
 
 /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::update
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:85
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:74
  * @route '/admin/websites/plugins/{plugin}'
  */
 update.post = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -114,7 +114,7 @@ update.post = (args: { plugin: number | { id: number } } | [plugin: number | { i
 
     /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::update
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:85
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:74
  * @route '/admin/websites/plugins/{plugin}'
  */
     const updateForm = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -124,7 +124,7 @@ update.post = (args: { plugin: number | { id: number } } | [plugin: number | { i
 
             /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::update
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:85
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:74
  * @route '/admin/websites/plugins/{plugin}'
  */
         updateForm.post = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -135,7 +135,7 @@ update.post = (args: { plugin: number | { id: number } } | [plugin: number | { i
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::destroy
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:122
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:109
  * @route '/admin/websites/plugins/{plugin}'
  */
 export const destroy = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -150,7 +150,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::destroy
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:122
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:109
  * @route '/admin/websites/plugins/{plugin}'
  */
 destroy.url = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -183,7 +183,7 @@ destroy.url = (args: { plugin: number | { id: number } } | [plugin: number | { i
 
 /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::destroy
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:122
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:109
  * @route '/admin/websites/plugins/{plugin}'
  */
 destroy.delete = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -193,7 +193,7 @@ destroy.delete = (args: { plugin: number | { id: number } } | [plugin: number | 
 
     /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::destroy
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:122
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:109
  * @route '/admin/websites/plugins/{plugin}'
  */
     const destroyForm = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -208,7 +208,7 @@ destroy.delete = (args: { plugin: number | { id: number } } | [plugin: number | 
 
             /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::destroy
- * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:122
+ * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:109
  * @route '/admin/websites/plugins/{plugin}'
  */
         destroyForm.delete = (args: { plugin: number | { id: number } } | [plugin: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -224,7 +224,7 @@ destroy.delete = (args: { plugin: number | { id: number } } | [plugin: number | 
     destroy.form = destroyForm
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::destroy
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:166
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:143
  * @route '/admin/websites/{website}/plugins'
  */
 export const destroy = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -239,7 +239,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::destroy
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:166
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:143
  * @route '/admin/websites/{website}/plugins'
  */
 destroy.url = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -272,7 +272,7 @@ destroy.url = (args: { website: number | { id: number } } | [website: number | {
 
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::destroy
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:166
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:143
  * @route '/admin/websites/{website}/plugins'
  */
 destroy.delete = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -282,7 +282,7 @@ destroy.delete = (args: { website: number | { id: number } } | [website: number 
 
     /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::destroy
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:166
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:143
  * @route '/admin/websites/{website}/plugins'
  */
     const destroyForm = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -297,7 +297,7 @@ destroy.delete = (args: { website: number | { id: number } } | [website: number 
 
             /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::destroy
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:166
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:143
  * @route '/admin/websites/{website}/plugins'
  */
         destroyForm.delete = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -313,7 +313,7 @@ destroy.delete = (args: { website: number | { id: number } } | [website: number 
     destroy.form = destroyForm
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::list
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:149
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:128
  * @route '/admin/websites/{website}/plugins'
  */
 export const list = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -328,7 +328,7 @@ list.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::list
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:149
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:128
  * @route '/admin/websites/{website}/plugins'
  */
 list.url = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -361,7 +361,7 @@ list.url = (args: { website: number | { id: number } } | [website: number | { id
 
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::list
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:149
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:128
  * @route '/admin/websites/{website}/plugins'
  */
 list.get = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -370,7 +370,7 @@ list.get = (args: { website: number | { id: number } } | [website: number | { id
 })
 /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::list
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:149
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:128
  * @route '/admin/websites/{website}/plugins'
  */
 list.head = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -380,7 +380,7 @@ list.head = (args: { website: number | { id: number } } | [website: number | { i
 
     /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::list
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:149
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:128
  * @route '/admin/websites/{website}/plugins'
  */
     const listForm = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -390,7 +390,7 @@ list.head = (args: { website: number | { id: number } } | [website: number | { i
 
             /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::list
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:149
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:128
  * @route '/admin/websites/{website}/plugins'
  */
         listForm.get = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -399,7 +399,7 @@ list.head = (args: { website: number | { id: number } } | [website: number | { i
         })
             /**
 * @see \App\Http\Controllers\Admin\WebsiteClientController::list
- * @see app/Http/Controllers/Admin/WebsiteClientController.php:149
+ * @see app/Http/Controllers/Admin/WebsiteClientController.php:128
  * @route '/admin/websites/{website}/plugins'
  */
         listForm.head = (args: { website: number | { id: number } } | [website: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

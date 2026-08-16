@@ -12,17 +12,8 @@ use Inertia\Response;
 
 class JournalEntryController extends Controller
 {
-    private function checkAdmin(): void
-    {
-        if (!auth()->user()->isAdmin()) {
-            abort(403, 'Unauthorized access.');
-        }
-    }
-
     public function index(): Response
     {
-        $this->checkAdmin();
-
         $journals = JournalEntry::with(['websiteClient.customer', 'user'])
             ->when(request('website_client_id'), fn($q, $v) => $q->where('website_client_id', $v))
             ->when(request('user_id'), fn($q, $v) => $q->where('user_id', $v))
@@ -44,8 +35,6 @@ class JournalEntryController extends Controller
 
     public function create(): Response
     {
-        $this->checkAdmin();
-
         $websites = WebsiteClient::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Admin/Journals/CreateEdit', [
@@ -56,8 +45,6 @@ class JournalEntryController extends Controller
 
     public function edit(JournalEntry $journal): Response
     {
-        $this->checkAdmin();
-
         $websites = WebsiteClient::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Admin/Journals/CreateEdit', [
@@ -68,8 +55,6 @@ class JournalEntryController extends Controller
 
     public function store(JournalEntryRequest $request)
     {
-        $this->checkAdmin();
-
         $data = $request->validated();
         $data['user_id'] = auth()->id();
 
@@ -84,7 +69,6 @@ class JournalEntryController extends Controller
 
     public function update(JournalEntryRequest $request, JournalEntry $journal)
     {
-        $this->checkAdmin();
         $journal->update($request->validated());
 
         return redirect()->route('admin.journals.index')->with('success', 'Jurnal berhasil diperbarui.');
@@ -92,7 +76,6 @@ class JournalEntryController extends Controller
 
     public function destroy(JournalEntry $journal)
     {
-        $this->checkAdmin();
         $journal->delete();
 
         return redirect()->route('admin.journals.index')->with('success', 'Jurnal berhasil dihapus.');
@@ -100,8 +83,6 @@ class JournalEntryController extends Controller
 
     public function report(JournalReportService $reportService): Response
     {
-        $this->checkAdmin();
-
         $period = request('period', 'daily'); // daily, weekly, monthly
         $dateFrom = request('date_from', now()->startOfMonth()->toDateString());
         $dateTo = request('date_to', now()->toDateString());
@@ -124,8 +105,6 @@ class JournalEntryController extends Controller
 
     public function export(JournalReportService $reportService)
     {
-        $this->checkAdmin();
-
         $period = request('period', 'daily');
         $dateFrom = request('date_from', now()->startOfMonth()->toDateString());
         $dateTo = request('date_to', now()->toDateString());
@@ -166,8 +145,6 @@ class JournalEntryController extends Controller
 
     public function exportExcel(JournalReportService $reportService)
     {
-        $this->checkAdmin();
-
         $journals = JournalEntry::with(['websiteClient', 'user'])
             ->when(request('website_client_id'), fn($q, $v) => $q->where('website_client_id', $v))
             ->when(request('date_from'), fn($q, $v) => $q->where('entry_date', '>=', $v))

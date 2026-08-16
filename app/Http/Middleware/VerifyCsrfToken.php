@@ -12,7 +12,9 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        'api/*',
+        // Hanya endpoint web yang memang butuh tanpa CSRF (token/digunakan oleh harness eksternal).
+        'api/public/ai-chat',
+        'api/agent/blog',
         '_boost/browser-logs',
     ];
 }

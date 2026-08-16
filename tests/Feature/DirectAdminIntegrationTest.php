@@ -109,7 +109,7 @@ it('keeps existing password when saving settings with blank password', function 
         ])
         ->assertRedirect();
 
-    expect(DirectAdminSetting::getValue('password'))->toBe('secret')
+    expect(DirectAdminSetting::getSecret('password'))->toBe('secret')
         ->and(DirectAdminSetting::getValue('host'))->toBe('da2.example.com');
 });
 

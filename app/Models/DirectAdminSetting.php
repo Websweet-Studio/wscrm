@@ -32,4 +32,29 @@ class DirectAdminSetting extends Model
     {
         return static::query()->pluck('value', 'key')->all();
     }
+
+    /**
+     * Simpan nilai rahasia (enkripsi at-rest) — utk password/credential.
+     */
+    public static function setSecret(string $key, string $value): void
+    {
+        static::setValue($key, \Illuminate\Support\Facades\Crypt::encryptString($value));
+    }
+
+    /**
+     * Baca nilai rahasia; fallback ke plaintext bila data lama belum terenkripsi.
+     */
+    public static function getSecret(string $key, ?string $default = null): ?string
+    {
+        $value = static::getValue($key);
+        if ($value === null || $value === '') {
+            return $default;
+        }
+
+        try {
+            return \Illuminate\Support\Facades\Crypt::decryptString($value);
+        } catch (\Throwable) {
+            return $value;
+        }
+    }
 }

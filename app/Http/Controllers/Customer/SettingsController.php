@@ -20,7 +20,7 @@ class SettingsController extends Controller
 
     public function updateProfile(Request $request): RedirectResponse
     {
-        $customer = Auth::guard('customer')->user();
+        $customer = $this->customer();
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -41,7 +41,7 @@ class SettingsController extends Controller
 
     public function updatePassword(Request $request): RedirectResponse
     {
-        $customer = Auth::guard('customer')->user();
+        $customer = $this->customer();
 
         $request->validate([
             'current_password' => 'required|current_password:customer',

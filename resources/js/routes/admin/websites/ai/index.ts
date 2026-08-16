@@ -3,7 +3,7 @@ import chatB2e4da from './chat'
 import conversations from './conversations'
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::chat
- * @see app/Http/Controllers/Admin/AiAgentController.php:57
+ * @see app/Http/Controllers/Admin/AiAgentController.php:46
  * @route '/admin/websites/ai/chat'
  */
 export const chat = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -18,7 +18,7 @@ chat.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::chat
- * @see app/Http/Controllers/Admin/AiAgentController.php:57
+ * @see app/Http/Controllers/Admin/AiAgentController.php:46
  * @route '/admin/websites/ai/chat'
  */
 chat.url = (options?: RouteQueryOptions) => {
@@ -27,7 +27,7 @@ chat.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\AiAgentController::chat
- * @see app/Http/Controllers/Admin/AiAgentController.php:57
+ * @see app/Http/Controllers/Admin/AiAgentController.php:46
  * @route '/admin/websites/ai/chat'
  */
 chat.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -37,7 +37,7 @@ chat.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\AiAgentController::chat
- * @see app/Http/Controllers/Admin/AiAgentController.php:57
+ * @see app/Http/Controllers/Admin/AiAgentController.php:46
  * @route '/admin/websites/ai/chat'
  */
     const chatForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -47,7 +47,7 @@ chat.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\AiAgentController::chat
- * @see app/Http/Controllers/Admin/AiAgentController.php:57
+ * @see app/Http/Controllers/Admin/AiAgentController.php:46
  * @route '/admin/websites/ai/chat'
  */
         chatForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

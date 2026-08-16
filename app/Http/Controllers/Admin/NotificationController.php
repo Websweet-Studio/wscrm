@@ -9,17 +9,8 @@ use Inertia\Response;
 
 class NotificationController extends Controller
 {
-    private function checkAdmin(): void
-    {
-        if (!auth()->user()->isAdmin()) {
-            abort(403, 'Unauthorized access.');
-        }
-    }
-
     public function index(): Response
     {
-        $this->checkAdmin();
-
         $notifications = auth()->user()
             ->notifications()
             ->orderBy('created_at', 'desc')
@@ -33,8 +24,6 @@ class NotificationController extends Controller
 
     public function latestJson()
     {
-        $this->checkAdmin();
-
         $notifications = auth()->user()
             ->notifications()
             ->orderBy('created_at', 'desc')
@@ -54,8 +43,6 @@ class NotificationController extends Controller
 
     public function markRead(Request $request, string $id)
     {
-        $this->checkAdmin();
-
         $notification = auth()->user()->notifications()->findOrFail($id);
         $notification->markAsRead();
 
@@ -64,8 +51,6 @@ class NotificationController extends Controller
 
     public function markAllRead(Request $request)
     {
-        $this->checkAdmin();
-
         auth()->user()->unreadNotifications->markAsRead();
 
         return redirect()->back();
@@ -73,8 +58,6 @@ class NotificationController extends Controller
 
     public function destroy(Request $request, string $id)
     {
-        $this->checkAdmin();
-
         auth()->user()->notifications()->findOrFail($id)->delete();
 
         return redirect()->back();

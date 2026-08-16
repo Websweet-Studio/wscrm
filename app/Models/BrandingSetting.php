@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class BrandingSetting extends Model
 {
+    private const CACHE_KEY = 'branding.all_active';
+
     protected $fillable = [
         'key',
         'value',
@@ -13,6 +16,13 @@ class BrandingSetting extends Model
         'description',
         'is_active',
     ];
+
+    protected static function booted(): void
+    {
+        static::saved(function () {
+            Cache::forget(self::CACHE_KEY);
+        });
+    }
 
     protected function casts(): array
     {
@@ -23,7 +33,7 @@ class BrandingSetting extends Model
 
     public static function getValue(string $key, mixed $default = null): mixed
     {
-        $setting = static::where('key', $key)->where('is_active', true)->first();
+        $setting = static::cachedAllActive()->firstWhere('key', $key);
 
         return $setting ? $setting->value : $default;
     }
@@ -38,12 +48,17 @@ class BrandingSetting extends Model
 
     public static function getByType(string $type): \Illuminate\Database\Eloquent\Collection
     {
-        return static::where('type', $type)->where('is_active', true)->get();
+        return static::cachedAllActive()->where('type', $type)->values();
     }
 
     public static function getAllActive(): \Illuminate\Database\Eloquent\Collection
     {
-        return static::where('is_active', true)->orderBy('key')->get();
+        return static::cachedAllActive();
+    }
+
+    public static function cachedAllActive(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Cache::rememberForever(self::CACHE_KEY, fn () => static::where('is_active', true)->orderBy('key')->get());
     }
 
     public static function ensureDefaultsIfEmpty(): void

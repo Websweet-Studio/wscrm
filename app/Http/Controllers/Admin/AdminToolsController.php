@@ -16,14 +16,10 @@ class AdminToolsController extends Controller
     private const DESTRUCTIVE_ACTIONS = [
         'migrate_fresh',
         'key_generate',
+        'db_seed',
+        'db_seed_users',
+        'maintenance_down',
     ];
-
-    private function checkAdmin(): void
-    {
-        if (!auth()->user()?->isAdmin()) {
-            abort(403, 'Unauthorized access.');
-        }
-    }
 
     private function checkSuperAdmin(): void
     {
@@ -34,8 +30,6 @@ class AdminToolsController extends Controller
 
     public function index(): Response
     {
-        $this->checkAdmin();
-
         $laravelRoot = base_path();
         $publicPath = public_path();
 
@@ -55,8 +49,6 @@ class AdminToolsController extends Controller
 
     public function execute(Request $request)
     {
-        $this->checkAdmin();
-
         $action = $request->input('action');
 
         if (in_array($action, self::DESTRUCTIVE_ACTIONS, true)) {

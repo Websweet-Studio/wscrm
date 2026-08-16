@@ -10,6 +10,7 @@ use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ServicePlan;
+use App\Services\InvoiceGeneratorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -575,8 +576,8 @@ class OrderController extends Controller
 
             // Only generate invoice for upgrades (costDifference > 0)
             if ($costDifference > 0) {
-                // Generate upgrade invoice
-                $invoiceNumber = 'INV-UPG-'.now()->format('Ymd').'-'.str_pad($order->id, 4, '0', STR_PAD_LEFT);
+                // Generate upgrade invoice (format konsisten via InvoiceGeneratorService)
+                $invoiceNumber = (new InvoiceGeneratorService)->generateInvoiceNumber();
 
                 Invoice::create([
                     'customer_id' => $order->customer_id,

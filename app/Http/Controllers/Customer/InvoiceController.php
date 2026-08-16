@@ -7,18 +7,17 @@ use App\Models\Invoice;
 use App\Models\PaymentAccount;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class InvoiceController extends Controller
+class InvoiceController extends CustomerBaseController
 {
     /**
      * Display a listing of the resource.
      */
     public function index(): Response
     {
-        $customer = Auth::guard('customer')->user();
+        $customer = $this->customer();
 
         $invoices = $customer->invoices()
             ->with(['bank', 'paymentAccount', 'order'])

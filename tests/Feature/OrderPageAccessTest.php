@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 it('can access orders page without JavaScript errors', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->admin()->create();
 
     $response = $this->actingAs($user)
         ->get('/admin/orders');
@@ -22,7 +22,7 @@ it('can access orders page without JavaScript errors', function () {
 });
 
 it('can access orders page with view parameter', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->admin()->create();
 
     $response = $this->actingAs($user)
         ->get('/admin/orders?view=services');

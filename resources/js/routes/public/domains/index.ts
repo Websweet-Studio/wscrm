@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\DomainPriceController::index
- * @see app/Http/Controllers/DomainPriceController.php:39
+ * @see app/Http/Controllers/DomainPriceController.php:50
  * @route '/domains'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\DomainPriceController::index
- * @see app/Http/Controllers/DomainPriceController.php:39
+ * @see app/Http/Controllers/DomainPriceController.php:50
  * @route '/domains'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DomainPriceController::index
- * @see app/Http/Controllers/DomainPriceController.php:39
+ * @see app/Http/Controllers/DomainPriceController.php:50
  * @route '/domains'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\DomainPriceController::index
- * @see app/Http/Controllers/DomainPriceController.php:39
+ * @see app/Http/Controllers/DomainPriceController.php:50
  * @route '/domains'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\DomainPriceController::index
- * @see app/Http/Controllers/DomainPriceController.php:39
+ * @see app/Http/Controllers/DomainPriceController.php:50
  * @route '/domains'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\DomainPriceController::index
- * @see app/Http/Controllers/DomainPriceController.php:39
+ * @see app/Http/Controllers/DomainPriceController.php:50
  * @route '/domains'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\DomainPriceController::index
- * @see app/Http/Controllers/DomainPriceController.php:39
+ * @see app/Http/Controllers/DomainPriceController.php:50
  * @route '/domains'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\DomainPriceController::search
- * @see app/Http/Controllers/DomainPriceController.php:54
+ * @see app/Http/Controllers/DomainPriceController.php:65
  * @route '/domains/search'
  */
 export const search = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ search.definition = {
 
 /**
 * @see \App\Http\Controllers\DomainPriceController::search
- * @see app/Http/Controllers/DomainPriceController.php:54
+ * @see app/Http/Controllers/DomainPriceController.php:65
  * @route '/domains/search'
  */
 search.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ search.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DomainPriceController::search
- * @see app/Http/Controllers/DomainPriceController.php:54
+ * @see app/Http/Controllers/DomainPriceController.php:65
  * @route '/domains/search'
  */
 search.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -112,7 +112,7 @@ search.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\DomainPriceController::search
- * @see app/Http/Controllers/DomainPriceController.php:54
+ * @see app/Http/Controllers/DomainPriceController.php:65
  * @route '/domains/search'
  */
 search.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -122,7 +122,7 @@ search.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\DomainPriceController::search
- * @see app/Http/Controllers/DomainPriceController.php:54
+ * @see app/Http/Controllers/DomainPriceController.php:65
  * @route '/domains/search'
  */
     const searchForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -132,7 +132,7 @@ search.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\DomainPriceController::search
- * @see app/Http/Controllers/DomainPriceController.php:54
+ * @see app/Http/Controllers/DomainPriceController.php:65
  * @route '/domains/search'
  */
         searchForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -141,7 +141,7 @@ search.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\DomainPriceController::search
- * @see app/Http/Controllers/DomainPriceController.php:54
+ * @see app/Http/Controllers/DomainPriceController.php:65
  * @route '/domains/search'
  */
         searchForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

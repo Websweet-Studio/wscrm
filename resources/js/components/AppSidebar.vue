@@ -321,11 +321,15 @@ const mainNavItems: NavItem[] = [
                 href: '/admin/branding',
                 icon: Palette,
             },
-            {
-                title: 'Database',
-                href: '/admin/database',
-                icon: FileText,
-            },
+            ...(user.role === 'super_admin'
+                ? [
+                      {
+                          title: 'Database',
+                          href: '/admin/database',
+                          icon: FileText,
+                      },
+                  ]
+                : []),
             {
                 title: 'App Manager',
                 href: '/admin/tools',

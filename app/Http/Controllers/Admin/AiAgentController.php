@@ -13,17 +13,8 @@ use Inertia\Response;
 
 class AiAgentController extends Controller
 {
-    private function checkAdmin(): void
-    {
-        if (!auth()->user()?->isAdmin()) {
-            abort(403, 'Unauthorized access.');
-        }
-    }
-
     public function index(): Response
     {
-        $this->checkAdmin();
-
         $conversations = AiConversation::where('user_id', auth()->id())
             ->latest('updated_at')
             ->get(['id', 'title', 'updated_at']);
@@ -35,7 +26,6 @@ class AiAgentController extends Controller
 
     public function show(AiConversation $conversation): JsonResponse
     {
-        $this->checkAdmin();
         abort_unless($conversation->user_id === auth()->id(), 403, 'Unauthorized access.');
 
         return response()->json([
@@ -46,7 +36,6 @@ class AiAgentController extends Controller
 
     public function destroy(AiConversation $conversation): JsonResponse
     {
-        $this->checkAdmin();
         abort_unless($conversation->user_id === auth()->id(), 403, 'Unauthorized access.');
 
         $conversation->delete();
@@ -56,8 +45,6 @@ class AiAgentController extends Controller
 
     public function chat(Request $request, AiAgentService $agent): JsonResponse
     {
-        $this->checkAdmin();
-
         $validated = $request->validate([
             'conversation_id' => 'nullable|integer',
             'message' => 'required|string|max:2000',
@@ -88,12 +75,11 @@ class AiAgentController extends Controller
         try {
             $result = $agent->process($validated['message'], null, [], $validated['page'] ?? []);
         } catch (\Exception $e) {
-            $result = [
-                'success' => false,
-                'ai_response' => 'Maaf, terjadi error: ' . $e->getMessage(),
-                'actions' => [],
-                'pending_actions' => [],
-            ];
+            \Illuminate\Support\Facades\Log::warning('AiAgent chat gagal: '.$e->getMessage());
+
+            return response()->json([
+                'error' => ['message' => 'Terjadi kesalahan saat memproses chat. Coba lagi nanti.', 'type' => 'server_error'],
+            ], 500);
         }
 
         $pendingActions = $result['pending_actions'] ?? [];
@@ -120,8 +106,6 @@ class AiAgentController extends Controller
      */
     public function streamChat(Request $request, AiAgentService $agent)
     {
-        $this->checkAdmin();
-
         $validated = $request->validate([
             'conversation_id' => 'nullable|integer',
             'message' => 'required|string|max:2000',
@@ -253,8 +237,6 @@ class AiAgentController extends Controller
      */
     public function confirmActions(Request $request, AiAgentService $agent)
     {
-        $this->checkAdmin();
-
         $validated = $request->validate([
             'conversation_id' => 'required|integer',
         ]);
@@ -362,8 +344,6 @@ class AiAgentController extends Controller
      */
     public function cancelActions(Request $request): JsonResponse
     {
-        $this->checkAdmin();
-
         $validated = $request->validate([
             'conversation_id' => 'required|integer',
         ]);

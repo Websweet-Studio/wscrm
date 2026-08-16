@@ -6,7 +6,7 @@ use App\Models\User;
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 it('can view customer index page', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->admin()->create();
     $customers = Customer::factory()->count(3)->create();
 
     $response = $this->actingAs($user)->get('/admin/customers');
@@ -19,7 +19,7 @@ it('can view customer index page', function () {
 });
 
 it('can view customer show page', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->admin()->create();
     $customer = Customer::factory()->create();
 
     $response = $this->actingAs($user)->get("/admin/customers/{$customer->id}");
@@ -32,7 +32,7 @@ it('can view customer show page', function () {
 });
 
 it('can create a customer', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->admin()->create();
 
     $customerData = [
         'name' => 'John Doe',
@@ -62,7 +62,7 @@ it('can create a customer', function () {
 });
 
 it('can update a customer', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->admin()->create();
     $customer = Customer::factory()->create();
 
     $updateData = [
@@ -91,7 +91,7 @@ it('can update a customer', function () {
 });
 
 it('can delete a customer without orders or services', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->admin()->create();
     $customer = Customer::factory()->create();
 
     $response = $this->actingAs($user)
@@ -103,7 +103,7 @@ it('can delete a customer without orders or services', function () {
 });
 
 it('can delete a customer with orders and related data', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->admin()->create();
     $customer = Customer::factory()->create();
     $order = $customer->orders()->create([
         'user_id' => $customer->id,
@@ -124,7 +124,7 @@ it('can delete a customer with orders and related data', function () {
 });
 
 it('validates required fields when creating customer', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->admin()->create();
 
     $response = $this->actingAs($user)
         ->withSession(['_token' => 'test-token'])
@@ -134,7 +134,7 @@ it('validates required fields when creating customer', function () {
 });
 
 it('validates email uniqueness when creating customer', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->admin()->create();
     $existingCustomer = Customer::factory()->create(['email' => 'test@example.com']);
 
     $response = $this->actingAs($user)
@@ -151,7 +151,7 @@ it('validates email uniqueness when creating customer', function () {
 });
 
 it('can search customers by name', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->admin()->create();
     Customer::factory()->create(['name' => 'John Doe']);
     Customer::factory()->create(['name' => 'Jane Smith']);
 
@@ -166,7 +166,7 @@ it('can search customers by name', function () {
 });
 
 it('can filter customers by status', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->admin()->create();
     Customer::factory()->create(['status' => 'active']);
     Customer::factory()->create(['status' => 'inactive']);
 

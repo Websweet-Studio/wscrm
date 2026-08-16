@@ -64,7 +64,8 @@ class AiGateway
         }
 
         if ($result === null || $usedModel === null) {
-            $detail = $lastError ? ' ('.implode(', ', $attempts).'): '.$lastError->getMessage() : ' ('.implode(', ', $attempts).')';
+            $detail = ' ('.implode(', ', $attempts).')';
+            Log::error('Semua provider AI gagal dihubungi: '.($lastError ? $lastError->getMessage() : 'tanpa pesan'));
             throw new \RuntimeException('Semua provider AI gagal dihubungi. Coba lagi nanti.'.$detail);
         }
 
@@ -74,6 +75,75 @@ class AiGateway
 
         $creditsUsed = $this->calculateCredits($usedModel, $inputTokens, $outputTokens);
 
+        $balanceAfter = $this->deduct($customerId, $usedModel, $inputTokens, $outputTokens, $creditsUsed);
+
+        return [
+            'content' => $result['content'],
+            'tool_calls' => $result['tool_calls'] ?? null,
+            'finish_reason' => $result['finish_reason'] ?? 'stop',
+            'usage' => ['prompt_tokens' => $inputTokens, 'completion_tokens' => $outputTokens],
+            'credits_used' => $creditsUsed,
+            'balance_after' => $balanceAfter,
+            'model_key' => $usedModel->model_key,
+            'provider_name' => $usedModel->provider->name,
+        ];
+    }
+
+    /**
+     * Streaming chat completion: pipa tiap chunk token dari provider via $onChunk,
+     * lalu deduksi kredit dari usage akhir (sama seperti chat non-streaming).
+     *
+     * @return array{content: string, tool_calls: ?array, finish_reason: string, usage: array, credits_used: int, balance_after: int, model_key: string, provider_name: string}
+     */
+    public function streamChat(int $customerId, ?string $modelKey, array $messages, float $temperature, int $maxTokens, array $options, callable $onChunk): array
+    {
+        $credit = AiCredit::firstOrCreate(['customer_id' => $customerId]);
+
+        if ($credit->balance <= 0) {
+            throw new \RuntimeException('Saldo AI tidak mencukupi. Silakan beli paket kredit.');
+        }
+
+        $models = $this->candidateModels($modelKey);
+
+        $maxCredits = $this->estimateMaxCredits($models, $messages, $maxTokens);
+        $this->ensureSufficientBalance($customerId, $maxCredits);
+
+        $attempts = [];
+        $lastError = null;
+        $result = null;
+        $usedModel = null;
+
+        foreach ($models as $model) {
+            if ($this->isCircuitBroken($model)) {
+                $attempts[] = $model->model_key . ' (skip)';
+                continue;
+            }
+
+            try {
+                $client = AiClient::forProvider($model->provider, $model->model_key);
+                $result = $client->streamChat($messages, $temperature, $maxTokens, $options, $onChunk);
+                $usedModel = $model;
+                $this->markHealthy($model);
+                break;
+            } catch (\Throwable $e) {
+                $lastError = $e;
+                $attempts[] = $model->model_key;
+                $this->markFailed($model);
+                Log::warning("AiGateway stream fallback: model {$model->model_key} gagal - ".$e->getMessage());
+            }
+        }
+
+        if ($result === null || $usedModel === null) {
+            $detail = ' ('.implode(', ', $attempts).')';
+            Log::error('Semua provider AI gagal (streaming): '.($lastError ? $lastError->getMessage() : 'tanpa pesan'));
+            throw new \RuntimeException('Semua provider AI gagal dihubungi. Coba lagi nanti.'.$detail);
+        }
+
+        $usage = $result['usage'] ?? [];
+        $inputTokens = (int) ($usage['prompt_tokens'] ?? $this->estimateTokens(mb_strlen($this->inputPayload($messages))));
+        $outputTokens = (int) ($usage['completion_tokens'] ?? $this->estimateTokens(mb_strlen((string) $result['content'])));
+
+        $creditsUsed = $this->calculateCredits($usedModel, $inputTokens, $outputTokens);
         $balanceAfter = $this->deduct($customerId, $usedModel, $inputTokens, $outputTokens, $creditsUsed);
 
         return [
@@ -153,6 +223,11 @@ class AiGateway
         if (! $credit || $credit->balance < $requiredCredits) {
             throw new \RuntimeException('Saldo AI tidak mencukupi. Silakan beli paket kredit.');
         }
+
+        // ponytail: pre-check melepas lock sebelum panggilan provider, jadi ada jendela race
+        // sempit di mana request konkuren bisa lolos (deduct tetap atomic & anti double-spend).
+        // Solusi penuh: hold credit dalam 1 transaksi mencakup panggilan provider — terlalu mahal
+        // (row lock 60s) untuk sekarang. Tambahkan bila biaya provider jadi masalah nyata.
     }
 
     private function deduct(int $customerId, AiModel $model, int $inputTokens, int $outputTokens, int $creditsUsed): int

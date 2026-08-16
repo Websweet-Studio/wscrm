@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\OrderController::bulkDestroy
- * @see app/Http/Controllers/Admin/OrderController.php:448
+ * @see app/Http/Controllers/Admin/OrderController.php:449
  * @route '/admin/orders/bulk'
  */
 export const bulkDestroy = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -16,7 +16,7 @@ bulkDestroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::bulkDestroy
- * @see app/Http/Controllers/Admin/OrderController.php:448
+ * @see app/Http/Controllers/Admin/OrderController.php:449
  * @route '/admin/orders/bulk'
  */
 bulkDestroy.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ bulkDestroy.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::bulkDestroy
- * @see app/Http/Controllers/Admin/OrderController.php:448
+ * @see app/Http/Controllers/Admin/OrderController.php:449
  * @route '/admin/orders/bulk'
  */
 bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -35,7 +35,7 @@ bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
 
     /**
 * @see \App\Http\Controllers\Admin\OrderController::bulkDestroy
- * @see app/Http/Controllers/Admin/OrderController.php:448
+ * @see app/Http/Controllers/Admin/OrderController.php:449
  * @route '/admin/orders/bulk'
  */
     const bulkDestroyForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -50,7 +50,7 @@ bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
 
             /**
 * @see \App\Http\Controllers\Admin\OrderController::bulkDestroy
- * @see app/Http/Controllers/Admin/OrderController.php:448
+ * @see app/Http/Controllers/Admin/OrderController.php:449
  * @route '/admin/orders/bulk'
  */
         bulkDestroyForm.delete = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -66,7 +66,7 @@ bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
     bulkDestroy.form = bulkDestroyForm
 /**
 * @see \App\Http\Controllers\Admin\OrderController::index
- * @see app/Http/Controllers/Admin/OrderController.php:23
+ * @see app/Http/Controllers/Admin/OrderController.php:24
  * @route '/admin/orders'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -81,7 +81,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::index
- * @see app/Http/Controllers/Admin/OrderController.php:23
+ * @see app/Http/Controllers/Admin/OrderController.php:24
  * @route '/admin/orders'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -90,7 +90,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::index
- * @see app/Http/Controllers/Admin/OrderController.php:23
+ * @see app/Http/Controllers/Admin/OrderController.php:24
  * @route '/admin/orders'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -99,7 +99,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\OrderController::index
- * @see app/Http/Controllers/Admin/OrderController.php:23
+ * @see app/Http/Controllers/Admin/OrderController.php:24
  * @route '/admin/orders'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -109,7 +109,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\OrderController::index
- * @see app/Http/Controllers/Admin/OrderController.php:23
+ * @see app/Http/Controllers/Admin/OrderController.php:24
  * @route '/admin/orders'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -119,7 +119,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\OrderController::index
- * @see app/Http/Controllers/Admin/OrderController.php:23
+ * @see app/Http/Controllers/Admin/OrderController.php:24
  * @route '/admin/orders'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -128,7 +128,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\OrderController::index
- * @see app/Http/Controllers/Admin/OrderController.php:23
+ * @see app/Http/Controllers/Admin/OrderController.php:24
  * @route '/admin/orders'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -144,7 +144,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\OrderController::store
- * @see app/Http/Controllers/Admin/OrderController.php:148
+ * @see app/Http/Controllers/Admin/OrderController.php:149
  * @route '/admin/orders'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -159,7 +159,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::store
- * @see app/Http/Controllers/Admin/OrderController.php:148
+ * @see app/Http/Controllers/Admin/OrderController.php:149
  * @route '/admin/orders'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -168,7 +168,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::store
- * @see app/Http/Controllers/Admin/OrderController.php:148
+ * @see app/Http/Controllers/Admin/OrderController.php:149
  * @route '/admin/orders'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -178,7 +178,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\OrderController::store
- * @see app/Http/Controllers/Admin/OrderController.php:148
+ * @see app/Http/Controllers/Admin/OrderController.php:149
  * @route '/admin/orders'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -188,7 +188,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\OrderController::store
- * @see app/Http/Controllers/Admin/OrderController.php:148
+ * @see app/Http/Controllers/Admin/OrderController.php:149
  * @route '/admin/orders'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -199,7 +199,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\Admin\OrderController::show
- * @see app/Http/Controllers/Admin/OrderController.php:111
+ * @see app/Http/Controllers/Admin/OrderController.php:112
  * @route '/admin/orders/{order}'
  */
 export const show = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -214,7 +214,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::show
- * @see app/Http/Controllers/Admin/OrderController.php:111
+ * @see app/Http/Controllers/Admin/OrderController.php:112
  * @route '/admin/orders/{order}'
  */
 show.url = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -247,7 +247,7 @@ show.url = (args: { order: number | { id: number } } | [order: number | { id: nu
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::show
- * @see app/Http/Controllers/Admin/OrderController.php:111
+ * @see app/Http/Controllers/Admin/OrderController.php:112
  * @route '/admin/orders/{order}'
  */
 show.get = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -256,7 +256,7 @@ show.get = (args: { order: number | { id: number } } | [order: number | { id: nu
 })
 /**
 * @see \App\Http\Controllers\Admin\OrderController::show
- * @see app/Http/Controllers/Admin/OrderController.php:111
+ * @see app/Http/Controllers/Admin/OrderController.php:112
  * @route '/admin/orders/{order}'
  */
 show.head = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -266,7 +266,7 @@ show.head = (args: { order: number | { id: number } } | [order: number | { id: n
 
     /**
 * @see \App\Http\Controllers\Admin\OrderController::show
- * @see app/Http/Controllers/Admin/OrderController.php:111
+ * @see app/Http/Controllers/Admin/OrderController.php:112
  * @route '/admin/orders/{order}'
  */
     const showForm = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -276,7 +276,7 @@ show.head = (args: { order: number | { id: number } } | [order: number | { id: n
 
             /**
 * @see \App\Http\Controllers\Admin\OrderController::show
- * @see app/Http/Controllers/Admin/OrderController.php:111
+ * @see app/Http/Controllers/Admin/OrderController.php:112
  * @route '/admin/orders/{order}'
  */
         showForm.get = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -285,7 +285,7 @@ show.head = (args: { order: number | { id: number } } | [order: number | { id: n
         })
             /**
 * @see \App\Http\Controllers\Admin\OrderController::show
- * @see app/Http/Controllers/Admin/OrderController.php:111
+ * @see app/Http/Controllers/Admin/OrderController.php:112
  * @route '/admin/orders/{order}'
  */
         showForm.head = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -301,7 +301,7 @@ show.head = (args: { order: number | { id: number } } | [order: number | { id: n
     show.form = showForm
 /**
 * @see \App\Http\Controllers\Admin\OrderController::update
- * @see app/Http/Controllers/Admin/OrderController.php:270
+ * @see app/Http/Controllers/Admin/OrderController.php:271
  * @route '/admin/orders/{order}'
  */
 export const update = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -316,7 +316,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::update
- * @see app/Http/Controllers/Admin/OrderController.php:270
+ * @see app/Http/Controllers/Admin/OrderController.php:271
  * @route '/admin/orders/{order}'
  */
 update.url = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -349,7 +349,7 @@ update.url = (args: { order: number | { id: number } } | [order: number | { id: 
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::update
- * @see app/Http/Controllers/Admin/OrderController.php:270
+ * @see app/Http/Controllers/Admin/OrderController.php:271
  * @route '/admin/orders/{order}'
  */
 update.put = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -358,7 +358,7 @@ update.put = (args: { order: number | { id: number } } | [order: number | { id: 
 })
 /**
 * @see \App\Http\Controllers\Admin\OrderController::update
- * @see app/Http/Controllers/Admin/OrderController.php:270
+ * @see app/Http/Controllers/Admin/OrderController.php:271
  * @route '/admin/orders/{order}'
  */
 update.patch = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -368,7 +368,7 @@ update.patch = (args: { order: number | { id: number } } | [order: number | { id
 
     /**
 * @see \App\Http\Controllers\Admin\OrderController::update
- * @see app/Http/Controllers/Admin/OrderController.php:270
+ * @see app/Http/Controllers/Admin/OrderController.php:271
  * @route '/admin/orders/{order}'
  */
     const updateForm = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -383,7 +383,7 @@ update.patch = (args: { order: number | { id: number } } | [order: number | { id
 
             /**
 * @see \App\Http\Controllers\Admin\OrderController::update
- * @see app/Http/Controllers/Admin/OrderController.php:270
+ * @see app/Http/Controllers/Admin/OrderController.php:271
  * @route '/admin/orders/{order}'
  */
         updateForm.put = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -397,7 +397,7 @@ update.patch = (args: { order: number | { id: number } } | [order: number | { id
         })
             /**
 * @see \App\Http\Controllers\Admin\OrderController::update
- * @see app/Http/Controllers/Admin/OrderController.php:270
+ * @see app/Http/Controllers/Admin/OrderController.php:271
  * @route '/admin/orders/{order}'
  */
         updateForm.patch = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -413,7 +413,7 @@ update.patch = (args: { order: number | { id: number } } | [order: number | { id
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\OrderController::destroy
- * @see app/Http/Controllers/Admin/OrderController.php:427
+ * @see app/Http/Controllers/Admin/OrderController.php:428
  * @route '/admin/orders/{order}'
  */
 export const destroy = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -428,7 +428,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::destroy
- * @see app/Http/Controllers/Admin/OrderController.php:427
+ * @see app/Http/Controllers/Admin/OrderController.php:428
  * @route '/admin/orders/{order}'
  */
 destroy.url = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -461,7 +461,7 @@ destroy.url = (args: { order: number | { id: number } } | [order: number | { id:
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::destroy
- * @see app/Http/Controllers/Admin/OrderController.php:427
+ * @see app/Http/Controllers/Admin/OrderController.php:428
  * @route '/admin/orders/{order}'
  */
 destroy.delete = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -471,7 +471,7 @@ destroy.delete = (args: { order: number | { id: number } } | [order: number | { 
 
     /**
 * @see \App\Http\Controllers\Admin\OrderController::destroy
- * @see app/Http/Controllers/Admin/OrderController.php:427
+ * @see app/Http/Controllers/Admin/OrderController.php:428
  * @route '/admin/orders/{order}'
  */
     const destroyForm = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -486,7 +486,7 @@ destroy.delete = (args: { order: number | { id: number } } | [order: number | { 
 
             /**
 * @see \App\Http\Controllers\Admin\OrderController::destroy
- * @see app/Http/Controllers/Admin/OrderController.php:427
+ * @see app/Http/Controllers/Admin/OrderController.php:428
  * @route '/admin/orders/{order}'
  */
         destroyForm.delete = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -502,7 +502,7 @@ destroy.delete = (args: { order: number | { id: number } } | [order: number | { 
     destroy.form = destroyForm
 /**
 * @see \App\Http\Controllers\Admin\OrderController::simulateUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:489
+ * @see app/Http/Controllers/Admin/OrderController.php:490
  * @route '/admin/orders/{order}/simulate-upgrade-downgrade'
  */
 export const simulateUpgradeDowngrade = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -517,7 +517,7 @@ simulateUpgradeDowngrade.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::simulateUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:489
+ * @see app/Http/Controllers/Admin/OrderController.php:490
  * @route '/admin/orders/{order}/simulate-upgrade-downgrade'
  */
 simulateUpgradeDowngrade.url = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -550,7 +550,7 @@ simulateUpgradeDowngrade.url = (args: { order: number | { id: number } } | [orde
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::simulateUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:489
+ * @see app/Http/Controllers/Admin/OrderController.php:490
  * @route '/admin/orders/{order}/simulate-upgrade-downgrade'
  */
 simulateUpgradeDowngrade.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -560,7 +560,7 @@ simulateUpgradeDowngrade.post = (args: { order: number | { id: number } } | [ord
 
     /**
 * @see \App\Http\Controllers\Admin\OrderController::simulateUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:489
+ * @see app/Http/Controllers/Admin/OrderController.php:490
  * @route '/admin/orders/{order}/simulate-upgrade-downgrade'
  */
     const simulateUpgradeDowngradeForm = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -570,7 +570,7 @@ simulateUpgradeDowngrade.post = (args: { order: number | { id: number } } | [ord
 
             /**
 * @see \App\Http\Controllers\Admin\OrderController::simulateUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:489
+ * @see app/Http/Controllers/Admin/OrderController.php:490
  * @route '/admin/orders/{order}/simulate-upgrade-downgrade'
  */
         simulateUpgradeDowngradeForm.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -581,7 +581,7 @@ simulateUpgradeDowngrade.post = (args: { order: number | { id: number } } | [ord
     simulateUpgradeDowngrade.form = simulateUpgradeDowngradeForm
 /**
 * @see \App\Http\Controllers\Admin\OrderController::processUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:536
+ * @see app/Http/Controllers/Admin/OrderController.php:537
  * @route '/admin/orders/{order}/process-upgrade-downgrade'
  */
 export const processUpgradeDowngrade = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -596,7 +596,7 @@ processUpgradeDowngrade.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::processUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:536
+ * @see app/Http/Controllers/Admin/OrderController.php:537
  * @route '/admin/orders/{order}/process-upgrade-downgrade'
  */
 processUpgradeDowngrade.url = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -629,7 +629,7 @@ processUpgradeDowngrade.url = (args: { order: number | { id: number } } | [order
 
 /**
 * @see \App\Http\Controllers\Admin\OrderController::processUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:536
+ * @see app/Http/Controllers/Admin/OrderController.php:537
  * @route '/admin/orders/{order}/process-upgrade-downgrade'
  */
 processUpgradeDowngrade.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -639,7 +639,7 @@ processUpgradeDowngrade.post = (args: { order: number | { id: number } } | [orde
 
     /**
 * @see \App\Http\Controllers\Admin\OrderController::processUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:536
+ * @see app/Http/Controllers/Admin/OrderController.php:537
  * @route '/admin/orders/{order}/process-upgrade-downgrade'
  */
     const processUpgradeDowngradeForm = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -649,7 +649,7 @@ processUpgradeDowngrade.post = (args: { order: number | { id: number } } | [orde
 
             /**
 * @see \App\Http\Controllers\Admin\OrderController::processUpgradeDowngrade
- * @see app/Http/Controllers/Admin/OrderController.php:536
+ * @see app/Http/Controllers/Admin/OrderController.php:537
  * @route '/admin/orders/{order}/process-upgrade-downgrade'
  */
         processUpgradeDowngradeForm.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -660,7 +660,7 @@ processUpgradeDowngrade.post = (args: { order: number | { id: number } } | [orde
     processUpgradeDowngrade.form = processUpgradeDowngradeForm
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::createAndSendInvoice
- * @see app/Http/Controllers/Admin/InvoiceController.php:225
+ * @see app/Http/Controllers/Admin/InvoiceController.php:215
  * @route '/admin/orders/{order}/create-and-send-invoice'
  */
 export const createAndSendInvoice = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -675,7 +675,7 @@ createAndSendInvoice.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::createAndSendInvoice
- * @see app/Http/Controllers/Admin/InvoiceController.php:225
+ * @see app/Http/Controllers/Admin/InvoiceController.php:215
  * @route '/admin/orders/{order}/create-and-send-invoice'
  */
 createAndSendInvoice.url = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -708,7 +708,7 @@ createAndSendInvoice.url = (args: { order: number | { id: number } } | [order: n
 
 /**
 * @see \App\Http\Controllers\Admin\InvoiceController::createAndSendInvoice
- * @see app/Http/Controllers/Admin/InvoiceController.php:225
+ * @see app/Http/Controllers/Admin/InvoiceController.php:215
  * @route '/admin/orders/{order}/create-and-send-invoice'
  */
 createAndSendInvoice.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -718,7 +718,7 @@ createAndSendInvoice.post = (args: { order: number | { id: number } } | [order: 
 
     /**
 * @see \App\Http\Controllers\Admin\InvoiceController::createAndSendInvoice
- * @see app/Http/Controllers/Admin/InvoiceController.php:225
+ * @see app/Http/Controllers/Admin/InvoiceController.php:215
  * @route '/admin/orders/{order}/create-and-send-invoice'
  */
     const createAndSendInvoiceForm = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -728,7 +728,7 @@ createAndSendInvoice.post = (args: { order: number | { id: number } } | [order: 
 
             /**
 * @see \App\Http\Controllers\Admin\InvoiceController::createAndSendInvoice
- * @see app/Http/Controllers/Admin/InvoiceController.php:225
+ * @see app/Http/Controllers/Admin/InvoiceController.php:215
  * @route '/admin/orders/{order}/create-and-send-invoice'
  */
         createAndSendInvoiceForm.post = (args: { order: number | { id: number } } | [order: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

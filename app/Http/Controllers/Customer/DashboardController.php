@@ -6,15 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\AiCredit;
 use App\Models\JournalEntry;
 use App\Models\PaymentAccount;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class DashboardController extends Controller
+class DashboardController extends CustomerBaseController
 {
     public function index(): Response
     {
-        $customer = Auth::guard('customer')->user();
+        $customer = $this->customer();
 
         // Services are now handled through orders - get active orders instead
         $services = $customer->orders()

@@ -54,8 +54,7 @@ class AiClient
             try {
                 $apiKey = Crypt::decryptString($db['api_key']);
             } catch (\Throwable) {
-                // Fallback: nilai disimpan plain (migrasi lama) — pakai langsung.
-                $apiKey = $db['api_key'];
+                logger()->warning('AiClient: api_key di DB tidak bisa didekripsi (nilai lama/rusak). Atur ulang di /admin/ai/settings.');
             }
         } else {
             $apiKey = config('services.ai.api_key', env('AI_API_KEY', ''));

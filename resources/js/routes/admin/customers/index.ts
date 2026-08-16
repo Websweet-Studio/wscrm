@@ -348,7 +348,7 @@ update.patch = (args: { customer: number | { id: number } } | [customer: number 
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::destroy
- * @see app/Http/Controllers/Admin/CustomerController.php:183
+ * @see app/Http/Controllers/Admin/CustomerController.php:185
  * @route '/admin/customers/{customer}'
  */
 export const destroy = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -363,7 +363,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::destroy
- * @see app/Http/Controllers/Admin/CustomerController.php:183
+ * @see app/Http/Controllers/Admin/CustomerController.php:185
  * @route '/admin/customers/{customer}'
  */
 destroy.url = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -396,7 +396,7 @@ destroy.url = (args: { customer: number | { id: number } } | [customer: number |
 
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::destroy
- * @see app/Http/Controllers/Admin/CustomerController.php:183
+ * @see app/Http/Controllers/Admin/CustomerController.php:185
  * @route '/admin/customers/{customer}'
  */
 destroy.delete = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -406,7 +406,7 @@ destroy.delete = (args: { customer: number | { id: number } } | [customer: numbe
 
     /**
 * @see \App\Http\Controllers\Admin\CustomerController::destroy
- * @see app/Http/Controllers/Admin/CustomerController.php:183
+ * @see app/Http/Controllers/Admin/CustomerController.php:185
  * @route '/admin/customers/{customer}'
  */
     const destroyForm = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -421,7 +421,7 @@ destroy.delete = (args: { customer: number | { id: number } } | [customer: numbe
 
             /**
 * @see \App\Http\Controllers\Admin\CustomerController::destroy
- * @see app/Http/Controllers/Admin/CustomerController.php:183
+ * @see app/Http/Controllers/Admin/CustomerController.php:185
  * @route '/admin/customers/{customer}'
  */
         destroyForm.delete = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -437,7 +437,7 @@ destroy.delete = (args: { customer: number | { id: number } } | [customer: numbe
     destroy.form = destroyForm
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::bulkDestroy
- * @see app/Http/Controllers/Admin/CustomerController.php:194
+ * @see app/Http/Controllers/Admin/CustomerController.php:196
  * @route '/admin/customers/bulk'
  */
 export const bulkDestroy = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -452,7 +452,7 @@ bulkDestroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::bulkDestroy
- * @see app/Http/Controllers/Admin/CustomerController.php:194
+ * @see app/Http/Controllers/Admin/CustomerController.php:196
  * @route '/admin/customers/bulk'
  */
 bulkDestroy.url = (options?: RouteQueryOptions) => {
@@ -461,7 +461,7 @@ bulkDestroy.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::bulkDestroy
- * @see app/Http/Controllers/Admin/CustomerController.php:194
+ * @see app/Http/Controllers/Admin/CustomerController.php:196
  * @route '/admin/customers/bulk'
  */
 bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -471,7 +471,7 @@ bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
 
     /**
 * @see \App\Http\Controllers\Admin\CustomerController::bulkDestroy
- * @see app/Http/Controllers/Admin/CustomerController.php:194
+ * @see app/Http/Controllers/Admin/CustomerController.php:196
  * @route '/admin/customers/bulk'
  */
     const bulkDestroyForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -486,7 +486,7 @@ bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
 
             /**
 * @see \App\Http\Controllers\Admin\CustomerController::bulkDestroy
- * @see app/Http/Controllers/Admin/CustomerController.php:194
+ * @see app/Http/Controllers/Admin/CustomerController.php:196
  * @route '/admin/customers/bulk'
  */
         bulkDestroyForm.delete = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -502,7 +502,7 @@ bulkDestroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> =>
     bulkDestroy.form = bulkDestroyForm
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::welcomeEmail
- * @see app/Http/Controllers/Admin/CustomerController.php:233
+ * @see app/Http/Controllers/Admin/CustomerController.php:235
  * @route '/admin/customers/{customer}/welcome-email'
  */
 export const welcomeEmail = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -517,7 +517,7 @@ welcomeEmail.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::welcomeEmail
- * @see app/Http/Controllers/Admin/CustomerController.php:233
+ * @see app/Http/Controllers/Admin/CustomerController.php:235
  * @route '/admin/customers/{customer}/welcome-email'
  */
 welcomeEmail.url = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -550,7 +550,7 @@ welcomeEmail.url = (args: { customer: number | { id: number } } | [customer: num
 
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::welcomeEmail
- * @see app/Http/Controllers/Admin/CustomerController.php:233
+ * @see app/Http/Controllers/Admin/CustomerController.php:235
  * @route '/admin/customers/{customer}/welcome-email'
  */
 welcomeEmail.post = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -560,7 +560,7 @@ welcomeEmail.post = (args: { customer: number | { id: number } } | [customer: nu
 
     /**
 * @see \App\Http\Controllers\Admin\CustomerController::welcomeEmail
- * @see app/Http/Controllers/Admin/CustomerController.php:233
+ * @see app/Http/Controllers/Admin/CustomerController.php:235
  * @route '/admin/customers/{customer}/welcome-email'
  */
     const welcomeEmailForm = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -570,7 +570,7 @@ welcomeEmail.post = (args: { customer: number | { id: number } } | [customer: nu
 
             /**
 * @see \App\Http\Controllers\Admin\CustomerController::welcomeEmail
- * @see app/Http/Controllers/Admin/CustomerController.php:233
+ * @see app/Http/Controllers/Admin/CustomerController.php:235
  * @route '/admin/customers/{customer}/welcome-email'
  */
         welcomeEmailForm.post = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -581,7 +581,7 @@ welcomeEmail.post = (args: { customer: number | { id: number } } | [customer: nu
     welcomeEmail.form = welcomeEmailForm
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::resendPassword
- * @see app/Http/Controllers/Admin/CustomerController.php:240
+ * @see app/Http/Controllers/Admin/CustomerController.php:242
  * @route '/admin/customers/{customer}/resend-password'
  */
 export const resendPassword = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -596,7 +596,7 @@ resendPassword.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::resendPassword
- * @see app/Http/Controllers/Admin/CustomerController.php:240
+ * @see app/Http/Controllers/Admin/CustomerController.php:242
  * @route '/admin/customers/{customer}/resend-password'
  */
 resendPassword.url = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -629,7 +629,7 @@ resendPassword.url = (args: { customer: number | { id: number } } | [customer: n
 
 /**
 * @see \App\Http\Controllers\Admin\CustomerController::resendPassword
- * @see app/Http/Controllers/Admin/CustomerController.php:240
+ * @see app/Http/Controllers/Admin/CustomerController.php:242
  * @route '/admin/customers/{customer}/resend-password'
  */
 resendPassword.post = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -639,7 +639,7 @@ resendPassword.post = (args: { customer: number | { id: number } } | [customer: 
 
     /**
 * @see \App\Http\Controllers\Admin\CustomerController::resendPassword
- * @see app/Http/Controllers/Admin/CustomerController.php:240
+ * @see app/Http/Controllers/Admin/CustomerController.php:242
  * @route '/admin/customers/{customer}/resend-password'
  */
     const resendPasswordForm = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -649,7 +649,7 @@ resendPassword.post = (args: { customer: number | { id: number } } | [customer: 
 
             /**
 * @see \App\Http\Controllers\Admin\CustomerController::resendPassword
- * @see app/Http/Controllers/Admin/CustomerController.php:240
+ * @see app/Http/Controllers/Admin/CustomerController.php:242
  * @route '/admin/customers/{customer}/resend-password'
  */
         resendPasswordForm.post = (args: { customer: number | { id: number } } | [customer: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

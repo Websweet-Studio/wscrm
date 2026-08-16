@@ -12,19 +12,13 @@ use App\Services\InvoiceGeneratorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class AiController extends Controller
+class AiController extends CustomerBaseController
 {
-    private function customer(): \App\Models\Customer
-    {
-        return Auth::guard('customer')->user();
-    }
-
     /**
      * Dashboard token & usage: sisa kredit, API key, harga per model, endpoint, riwayat usage.
      */

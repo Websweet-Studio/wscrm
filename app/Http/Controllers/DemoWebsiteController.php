@@ -298,8 +298,8 @@ class DemoWebsiteController extends Controller
      */
     public function trackEmbed(Request $request): JsonResponse
     {
-        $referer = $request->header('Referer') ?: $request->input('ref', '');
-        $type = $request->input('type', 'listing');
+        $referer = mb_substr($request->header('Referer') ?: $request->input('ref', ''), 0, 255);
+        $type = mb_substr($request->input('type', 'listing'), 0, 32);
         $demoId = $request->input('demo_id');
 
         if ($referer) {

@@ -14,17 +14,8 @@ use Illuminate\Http\JsonResponse;
 
 class WebsiteClientController extends Controller
 {
-    private function checkAdmin(): void
-    {
-        if (!auth()->user()->isAdmin()) {
-            abort(403, 'Unauthorized access.');
-        }
-    }
-
     public function index(): Response
     {
-        $this->checkAdmin();
-
         $websites = WebsiteClient::with('customer')
             ->when(request('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -46,8 +37,6 @@ class WebsiteClientController extends Controller
 
     public function create(): Response
     {
-        $this->checkAdmin();
-
         $customers = Customer::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Admin/WebsiteClients/CreateEdit', [
@@ -58,8 +47,6 @@ class WebsiteClientController extends Controller
 
     public function edit(WebsiteClient $website): Response
     {
-        $this->checkAdmin();
-
         $customers = Customer::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Admin/WebsiteClients/CreateEdit', [
@@ -70,7 +57,6 @@ class WebsiteClientController extends Controller
 
     public function store(WebsiteClientRequest $request)
     {
-        $this->checkAdmin();
         WebsiteClient::create($request->validated());
 
         return redirect()->route('admin.websites.index')->with('success', 'Website berhasil ditambahkan.');
@@ -78,7 +64,6 @@ class WebsiteClientController extends Controller
 
     public function update(WebsiteClientRequest $request, WebsiteClient $website)
     {
-        $this->checkAdmin();
         $website->update($request->validated());
 
         return redirect()->route('admin.websites.index')->with('success', 'Website berhasil diperbarui.');
@@ -86,7 +71,6 @@ class WebsiteClientController extends Controller
 
     public function destroy(WebsiteClient $website)
     {
-        $this->checkAdmin();
         $website->delete();
 
         return redirect()->route('admin.websites.index')->with('success', 'Website berhasil dihapus.');
@@ -94,7 +78,6 @@ class WebsiteClientController extends Controller
 
     public function bulkDelete()
     {
-        $this->checkAdmin();
         $ids = request('ids', []);
 
         if (empty($ids)) {
@@ -108,8 +91,6 @@ class WebsiteClientController extends Controller
 
     public function show(WebsiteClient $website): Response
     {
-        $this->checkAdmin();
-
         $website->load('customer');
 
         $journals = $website->journals()
@@ -125,8 +106,6 @@ class WebsiteClientController extends Controller
 
     public function sync(WebsiteClient $website, WordPressService $wpService): JsonResponse
     {
-        $this->checkAdmin();
-
         $result = $wpService->syncSiteInfo($website);
 
         if ($result === null) {
@@ -148,8 +127,6 @@ class WebsiteClientController extends Controller
 
     public function plugins(WebsiteClient $website, WordPressService $wpService): JsonResponse
     {
-        $this->checkAdmin();
-
         if (!$website->wp_username || !$website->wp_app_password) {
             return response()->json([
                 'success' => false,
@@ -165,8 +142,6 @@ class WebsiteClientController extends Controller
 
     public function destroyPlugin(WebsiteClient $website, WordPressService $wpService): JsonResponse
     {
-        $this->checkAdmin();
-
         $pluginFile = (string) request('plugin');
         if (!$pluginFile) {
             return response()->json([

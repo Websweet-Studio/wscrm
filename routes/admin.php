@@ -37,7 +37,7 @@ use App\Http\Controllers\Admin\Ai\SettingController as AiSettingController;
 use App\Http\Controllers\Admin\Ai\TransactionController as AiTransactionController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verified'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verified', 'admin'])->group(function () {
     Route::resource('customers', CustomerController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
     Route::delete('customers/bulk', [CustomerController::class, 'bulkDestroy'])->name('customers.bulk-destroy');
     Route::post('customers/{customer}/welcome-email', [CustomerController::class, 'sendWelcomeEmail'])->name('customers.welcome-email');
@@ -137,11 +137,13 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
         Route::delete('branding/delete-image', [BrandingController::class, 'deleteImage'])->name('branding.delete-image');
     });
 
-    // Database Export/Import
-    Route::get('database', [DatabaseController::class, 'index'])->name('database.index');
-    Route::get('database/export', [DatabaseController::class, 'export'])->name('database.export');
-    Route::post('database/import', [DatabaseController::class, 'import'])->name('database.import');
-    Route::post('database/clear', [DatabaseController::class, 'clear'])->name('database.clear');
+    // Database Export/Import (hanya super admin — menyentuh seluruh data & secret)
+    Route::middleware('super_admin')->group(function () {
+        Route::get('database', [DatabaseController::class, 'index'])->name('database.index');
+        Route::get('database/export', [DatabaseController::class, 'export'])->name('database.export');
+        Route::post('database/import', [DatabaseController::class, 'import'])->name('database.import');
+        Route::post('database/clear', [DatabaseController::class, 'clear'])->name('database.clear');
+    });
 
     // Admin Tools
     Route::get('tools', [AdminToolsController::class, 'index'])->name('tools.index');

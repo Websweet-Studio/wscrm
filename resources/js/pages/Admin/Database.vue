@@ -11,6 +11,7 @@ import { ref } from 'vue';
 
 const form = useForm({
     file: null as File | null,
+    confirmRestore: false,
 });
 
 const clearForm = useForm({
@@ -43,6 +44,7 @@ const submitImport = () => {
         forceFormData: true,
         onSuccess: () => {
             form.reset('file');
+            form.reset('confirmRestore');
         },
     });
 };
@@ -83,13 +85,17 @@ const submitClear = () => {
                         <CardTitle style="font-family: Georgia, serif;">Export Database</CardTitle>
                         <CardDescription>Unduh snapshot database dalam format JSON</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent class="space-y-3">
                         <Button variant="outline" asChild class="w-full cursor-pointer sm:w-auto">
                             <a href="/admin/database/export">
                                 <Download class="mr-2 h-4 w-4" />
                                 Export
                             </a>
                         </Button>
+                        <p class="text-xs text-muted-foreground">
+                            Kolom rahasia (API key AI customer, API key provider, password DirectAdmin/WP)
+                            dikosongkan pada file export. Isi ulang melalui menu Admin setelah restore.
+                        </p>
                     </CardContent>
                 </Card>
 
@@ -99,7 +105,7 @@ const submitClear = () => {
                         <CardDescription>Unggah file JSON hasil export untuk restore data</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                        <div class="flex flex-col gap-3">
                             <div class="w-full space-y-2">
                                 <Label for="database-import-file">File JSON</Label>
                                 <input
@@ -110,12 +116,23 @@ const submitClear = () => {
                                     class="block w-full cursor-pointer rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-2 file:text-sm file:font-medium file:text-secondary-foreground hover:file:bg-secondary/80 dark:bg-input/30"
                                 />
                             </div>
-                            <Button :disabled="!form.file || form.processing" @click="submitImport" class="w-full cursor-pointer disabled:cursor-not-allowed sm:w-auto">
-                                <Upload class="mr-2 h-4 w-4" />
-                                Import
-                            </Button>
+                            <label class="flex cursor-pointer items-start gap-2 text-sm text-muted-foreground">
+                                <input v-model="form.confirmRestore" type="checkbox" class="mt-0.5 h-4 w-4 cursor-pointer rounded border-input accent-primary" />
+                                <span>Saya paham data yang ada akan <strong>dihapus dan ditimpa</strong> dari file ini.</span>
+                            </label>
+                            <div class="flex items-end gap-3">
+                                <Button
+                                    :disabled="!form.file || !form.confirmRestore || form.processing"
+                                    @click="submitImport"
+                                    class="w-full cursor-pointer disabled:cursor-not-allowed sm:w-auto"
+                                >
+                                    <Upload class="mr-2 h-4 w-4" />
+                                    Import
+                                </Button>
+                            </div>
                         </div>
                         <div v-if="form.errors.file" class="mt-2 text-sm text-destructive">{{ form.errors.file }}</div>
+                        <div v-if="form.errors.confirmRestore" class="mt-2 text-sm text-destructive">{{ form.errors.confirmRestore }}</div>
                         <div v-if="form.recentlySuccessful" class="mt-2 text-sm text-primary">Import berhasil</div>
                     </CardContent>
                 </Card>

@@ -17,23 +17,27 @@ class DatabaseController extends Controller
         return \Inertia\Inertia::render('Admin/Database');
     }
 
+    /**
+     * Kolom yang TIDAK ikut diekspor (nilai dikosongkan):
+     * - ai_credits.api_key / api_key_hash: API key customer TIDAK terenkripsi (plaintext).
+     * - ai_providers.api_key, website_clients.wp_app_password, directadmin_settings
+     *   (key=password): terenkripsi dengan APP_KEY, tidak bisa dipulihkan di server
+     *   lain. Dikosongkan agar backup portabel & aman dibagikan.
+     */
+    private const SENSITIVE_COLUMNS = [
+        'ai_providers' => ['api_key'],
+        'website_clients' => ['wp_app_password'],
+        'ai_credits' => ['api_key', 'api_key_hash'],
+    ];
+
+    /** Tabel runtime/transien yang dibuat ulang otomatis — tidak perlu diekspor. */
+    private const RUNTIME_TABLES = ['cache', 'cache_locks', 'sessions', 'jobs', 'job_batches', 'failed_jobs'];
+
     public function export()
     {
         $driver = DB::getDriverName();
         $database = DB::getDatabaseName();
         $tables = $this->getTables($driver, $database);
-
-        $data = [
-            'driver' => $driver,
-            'database' => $database,
-            'generated_at' => now()->toIso8601String(),
-            'tables' => [],
-        ];
-
-        foreach ($tables as $table) {
-            $rows = DB::table($table)->get()->map(fn ($row) => (array) $row)->toArray();
-            $data['tables'][$table] = $rows;
-        }
 
         $dir = storage_path('app/backups');
         if (! File::exists($dir)) {
@@ -41,7 +45,52 @@ class DatabaseController extends Controller
         }
 
         $filePath = $dir.'/db-export-'.date('Y-m-d-H-i-s').'.json';
-        File::put($filePath, json_encode($data));
+
+        // Stream langsung ke file agar memory tetap kecil walau DB besar.
+        $handle = fopen($filePath, 'w');
+
+        fwrite($handle, "{\n");
+        fwrite($handle, implode(",\n", [
+            '"driver":'.json_encode($driver),
+            '"database":'.json_encode($database),
+            '"generated_at":'.json_encode(now()->toIso8601String()),
+            '"version":2',
+            '"note":'.json_encode('Kolom rahasia dikosongkan saat ekspor. Isi ulang API key & password via menu Admin setelah restore.'),
+        ]));
+        fwrite($handle, ",\n\"tables\": {\n");
+
+        $firstTable = true;
+        foreach ($tables as $table) {
+            if (in_array($table, self::RUNTIME_TABLES, true)) {
+                continue;
+            }
+
+            if (! $firstTable) {
+                fwrite($handle, ",\n");
+            }
+            $firstTable = false;
+
+            fwrite($handle, json_encode((string) $table).': [');
+
+            $firstRow = true;
+            foreach (DB::table($table)->cursor() as $row) {
+                $arr = (array) $row;
+                foreach (self::SENSITIVE_COLUMNS[$table] ?? [] as $column) {
+                    $arr[$column] = null;
+                }
+                if ($table === 'directadmin_settings' && ($arr['key'] ?? null) === 'password') {
+                    $arr['value'] = null;
+                }
+
+                fwrite($handle, ($firstRow ? '' : ',').json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+                $firstRow = false;
+            }
+
+            fwrite($handle, ']');
+        }
+
+        fwrite($handle, "\n}\n}\n");
+        fclose($handle);
 
         return Response::download($filePath)->deleteFileAfterSend(true);
     }
@@ -110,8 +159,14 @@ class DatabaseController extends Controller
 
     public function import(Request $request)
     {
+        // Batas ukuran 50MB — file lebih besar ditolak sebelum diproses.
         $request->validate([
-            'file' => ['required', 'file', 'mimes:json'],
+            'file' => ['required', 'file', 'mimes:json', 'max:51200'],
+            // Restore menghapus data yang ada → wajib konfirmasi eksplisit.
+            'confirm_restore' => ['required', 'accepted'],
+        ], [
+            'confirm_restore.required' => 'Centang konfirmasi bahwa Anda paham data yang ada akan ditimpa.',
+            'confirm_restore.accepted' => 'Centang konfirmasi bahwa Anda paham data yang ada akan ditimpa.',
         ]);
 
         $file = $request->file('file');
@@ -170,7 +225,7 @@ class DatabaseController extends Controller
 
                             $filtered = array_intersect_key($row, $columnSet);
                             if ($filtered !== []) {
-                                $filteredChunk[] = $filtered;
+                                $filteredChunk[] = $this->normalizeDatetimeValues($filtered);
                             }
                         }
 
@@ -207,6 +262,22 @@ class DatabaseController extends Controller
 
             return redirect()->back()->with('error', 'Gagal import: '.$e->getMessage());
         }
+    }
+
+    /**
+     * json_encode(Carbon) menghasilkan ISO8601 dengan 'T'/'Z', mis. dari file
+     * backup yang dibuat tool lain. MySQL strict mode menolak format itu →
+     * konversi ke format datetime standar sebelum insert.
+     */
+    private function normalizeDatetimeValues(array $row): array
+    {
+        foreach ($row as $key => $value) {
+            if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/', $value)) {
+                $row[$key] = \Illuminate\Support\Carbon::parse($value)->format('Y-m-d H:i:s');
+            }
+        }
+
+        return $row;
     }
 
     private function getTables(string $driver, ?string $database): array

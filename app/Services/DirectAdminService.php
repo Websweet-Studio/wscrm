@@ -25,7 +25,7 @@ class DirectAdminService
             'host' => $stored['host'] ?? '',
             'port' => ($stored['port'] ?? '') ?: '2222',
             'username' => $stored['username'] ?? '',
-            'password' => $stored['password'] ?? '',
+            'password' => DirectAdminSetting::getSecret('password', $stored['password'] ?? ''),
             'verify_ssl' => filter_var($stored['verify_ssl'] ?? false, FILTER_VALIDATE_BOOLEAN),
         ];
     }

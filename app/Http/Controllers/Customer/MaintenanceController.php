@@ -5,15 +5,14 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\JournalEntry;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class MaintenanceController extends Controller
+class MaintenanceController extends CustomerBaseController
 {
     public function index(): Response
     {
-        $customer = Auth::guard('customer')->user();
+        $customer = $this->customer();
         $websiteIds = $customer->websiteClients()->pluck('id');
 
         $filters = request()->only(['website_client_id', 'date_from', 'date_to']);
@@ -52,7 +51,7 @@ class MaintenanceController extends Controller
 
     public function export()
     {
-        $customer = Auth::guard('customer')->user();
+        $customer = $this->customer();
         $websiteIds = $customer->websiteClients()->pluck('id');
 
         if ($websiteIds->isEmpty()) {

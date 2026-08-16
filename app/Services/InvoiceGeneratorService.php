@@ -63,9 +63,14 @@ class InvoiceGeneratorService
                 'notes' => "Renewal invoice for {$order->domain_name} - {$order->service_type} service expiring on ".Carbon::parse($order->expires_at)->format('d M Y'),
             ]);
 
+            // Kirim email invoice renewal ke customer (antri via InvoiceEmail/ShouldQueue).
+            $invoice->setRelation('customer', $order->customer);
+            $invoice->setRelation('order', $order);
+            \Illuminate\Support\Facades\Mail::to($order->customer->email)
+                ->queue(new \App\Mail\InvoiceEmail($invoice));
+
             \Log::info("Generated renewal invoice #{$invoice->invoice_number} for order #{$order->id} - {$order->domain_name}");
 
-            // TODO: Send email notification to customer about renewal invoice
             // TODO: Send notification to admin about generated renewal invoices
             $generatedCount++;
         }

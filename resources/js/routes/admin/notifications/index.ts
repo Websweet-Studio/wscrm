@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\NotificationController::index
- * @see app/Http/Controllers/Admin/NotificationController.php:19
+ * @see app/Http/Controllers/Admin/NotificationController.php:12
  * @route '/admin/notifications'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\NotificationController::index
- * @see app/Http/Controllers/Admin/NotificationController.php:19
+ * @see app/Http/Controllers/Admin/NotificationController.php:12
  * @route '/admin/notifications'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\NotificationController::index
- * @see app/Http/Controllers/Admin/NotificationController.php:19
+ * @see app/Http/Controllers/Admin/NotificationController.php:12
  * @route '/admin/notifications'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\NotificationController::index
- * @see app/Http/Controllers/Admin/NotificationController.php:19
+ * @see app/Http/Controllers/Admin/NotificationController.php:12
  * @route '/admin/notifications'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\NotificationController::index
- * @see app/Http/Controllers/Admin/NotificationController.php:19
+ * @see app/Http/Controllers/Admin/NotificationController.php:12
  * @route '/admin/notifications'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\NotificationController::index
- * @see app/Http/Controllers/Admin/NotificationController.php:19
+ * @see app/Http/Controllers/Admin/NotificationController.php:12
  * @route '/admin/notifications'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\NotificationController::index
- * @see app/Http/Controllers/Admin/NotificationController.php:19
+ * @see app/Http/Controllers/Admin/NotificationController.php:12
  * @route '/admin/notifications'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\NotificationController::latest
- * @see app/Http/Controllers/Admin/NotificationController.php:34
+ * @see app/Http/Controllers/Admin/NotificationController.php:25
  * @route '/admin/notifications/latest'
  */
 export const latest = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ latest.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\NotificationController::latest
- * @see app/Http/Controllers/Admin/NotificationController.php:34
+ * @see app/Http/Controllers/Admin/NotificationController.php:25
  * @route '/admin/notifications/latest'
  */
 latest.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ latest.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\NotificationController::latest
- * @see app/Http/Controllers/Admin/NotificationController.php:34
+ * @see app/Http/Controllers/Admin/NotificationController.php:25
  * @route '/admin/notifications/latest'
  */
 latest.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -112,7 +112,7 @@ latest.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\NotificationController::latest
- * @see app/Http/Controllers/Admin/NotificationController.php:34
+ * @see app/Http/Controllers/Admin/NotificationController.php:25
  * @route '/admin/notifications/latest'
  */
 latest.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -122,7 +122,7 @@ latest.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\NotificationController::latest
- * @see app/Http/Controllers/Admin/NotificationController.php:34
+ * @see app/Http/Controllers/Admin/NotificationController.php:25
  * @route '/admin/notifications/latest'
  */
     const latestForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -132,7 +132,7 @@ latest.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\NotificationController::latest
- * @see app/Http/Controllers/Admin/NotificationController.php:34
+ * @see app/Http/Controllers/Admin/NotificationController.php:25
  * @route '/admin/notifications/latest'
  */
         latestForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -141,7 +141,7 @@ latest.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\NotificationController::latest
- * @see app/Http/Controllers/Admin/NotificationController.php:34
+ * @see app/Http/Controllers/Admin/NotificationController.php:25
  * @route '/admin/notifications/latest'
  */
         latestForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -157,7 +157,7 @@ latest.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     latest.form = latestForm
 /**
 * @see \App\Http\Controllers\Admin\NotificationController::readAll
- * @see app/Http/Controllers/Admin/NotificationController.php:65
+ * @see app/Http/Controllers/Admin/NotificationController.php:52
  * @route '/admin/notifications/read-all'
  */
 export const readAll = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -172,7 +172,7 @@ readAll.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\NotificationController::readAll
- * @see app/Http/Controllers/Admin/NotificationController.php:65
+ * @see app/Http/Controllers/Admin/NotificationController.php:52
  * @route '/admin/notifications/read-all'
  */
 readAll.url = (options?: RouteQueryOptions) => {
@@ -181,7 +181,7 @@ readAll.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\NotificationController::readAll
- * @see app/Http/Controllers/Admin/NotificationController.php:65
+ * @see app/Http/Controllers/Admin/NotificationController.php:52
  * @route '/admin/notifications/read-all'
  */
 readAll.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -191,7 +191,7 @@ readAll.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\NotificationController::readAll
- * @see app/Http/Controllers/Admin/NotificationController.php:65
+ * @see app/Http/Controllers/Admin/NotificationController.php:52
  * @route '/admin/notifications/read-all'
  */
     const readAllForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -201,7 +201,7 @@ readAll.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\NotificationController::readAll
- * @see app/Http/Controllers/Admin/NotificationController.php:65
+ * @see app/Http/Controllers/Admin/NotificationController.php:52
  * @route '/admin/notifications/read-all'
  */
         readAllForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -212,7 +212,7 @@ readAll.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     readAll.form = readAllForm
 /**
 * @see \App\Http\Controllers\Admin\NotificationController::read
- * @see app/Http/Controllers/Admin/NotificationController.php:55
+ * @see app/Http/Controllers/Admin/NotificationController.php:44
  * @route '/admin/notifications/{notification}/read'
  */
 export const read = (args: { notification: string | number } | [notification: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -227,7 +227,7 @@ read.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\NotificationController::read
- * @see app/Http/Controllers/Admin/NotificationController.php:55
+ * @see app/Http/Controllers/Admin/NotificationController.php:44
  * @route '/admin/notifications/{notification}/read'
  */
 read.url = (args: { notification: string | number } | [notification: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -255,7 +255,7 @@ read.url = (args: { notification: string | number } | [notification: string | nu
 
 /**
 * @see \App\Http\Controllers\Admin\NotificationController::read
- * @see app/Http/Controllers/Admin/NotificationController.php:55
+ * @see app/Http/Controllers/Admin/NotificationController.php:44
  * @route '/admin/notifications/{notification}/read'
  */
 read.post = (args: { notification: string | number } | [notification: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -265,7 +265,7 @@ read.post = (args: { notification: string | number } | [notification: string | n
 
     /**
 * @see \App\Http\Controllers\Admin\NotificationController::read
- * @see app/Http/Controllers/Admin/NotificationController.php:55
+ * @see app/Http/Controllers/Admin/NotificationController.php:44
  * @route '/admin/notifications/{notification}/read'
  */
     const readForm = (args: { notification: string | number } | [notification: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -275,7 +275,7 @@ read.post = (args: { notification: string | number } | [notification: string | n
 
             /**
 * @see \App\Http\Controllers\Admin\NotificationController::read
- * @see app/Http/Controllers/Admin/NotificationController.php:55
+ * @see app/Http/Controllers/Admin/NotificationController.php:44
  * @route '/admin/notifications/{notification}/read'
  */
         readForm.post = (args: { notification: string | number } | [notification: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -286,7 +286,7 @@ read.post = (args: { notification: string | number } | [notification: string | n
     read.form = readForm
 /**
 * @see \App\Http\Controllers\Admin\NotificationController::destroy
- * @see app/Http/Controllers/Admin/NotificationController.php:74
+ * @see app/Http/Controllers/Admin/NotificationController.php:59
  * @route '/admin/notifications/{notification}'
  */
 export const destroy = (args: { notification: string | number } | [notification: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -301,7 +301,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\NotificationController::destroy
- * @see app/Http/Controllers/Admin/NotificationController.php:74
+ * @see app/Http/Controllers/Admin/NotificationController.php:59
  * @route '/admin/notifications/{notification}'
  */
 destroy.url = (args: { notification: string | number } | [notification: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -329,7 +329,7 @@ destroy.url = (args: { notification: string | number } | [notification: string |
 
 /**
 * @see \App\Http\Controllers\Admin\NotificationController::destroy
- * @see app/Http/Controllers/Admin/NotificationController.php:74
+ * @see app/Http/Controllers/Admin/NotificationController.php:59
  * @route '/admin/notifications/{notification}'
  */
 destroy.delete = (args: { notification: string | number } | [notification: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -339,7 +339,7 @@ destroy.delete = (args: { notification: string | number } | [notification: strin
 
     /**
 * @see \App\Http\Controllers\Admin\NotificationController::destroy
- * @see app/Http/Controllers/Admin/NotificationController.php:74
+ * @see app/Http/Controllers/Admin/NotificationController.php:59
  * @route '/admin/notifications/{notification}'
  */
     const destroyForm = (args: { notification: string | number } | [notification: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -354,7 +354,7 @@ destroy.delete = (args: { notification: string | number } | [notification: strin
 
             /**
 * @see \App\Http\Controllers\Admin\NotificationController::destroy
- * @see app/Http/Controllers/Admin/NotificationController.php:74
+ * @see app/Http/Controllers/Admin/NotificationController.php:59
  * @route '/admin/notifications/{notification}'
  */
         destroyForm.delete = (args: { notification: string | number } | [notification: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

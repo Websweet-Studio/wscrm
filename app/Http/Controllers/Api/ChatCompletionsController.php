@@ -19,6 +19,11 @@ class ChatCompletionsController extends Controller
 {
     public function chat(Request $request, AiGateway $gateway): JsonResponse|StreamedResponse
     {
+        // Batas ukuran payload total (cegah messages/tools/response_format jumbo).
+        if (mb_strlen((string) $request->getContent()) > 1_048_576) {
+            return $this->error('Payload terlalu besar. Maksimal 1 MB.', 'invalid_request_error', 400);
+        }
+
         $credit = $this->authenticate($request);
 
         if (! $credit) {
@@ -60,14 +65,17 @@ class ChatCompletionsController extends Controller
                 return $this->error('Saldo kredit AI Anda tidak mencukupi. Silakan beli paket kredit di portal customer.', 'insufficient_quota', 429);
             }
 
-            return $this->error($message, 'server_error', 502);
+            // Jangan bocorkan detail internal provider/gateway ke client; catat di log server.
+            \Illuminate\Support\Facades\Log::warning('Chat completions gagal: '.$message);
+
+            return $this->error('Terjadi kesalahan saat memproses request. Coba lagi nanti.', 'server_error', 502);
         }
 
         $completion = $this->buildCompletion($result);
 
         // Trae / code editor mengirim stream=true dan mengharapkan SSE.
         if (! empty($payload['stream'])) {
-            return $this->streamCompletion($completion);
+            return $this->streamCompletion($gateway, $customerId, $modelKey, $messages, $temperature, $maxTokens, $options);
         }
 
         return response()->json($completion);
@@ -102,6 +110,11 @@ class ChatCompletionsController extends Controller
     private function normalizeMessages(mixed $raw): ?array
     {
         if (! is_array($raw) || count($raw) === 0) {
+            return null;
+        }
+
+        // Cap jumlah pesan & panjang konten (cegah input-token jumbo / memori).
+        if (count($raw) > 100) {
             return null;
         }
 
@@ -153,6 +166,11 @@ class ChatCompletionsController extends Controller
                 // jangan ditolak, cukup kosongkan.
                 $normalizedContent = '';
             } else {
+                return null;
+            }
+
+            // Batas panjang konten per pesan (~64KB karakter).
+            if (mb_strlen($normalizedContent) > 65536) {
                 return null;
             }
 
@@ -211,7 +229,12 @@ class ChatCompletionsController extends Controller
 
         foreach (['tools', 'tool_choice', 'response_format', 'top_p', 'frequency_penalty', 'presence_penalty', 'stop', 'seed'] as $key) {
             if (array_key_exists($key, $payload) && $payload[$key] !== null) {
-                $options[$key] = $payload[$key];
+                if ($key === 'tools' && is_array($payload['tools'])) {
+                    // Cap jumlah tools (cek skema function-calling jumbo).
+                    $options['tools'] = array_slice($payload['tools'], 0, 32);
+                } else {
+                    $options[$key] = $payload[$key];
+                }
             }
         }
 
@@ -254,36 +277,66 @@ class ChatCompletionsController extends Controller
     }
 
     /**
-     * Emulasikan SSE: provider kita bersifat blocking, jadi kirim satu chunk lengkap
-     * lalu [DONE]. Cukup utk klien OpenAI-compatible (Trae/Claude Code, dsb).
-     * ponytail: ganti jadi streaming nyata bila provider utama sudah mendukung SSE.
+     * Streaming SSE nyata: pipa tiap chunk token dari provider (AiGateway/streamChat)
+     * langsung ke client OpenAI-compatible, lalu kirim chunk final berisi usage
+     * + sisa kredit, dan `data: [DONE]`.
      */
-    private function streamCompletion(array $completion): StreamedResponse
+    private function streamCompletion(AiGateway $gateway, int $customerId, ?string $modelKey, array $messages, float $temperature, int $maxTokens, array $options): StreamedResponse
     {
-        $chunk = $completion;
-        $chunk['object'] = 'chat.completion.chunk';
+        return response()->stream(function () use ($gateway, $customerId, $modelKey, $messages, $temperature, $maxTokens, $options) {
+            $onChunk = function (array $raw) {
+                $raw['object'] = 'chat.completion.chunk';
+                echo 'data: '.json_encode($raw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n\n";
+                @ob_flush();
+                flush();
+            };
 
-        $message = $chunk['choices'][0]['message'];
-        unset($chunk['choices'][0]['message']);
+            try {
+                $result = $gateway->streamChat($customerId, $modelKey, $messages, $temperature, $maxTokens, $options, $onChunk);
 
-        $delta = ['role' => 'assistant'];
+                // Chunk final: usage + sisa kredit (trailing chunk ala OpenAI).
+                $final = [
+                    'id' => 'chatcmpl-'.bin2hex(random_bytes(8)),
+                    'object' => 'chat.completion.chunk',
+                    'created' => now()->timestamp,
+                    'model' => $result['model_key'],
+                    'provider' => $result['provider_name'],
+                    'choices' => [[
+                        'index' => 0,
+                        'delta' => [],
+                        'finish_reason' => $result['finish_reason'],
+                    ]],
+                    'usage' => [
+                        'prompt_tokens' => $result['usage']['prompt_tokens'],
+                        'completion_tokens' => $result['usage']['completion_tokens'],
+                        'total_tokens' => $result['usage']['prompt_tokens'] + $result['usage']['completion_tokens'],
+                    ],
+                    'credits_used' => $result['credits_used'],
+                    'balance_after' => $result['balance_after'],
+                ];
+                echo 'data: '.json_encode($final, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n\n";
+            } catch (\RuntimeException $e) {
+                $message = $e->getMessage();
+                $type = 'server_error';
+                $safeMessage = 'Terjadi kesalahan saat memproses request. Coba lagi nanti.';
 
-        if (array_key_exists('content', $message) && $message['content'] !== '') {
-            $delta['content'] = $message['content'];
-        }
+                if (str_contains($message, 'Saldo AI tidak mencukupi')) {
+                    $type = 'insufficient_quota';
+                    $safeMessage = 'Saldo kredit AI Anda tidak mencukupi. Silakan beli paket kredit di portal customer.';
+                } else {
+                    \Illuminate\Support\Facades\Log::warning('Chat completions stream gagal: '.$message);
+                }
 
-        if (! empty($message['tool_calls'])) {
-            $delta['tool_calls'] = $message['tool_calls'];
-        }
+                echo 'data: '.json_encode(['error' => ['message' => $safeMessage, 'type' => $type]], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n\n";
+            }
 
-        $chunk['choices'][0]['delta'] = $delta;
-
-        return response()->stream(function () use ($chunk) {
-            echo 'data: ' . json_encode($chunk) . "\n\n";
             echo "data: [DONE]\n\n";
+            @ob_flush();
+            flush();
         }, 200, [
             'Content-Type' => 'text/event-stream',
             'Cache-Control' => 'no-cache',
+            'Connection' => 'keep-alive',
             'X-Accel-Buffering' => 'no',
         ]);
     }

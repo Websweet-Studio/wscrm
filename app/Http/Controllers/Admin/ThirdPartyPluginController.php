@@ -11,17 +11,8 @@ use Inertia\Response;
 
 class ThirdPartyPluginController extends Controller
 {
-    private function checkAdmin(): void
-    {
-        if (!auth()->user()->isAdmin()) {
-            abort(403, 'Unauthorized access.');
-        }
-    }
-
     public function index(): Response
     {
-        $this->checkAdmin();
-
         $plugins = ThirdPartyPlugin::orderBy('name')->get();
 
         return Inertia::render('Admin/Websites/Plugins', [
@@ -55,8 +46,6 @@ class ThirdPartyPluginController extends Controller
 
     public function store(Request $request)
     {
-        $this->checkAdmin();
-
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'alpha_dash', 'max:100', 'unique:third_party_plugins'],
@@ -84,8 +73,6 @@ class ThirdPartyPluginController extends Controller
 
     public function update(Request $request, ThirdPartyPlugin $plugin)
     {
-        $this->checkAdmin();
-
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'alpha_dash', 'max:100', 'unique:third_party_plugins,slug,' . $plugin->id],
@@ -121,8 +108,6 @@ class ThirdPartyPluginController extends Controller
 
     public function destroy(ThirdPartyPlugin $plugin)
     {
-        $this->checkAdmin();
-
         if ($plugin->file_path) {
             Storage::disk('public')->delete($plugin->file_path);
         }

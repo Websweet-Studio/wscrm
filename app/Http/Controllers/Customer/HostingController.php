@@ -28,8 +28,8 @@ class HostingController extends Controller
 
         // Get customer's existing domains from their orders
         $existingDomains = collect([]);
-        if (Auth::guard('customer')->check()) {
-            $customer = Auth::guard('customer')->user();
+        if (auth('customer')->check()) {
+            $customer = $this->customer();
             $existingDomains = \DB::table('order_items')
                 ->join('orders', 'orders.id', '=', 'order_items.order_id')
                 ->where('orders.customer_id', $customer->id)

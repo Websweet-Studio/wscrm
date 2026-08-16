@@ -148,7 +148,9 @@ class CustomerController extends Controller
     {
         \Log::info('Update customer request', [
             'customer_id' => $customer->id,
-            'request_data' => $request->all(),
+            'request_fields' => collect($request->all())
+                ->except(['password', 'password_confirmation'])
+                ->all(),
             'email_validation_rule' => 'unique:customers,email,'.$customer->id,
         ]);
 

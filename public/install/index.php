@@ -354,6 +354,20 @@ function deleteDirectoryRecursive($dir)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
 
+    // Proteksi: jika aplikasi sudah terinstal (installer.lock + .env), tolak aksi
+    // yang menimpa/mereset instalasi. Aksi update (update_app/laravel_command) tetap jalan.
+    $guardWscrm = detectWscrmFolder();
+    $guardInstalled = $guardWscrm && is_dir($guardWscrm)
+        && file_exists($guardWscrm . '/.env')
+        && file_exists($guardWscrm . '/storage/installer.lock');
+    if ($guardInstalled && in_array($_POST['action'] ?? '', [
+        'finalize_install', 'move_wscrm', 'configure_env',
+        'delete_install_folder', 'cleanup_after_install',
+    ], true)) {
+        echo json_encode(['success' => false, 'message' => 'Aplikasi sudah terinstal. Aksi instalasi diblokir.']);
+        exit;
+    }
+
     $action = $_POST['action'] ?? '';
 
     switch ($action) {
@@ -568,6 +582,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $envContent = setEnvValue($envContent, 'APP_URL', $appUrl);
             $envContent = setEnvValue($envContent, 'APP_ENV', 'production');
             $envContent = setEnvValue($envContent, 'APP_DEBUG', 'false');
+            // Log level produksi lebih tenang (debug = bocorkan detail internal ke log).
+            $envContent = setEnvValue($envContent, 'LOG_LEVEL', 'warning');
 
             if ($dbType === 'mysql') {
                 $envContent = setEnvValue($envContent, 'DB_CONNECTION', 'mysql');

@@ -93,39 +93,55 @@ class DashboardController extends Controller
             ? (($revenueThisMonth - $revenueLastMonth) / $revenueLastMonth) * 100
             : ($revenueThisMonth > 0 ? 100 : 0);
 
-        // Daily orders for current month chart
+        // Daily orders for current month chart (1 query GROUP BY, bukan loop per-hari).
         $dailyOrders = [];
         $currentMonth = $now->copy()->startOfMonth();
         $daysInMonth = $currentMonth->daysInMonth;
 
+        $dailyOrderCounts = Order::whereBetween('created_at', [$currentMonth, $currentMonth->copy()->endOfMonth()])
+            ->selectRaw('DATE(created_at) as d, COUNT(*) as c')
+            ->groupBy('d')
+            ->pluck('c', 'd');
+
         for ($day = 1; $day <= $daysInMonth; $day++) {
             $date = $currentMonth->copy()->day($day);
-            $dayOrders = Order::whereDate('created_at', $date)->count();
             $dailyOrders[] = [
                 'date' => $date->format('Y-m-d'),
                 'day' => $day,
-                'orders' => $dayOrders,
+                'orders' => (int) ($dailyOrderCounts[$date->format('Y-m-d')] ?? 0),
             ];
         }
 
-        // Previous months statistics (last 6 months)
+        // Previous months statistics (last 6 months) — 3 query GROUP BY, bukan 18.
+        $sixMonthsAgo = $now->copy()->subMonths(5)->startOfMonth();
+
+        $monthlyOrderCounts = Order::where('created_at', '>=', $sixMonthsAgo)
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as m, COUNT(*) as c")
+            ->groupBy('m')
+            ->pluck('c', 'm');
+
+        $monthlyRevenues = Order::where('status', 'completed')
+            ->where('created_at', '>=', $sixMonthsAgo)
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as m, SUM(total_amount) as s")
+            ->groupBy('m')
+            ->pluck('s', 'm');
+
+        $monthlyCustomerCounts = Customer::where('created_at', '>=', $sixMonthsAgo)
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as m, COUNT(*) as c")
+            ->groupBy('m')
+            ->pluck('c', 'm');
+
         $monthlyStats = [];
         for ($i = 5; $i >= 0; $i--) {
             $monthStart = $now->copy()->subMonths($i)->startOfMonth();
-            $monthEnd = $monthStart->copy()->endOfMonth();
-
-            $monthOrders = Order::whereBetween('created_at', [$monthStart, $monthEnd])->count();
-            $monthRevenue = Order::where('status', 'completed')
-                ->whereBetween('created_at', [$monthStart, $monthEnd])
-                ->sum('total_amount');
-            $monthCustomers = Customer::whereBetween('created_at', [$monthStart, $monthEnd])->count();
+            $monthKey = $monthStart->format('Y-m');
 
             $monthlyStats[] = [
                 'month' => $monthStart->format('M Y'),
                 'month_short' => $monthStart->format('M'),
-                'orders' => $monthOrders,
-                'revenue' => $monthRevenue,
-                'customers' => $monthCustomers,
+                'orders' => (int) ($monthlyOrderCounts[$monthKey] ?? 0),
+                'revenue' => (float) ($monthlyRevenues[$monthKey] ?? 0),
+                'customers' => (int) ($monthlyCustomerCounts[$monthKey] ?? 0),
             ];
         }
 

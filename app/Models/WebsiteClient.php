@@ -32,6 +32,7 @@ class WebsiteClient extends Model
     {
         return [
             'plugins' => 'array',
+            'wp_app_password' => 'encrypted',
             'is_active' => 'boolean',
             'auto_update_enabled' => 'boolean',
             'last_auto_update_at' => 'datetime',

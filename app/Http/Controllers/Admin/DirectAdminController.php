@@ -86,7 +86,7 @@ class DirectAdminController extends Controller
 
         // Password kosong → pertahankan yang lama
         if (! empty($validated['password']) && $validated['password'] !== '********') {
-            DirectAdminSetting::setValue('password', $validated['password']);
+            DirectAdminSetting::setSecret('password', $validated['password']);
         }
 
         $test = $this->da->testConnection();

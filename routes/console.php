@@ -12,3 +12,5 @@ Artisan::command('inspire', function () {
 Schedule::command('websites:auto-update')->dailyAt('03:00');
 // Cek uptime website harian → catat ke jurnal + notifikasi jika down
 Schedule::command('websites:check-uptime')->dailyAt('08:00');
+// Generate invoice renewal untuk layanan yang hampir habis masa berlakunya
+Schedule::command('invoice:generate-renewals')->dailyAt('09:00');

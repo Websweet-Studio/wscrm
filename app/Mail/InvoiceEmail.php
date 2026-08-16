@@ -6,12 +6,13 @@ use App\Models\Invoice;
 use App\Models\PaymentAccount;
 use App\Models\BrandingSetting;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class InvoiceEmail extends Mailable
+class InvoiceEmail extends Mailable implements ShouldQueue
 {
   use Queueable, SerializesModels;
 
@@ -35,7 +36,7 @@ class InvoiceEmail extends Mailable
     return new Content(
       view: 'emails.invoices.invoice-email',
       with: [
-        'orderItems' => $this->invoice->order?->orderItems()->with(['hostingPlan', 'domainPrice', 'servicePlan'])->get() ?? collect(),
+        'orderItems' => $this->invoice->order?->orderItems ?? collect(),
         'branding' => BrandingSetting::getAllActive()->pluck('value', 'key'),
         'paymentAccounts' => PaymentAccount::active()->orderBy('sort')->get(),
       ],

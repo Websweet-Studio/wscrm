@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 | Routes untuk sistem auto-update dari GitHub releases
 */
 
-Route::middleware(['auth'])->prefix('admin/system')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin/system')->group(function () {
     // System Update Page
     Route::get('/update', function () {
         return inertia('Admin/SystemUpdate');
@@ -21,8 +21,10 @@ Route::middleware(['auth'])->prefix('admin/system')->group(function () {
         ->name('admin.system.check-updates');
 
     Route::post('/perform-update', [UpdateController::class, 'performUpdate'])
+        ->middleware('super_admin')
         ->name('admin.system.perform-update');
 
     Route::post('/restore-backup', [UpdateController::class, 'restoreBackup'])
+        ->middleware('super_admin')
         ->name('admin.system.restore-backup');
 });

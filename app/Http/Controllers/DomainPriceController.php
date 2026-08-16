@@ -28,11 +28,22 @@ class DomainPriceController extends Controller
 
         $domainPrice = DomainPrice::byExtension($extension)->active()->first();
 
+        // Cek ketersediaan domain via RNA API (DomainAvailabilityService sudah ada,
+        // dulunya hardcoded true). Punya fallback sendiri bila API mati.
+        $fullDomain = trim((string) $domain);
+        $available = false;
+        if ($fullDomain !== '') {
+            if ($extension && ! str_contains($fullDomain, '.')) {
+                $fullDomain .= ltrim((string) $extension, '.');
+            }
+            $available = app(DomainAvailabilityService::class)->checkAvailability($fullDomain)['available'] ?? false;
+        }
+
         return Inertia::render('Domains/Search', [
             'domain' => $domain,
             'extension' => $extension,
             'domainPrice' => $domainPrice,
-            'available' => true, // TODO: Implement domain availability check
+            'available' => $available,
         ]);
     }
 

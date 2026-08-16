@@ -11,7 +11,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Create a test user
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->admin()->create();
 
     // Create test data
     $this->customer = Customer::factory()->create();

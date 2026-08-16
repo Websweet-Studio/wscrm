@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\DatabaseController::exportMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:20
+ * @see app/Http/Controllers/Admin/DatabaseController.php:36
  * @route '/admin/database/export'
  */
 export const exportMethod = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ exportMethod.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DatabaseController::exportMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:20
+ * @see app/Http/Controllers/Admin/DatabaseController.php:36
  * @route '/admin/database/export'
  */
 exportMethod.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ exportMethod.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\DatabaseController::exportMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:20
+ * @see app/Http/Controllers/Admin/DatabaseController.php:36
  * @route '/admin/database/export'
  */
 exportMethod.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -112,7 +112,7 @@ exportMethod.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\DatabaseController::exportMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:20
+ * @see app/Http/Controllers/Admin/DatabaseController.php:36
  * @route '/admin/database/export'
  */
 exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -122,7 +122,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\DatabaseController::exportMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:20
+ * @see app/Http/Controllers/Admin/DatabaseController.php:36
  * @route '/admin/database/export'
  */
     const exportMethodForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -132,7 +132,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\DatabaseController::exportMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:20
+ * @see app/Http/Controllers/Admin/DatabaseController.php:36
  * @route '/admin/database/export'
  */
         exportMethodForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -141,7 +141,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\DatabaseController::exportMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:20
+ * @see app/Http/Controllers/Admin/DatabaseController.php:36
  * @route '/admin/database/export'
  */
         exportMethodForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -157,7 +157,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     exportMethod.form = exportMethodForm
 /**
 * @see \App\Http\Controllers\Admin\DatabaseController::importMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:111
+ * @see app/Http/Controllers/Admin/DatabaseController.php:160
  * @route '/admin/database/import'
  */
 export const importMethod = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -172,7 +172,7 @@ importMethod.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DatabaseController::importMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:111
+ * @see app/Http/Controllers/Admin/DatabaseController.php:160
  * @route '/admin/database/import'
  */
 importMethod.url = (options?: RouteQueryOptions) => {
@@ -181,7 +181,7 @@ importMethod.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\DatabaseController::importMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:111
+ * @see app/Http/Controllers/Admin/DatabaseController.php:160
  * @route '/admin/database/import'
  */
 importMethod.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -191,7 +191,7 @@ importMethod.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\DatabaseController::importMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:111
+ * @see app/Http/Controllers/Admin/DatabaseController.php:160
  * @route '/admin/database/import'
  */
     const importMethodForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -201,7 +201,7 @@ importMethod.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\DatabaseController::importMethod
- * @see app/Http/Controllers/Admin/DatabaseController.php:111
+ * @see app/Http/Controllers/Admin/DatabaseController.php:160
  * @route '/admin/database/import'
  */
         importMethodForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -212,7 +212,7 @@ importMethod.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     importMethod.form = importMethodForm
 /**
 * @see \App\Http\Controllers\Admin\DatabaseController::clear
- * @see app/Http/Controllers/Admin/DatabaseController.php:49
+ * @see app/Http/Controllers/Admin/DatabaseController.php:98
  * @route '/admin/database/clear'
  */
 export const clear = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -227,7 +227,7 @@ clear.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\DatabaseController::clear
- * @see app/Http/Controllers/Admin/DatabaseController.php:49
+ * @see app/Http/Controllers/Admin/DatabaseController.php:98
  * @route '/admin/database/clear'
  */
 clear.url = (options?: RouteQueryOptions) => {
@@ -236,7 +236,7 @@ clear.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\DatabaseController::clear
- * @see app/Http/Controllers/Admin/DatabaseController.php:49
+ * @see app/Http/Controllers/Admin/DatabaseController.php:98
  * @route '/admin/database/clear'
  */
 clear.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -246,7 +246,7 @@ clear.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\DatabaseController::clear
- * @see app/Http/Controllers/Admin/DatabaseController.php:49
+ * @see app/Http/Controllers/Admin/DatabaseController.php:98
  * @route '/admin/database/clear'
  */
     const clearForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -256,7 +256,7 @@ clear.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\DatabaseController::clear
- * @see app/Http/Controllers/Admin/DatabaseController.php:49
+ * @see app/Http/Controllers/Admin/DatabaseController.php:98
  * @route '/admin/database/clear'
  */
         clearForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
