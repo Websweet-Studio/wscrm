@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\AiCredit;
+use App\Models\JournalEntry;
 use App\Models\PaymentAccount;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -31,8 +33,10 @@ class DashboardController extends Controller
         $unpaidInvoices = $customer->invoices()
             ->unpaid()
             ->orderBy('due_date', 'asc')
-            ->limit(5)
+            ->limit(10)
             ->get();
+
+        $unpaidTotal = (float) $customer->invoices()->unpaid()->sum('amount');
 
         $paymentAccounts = PaymentAccount::query()
             ->active()
@@ -41,12 +45,54 @@ class DashboardController extends Controller
             ->limit(12)
             ->get();
 
+        $aiBalance = AiCredit::currentBalance($customer->id);
+
+        // Layanan hampir habis / sudah kadaluarsa (dalam 30 hari ke depan).
+        $expiringSoon = $customer->orders()
+            ->whereIn('status', ['active', 'suspended'])
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<=', now()->addDays(30)->endOfDay())
+            ->with(['orderItems', 'hostingPlan'])
+            ->orderBy('expires_at')
+            ->get()
+            ->map(fn ($o) => [
+                'id' => $o->id,
+                'name' => $o->orderItems->first()?->domain_name ?: ($o->hostingPlan?->plan_name ?? 'Layanan #'.$o->id),
+                'expires_at' => $o->expires_at?->toDateString(),
+                'is_expired' => $o->isExpired(),
+                'days_left' => $o->isExpired() ? 0 : $o->daysUntilExpiry(),
+            ])
+            ->values();
+
+        // Jurnal maintenance terbaru milik customer.
+        $websiteIds = $customer->websiteClients()->pluck('id');
+        $recentJournals = $websiteIds->isEmpty()
+            ? collect()
+            : JournalEntry::with('websiteClient:id,name')
+                ->whereIn('website_client_id', $websiteIds)
+                ->orderBy('entry_date', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->limit(3)
+                ->get()
+                ->map(fn ($j) => [
+                    'id' => $j->id,
+                    'website_name' => $j->websiteClient?->name,
+                    'entry_date' => $j->entry_date?->toDateString(),
+                    'summary' => $j->summary,
+                    'activity_count' => count($j->activities ?? []),
+                ])
+                ->values();
+
         return Inertia::render('Customer/Dashboard', [
             'customer' => $customer,
             'services' => $services,
             'recentOrders' => $recentOrders,
             'unpaidInvoices' => $unpaidInvoices,
+            'unpaidTotal' => $unpaidTotal,
             'paymentAccounts' => $paymentAccounts,
+            'aiBalance' => $aiBalance,
+            'expiringSoon' => $expiringSoon,
+            'recentJournals' => $recentJournals,
         ]);
     }
 }

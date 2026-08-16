@@ -11,6 +11,7 @@ use App\Models\Invoice;
 use App\Services\InvoiceGeneratorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
@@ -66,6 +67,30 @@ class AiController extends Controller
             ->where('type', 'in')
             ->sum('credits');
 
+        // Pemakaian harian 30 hari terakhir: kredit terpakai + jumlah request.
+        $daily = [];
+        for ($i = 29; $i >= 0; $i--) {
+            $day = now()->subDays($i);
+            $daily[$day->format('Y-m-d')] = [
+                'date' => $day->format('Y-m-d'),
+                'label' => $day->format('d M'),
+                'credits' => 0,
+                'runs' => 0,
+            ];
+        }
+
+        AiTransaction::where('customer_id', $customer->id)
+            ->where('type', 'out')
+            ->where('created_at', '>=', now()->subDays(29)->startOfDay())
+            ->get(['created_at', 'credits'])
+            ->each(function ($t) use (&$daily) {
+                $key = Carbon::parse($t->created_at)->format('Y-m-d');
+                if (isset($daily[$key])) {
+                    $daily[$key]['credits'] += abs((int) $t->credits);
+                    $daily[$key]['runs']++;
+                }
+            });
+
         return Inertia::render('Customer/Ai/Index', [
             'balance' => (int) $credit->balance,
             'total_credits' => $totalCredits,
@@ -74,6 +99,7 @@ class AiController extends Controller
             'models' => $models,
             'credit_price' => $creditPrice !== null ? round($creditPrice, 2) : null,
             'transactions' => $transactions,
+            'usage_daily' => array_values($daily),
         ]);
     }
 

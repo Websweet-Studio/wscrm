@@ -8,8 +8,12 @@ import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowDownCircle, ArrowRight, ArrowUpCircle, Check, Copy, Cpu, History, KeyRound, RefreshCw, Server, ShoppingCart } from 'lucide-vue-next';
+import { ArrowDownCircle, ArrowRight, ArrowUpCircle, BookOpen, Check, Copy, Cpu, History, KeyRound, RefreshCw, Server, ShoppingCart, TrendingUp, Zap } from 'lucide-vue-next';
 import { computed, onMounted, ref, watch } from 'vue';
+import { Bar } from 'vue-chartjs';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 interface Model {
     id: number;
@@ -39,6 +43,7 @@ interface Props {
     models: Model[];
     credit_price: number | null;
     transactions: Transaction[];
+    usage_daily: Array<{ date: string; label: string; credits: number; runs: number }>;
 }
 
 const props = defineProps<Props>();
@@ -55,12 +60,13 @@ const showKey = ref(false);
 const copiedEndpoint = ref(false);
 const copiedKey = ref(false);
 const showRegenModal = ref(false);
-const activeTab = ref<'endpoint' | 'pricing' | 'history'>('pricing');
+const activeTab = ref<'endpoint' | 'pricing' | 'history' | 'docs'>('pricing');
 
 const tabs = [
     { key: 'endpoint', label: 'Endpoint API', icon: Server },
     { key: 'pricing', label: 'Harga Token', icon: Cpu },
     { key: 'history', label: 'Riwayat Usage', icon: History },
+    { key: 'docs', label: 'Dokumentasi', icon: BookOpen },
 ] as const;
 
 const TAB_STORAGE_KEY = 'customer-ai-active-tab';
@@ -68,7 +74,7 @@ const TAB_STORAGE_KEY = 'customer-ai-active-tab';
 onMounted(() => {
     try {
         const saved = localStorage.getItem(TAB_STORAGE_KEY);
-        if (saved === 'endpoint' || saved === 'pricing' || saved === 'history') {
+        if (saved === 'endpoint' || saved === 'pricing' || saved === 'history' || saved === 'docs') {
             activeTab.value = saved;
         }
     } catch {
@@ -144,6 +150,39 @@ const creditPercent = computed(() => {
     if (!props.total_credits) return 0;
     return Math.min(100, Math.max(0, Math.round((props.balance / props.total_credits) * 100)));
 });
+
+const usageDailyData = computed(() => ({
+    labels: props.usage_daily.map((d) => d.label),
+    datasets: [
+        {
+            label: 'Kredit Terpakai',
+            data: props.usage_daily.map((d) => d.credits),
+            backgroundColor: 'hsl(var(--primary) / 0.85)',
+            borderRadius: 4,
+        },
+    ],
+}));
+
+const usageBarOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { display: false },
+        tooltip: {
+            callbacks: {
+                label: (ctx: { parsed: { y: number }; dataIndex: number }) =>
+                    `${props.usage_daily[ctx.dataIndex].runs} request · ${ctx.parsed.y.toLocaleString('id-ID')} kredit`,
+            },
+        },
+    },
+    scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 15 } },
+        y: { beginAtZero: true, ticks: { font: { size: 10 } }, grid: { color: 'hsl(var(--border) / 0.6)' } },
+    },
+};
+
+const usage30dTotal = computed(() => props.usage_daily.reduce((sum, d) => sum + d.credits, 0));
+const usage30dRuns = computed(() => props.usage_daily.reduce((sum, d) => sum + d.runs, 0));
 </script>
 
 <template>
@@ -247,6 +286,31 @@ const creditPercent = computed(() => {
                     <p class="mt-2 text-xs text-muted-foreground">
                         {{ balance.toLocaleString('id-ID') }} dari {{ total_credits.toLocaleString('id-ID') }} kredit terpakai
                     </p>
+                </CardContent>
+            </Card>
+
+            <!-- Grafik penggunaan 30 hari terakhir -->
+            <Card class="rounded-lg border-border/60 shadow-sm">
+                <CardHeader class="flex flex-row items-center justify-between pb-2">
+                    <div>
+                        <CardTitle class="flex items-center gap-2 text-base">
+                            <TrendingUp class="h-4 w-4 text-muted-foreground" /> Penggunaan 30 Hari Terakhir
+                        </CardTitle>
+                        <CardDescription>Kredit terpakai per hari dari request API</CardDescription>
+                    </div>
+                    <div class="flex gap-4 text-sm">
+                        <span class="text-muted-foreground">{{ usage30dRuns.toLocaleString('id-ID') }} request</span>
+                        <span class="font-semibold">{{ usage30dTotal.toLocaleString('id-ID') }} kredit</span>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div v-if="usage30dTotal > 0" class="h-56">
+                        <Bar :data="usageDailyData" :options="usageBarOptions" />
+                    </div>
+                    <div v-else class="flex h-56 flex-col items-center justify-center gap-2 text-muted-foreground">
+                        <Zap class="h-8 w-8 opacity-50" />
+                        <p class="text-sm">Belum ada pemakaian dalam 30 hari terakhir.</p>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -420,14 +484,126 @@ const creditPercent = computed(() => {
                                             </TableCell>
                                         </TableRow>
                                         <TableRow v-if="transactions.length === 0">
-                                            <TableCell colspan="4" class="text-center text-muted-foreground">Belum ada transaksi. Beli token untuk mulai memakai.</TableCell>
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
+                            <TableCell colspan="4" class="text-center text-muted-foreground">Belum ada transaksi. Beli token untuk mulai memakai.</TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dokumentasi -->
+    <div v-if="activeTab === 'docs'" class="space-y-6 p-4 sm:p-6">
+        <p class="text-sm text-muted-foreground">
+            API ini kompatibel dengan <span class="font-medium text-foreground">OpenAI Chat Completions</span>.
+            Bisa dipasang di Trae, Cline, Roo Code, Continue, atau code editor / AI agent lain yang mendukung
+            provider <em>OpenAI-compatible</em>.
+        </p>
+
+        <!-- Info dasar -->
+        <div class="grid gap-3 sm:grid-cols-3">
+            <div class="rounded-lg border border-border/60 p-3">
+                <div class="text-xs font-medium text-muted-foreground">Base URL</div>
+                <div class="mt-1 break-all font-mono text-sm font-medium">{{ endpoint }}</div>
+            </div>
+            <div class="rounded-lg border border-border/60 p-3">
+                <div class="text-xs font-medium text-muted-foreground">Autentikasi</div>
+                <div class="mt-1 break-all font-mono text-sm font-medium">Authorization: Bearer &lt;API_KEY&gt;</div>
+            </div>
+            <div class="rounded-lg border border-border/60 p-3">
+                <div class="text-xs font-medium text-muted-foreground">Endpoint Chat</div>
+                <div class="mt-1 break-all font-mono text-sm font-medium">{{ endpoint }}/chat/completions</div>
+            </div>
+        </div>
+
+        <div v-if="!apiKey" class="rounded-lg border border-amber-600/40 bg-amber-500/5 p-4 text-sm">
+            Anda belum punya API key. <Link href="/customer/ai" class="font-medium text-amber-600 hover:underline dark:text-amber-400">Generate API key</Link> di tab Endpoint API terlebih dahulu.
+        </div>
+
+        <!-- Model tersedia -->
+        <div class="space-y-2">
+            <Label class="text-xs font-medium text-muted-foreground">Model yang tersedia</Label>
+            <div class="flex flex-wrap gap-2">
+                <span v-for="m in models" :key="m.id" class="rounded-full border border-border/60 bg-muted/40 px-3 py-1 font-mono text-xs">{{ m.model_key }}</span>
+                <span v-if="models.length === 0" class="text-sm text-muted-foreground">Belum ada model aktif.</span>
+            </div>
+        </div>
+
+        <!-- Uji cepat cURL -->
+        <div class="space-y-2">
+            <Label class="text-xs font-medium text-muted-foreground">Uji cepat (cURL)</Label>
+            <div class="overflow-hidden rounded-lg border border-border/70 bg-zinc-950 dark:bg-zinc-900">
+                <div class="flex items-center gap-1.5 border-b border-white/10 px-3 py-2">
+                    <span class="h-2.5 w-2.5 rounded-full bg-red-500/80" />
+                    <span class="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
+                    <span class="h-2.5 w-2.5 rounded-full bg-green-500/80" />
+                </div>
+                <pre class="overflow-x-auto p-4 text-xs leading-relaxed text-zinc-100"><code>curl {{ endpoint }}/chat/completions \
+  -H "Authorization: Bearer &lt;API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "{{ models[0]?.model_key || 'gpt-4o-mini' }}",
+    "messages": [{"role": "user", "content": "halo"}],
+    "stream": false
+  }'</code></pre>
+            </div>
+        </div>
+
+        <!-- Trae -->
+        <div class="space-y-3 rounded-lg border border-border/60 p-4">
+            <div class="flex items-center gap-2">
+                <div class="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    <Zap class="h-3.5 w-3.5" />
+                </div>
+                <h3 class="text-sm font-semibold">Trae</h3>
+            </div>
+            <ol class="list-inside list-decimal space-y-1.5 text-sm text-muted-foreground">
+                <li>Buka <span class="font-medium text-foreground">Settings</span> di Trae → bagian <span class="font-medium text-foreground">Model</span> / AI Provider.</li>
+                <li>Tambahkan provider baru dengan tipe <span class="font-medium text-foreground">OpenAI Compatible</span> (Custom).</li>
+                <li>Isi <span class="font-mono text-xs">Base URL</span> = <code class="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">{{ endpoint }}</code>, dan <span class="font-mono text-xs">API Key</span> = key Anda.</li>
+                <li>Pilih model dari daftar di atas (misal <code class="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">{{ models[0]?.model_key || 'gpt-4o-mini' }}</code>).</li>
+                <li>Aktifkan, lalu gunakan sebagai model chat di Trae.</li>
+            </ol>
+        </div>
+
+        <!-- Cline / Roo Code / Continue -->
+        <div class="space-y-3 rounded-lg border border-border/60 p-4">
+            <div class="flex items-center gap-2">
+                <div class="flex h-6 w-6 items-center justify-center rounded-md bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+                    <Cpu class="h-3.5 w-3.5" />
+                </div>
+                <h3 class="text-sm font-semibold">Cline, Roo Code, Continue &amp; lainnya</h3>
+            </div>
+            <p class="text-sm text-muted-foreground">
+                Di ekstensi/agent apa pun yang mendukung provider OpenAI-compatible, masukkan kredensial berikut:
+            </p>
+            <div class="overflow-hidden rounded-lg border border-border/70 bg-zinc-950 dark:bg-zinc-900">
+                <pre class="overflow-x-auto p-4 text-xs leading-relaxed text-zinc-100"><code>{
+  "apiProvider": "openai",
+  "openAiBaseUrl": "{{ endpoint }}",
+  "openAiApiKey": "&lt;API_KEY&gt;",
+  "openAiModelId": "{{ models[0]?.model_key || 'gpt-4o-mini' }}"
+}</code></pre>
+            </div>
+            <p class="text-xs text-muted-foreground">
+                Nilai di atas juga berlaku untuk CLI yang memakai variabel lingkungan
+                <code class="rounded bg-muted px-1.5 py-0.5 font-mono">OPENAI_BASE_URL</code> dan
+                <code class="rounded bg-muted px-1.5 py-0.5 font-mono">OPENAI_API_KEY</code>.
+            </p>
+        </div>
+
+        <!-- Catatan -->
+        <div class="space-y-1.5 rounded-lg border border-border/60 bg-muted/30 p-4 text-sm text-muted-foreground">
+            <h3 class="text-xs font-semibold uppercase tracking-wide text-foreground">Catatan</h3>
+            <ul class="list-inside list-disc space-y-1">
+                <li>Setiap request memotong saldo kredit sesuai model &amp; jumlah token (lihat tab <span class="font-medium text-foreground">Harga Token</span>).</li>
+                <li>Streaming (<code class="rounded bg-muted px-1 font-mono text-xs">stream: true</code>) dan <em>function calling</em> (<code class="rounded bg-muted px-1 font-mono text-xs">tools</code>) didukung.</li>
+                <li>Model harus persis sesuai daftar di atas (case-sensitive). Daftar model tersedia di <code class="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">{{ endpoint }}/models</code>.</li>
+                <li>Saldo habis → request ditolak dengan kode <span class="font-mono text-xs">429 insufficient_quota</span>; top up di halaman Paket.</li>
+            </ul>
+        </div>
+    </div>
+</CardContent>
             </Card>
         </div>
         <!-- Regenerate Key Modal -->

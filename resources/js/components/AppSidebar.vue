@@ -114,24 +114,6 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Tugas',
-        href: '#',
-        icon: CheckSquare,
-        badge: 0,
-        children: [
-            {
-                title: 'Semua Tugas',
-                href: '/admin/tasks',
-                icon: CheckSquare,
-            },
-            {
-                title: 'Kategori',
-                href: '/admin/task-categories',
-                icon: Tags,
-            },
-        ],
-    },
-    {
         title: 'Manage Website',
         href: '#',
         icon: ClipboardList,
@@ -306,6 +288,24 @@ const mainNavItems: NavItem[] = [
               },
           ] as NavItem[])
         : []),
+    {
+        title: 'Tugas',
+        href: '#',
+        icon: CheckSquare,
+        badge: 0,
+        children: [
+            {
+                title: 'Semua Tugas',
+                href: '/admin/tasks',
+                icon: CheckSquare,
+            },
+            {
+                title: 'Kategori',
+                href: '/admin/task-categories',
+                icon: Tags,
+            },
+        ],
+    },
     {
         title: 'Setting',
         href: '#',
