@@ -20,11 +20,12 @@ class AiClient
 
     public function __construct()
     {
-        $s = self::settings();
-
-        $this->endpoint = self::normalizeEndpoint($s['endpoint']);
-        $this->apiKey = $s['api_key'];
-        $this->model = $s['model'];
+        // Default dari config; forProvider() meng-override endpoint/model/api_key
+        // dari DB provider. Hindari query DB di sini (settings() = 1 query + dekripsi
+        // tiap request) karena path utama tak pernah memakai nilai ini.
+        $this->endpoint = self::normalizeEndpoint((string) config('services.ai.endpoint', env('AI_ENDPOINT', 'https://api.openai.com/v1')));
+        $this->apiKey = (string) config('services.ai.api_key', env('AI_API_KEY', ''));
+        $this->model = (string) config('services.ai.model', env('AI_MODEL', 'gpt-4o-mini'));
     }
 
     /**

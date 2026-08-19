@@ -160,23 +160,29 @@ class AiGateway
 
     /**
      * Model yang dicoba: yang diminta (bila aktif), lalu semua model aktif urut sort_order.
+     * Di-cache 60s — katalog model jarang berubah; hemat 2 query + eager-load provider
+     * tiap request tanpa mengubah akurasi hasil (daftar kandidat fallback tetap sama).
      */
     private function candidateModels(?string $modelKey): array
     {
-        $query = AiModel::query()
-            ->where('is_active', true)
-            ->with('provider')
-            ->orderBy('sort_order')
-            ->orderBy('id');
+        $modelKey = $modelKey ?: '';
 
-        if ($modelKey) {
-            $specific = (clone $query)->where('model_key', $modelKey)->get();
-            $specific = $specific->merge($query->where('model_key', '!=', $modelKey)->get());
+        return Cache::remember('ai_models_' . $modelKey, 60, function () use ($modelKey) {
+            $query = AiModel::query()
+                ->where('is_active', true)
+                ->with('provider')
+                ->orderBy('sort_order')
+                ->orderBy('id');
 
-            return $specific->all();
-        }
+            if ($modelKey !== '') {
+                $specific = (clone $query)->where('model_key', $modelKey)->get();
+                $specific = $specific->merge($query->where('model_key', '!=', $modelKey)->get());
 
-        return $query->get()->all();
+                return $specific->all();
+            }
+
+            return $query->get()->all();
+        });
     }
 
     private function calculateCredits(AiModel $model, int $inputTokens, int $outputTokens): int

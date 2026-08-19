@@ -55,6 +55,12 @@ class ChatCompletionsController extends Controller
         // Teruskan parameter OpenAI tambahan agar function calling (Trae/Claude Code) jalan.
         $options = $this->extractOptions($payload);
 
+        // Streaming (Trae/Claude Code): langsung stream dari provider. Jangan panggil
+        // chat() non-streaming dulu — itu memicu 2x generasi penuh + 2x biaya token.
+        if (! empty($payload['stream'])) {
+            return $this->streamCompletion($gateway, $customerId, $modelKey, $messages, $temperature, $maxTokens, $options);
+        }
+
         try {
             $result = $gateway->chat($customerId, $modelKey, $messages, $temperature, $maxTokens, $options);
         } catch (\RuntimeException $e) {
@@ -72,11 +78,6 @@ class ChatCompletionsController extends Controller
         }
 
         $completion = $this->buildCompletion($result);
-
-        // Trae / code editor mengirim stream=true dan mengharapkan SSE.
-        if (! empty($payload['stream'])) {
-            return $this->streamCompletion($gateway, $customerId, $modelKey, $messages, $temperature, $maxTokens, $options);
-        }
 
         return response()->json($completion);
     }
