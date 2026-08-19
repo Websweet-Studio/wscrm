@@ -33,11 +33,16 @@ class ChatCompletionsController extends Controller
         $customerId = $credit->customer_id;
 
         $payload = $request->all();
-        $messages = $this->normalizeMessages($payload['messages'] ?? null);
+        $normalized = $this->normalizeMessages($payload['messages'] ?? null);
 
-        if ($messages === null) {
+        if (! $normalized['ok']) {
+            // Catat alasan penolakan di log server (reject terlalu umum tidak membantu).
+            \Illuminate\Support\Facades\Log::warning('Chat completions: messages ditolak - ' . $normalized['reason']);
+
             return $this->error('messages tidak boleh kosong. Kirim setidaknya satu pesan berisi role dan content.', 'invalid_request_error', 400);
         }
+
+        $messages = $normalized['messages'];
 
         $modelKey = $payload['model'] ?? null;
 
@@ -72,7 +77,7 @@ class ChatCompletionsController extends Controller
             }
 
             // Jangan bocorkan detail internal provider/gateway ke client; catat di log server.
-            \Illuminate\Support\Facades\Log::warning('Chat completions gagal: '.$message);
+            \Illuminate\Support\Facades\Log::warning('Chat completions gagal: ' . $message);
 
             return $this->error('Terjadi kesalahan saat memproses request. Coba lagi nanti.', 'server_error', 502);
         }
@@ -106,24 +111,25 @@ class ChatCompletionsController extends Controller
     /**
      * Normalisasi messages: terima content string ATAU array bagian (format Claude Code/Trae),
      * role `tool` + `tool_calls`/`tool_call_id` (function calling).
-     * Kembalikan null bila format tak dikenal atau kosong.
+     * Return ['ok'=>bool, 'messages'=>?array, 'reason'=>string] — reason untuk log server.
      */
-    private function normalizeMessages(mixed $raw): ?array
+    private function normalizeMessages(mixed $raw): array
     {
         if (! is_array($raw) || count($raw) === 0) {
-            return null;
+            return ['ok' => false, 'messages' => null, 'reason' => 'kosong/tidak array'];
         }
 
-        // Cap jumlah pesan & panjang konten (cegah input-token jumbo / memori).
-        if (count($raw) > 100) {
-            return null;
+        // Cap jumlah pesan (cegah input-token jumbo). 500 cukup longgar utk sesi
+        // agent multi-turn (Trae/Claude Code) tanpa membuka abuse memori.
+        if (count($raw) > 500) {
+            return ['ok' => false, 'messages' => null, 'reason' => 'terlalu banyak pesan'];
         }
 
         $out = [];
 
         foreach ($raw as $m) {
             if (! is_array($m) || ! isset($m['role']) || ! in_array($m['role'], ['system', 'user', 'assistant', 'tool'], true)) {
-                return null;
+                return ['ok' => false, 'messages' => null, 'reason' => 'role tidak valid'];
             }
 
             $role = $m['role'];
@@ -131,7 +137,7 @@ class ChatCompletionsController extends Controller
             // Role `tool` wajib punya tool_call_id (hasil eksekusi tool dari Trae/Claude Code).
             if ($role === 'tool') {
                 if (! isset($m['tool_call_id']) || ! is_string($m['tool_call_id'])) {
-                    return null;
+                    return ['ok' => false, 'messages' => null, 'reason' => 'tool tanpa tool_call_id'];
                 }
 
                 $out[] = [
@@ -152,7 +158,8 @@ class ChatCompletionsController extends Controller
             if (is_string($content)) {
                 $normalizedContent = $content;
             } elseif (is_array($content)) {
-                // Array bagian teks: [{"type":"text","text":"..."}] — gabungkan jadi string.
+                // Array bagian: [{"type":"text","text":"..."}] — gabungkan bagian teks jadi string.
+                // Bagian non-teks (gambar, tool) diabaikan; kalau tidak ada teks tetap valid.
                 $text = '';
                 foreach ($content as $part) {
                     if (is_string($part)) {
@@ -167,12 +174,12 @@ class ChatCompletionsController extends Controller
                 // jangan ditolak, cukup kosongkan.
                 $normalizedContent = '';
             } else {
-                return null;
+                return ['ok' => false, 'messages' => null, 'reason' => 'content tipe tidak didukung'];
             }
 
             // Batas panjang konten per pesan (~64KB karakter).
             if (mb_strlen($normalizedContent) > 65536) {
-                return null;
+                return ['ok' => false, 'messages' => null, 'reason' => 'konten per pesan terlalu panjang'];
             }
 
             $normalized = ['role' => $role, 'content' => $normalizedContent];
@@ -185,7 +192,7 @@ class ChatCompletionsController extends Controller
             $out[] = $normalized;
         }
 
-        return $out;
+        return ['ok' => true, 'messages' => $out, 'reason' => ''];
     }
 
     /**
@@ -287,7 +294,7 @@ class ChatCompletionsController extends Controller
         return response()->stream(function () use ($gateway, $customerId, $modelKey, $messages, $temperature, $maxTokens, $options) {
             $onChunk = function (array $raw) {
                 $raw['object'] = 'chat.completion.chunk';
-                echo 'data: '.json_encode($raw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n\n";
+                echo 'data: ' . json_encode($raw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
                 @ob_flush();
                 flush();
             };
@@ -297,7 +304,7 @@ class ChatCompletionsController extends Controller
 
                 // Chunk final: usage + sisa kredit (trailing chunk ala OpenAI).
                 $final = [
-                    'id' => 'chatcmpl-'.bin2hex(random_bytes(8)),
+                    'id' => 'chatcmpl-' . bin2hex(random_bytes(8)),
                     'object' => 'chat.completion.chunk',
                     'created' => now()->timestamp,
                     'model' => $result['model_key'],
@@ -315,7 +322,7 @@ class ChatCompletionsController extends Controller
                     'credits_used' => $result['credits_used'],
                     'balance_after' => $result['balance_after'],
                 ];
-                echo 'data: '.json_encode($final, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n\n";
+                echo 'data: ' . json_encode($final, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
             } catch (\RuntimeException $e) {
                 $message = $e->getMessage();
                 $type = 'server_error';
@@ -325,10 +332,10 @@ class ChatCompletionsController extends Controller
                     $type = 'insufficient_quota';
                     $safeMessage = 'Saldo kredit AI Anda tidak mencukupi. Silakan beli paket kredit di portal customer.';
                 } else {
-                    \Illuminate\Support\Facades\Log::warning('Chat completions stream gagal: '.$message);
+                    \Illuminate\Support\Facades\Log::warning('Chat completions stream gagal: ' . $message);
                 }
 
-                echo 'data: '.json_encode(['error' => ['message' => $safeMessage, 'type' => $type]], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n\n";
+                echo 'data: ' . json_encode(['error' => ['message' => $safeMessage, 'type' => $type]], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
             }
 
             echo "data: [DONE]\n\n";
