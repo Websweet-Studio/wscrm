@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\AiProvider;
+use App\Models\AiSetting;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -12,10 +15,13 @@ use Illuminate\Support\Facades\Log;
 class AiClient
 {
     private const MAX_ATTEMPTS = 3;
+
     private const RETRYABLE_STATUSES = [408, 409, 429, 500, 502, 503, 504];
 
     private string $endpoint;
+
     private string $apiKey;
+
     private string $model;
 
     public function __construct()
@@ -35,7 +41,7 @@ class AiClient
     public static function settings(): array
     {
         try {
-            $db = \App\Models\AiSetting::allSettings();
+            $db = AiSetting::allSettings();
         } catch (\Throwable) {
             $db = [];
         }
@@ -71,7 +77,7 @@ class AiClient
     /**
      * Buat client untuk provider dari DB (multi-provider). Api key didekripsi.
      */
-    public static function forProvider(\App\Models\AiProvider $provider, string $modelKey): self
+    public static function forProvider(AiProvider $provider, string $modelKey): self
     {
         $client = new self;
         $client->endpoint = self::normalizeEndpoint($provider->endpoint);
@@ -101,7 +107,7 @@ class AiClient
 
     public function hasApiKey(): bool
     {
-        return !empty($this->apiKey);
+        return ! empty($this->apiKey);
     }
 
     public function getModel(): string
@@ -128,7 +134,7 @@ class AiClient
      */
     public function chatWithUsage(array $messages, float $temperature = 0.3, int $maxTokens = 2000, array $options = []): array
     {
-        $url = rtrim($this->endpoint, '/') . '/chat/completions';
+        $url = rtrim($this->endpoint, '/').'/chat/completions';
 
         $payload = array_filter([
             'model' => $this->model,
@@ -143,7 +149,7 @@ class AiClient
             'presence_penalty' => $options['presence_penalty'] ?? null,
             'stop' => $options['stop'] ?? null,
             'seed' => $options['seed'] ?? null,
-        ], fn($v) => $v !== null);
+        ], fn ($v) => $v !== null);
 
         $lastError = null;
         $lastResponse = null;
@@ -151,7 +157,7 @@ class AiClient
         for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS; $attempt++) {
             try {
                 $response = Http::withHeaders([
-                    'Authorization' => 'Bearer ' . $this->apiKey,
+                    'Authorization' => 'Bearer '.$this->apiKey,
                     'Content-Type' => 'application/json',
                 ])
                     ->timeout(60)
@@ -168,7 +174,7 @@ class AiClient
                         $message = $choice['message'] ?? [];
 
                         return [
-                            'content' => $message['content'] ?? '',
+                            'content' => $this->extractContent($message),
                             'tool_calls' => $message['tool_calls'] ?? null,
                             'finish_reason' => $choice['finish_reason'] ?? 'stop',
                             'usage' => $data['usage'] ?? [],
@@ -187,9 +193,9 @@ class AiClient
                     $lastError = $this->statusError($response);
                     Log::warning("AiClient attempt {$attempt} gagal (status {$response->status()}).");
                 }
-            } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            } catch (ConnectionException $e) {
                 $lastError = $e;
-                Log::warning("AiClient attempt {$attempt} koneksi gagal: " . $e->getMessage());
+                Log::warning("AiClient attempt {$attempt} koneksi gagal: ".$e->getMessage());
             }
 
             if ($attempt < self::MAX_ATTEMPTS) {
@@ -198,7 +204,7 @@ class AiClient
         }
 
         Log::error('AiClient semua percobaan gagal', ['error' => $lastError?->getMessage()]);
-        throw new \RuntimeException('AI API error: ' . ($lastError?->getMessage() ?? 'tidak diketahui'));
+        throw new \RuntimeException('AI API error: '.($lastError?->getMessage() ?? 'tidak diketahui'));
     }
 
     /**
@@ -208,7 +214,7 @@ class AiClient
      */
     public function streamChat(array $messages, float $temperature, int $maxTokens, array $options, callable $onChunk): array
     {
-        $url = rtrim($this->endpoint, '/') . '/chat/completions';
+        $url = rtrim($this->endpoint, '/').'/chat/completions';
 
         $payload = array_filter([
             'model' => $this->model,
@@ -223,11 +229,11 @@ class AiClient
             'presence_penalty' => $options['presence_penalty'] ?? null,
             'stop' => $options['stop'] ?? null,
             'seed' => $options['seed'] ?? null,
-        ], fn($v) => $v !== null);
+        ], fn ($v) => $v !== null);
         $payload['stream'] = true;
 
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->apiKey,
+            'Authorization' => 'Bearer '.$this->apiKey,
             'Content-Type' => 'application/json',
             'Accept' => 'text/event-stream',
         ])
@@ -248,7 +254,7 @@ class AiClient
                 $message = $choice['message'] ?? [];
 
                 return [
-                    'content' => $message['content'] ?? '',
+                    'content' => $data['choices'][0]['message']['content'] ?? ($data['choices'][0]['message']['reasoning_content'] ?? ''),
                     'tool_calls' => $message['tool_calls'] ?? null,
                     'finish_reason' => $choice['finish_reason'] ?? 'stop',
                     'usage' => $data['usage'] ?? [],
@@ -292,9 +298,10 @@ class AiClient
 
                 $choice = $chunk['choices'][0] ?? [];
                 $delta = $choice['delta'] ?? [];
+                $piece = $delta['content'] ?? ($delta['reasoning_content'] ?? '');
 
-                if (isset($delta['content'])) {
-                    $content .= $delta['content'];
+                if ($piece !== '') {
+                    $content .= $piece;
                 }
                 if (! empty($delta['tool_calls'])) {
                     $toolCalls = $this->mergeToolCallDeltas($toolCalls, $delta['tool_calls']);
@@ -314,6 +321,22 @@ class AiClient
             'finish_reason' => $finishReason,
             'usage' => $usage,
         ];
+    }
+
+    /**
+     * Ambil isi pesan assistant. Model reasoning (mis. DeepSeek V4 Pro / aggregator)
+     * mengirim jawaban lewat `reasoning_content` — fallback ke sana bila `content`
+     * kosong supaya klien (Trae/Claude Code) tak menerima pesan kosong.
+     */
+    private function extractContent(array $message): string
+    {
+        $content = $message['content'] ?? '';
+
+        if ((string) $content === '' && ! empty($message['reasoning_content'])) {
+            $content = $message['reasoning_content'];
+        }
+
+        return (string) $content;
     }
 
     /**
@@ -357,9 +380,9 @@ class AiClient
     {
         $body = trim((string) $response->body());
         $body = preg_replace('/\s+/', ' ', $body);
-        $snippet = $body !== '' ? ' — ' . mb_substr($body, 0, 200) : '';
+        $snippet = $body !== '' ? ' — '.mb_substr($body, 0, 200) : '';
 
-        return new \RuntimeException('AI API error: ' . $response->status() . $snippet);
+        return new \RuntimeException('AI API error: '.$response->status().$snippet);
     }
 
     /**
@@ -430,7 +453,7 @@ class AiClient
     {
         $lines = preg_split('/\r?\n/', $body);
 
-        $lines = array_filter($lines, fn($l) => ! str_starts_with(trim($l), 'data:'));
+        $lines = array_filter($lines, fn ($l) => ! str_starts_with(trim($l), 'data:'));
 
         return trim(implode("\n", $lines));
     }

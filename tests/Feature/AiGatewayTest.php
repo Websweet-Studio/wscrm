@@ -115,3 +115,23 @@ it('estimates tokens when provider omits usage', function () {
     expect($tx->tokens_input)->not->toBeNull()
         ->and($tx->tokens_output)->not->toBeNull();
 });
+
+it('uses reasoning_content when content is empty (reasoning model)', function () {
+    $provider = makeAiProvider('P', 'https://p3.example.com/v1');
+    makeAiModel($provider, 'deepseek-v4-pro');
+    AiCredit::create(['customer_id' => $this->customer->id, 'balance' => 100]);
+
+    Http::fake([
+        '*/chat/completions' => Http::response([
+            'choices' => [[
+                'message' => ['role' => 'assistant', 'content' => '', 'reasoning_content' => 'Jawaban dari penalaran model'],
+                'finish_reason' => 'stop',
+            ]],
+            'usage' => ['prompt_tokens' => 100, 'completion_tokens' => 50, 'total_tokens' => 150],
+        ]),
+    ]);
+
+    $result = app(AiGateway::class)->chat($this->customer->id, null, [['role' => 'user', 'content' => 'tes']]);
+
+    expect($result['content'])->toBe('Jawaban dari penalaran model');
+});
