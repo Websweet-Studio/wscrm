@@ -134,7 +134,7 @@ class AiClient
      */
     public function chatWithUsage(array $messages, float $temperature = 0.3, int $maxTokens = 2000, array $options = []): array
     {
-        $url = rtrim($this->endpoint, '/').'/chat/completions';
+        $url = rtrim($this->endpoint, '/') . '/chat/completions';
 
         $payload = array_filter([
             'model' => $this->model,
@@ -149,7 +149,7 @@ class AiClient
             'presence_penalty' => $options['presence_penalty'] ?? null,
             'stop' => $options['stop'] ?? null,
             'seed' => $options['seed'] ?? null,
-        ], fn ($v) => $v !== null);
+        ], fn($v) => $v !== null);
 
         $lastError = null;
         $lastResponse = null;
@@ -157,7 +157,7 @@ class AiClient
         for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS; $attempt++) {
             try {
                 $response = Http::withHeaders([
-                    'Authorization' => 'Bearer '.$this->apiKey,
+                    'Authorization' => 'Bearer ' . $this->apiKey,
                     'Content-Type' => 'application/json',
                 ])
                     ->timeout(60)
@@ -195,7 +195,7 @@ class AiClient
                 }
             } catch (ConnectionException $e) {
                 $lastError = $e;
-                Log::warning("AiClient attempt {$attempt} koneksi gagal: ".$e->getMessage());
+                Log::warning("AiClient attempt {$attempt} koneksi gagal: " . $e->getMessage());
             }
 
             if ($attempt < self::MAX_ATTEMPTS) {
@@ -204,7 +204,7 @@ class AiClient
         }
 
         Log::error('AiClient semua percobaan gagal', ['error' => $lastError?->getMessage()]);
-        throw new \RuntimeException('AI API error: '.($lastError?->getMessage() ?? 'tidak diketahui'));
+        throw new \RuntimeException('AI API error: ' . ($lastError?->getMessage() ?? 'tidak diketahui'));
     }
 
     /**
@@ -214,7 +214,7 @@ class AiClient
      */
     public function streamChat(array $messages, float $temperature, int $maxTokens, array $options, callable $onChunk): array
     {
-        $url = rtrim($this->endpoint, '/').'/chat/completions';
+        $url = rtrim($this->endpoint, '/') . '/chat/completions';
 
         $payload = array_filter([
             'model' => $this->model,
@@ -229,11 +229,11 @@ class AiClient
             'presence_penalty' => $options['presence_penalty'] ?? null,
             'stop' => $options['stop'] ?? null,
             'seed' => $options['seed'] ?? null,
-        ], fn ($v) => $v !== null);
+        ], fn($v) => $v !== null);
         $payload['stream'] = true;
 
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer '.$this->apiKey,
+            'Authorization' => 'Bearer ' . $this->apiKey,
             'Content-Type' => 'application/json',
             'Accept' => 'text/event-stream',
         ])
@@ -266,6 +266,7 @@ class AiClient
         $body = $response->toPsrResponse()->getBody();
         $buffer = '';
         $content = '';
+        $reasoning = '';
         $toolCalls = [];
         $finishReason = 'stop';
         $usage = [];
@@ -298,11 +299,16 @@ class AiClient
 
                 $choice = $chunk['choices'][0] ?? [];
                 $delta = $choice['delta'] ?? [];
-                $piece = $delta['content'] ?? ($delta['reasoning_content'] ?? '');
 
-                if ($piece !== '') {
-                    $content .= $piece;
+                // Jangan campur reasoning_content ke content per-chunk (itu penyebab
+                // klien agent menerima "thinking" sebagai jawaban lalu menghapusnya &
+                // loop rethink). Pisahkan keduanya.
+                if (($delta['content'] ?? '') !== '') {
+                    $content .= $delta['content'];
+                } elseif (($delta['reasoning_content'] ?? '') !== '') {
+                    $reasoning .= $delta['reasoning_content'];
                 }
+
                 if (! empty($delta['tool_calls'])) {
                     $toolCalls = $this->mergeToolCallDeltas($toolCalls, $delta['tool_calls']);
                 }
@@ -315,8 +321,19 @@ class AiClient
             }
         }
 
+        // Model reasoning (mis. DeepSeek V4 Pro via aggregator) kadang hanya mengirim
+        // reasoning_content tanpa content final. Klien OpenAI-compatible menuntut content
+        // tidak kosong — bila kosong, ia hapus "jawaban" lalu loop rethink & berakhir error -1.
+        // Pakai reasoning sebagai jawaban (sama seperti fallback non-streaming).
+        $reasoningFallback = false;
+        if ($content === '' && $reasoning !== '') {
+            $content = $reasoning;
+            $reasoningFallback = true;
+        }
+
         return [
             'content' => $content,
+            'reasoning_fallback' => $reasoningFallback,
             'tool_calls' => $toolCalls ?: null,
             'finish_reason' => $finishReason,
             'usage' => $usage,
@@ -380,9 +397,9 @@ class AiClient
     {
         $body = trim((string) $response->body());
         $body = preg_replace('/\s+/', ' ', $body);
-        $snippet = $body !== '' ? ' — '.mb_substr($body, 0, 200) : '';
+        $snippet = $body !== '' ? ' — ' . mb_substr($body, 0, 200) : '';
 
-        return new \RuntimeException('AI API error: '.$response->status().$snippet);
+        return new \RuntimeException('AI API error: ' . $response->status() . $snippet);
     }
 
     /**
@@ -453,7 +470,7 @@ class AiClient
     {
         $lines = preg_split('/\r?\n/', $body);
 
-        $lines = array_filter($lines, fn ($l) => ! str_starts_with(trim($l), 'data:'));
+        $lines = array_filter($lines, fn($l) => ! str_starts_with(trim($l), 'data:'));
 
         return trim(implode("\n", $lines));
     }

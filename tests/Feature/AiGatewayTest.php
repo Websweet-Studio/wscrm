@@ -135,3 +135,32 @@ it('uses reasoning_content when content is empty (reasoning model)', function ()
 
     expect($result['content'])->toBe('Jawaban dari penalaran model');
 });
+
+it('falls back to reasoning_content in streaming when provider sends no real content', function () {
+    $provider = makeAiProvider('P', 'https://p4.example.com/v1');
+    makeAiModel($provider, 'deepseek-v4-pro');
+    AiCredit::create(['customer_id' => $this->customer->id, 'balance' => 100]);
+
+    // Simulasikan model reasoning yang HANYA mengirim reasoning_content (tanpa
+    // content final). Tanpa fallback, klien agent (Trae/Hermes) menghapus "jawaban",
+    // loop rethink, lalu error -1. Content harus di-pakai dari reasoning.
+    $sse = "data: " . json_encode(['choices' => [['delta' => ['reasoning_content' => 'Jawaban dari penalaran model']]]]) . "\n\n"
+        . "data: " . json_encode(['choices' => [['delta' => [], 'finish_reason' => 'stop']], 'usage' => ['prompt_tokens' => 100, 'completion_tokens' => 50]]) . "\n\n"
+        . "data: [DONE]\n\n";
+
+    Http::fake([
+        '*/chat/completions' => Http::response($sse, 200, ['Content-Type' => 'text/event-stream']),
+    ]);
+
+    $client = \App\Services\AiClient::forProvider($provider, 'deepseek-v4-pro');
+    $result = $client->streamChat(
+        [['role' => 'user', 'content' => 'tes']],
+        0.3,
+        2000,
+        [],
+        function () {},
+    );
+
+    expect($result['content'])->toBe('Jawaban dari penalaran model')
+        ->and($result['reasoning_fallback'])->toBeTrue();
+});

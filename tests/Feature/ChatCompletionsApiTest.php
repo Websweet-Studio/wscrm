@@ -13,7 +13,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->customer = Customer::factory()->create();
-    $this->apiKey = 'wsk-test-'.Str::random(40);
+    $this->apiKey = 'wsk-test-' . Str::random(40);
     AiCredit::create([
         'customer_id' => $this->customer->id,
         'balance' => 100,
@@ -47,13 +47,13 @@ it('rejects invalid api key', function () {
 });
 
 it('rejects empty messages', function () {
-    $this->withHeaders(['Authorization' => 'Bearer '.$this->apiKey])
+    $this->withHeaders(['Authorization' => 'Bearer ' . $this->apiKey])
         ->postJson('/api/v1/chat/completions', ['messages' => []])
         ->assertStatus(400);
 });
 
 it('rejects unknown model with 404', function () {
-    $this->withHeaders(['Authorization' => 'Bearer '.$this->apiKey])
+    $this->withHeaders(['Authorization' => 'Bearer ' . $this->apiKey])
         ->postJson('/api/v1/chat/completions', [
             'model' => 'tidak-ada',
             'messages' => [['role' => 'user', 'content' => 'halo']],
@@ -69,7 +69,7 @@ it('returns openai-compatible response and deducts credits', function () {
         ]),
     ]);
 
-    $this->withHeaders(['Authorization' => 'Bearer '.$this->apiKey])
+    $this->withHeaders(['Authorization' => 'Bearer ' . $this->apiKey])
         ->postJson('/api/v1/chat/completions', [
             'model' => 'test-model',
             'messages' => [['role' => 'user', 'content' => 'halo']],
@@ -90,7 +90,7 @@ it('returns 429 when balance is insufficient', function () {
 
     Http::fake(['*/chat/completions' => Http::response(['choices' => [], 'usage' => []])]);
 
-    $this->withHeaders(['Authorization' => 'Bearer '.$this->apiKey])
+    $this->withHeaders(['Authorization' => 'Bearer ' . $this->apiKey])
         ->postJson('/api/v1/chat/completions', [
             'messages' => [['role' => 'user', 'content' => 'halo']],
         ])

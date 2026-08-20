@@ -302,6 +302,28 @@ class ChatCompletionsController extends Controller
             try {
                 $result = $gateway->streamChat($customerId, $modelKey, $messages, $temperature, $maxTokens, $options, $onChunk);
 
+                // Model reasoning yang hanya mengirim reasoning_content: provider telah
+                // meng-stream "thinking" via delta.reasoning_content, tetapi tidak pernah
+                // mengirim content final. Tanpa content, klien agent (Trae/Hermes) menghapus
+                // "jawaban", loop rethink, lalu error -1. Kirim reasoning sebagai content DELTA
+                // agar jawaban benar-benar sampai (tanpa duplikasi jawaban normal).
+                $content = $result['content'] ?? '';
+                if (! empty($result['reasoning_fallback']) && $content !== '') {
+                    echo 'data: ' . json_encode([
+                        'id' => 'chatcmpl-' . bin2hex(random_bytes(8)),
+                        'object' => 'chat.completion.chunk',
+                        'created' => now()->timestamp,
+                        'model' => $result['model_key'],
+                        'provider' => $result['provider_name'],
+                        'choices' => [[
+                            'index' => 0,
+                            'delta' => ['content' => $content],
+                        ]],
+                    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
+                    @ob_flush();
+                    flush();
+                }
+
                 // Chunk final: usage + sisa kredit (trailing chunk ala OpenAI).
                 $final = [
                     'id' => 'chatcmpl-' . bin2hex(random_bytes(8)),
