@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\Admin\AdminToolsController;
 use App\Http\Controllers\Admin\AiAgentController;
+use App\Http\Controllers\Admin\BankController;
 use App\Http\Controllers\Admin\BlogController;
+use App\Http\Controllers\Admin\BroadcastController;
 use App\Http\Controllers\Admin\BrandingController;
 use App\Http\Controllers\Admin\BulkPricingController;
 use App\Http\Controllers\Admin\CustomerController;
@@ -148,6 +150,10 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     // Admin Tools
     Route::get('tools', [AdminToolsController::class, 'index'])->name('tools.index');
     Route::post('tools/execute', [AdminToolsController::class, 'execute'])->name('tools.execute');
+
+    // Broadcast email ke customer
+    Route::get('broadcast', [BroadcastController::class, 'index'])->name('broadcast.index');
+    Route::post('broadcast', [BroadcastController::class, 'send'])->name('broadcast.send');
 
     // DirectAdmin Integration
     Route::get('directadmin', [DirectAdminController::class, 'index'])->name('directadmin.index');
