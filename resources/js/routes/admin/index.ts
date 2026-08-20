@@ -21,6 +21,7 @@ import notifications from './notifications'
 import branding from './branding'
 import database from './database'
 import tools from './tools'
+import broadcast from './broadcast'
 import directadmin from './directadmin'
 import api from './api'
 import ai from './ai'
@@ -188,6 +189,7 @@ notifications: Object.assign(notifications, notifications),
 branding: Object.assign(branding, branding),
 database: Object.assign(database, database),
 tools: Object.assign(tools, tools),
+broadcast: Object.assign(broadcast, broadcast),
 directadmin: Object.assign(directadmin, directadmin),
 api: Object.assign(api, api),
 ai: Object.assign(ai, ai),

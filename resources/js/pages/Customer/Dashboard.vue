@@ -94,6 +94,8 @@ interface Props {
     recentOrders: Order[];
     unpaidInvoices: Invoice[];
     unpaidTotal: number;
+    expenseMonth: number;
+    outstandingTotal: number;
     paymentAccounts: PaymentAccount[];
     aiBalance: number;
     expiringSoon: ExpiringService[];
@@ -305,10 +307,8 @@ const todayLabel = computed(() =>
                         <div class="grid grid-cols-2 gap-2">
                             <Link
                                 :href="getCustomerUrl(() => customerRoutes?.services?.index?.().url, '/customer/services')"
-                                class="inline-flex h-10 items-center justify-between rounded-2xl px-3.5 py-1.5 text-sm font-bold transition-colors"
+                                class="inline-flex h-10 items-center justify-between rounded-2xl px-3.5 py-1.5 text-sm font-bold transition-colors hover:bg-[#c8c8c1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/50"
                                 style="background-color: #f6f6f3; color: #000000;"
-                                @mouseenter="$event.target.style.backgroundColor = '#c8c8c1'"
-                                @mouseleave="$event.target.style.backgroundColor = '#f6f6f3'"
                             >
                                 <span class="inline-flex items-center gap-2">
                                     <Layers class="h-4 w-4" style="color: var(--primary)" />
@@ -318,10 +318,8 @@ const todayLabel = computed(() =>
                             </Link>
                             <Link
                                 :href="getCustomerUrl(() => customerRoutes?.orders?.index?.().url, '/customer/orders')"
-                                class="inline-flex h-10 items-center justify-between rounded-2xl px-3.5 py-1.5 text-sm font-bold transition-colors"
+                                class="inline-flex h-10 items-center justify-between rounded-2xl px-3.5 py-1.5 text-sm font-bold transition-colors hover:bg-[#c8c8c1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/50"
                                 style="background-color: #f6f6f3; color: #000000;"
-                                @mouseenter="$event.target.style.backgroundColor = '#c8c8c1'"
-                                @mouseleave="$event.target.style.backgroundColor = '#f6f6f3'"
                             >
                                 <span class="inline-flex items-center gap-2">
                                     <ReceiptText class="h-4 w-4" style="color: var(--primary)" />
@@ -411,6 +409,74 @@ const todayLabel = computed(() =>
                     <span :class="`mt-1.5 inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${getStatusColor(displayStatus)}`">
                         {{ statusLabel }}
                     </span>
+                </div>
+            </div>
+
+            <!-- Ringkasan pengeluaran -->
+            <div class="rounded-2xl bg-white p-6">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h2 class="font-heading text-lg font-bold" style="letter-spacing: -1px;">Ringkasan Pengeluaran</h2>
+                    <div class="flex flex-wrap gap-2 sm:gap-3">
+                        <div class="rounded-2xl px-4 py-2" style="background-color: #f6f6f3;">
+                            <div class="text-xs font-bold uppercase tracking-wide" style="color: #62625b;">Bulan Ini</div>
+                            <div class="mt-0.5 text-lg font-bold tabular-nums" style="color: #103c25;">{{ formatPrice(expenseMonth) }}</div>
+                        </div>
+                        <div class="rounded-2xl px-4 py-2" style="background-color: #f6f6f3;">
+                            <div class="text-xs font-bold uppercase tracking-wide" style="color: #62625b;">Total Menunggak</div>
+                            <div class="mt-0.5 text-lg font-bold tabular-nums" :style="{ color: outstandingTotal > 0 ? '#dc2626' : '#103c25' }">{{ formatPrice(outstandingTotal) }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-1 text-sm" style="color: #91918c;">Total tagihan lunas pada bulan berjalan dan total yang belum dibayar.</div>
+                <div class="mt-4 flex flex-wrap gap-2">
+                    <Link
+                        :href="getCustomerUrl(() => customerRoutes?.invoices?.index?.().url, '/customer/invoices')"
+                        class="inline-flex h-9 items-center justify-center rounded-2xl px-3.5 text-sm font-bold transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/50"
+                        style="background-color: var(--primary); color: #ffffff;"
+                    >
+                        Lihat Tagihan
+                        <ArrowRight class="ml-1.5 h-4 w-4" />
+                    </Link>
+                    <Link
+                        v-if="primaryInvoice"
+                        :href="getCustomerUrl(() => customerRoutes?.invoices?.payment?.(primaryInvoice.id).url, `/customer/invoices/${primaryInvoice.id}/payment`)"
+                        class="inline-flex h-9 items-center justify-center rounded-2xl px-3.5 text-sm font-bold transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/50"
+                        style="background-color: #f6f6f3; color: #000000;"
+                    >
+                        <CreditCard class="mr-1.5 h-4 w-4" style="color: var(--primary)" />
+                        Bayar Menunggak
+                    </Link>
+                </div>
+            </div>
+
+            <!-- CTA renew layanan hampir habis / kadaluarsa -->
+            <div v-if="expiringSoon.length > 0" class="rounded-2xl border px-5 py-4" style="border-color: #fcd34d; background-color: #fffbeb;">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <AlertTriangle class="h-5 w-5 shrink-0 text-amber-600" />
+                        <div>
+                            <div class="text-sm font-bold text-amber-900">Layanan perlu perhatian</div>
+                            <div class="text-sm text-amber-800">
+                                {{ expiringSoon.length }} layanan {{ expiringSoon.some((s) => s.is_expired) ? 'kedaluwarsa / ' : '' }}akan berakhir dalam 30 hari.
+                            </div>
+                        </div>
+                    </div>
+                    <Link
+                        :href="getCustomerUrl(() => customerRoutes?.services?.index?.().url, '/customer/services')"
+                        class="inline-flex h-9 items-center justify-center rounded-2xl px-3.5 text-sm font-bold transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
+                        style="background-color: #f59e0b; color: #ffffff;"
+                    >
+                        Perbarui Layanan
+                        <ArrowRight class="ml-1.5 h-4 w-4" />
+                    </Link>
+                </div>
+                <div class="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    <div v-for="s in expiringSoon" :key="s.id" class="flex items-center justify-between gap-2 rounded-2xl bg-white px-3 py-2 text-sm" style="border: 1px solid #fde68a;">
+                        <span class="truncate font-bold" style="color: #92400e;">{{ s.name }}</span>
+                        <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold" :style="s.is_expired ? 'background-color: #fecaca; color: #991b1b;' : 'background-color: #fef3c7; color: #92400e;'">
+                            {{ s.is_expired ? 'Kadaluarsa' : `Sisa ${s.days_left} hari` }}
+                        </span>
+                    </div>
                 </div>
             </div>
 

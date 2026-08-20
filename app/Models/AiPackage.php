@@ -8,6 +8,9 @@ class AiPackage extends Model
 {
     protected $fillable = ['name', 'credits', 'price', 'discount_amount', 'is_active', 'sort_order'];
 
+    // Sertakan aksesor `final_price` di output JSON (Inertia) — tanpa ini undefined di frontend → RpNaN.
+    protected $appends = ['final_price'];
+
     protected function casts(): array
     {
         return [

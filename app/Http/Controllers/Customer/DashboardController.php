@@ -37,6 +37,19 @@ class DashboardController extends CustomerBaseController
 
         $unpaidTotal = (float) $customer->invoices()->unpaid()->sum('amount');
 
+        // Ringkasan pengeluaran: total lunas bulan ini + total outstanding (belum dibayar).
+        // Pakai final amount (amount - discount) supaya konsisten dengan yang dibayar customer.
+        $expenseMonth = (float) $customer->invoices()
+            ->paid()
+            ->where('paid_at', '>=', now()->startOfMonth())
+            ->get()
+            ->sum(fn ($i) => $i->final_amount);
+
+        $outstandingTotal = (float) $customer->invoices()
+            ->unpaid()
+            ->get()
+            ->sum(fn ($i) => $i->final_amount);
+
         $paymentAccounts = PaymentAccount::query()
             ->active()
             ->orderBy('type')
@@ -88,6 +101,8 @@ class DashboardController extends CustomerBaseController
             'recentOrders' => $recentOrders,
             'unpaidInvoices' => $unpaidInvoices,
             'unpaidTotal' => $unpaidTotal,
+            'expenseMonth' => $expenseMonth,
+            'outstandingTotal' => $outstandingTotal,
             'paymentAccounts' => $paymentAccounts,
             'aiBalance' => $aiBalance,
             'expiringSoon' => $expiringSoon,
