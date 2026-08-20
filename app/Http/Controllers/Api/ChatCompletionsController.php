@@ -5,21 +5,28 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\AiCredit;
 use App\Models\AiModel;
-use App\Services\AiGateway;
+use App\Models\AiProvider;
+use App\Models\AiTransaction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Endpoint OpenAI-compatible utk customer (Hermes agent, code editor, dsb).
  * Auth: Authorization: Bearer <api_key customer>.
+ *
+ * RINGAN: hanya autentikasi + limit saldo + catat pemakaian token. Request
+ * diteruskan (passthrough) mentah ke gateway AI (9router → provider), sehingga
+ * stream/format respons apa adanya dari upstream — bukan di-remap di sini.
  */
 class ChatCompletionsController extends Controller
 {
-    public function chat(Request $request, AiGateway $gateway): JsonResponse|StreamedResponse
+    public function chat(Request $request): JsonResponse|StreamedResponse
     {
-        // Batas ukuran payload total (cegah messages/tools/response_format jumbo).
         if (mb_strlen((string) $request->getContent()) > 1_048_576) {
             return $this->error('Payload terlalu besar. Maksimal 1 MB.', 'invalid_request_error', 400);
         }
@@ -30,61 +37,190 @@ class ChatCompletionsController extends Controller
             return $this->error('Invalid API key', 'invalid_api_key', 401);
         }
 
-        $customerId = $credit->customer_id;
-
         $payload = $request->all();
-        $normalized = $this->normalizeMessages($payload['messages'] ?? null);
 
-        if (! $normalized['ok']) {
-            // Catat alasan penolakan di log server (reject terlalu umum tidak membantu).
-            \Illuminate\Support\Facades\Log::warning('Chat completions: messages ditolak - ' . $normalized['reason']);
-
+        if (empty($payload['messages']) || ! is_array($payload['messages'])) {
             return $this->error('messages tidak boleh kosong. Kirim setidaknya satu pesan berisi role dan content.', 'invalid_request_error', 400);
         }
 
-        $messages = $normalized['messages'];
-
+        // Resolusi model aktif (untuk rate/billing). Tanpa model → pakai yang pertama aktif.
         $modelKey = $payload['model'] ?? null;
+        $model = $modelKey
+            ? AiModel::where('model_key', $modelKey)->where('is_active', true)->first()
+            : AiModel::where('is_active', true)->orderBy('sort_order')->first();
 
-        if ($modelKey && ! AiModel::where('model_key', $modelKey)->where('is_active', true)->exists()) {
+        if ($modelKey && ! $model) {
             return $this->error("Model '{$modelKey}' tidak ditemukan.", 'model_not_found', 404);
         }
 
-        $temperature = (float) ($payload['temperature'] ?? 0.3);
-        $maxTokens = (int) ($payload['max_tokens'] ?? 2000);
+        // Pre-check saldo (limit) — kunci baris biar anti race, dilepas sebelum stream panjang.
+        $credit = AiCredit::where('customer_id', $credit->customer_id)->lockForUpdate()->first();
 
-        // Batasi parameter untuk mencegah abuse biaya provider.
-        $temperature = min(2.0, max(0.0, $temperature));
-        $maxTokens = min(4096, max(1, $maxTokens));
-
-        // Teruskan parameter OpenAI tambahan agar function calling (Trae/Claude Code) jalan.
-        $options = $this->extractOptions($payload);
-
-        // Streaming (Trae/Claude Code): langsung stream dari provider. Jangan panggil
-        // chat() non-streaming dulu — itu memicu 2x generasi penuh + 2x biaya token.
-        if (! empty($payload['stream'])) {
-            return $this->streamCompletion($gateway, $customerId, $modelKey, $messages, $temperature, $maxTokens, $options);
+        if (! $credit || $credit->balance < 1) {
+            return $this->error('Saldo kredit AI Anda tidak mencukupi. Silakan beli paket kredit di portal customer.', 'insufficient_quota', 429);
         }
 
+        // Resolve upstream gateway AI (provider aktif → 9router).
+        $provider = AiProvider::where('is_active', true)->orderBy('sort_order')->first();
+        $upstream = rtrim($provider->endpoint, '/') . '/chat/completions';
+        $apiKey = $provider->api_key
+            ? Crypt::decryptString($provider->api_key)
+            : (string) config('services.ai.api_key', env('AI_API_KEY', ''));
+
+        return ! empty($payload['stream'])
+            ? $this->proxyStream($upstream, $apiKey, $credit, $model, $payload)
+            : $this->proxyJson($upstream, $apiKey, $credit, $model, $payload);
+    }
+
+    /**
+     * Passthrough non-stream: forward ke upstream, kembalikan JSON apa adanya,
+     * catat usage dari response lalu potong saldo.
+     */
+    private function proxyJson(string $upstream, string $apiKey, AiCredit $credit, ?AiModel $model, array $payload): JsonResponse
+    {
         try {
-            $result = $gateway->chat($customerId, $modelKey, $messages, $temperature, $maxTokens, $options);
-        } catch (\RuntimeException $e) {
-            $message = $e->getMessage();
-
-            // Saldo habis → kode 429 seperti OpenAI (insufficient_quota).
-            if (str_contains($message, 'Saldo AI tidak mencukupi')) {
-                return $this->error('Saldo kredit AI Anda tidak mencukupi. Silakan beli paket kredit di portal customer.', 'insufficient_quota', 429);
-            }
-
-            // Jangan bocorkan detail internal provider/gateway ke client; catat di log server.
-            \Illuminate\Support\Facades\Log::warning('Chat completions gagal: ' . $message);
+            $resp = Http::withToken($apiKey)
+                ->withHeaders(['Accept' => 'application/json'])
+                ->timeout(300)
+                ->post($upstream, $payload);
+        } catch (\Throwable $e) {
+            Log::warning('AI proxy non-stream gagal: ' . $e->getMessage());
 
             return $this->error('Terjadi kesalahan saat memproses request. Coba lagi nanti.', 'server_error', 502);
         }
 
-        $completion = $this->buildCompletion($result);
+        $body = $resp->json() ?? [];
 
-        return response()->json($completion);
+        $this->billFromUsage($credit, $model, $body['choices'][0]['finish_reason'] ?? '', $body['usage'] ?? null);
+
+        return response()->json($body, $resp->status(), [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
+     * Passthrough stream: pipa SSE dari upstream verbatim ke client, tangkap
+     * usage dari trailing chunk untuk billing, potong saldo di akhir.
+     */
+    private function proxyStream(string $upstream, string $apiKey, AiCredit $credit, ?AiModel $model, array $payload): StreamedResponse
+    {
+        return response()->stream(function () use ($upstream, $apiKey, $credit, $model, $payload) {
+            $usage = null;
+            $finish = '';
+
+            // Stream via curl: kontrol header & baca SSE line-by-line dapat diandalkan.
+            $ch = curl_init($upstream);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => false,
+                CURLOPT_HEADER => false,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_TIMEOUT => 600,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => json_encode($payload),
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: application/json',
+                    'Accept: text/event-stream',
+                    'Authorization: Bearer ' . $apiKey,
+                    'X-Accel-Buffering: no',
+                ],
+                CURLOPT_WRITEFUNCTION => function ($ch, $data) use (&$usage, &$finish) {
+                    // Forward verbatim ke client.
+                    echo $data;
+                    @ob_flush();
+                    flush();
+
+                    // Tangkap usage + finish_reason dari chunk SSE untuk billing.
+                    foreach (explode("\n", $data) as $line) {
+                        if (str_starts_with(trim($line), 'data:') && ! str_contains($line, '[DONE]')) {
+                            $json = json_decode(trim(substr($line, 5)), true);
+                            if (is_array($json)) {
+                                if (! empty($json['usage']['prompt_tokens'])) {
+                                    $usage = $json['usage'];
+                                }
+                                $fr = $json['choices'][0]['finish_reason'] ?? '';
+                                if ($fr !== '') {
+                                    $finish = $fr;
+                                }
+                            }
+                        }
+                    }
+
+                    return strlen($data);
+                },
+            ]);
+
+            $ok = curl_exec($ch);
+            $err = curl_error($ch);
+            curl_close($ch);
+
+            if (! $ok && $usage === null) {
+                Log::warning('AI proxy stream error: ' . $err);
+            }
+
+            // Billing berdasarkan usage yang tertangkap dari stream.
+            $this->billFromUsage($credit, $model, $finish, $usage);
+
+            if (! $ok && $usage === null) {
+                echo 'data: ' . json_encode(['error' => ['message' => 'Terjadi kesalahan saat memproses request. Coba lagi nanti.', 'type' => 'server_error']]) . "\n\n";
+            }
+
+            // 9router mengakhiri stream tanpa `data: [DONE]`. Klien OpenAI-compatible
+            // (Trae/agent) menunggu penanda selesai ini; tanpanya bisa hang/loop/-1.
+            echo "data: [DONE]\n\n";
+            @ob_flush();
+            flush();
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache',
+            'Connection' => 'keep-alive',
+            'X-Accel-Buffering' => 'no',
+        ]);
+    }
+
+    /**
+     * Hitung kredit dari usage (token) lalu potong saldo + catat transaksi.
+     */
+    private function billFromUsage(AiCredit $credit, ?AiModel $model, string $finish, ?array $usage): void
+    {
+        if (! $model) {
+            return;
+        }
+
+        $input = (int) ($usage['prompt_tokens'] ?? 0);
+        $output = (int) ($usage['completion_tokens'] ?? 0);
+
+        // Fallback estimasi bila usage kosong (beberapa provider omit usage di stream).
+        if ($input === 0 && $output === 0) {
+            return; // tak bisa dihitung akurat; jangan tebak-hitam utk hindari charge keliru.
+        }
+
+        $credits = max(1, (int) round(
+            ($input / 1_000_000) * (float) $model->input_rate
+            + ($output / 1_000_000) * (float) $model->output_rate
+        ));
+
+        try {
+            DB::transaction(function () use ($credit, $model, $input, $output, $credits) {
+                $row = AiCredit::where('customer_id', $credit->customer_id)->lockForUpdate()->first();
+
+                if (! $row || $row->balance < $credits) {
+                    return;
+                }
+
+                AiTransaction::create([
+                    'customer_id' => $credit->customer_id,
+                    'type' => 'out',
+                    'source' => 'usage',
+                    'credits' => -$credits,
+                    'ai_model_id' => $model->id,
+                    'tokens_input' => $input,
+                    'tokens_output' => $output,
+                    'description' => "Chat AI pakai model {$model->model_key}",
+                ]);
+
+                $row->decrement('balance', $credits);
+            });
+        } catch (\Throwable $e) {
+            Log::warning('AI proxy billing gagal: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -99,275 +235,12 @@ class ChatCompletionsController extends Controller
 
         return response()->json([
             'object' => 'list',
-            'data' => $models->map(fn($m) => [
+            'data' => $models->map(fn ($m) => [
                 'id' => $m->model_key,
                 'object' => 'model',
                 'created' => 0,
                 'owned_by' => 'wscrm',
             ])->values(),
-        ]);
-    }
-
-    /**
-     * Normalisasi messages: terima content string ATAU array bagian (format Claude Code/Trae),
-     * role `tool` + `tool_calls`/`tool_call_id` (function calling).
-     * Return ['ok'=>bool, 'messages'=>?array, 'reason'=>string] — reason untuk log server.
-     */
-    private function normalizeMessages(mixed $raw): array
-    {
-        if (! is_array($raw) || count($raw) === 0) {
-            return ['ok' => false, 'messages' => null, 'reason' => 'kosong/tidak array'];
-        }
-
-        // Cap jumlah pesan (cegah input-token jumbo). 500 cukup longgar utk sesi
-        // agent multi-turn (Trae/Claude Code) tanpa membuka abuse memori.
-        if (count($raw) > 500) {
-            return ['ok' => false, 'messages' => null, 'reason' => 'terlalu banyak pesan'];
-        }
-
-        $out = [];
-
-        foreach ($raw as $m) {
-            if (! is_array($m) || ! isset($m['role']) || ! in_array($m['role'], ['system', 'user', 'assistant', 'tool'], true)) {
-                return ['ok' => false, 'messages' => null, 'reason' => 'role tidak valid'];
-            }
-
-            $role = $m['role'];
-
-            // Role `tool` wajib punya tool_call_id (hasil eksekusi tool dari Trae/Claude Code).
-            if ($role === 'tool') {
-                if (! isset($m['tool_call_id']) || ! is_string($m['tool_call_id'])) {
-                    return ['ok' => false, 'messages' => null, 'reason' => 'tool tanpa tool_call_id'];
-                }
-
-                $out[] = [
-                    'role' => 'tool',
-                    'tool_call_id' => $m['tool_call_id'],
-                    'content' => is_string($m['content'] ?? '') ? $m['content'] : json_encode($m['content'] ?? ''),
-                ];
-                continue;
-            }
-
-            if (! isset($m['content'])) {
-                $m['content'] = null;
-            }
-
-            $content = $m['content'];
-            $normalizedContent = '';
-
-            if (is_string($content)) {
-                $normalizedContent = $content;
-            } elseif (is_array($content)) {
-                // Array bagian: [{"type":"text","text":"..."}] — gabungkan bagian teks jadi string.
-                // Bagian non-teks (gambar, tool) diabaikan; kalau tidak ada teks tetap valid.
-                $text = '';
-                foreach ($content as $part) {
-                    if (is_string($part)) {
-                        $text .= $part;
-                    } elseif (is_array($part) && isset($part['text']) && is_string($part['text'])) {
-                        $text .= $part['text'];
-                    }
-                }
-                $normalizedContent = $text;
-            } elseif ($content === null) {
-                // Assistant yang memanggil tool sering mengirim content null/'' —
-                // jangan ditolak, cukup kosongkan.
-                $normalizedContent = '';
-            } else {
-                return ['ok' => false, 'messages' => null, 'reason' => 'content tipe tidak didukung'];
-            }
-
-            // Batas panjang konten per pesan (~64KB karakter).
-            if (mb_strlen($normalizedContent) > 65536) {
-                return ['ok' => false, 'messages' => null, 'reason' => 'konten per pesan terlalu panjang'];
-            }
-
-            $normalized = ['role' => $role, 'content' => $normalizedContent];
-
-            // Pertahankan tool_calls pada pesan assistant (penting utk function calling).
-            if ($role === 'assistant' && isset($m['tool_calls']) && is_array($m['tool_calls'])) {
-                $normalized['tool_calls'] = $this->normalizeToolCalls($m['tool_calls']);
-            }
-
-            $out[] = $normalized;
-        }
-
-        return ['ok' => true, 'messages' => $out, 'reason' => ''];
-    }
-
-    /**
-     * Normalisasi array tool_calls (pastikan id & function.arguments valid string).
-     */
-    private function normalizeToolCalls(array $toolCalls): array
-    {
-        $out = [];
-
-        foreach ($toolCalls as $tc) {
-            if (! is_array($tc) || ! isset($tc['id'])) {
-                continue;
-            }
-
-            $function = $tc['function'] ?? [];
-            $arguments = $function['arguments'] ?? '';
-
-            if (is_array($arguments)) {
-                $arguments = json_encode($arguments, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-            }
-
-            $out[] = [
-                'id' => (string) $tc['id'],
-                'type' => $tc['type'] ?? 'function',
-                'function' => [
-                    'name' => (string) ($function['name'] ?? ''),
-                    'arguments' => (string) $arguments,
-                ],
-            ];
-        }
-
-        return $out;
-    }
-
-    /**
-     * Ambil parameter OpenAI tambahan (tools, tool_choice, response_format, dll)
-     * dari payload agar gateway bersifat transparan (function calling).
-     */
-    private function extractOptions(array $payload): array
-    {
-        $options = [];
-
-        foreach (['tools', 'tool_choice', 'response_format', 'top_p', 'frequency_penalty', 'presence_penalty', 'stop', 'seed'] as $key) {
-            if (array_key_exists($key, $payload) && $payload[$key] !== null) {
-                if ($key === 'tools' && is_array($payload['tools'])) {
-                    // Cap jumlah tools (cek skema function-calling jumbo).
-                    $options['tools'] = array_slice($payload['tools'], 0, 32);
-                } else {
-                    $options[$key] = $payload[$key];
-                }
-            }
-        }
-
-        return $options;
-    }
-
-    private function buildCompletion(array $result): array
-    {
-        $message = ['role' => 'assistant', 'content' => $result['content'] ?? ''];
-
-        if (! empty($result['tool_calls'])) {
-            $message['tool_calls'] = $result['tool_calls'];
-        }
-
-        $finishReason = $result['finish_reason'] ?? 'stop';
-        if ($finishReason === 'tool_calls' && ! empty($result['tool_calls'])) {
-            // Beberapa gateway memakai finish_reason yang berbeda; jaga konsistensi.
-            $finishReason = 'tool_calls';
-        }
-
-        return [
-            'id' => 'chatcmpl-' . bin2hex(random_bytes(8)),
-            'object' => 'chat.completion',
-            'created' => now()->timestamp,
-            'model' => $result['model_key'],
-            'provider' => $result['provider_name'],
-            'choices' => [[
-                'index' => 0,
-                'message' => $message,
-                'finish_reason' => $finishReason,
-            ]],
-            'usage' => [
-                'prompt_tokens' => $result['usage']['prompt_tokens'],
-                'completion_tokens' => $result['usage']['completion_tokens'],
-                'total_tokens' => $result['usage']['prompt_tokens'] + $result['usage']['completion_tokens'],
-            ],
-            'credits_used' => $result['credits_used'],
-            'balance_after' => $result['balance_after'],
-        ];
-    }
-
-    /**
-     * Streaming SSE nyata: pipa tiap chunk token dari provider (AiGateway/streamChat)
-     * langsung ke client OpenAI-compatible, lalu kirim chunk final berisi usage
-     * + sisa kredit, dan `data: [DONE]`.
-     */
-    private function streamCompletion(AiGateway $gateway, int $customerId, ?string $modelKey, array $messages, float $temperature, int $maxTokens, array $options): StreamedResponse
-    {
-        return response()->stream(function () use ($gateway, $customerId, $modelKey, $messages, $temperature, $maxTokens, $options) {
-            $onChunk = function (array $raw) {
-                $raw['object'] = 'chat.completion.chunk';
-                echo 'data: ' . json_encode($raw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
-                @ob_flush();
-                flush();
-            };
-
-            try {
-                $result = $gateway->streamChat($customerId, $modelKey, $messages, $temperature, $maxTokens, $options, $onChunk);
-
-                // Model reasoning yang hanya mengirim reasoning_content: provider telah
-                // meng-stream "thinking" via delta.reasoning_content, tetapi tidak pernah
-                // mengirim content final. Tanpa content, klien agent (Trae/Hermes) menghapus
-                // "jawaban", loop rethink, lalu error -1. Kirim reasoning sebagai content DELTA
-                // agar jawaban benar-benar sampai (tanpa duplikasi jawaban normal).
-                $content = $result['content'] ?? '';
-                if (! empty($result['reasoning_fallback']) && $content !== '') {
-                    echo 'data: ' . json_encode([
-                        'id' => 'chatcmpl-' . bin2hex(random_bytes(8)),
-                        'object' => 'chat.completion.chunk',
-                        'created' => now()->timestamp,
-                        'model' => $result['model_key'],
-                        'provider' => $result['provider_name'],
-                        'choices' => [[
-                            'index' => 0,
-                            'delta' => ['content' => $content],
-                        ]],
-                    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
-                    @ob_flush();
-                    flush();
-                }
-
-                // Chunk final: usage + sisa kredit (trailing chunk ala OpenAI).
-                $final = [
-                    'id' => 'chatcmpl-' . bin2hex(random_bytes(8)),
-                    'object' => 'chat.completion.chunk',
-                    'created' => now()->timestamp,
-                    'model' => $result['model_key'],
-                    'provider' => $result['provider_name'],
-                    'choices' => [[
-                        'index' => 0,
-                        'delta' => [],
-                        'finish_reason' => $result['finish_reason'],
-                    ]],
-                    'usage' => [
-                        'prompt_tokens' => $result['usage']['prompt_tokens'],
-                        'completion_tokens' => $result['usage']['completion_tokens'],
-                        'total_tokens' => $result['usage']['prompt_tokens'] + $result['usage']['completion_tokens'],
-                    ],
-                    'credits_used' => $result['credits_used'],
-                    'balance_after' => $result['balance_after'],
-                ];
-                echo 'data: ' . json_encode($final, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
-            } catch (\RuntimeException $e) {
-                $message = $e->getMessage();
-                $type = 'server_error';
-                $safeMessage = 'Terjadi kesalahan saat memproses request. Coba lagi nanti.';
-
-                if (str_contains($message, 'Saldo AI tidak mencukupi')) {
-                    $type = 'insufficient_quota';
-                    $safeMessage = 'Saldo kredit AI Anda tidak mencukupi. Silakan beli paket kredit di portal customer.';
-                } else {
-                    \Illuminate\Support\Facades\Log::warning('Chat completions stream gagal: ' . $message);
-                }
-
-                echo 'data: ' . json_encode(['error' => ['message' => $safeMessage, 'type' => $type]], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
-            }
-
-            echo "data: [DONE]\n\n";
-            @ob_flush();
-            flush();
-        }, 200, [
-            'Content-Type' => 'text/event-stream',
-            'Cache-Control' => 'no-cache',
-            'Connection' => 'keep-alive',
-            'X-Accel-Buffering' => 'no',
         ]);
     }
 

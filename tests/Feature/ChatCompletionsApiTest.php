@@ -61,30 +61,6 @@ it('rejects unknown model with 404', function () {
         ->assertStatus(404);
 });
 
-it('returns openai-compatible response and deducts credits', function () {
-    Http::fake([
-        '*/chat/completions' => Http::response([
-            'choices' => [['message' => ['content' => 'Halo, ada yang bisa dibantu?']]],
-            'usage' => ['prompt_tokens' => 1000, 'completion_tokens' => 500],
-        ]),
-    ]);
-
-    $this->withHeaders(['Authorization' => 'Bearer ' . $this->apiKey])
-        ->postJson('/api/v1/chat/completions', [
-            'model' => 'test-model',
-            'messages' => [['role' => 'user', 'content' => 'halo']],
-        ])
-        ->assertOk()
-        ->assertJsonPath('object', 'chat.completion')
-        ->assertJsonPath('model', 'test-model')
-        ->assertJsonPath('choices.0.message.content', 'Halo, ada yang bisa dibantu?')
-        ->assertJsonPath('usage.prompt_tokens', 1000)
-        ->assertJsonPath('credits_used', 1)
-        ->assertJsonPath('balance_after', 99);
-
-    expect(AiCredit::currentBalance($this->customer->id))->toBe(99);
-});
-
 it('returns 429 when balance is insufficient', function () {
     AiCredit::where('customer_id', $this->customer->id)->update(['balance' => 0]);
 
@@ -96,4 +72,41 @@ it('returns 429 when balance is insufficient', function () {
         ])
         ->assertStatus(429)
         ->assertJsonPath('error.type', 'insufficient_quota');
+});
+
+it('passes through upstream response verbatim and deducts credits from usage', function () {
+    // Bersih: /api/v1 adalah passthrough ke gateway AI. Body respons dikembalikan apa
+    // adanya dari upstream, bukan di-remap. Kredit dihitung dari token usage & saldo
+    // dipotong via transaksi (bukan field tambahan di body).
+    $upstreamBody = [
+        'id' => 'chatcmpl-test123',
+        'object' => 'chat.completion',
+        'created' => 1234567890,
+        'model' => 'deepseek/deepseek-v4-pro',
+        'choices' => [[
+            'index' => 0,
+            'message' => ['role' => 'assistant', 'content' => 'Halo, ada yang bisa dibantu?'],
+            'finish_reason' => 'stop',
+        ]],
+        'usage' => ['prompt_tokens' => 1000, 'completion_tokens' => 500, 'total_tokens' => 1500],
+    ];
+
+    Http::fake(['*/chat/completions' => Http::response($upstreamBody)]);
+
+    $this->withHeaders(['Authorization' => 'Bearer ' . $this->apiKey])
+        ->postJson('/api/v1/chat/completions', [
+            'model' => 'test-model',
+            'messages' => [['role' => 'user', 'content' => 'halo']],
+        ])
+        ->assertOk()
+        ->assertJsonPath('object', 'chat.completion')
+        ->assertJsonPath('id', 'chatcmpl-test123')
+        ->assertJsonPath('choices.0.message.content', 'Halo, ada yang bisa dibantu?')
+        ->assertJsonPath('usage.prompt_tokens', 1000)
+        // Passthrough mem-forward header auth/endpoint ups ke upstream provider.
+        ->assertJsonMissingPath('credits_used')
+        ->assertJsonMissingPath('balance_after');
+
+    // Kredit dipotong: 1000 in + 500 out, rate 1 per 1M → (0.001 + 0.0005) → 1 kredit.
+    expect(AiCredit::currentBalance($this->customer->id))->toBe(99);
 });
