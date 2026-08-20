@@ -11,6 +11,14 @@ class WebsiteClient extends Model
 {
     use SoftDeletes;
 
+    /**
+     * wp_app_password di-hide dari serialization karena ter-encrypt pakai
+     * APP_KEY produksi lama (103) yang beda. Data tetap utuh di DB; akses
+     * via attribute tetap jalan (controller sync). Fix sementara sampai
+     * APP_KEY asli didapat. Ref: session deploy app.websweetstudio.com.
+     */
+    protected $hidden = ['wp_app_password'];
+
     protected $fillable = [
         'customer_id',
         'name',
