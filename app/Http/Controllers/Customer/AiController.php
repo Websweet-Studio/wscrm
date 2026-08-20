@@ -47,19 +47,30 @@ class AiController extends CustomerBaseController
         $creditPrice = AiPackage::active()
             ->where('credits', '>', 0)
             ->get()
-            ->map(fn ($p) => (float) $p->final_price / (int) $p->credits)
+            ->map(fn($p) => (float) $p->final_price / (int) $p->credits)
             ->min();
 
-        $transactions = AiTransaction::with(['model:id,model_key', 'package:id,name'])
-            ->where('customer_id', $customer->id)
-            ->latest('created_at')
-            ->limit(20)
-            ->get();
+        $transactions = $this->filteredTransactions($customer->id, null, null)
+            ->paginate(15);
 
         // Total kredit yang pernah masuk (pembelian + penyesuaian manual), patokan 100%.
         $totalCredits = (int) AiTransaction::where('customer_id', $customer->id)
             ->where('type', 'in')
             ->sum('credits');
+
+        // Ringkasan pemakaian token (input+output) dari transaksi usage.
+        $tokenSum = function (?string $since) use ($customer) {
+            $q = AiTransaction::where('customer_id', $customer->id)->where('type', 'out');
+            if ($since !== null) {
+                $q->where('created_at', '>=', $since);
+            }
+
+            return (int) $q->selectRaw('COALESCE(SUM(COALESCE(tokens_input,0)+COALESCE(tokens_output,0)),0) as total')->value('total');
+        };
+
+        $tokensToday = $tokenSum(now()->startOfDay()->toDateTimeString());
+        $tokens30d = $tokenSum(now()->subDays(29)->startOfDay()->toDateTimeString());
+        $tokensTotal = $tokenSum(null);
 
         // Pemakaian harian 30 hari terakhir: kredit terpakai + jumlah request.
         $daily = [];
@@ -94,7 +105,85 @@ class AiController extends CustomerBaseController
             'credit_price' => $creditPrice !== null ? round($creditPrice, 2) : null,
             'transactions' => $transactions,
             'usage_daily' => array_values($daily),
+            'tokens_today' => $tokensToday,
+            'tokens_30d' => $tokens30d,
+            'tokens_total' => $tokensTotal,
         ]);
+    }
+
+    /**
+     * Query transaksi AI customer dengan filter opsional (type, model_id).
+     */
+    private function filteredTransactions(int $customerId, ?string $type, ?int $modelId)
+    {
+        return AiTransaction::with(['model:id,model_key', 'package:id,name'])
+            ->where('customer_id', $customerId)
+            ->when($type !== null && $type !== '', fn($q) => $q->where('type', $type))
+            ->when($modelId !== null && $modelId > 0, fn($q) => $q->where('ai_model_id', $modelId))
+            ->latest('created_at');
+    }
+
+    /**
+     * API JSON riwayat transaksi (paginasi + filter) untuk tab Riwayat Usage.
+     */
+    public function history(Request $request): JsonResponse
+    {
+        $customer = $this->customer();
+
+        $type = $request->input('type');
+        $modelId = (int) $request->input('model_id', 0);
+
+        $transactions = $this->filteredTransactions($customer->id, $type, $modelId)
+            ->paginate(15)
+            ->withQueryString();
+
+        return response()->json([
+            'data' => $transactions->items(),
+            'current_page' => $transactions->currentPage(),
+            'last_page' => $transactions->lastPage(),
+            'total' => $transactions->total(),
+            'per_page' => $transactions->perPage(),
+        ]);
+    }
+
+    /**
+     * Export riwayat transaksi ke CSV.
+     */
+    public function exportCsv(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $customer = $this->customer();
+
+        $type = $request->input('type');
+        $modelId = (int) $request->input('model_id', 0);
+
+        $transactions = $this->filteredTransactions($customer->id, $type, $modelId)->get();
+
+        $filename = 'ai-transactions-' . now()->format('Ymd-His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        return response()->stream(function () use ($transactions) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF"); // BOM utk Excel
+            fputcsv($out, ['Waktu', 'Tipe', 'Kredit', 'Token In', 'Token Out', 'Model', 'Detail']);
+
+            foreach ($transactions as $t) {
+                fputcsv($out, [
+                    Carbon::parse($t->created_at)->format('Y-m-d H:i'),
+                    $t->type === 'in' ? ($t->source === 'purchase' ? 'Pembelian' : 'Penyesuaian') : 'Pemakaian',
+                    (int) $t->credits,
+                    (int) ($t->tokens_input ?? 0),
+                    (int) ($t->tokens_output ?? 0),
+                    $t->model?->model_key ?? '',
+                    (string) $t->description,
+                ]);
+            }
+
+            fclose($out);
+        }, 200, $headers);
     }
 
     /**
@@ -106,7 +195,7 @@ class AiController extends CustomerBaseController
 
         $credit = AiCredit::firstOrCreate(['customer_id' => $customer->id]);
 
-        $key = 'wsk-'.Str::random(48);
+        $key = 'wsk-' . Str::random(48);
 
         $credit->update([
             'api_key' => Crypt::encryptString($key),

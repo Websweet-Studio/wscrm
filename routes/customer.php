@@ -64,6 +64,8 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::prefix('ai')->name('ai.')->group(function () {
             Route::get('/', [AiController::class, 'index'])->name('index');
             Route::post('/api-key', [AiController::class, 'apiKey'])->name('api-key');
+            Route::get('/history', [AiController::class, 'history'])->name('history');
+            Route::get('/export', [AiController::class, 'exportCsv'])->name('export');
             Route::get('/packages', [AiController::class, 'packages'])->name('packages');
             Route::post('/packages/{package}/buy', [AiController::class, 'buy'])->name('buy');
         });

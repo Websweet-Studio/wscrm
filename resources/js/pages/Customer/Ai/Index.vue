@@ -8,7 +8,7 @@ import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowDownCircle, ArrowRight, ArrowUpCircle, BookOpen, Check, Copy, Cpu, History, KeyRound, RefreshCw, Server, ShoppingCart, TrendingUp, Zap } from 'lucide-vue-next';
+import { ArrowDownCircle, ArrowRight, ArrowUpCircle, BookOpen, Check, ChevronLeft, ChevronRight, Copy, Cpu, Download, History, KeyRound, RefreshCw, Server, ShoppingCart, TrendingUp, Zap } from 'lucide-vue-next';
 import { computed, onMounted, ref, watch } from 'vue';
 import { Bar } from 'vue-chartjs';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
@@ -29,10 +29,20 @@ interface Transaction {
     type: 'in' | 'out';
     source: 'purchase' | 'usage' | 'manual_adjust';
     credits: number;
+    tokens_input: number | null;
+    tokens_output: number | null;
     description: string | null;
     created_at: string;
     model: { model_key: string } | null;
     package: { name: string } | null;
+}
+
+interface Paginated<T> {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    total: number;
+    per_page: number;
 }
 
 interface Props {
@@ -42,8 +52,11 @@ interface Props {
     endpoint: string;
     models: Model[];
     credit_price: number | null;
-    transactions: Transaction[];
+    transactions: Paginated<Transaction>;
     usage_daily: Array<{ date: string; label: string; credits: number; runs: number }>;
+    tokens_today: number;
+    tokens_30d: number;
+    tokens_total: number;
 }
 
 const props = defineProps<Props>();
@@ -90,9 +103,9 @@ watch(activeTab, (value) => {
     }
 });
 
-const totalTransactions = computed(() => props.transactions.length);
-const usageTransactions = computed(() => props.transactions.filter(t => t.type === 'out').length);
-const purchaseTransactions = computed(() => props.transactions.filter(t => t.source === 'purchase').length);
+const totalTransactions = computed(() => props.transactions.total);
+const usageTransactions = computed(() => props.transactions.data.filter(t => t.type === 'out').length);
+const purchaseTransactions = computed(() => props.transactions.data.filter(t => t.source === 'purchase').length);
 
 const copyText = async (text: string) => {
     try {
@@ -183,6 +196,43 @@ const usageBarOptions = {
 
 const usage30dTotal = computed(() => props.usage_daily.reduce((sum, d) => sum + d.credits, 0));
 const usage30dRuns = computed(() => props.usage_daily.reduce((sum, d) => sum + d.runs, 0));
+
+// Riwayat Usage: filter, paginasi, export
+const typeFilter = ref<string>('');
+const modelFilter = ref<number>(0);
+const historyRows = ref<Transaction[]>(props.transactions.data);
+const historyPage = ref(props.transactions.current_page);
+const historyLastPage = ref(props.transactions.last_page);
+const historyTotal = ref(props.transactions.total);
+
+const historyQuery = (page: number) => {
+    const params = new URLSearchParams();
+    if (typeFilter.value) params.set('type', typeFilter.value);
+    if (modelFilter.value) params.set('model_id', String(modelFilter.value));
+    params.set('page', String(page));
+    return `/customer/ai/history?${params.toString()}`;
+};
+
+const loadHistory = async (page: number) => {
+    const res = await fetch(historyQuery(page));
+    if (!res.ok) return;
+    const d = await res.json();
+    historyRows.value = d.data;
+    historyPage.value = d.current_page;
+    historyLastPage.value = d.last_page;
+    historyTotal.value = d.total;
+};
+
+const applyHistoryFilters = () => loadHistory(1);
+const historyPrev = () => historyPage.value > 1 && loadHistory(historyPage.value - 1);
+const historyNext = () => historyPage.value < historyLastPage.value && loadHistory(historyPage.value + 1);
+const historyExportUrl = computed(() => {
+    const params = new URLSearchParams();
+    if (typeFilter.value) params.set('type', typeFilter.value);
+    if (modelFilter.value) params.set('model_id', String(modelFilter.value));
+    const qs = params.toString();
+    return `/customer/ai/export${qs ? '?' + qs : ''}`;
+});
 </script>
 
 <template>
@@ -258,6 +308,30 @@ const usage30dRuns = computed(() => props.usage_daily.reduce((sum, d) => sum + d
                     </CardHeader>
                 </Card>
             </div>
+
+            <!-- Penggunaan Token -->
+            <Card class="rounded-lg border-border/60 shadow-sm">
+                <CardHeader class="pb-2">
+                    <CardTitle class="flex items-center gap-2 text-base">
+                        <BookOpen class="h-4 w-4 text-muted-foreground" /> Penggunaan Token
+                    </CardTitle>
+                    <CardDescription>Total token (input + output) dari pemakaian API</CardDescription>
+                </CardHeader>
+                <CardContent class="grid gap-3 sm:grid-cols-3">
+                    <div class="rounded-lg border border-border/60 p-3">
+                        <div class="text-xs font-medium text-muted-foreground">Hari Ini</div>
+                        <div class="mt-1 text-xl font-semibold tabular-nums">{{ tokens_today.toLocaleString('id-ID') }}</div>
+                    </div>
+                    <div class="rounded-lg border border-border/60 p-3">
+                        <div class="text-xs font-medium text-muted-foreground">30 Hari Terakhir</div>
+                        <div class="mt-1 text-xl font-semibold tabular-nums">{{ tokens_30d.toLocaleString('id-ID') }}</div>
+                    </div>
+                    <div class="rounded-lg border border-border/60 p-3">
+                        <div class="text-xs font-medium text-muted-foreground">Total</div>
+                        <div class="mt-1 text-xl font-semibold tabular-nums">{{ tokens_total.toLocaleString('id-ID') }}</div>
+                    </div>
+                </CardContent>
+            </Card>
 
             <!-- Progress bar sisa kredit -->
             <Card class="rounded-lg border-border/60 shadow-sm">
@@ -450,7 +524,41 @@ const usage30dRuns = computed(() => props.usage_daily.reduce((sum, d) => sum + d
 
                     <!-- Riwayat Usage -->
                     <div v-if="activeTab === 'history'" class="p-4 sm:p-6">
-                        <p class="mb-4 text-sm text-muted-foreground">20 transaksi terakhir (pembelian &amp; pemakaian)</p>
+                        <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+                            <div class="flex flex-wrap items-end gap-3">
+                                <div class="space-y-1">
+                                    <Label class="text-xs font-medium text-muted-foreground">Tipe</Label>
+                                    <select
+                                        v-model="typeFilter"
+                                        @change="applyHistoryFilters"
+                                        class="h-9 rounded-md border border-border/70 bg-background px-3 text-sm focus-visible:outline-none"
+                                    >
+                                        <option value="">Semua</option>
+                                        <option value="in">Pembelian / Masuk</option>
+                                        <option value="out">Pemakaian</option>
+                                    </select>
+                                </div>
+                                <div class="space-y-1">
+                                    <Label class="text-xs font-medium text-muted-foreground">Model</Label>
+                                    <select
+                                        v-model="modelFilter"
+                                        @change="applyHistoryFilters"
+                                        class="h-9 rounded-md border border-border/70 bg-background px-3 text-sm focus-visible:outline-none"
+                                    >
+                                        <option :value="0">Semua</option>
+                                        <option v-for="m in models" :key="m.id" :value="m.id">{{ m.model_key }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-muted-foreground">{{ historyTotal.toLocaleString('id-ID') }} transaksi</span>
+                                <Button asChild variant="outline" size="sm">
+                                    <a :href="historyExportUrl" download>
+                                        <Download class="h-4 w-4" /> Export CSV
+                                    </a>
+                                </Button>
+                            </div>
+                        </div>
                         <div class="overflow-hidden rounded-lg border border-border/60">
                             <div class="overflow-x-auto">
                                 <Table>
@@ -458,12 +566,13 @@ const usage30dRuns = computed(() => props.usage_daily.reduce((sum, d) => sum + d
                                         <TableRow>
                                             <TableHead>Waktu</TableHead>
                                             <TableHead>Tipe</TableHead>
-                                            <TableHead>Token</TableHead>
+                                            <TableHead>Kredit</TableHead>
+                                            <TableHead>Token In / Out</TableHead>
                                             <TableHead>Detail</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        <TableRow v-for="t in transactions" :key="t.id">
+                                        <TableRow v-for="t in historyRows" :key="t.id">
                                             <TableCell class="text-xs text-muted-foreground">{{ formatDate(t.created_at) }}</TableCell>
                                             <TableCell>
                                                 <Badge :variant="t.type === 'in' ? 'default' : 'secondary'">
@@ -477,20 +586,40 @@ const usage30dRuns = computed(() => props.usage_daily.reduce((sum, d) => sum + d
                                                     {{ t.credits > 0 ? '+' : '' }}{{ t.credits.toLocaleString('id-ID') }}
                                                 </span>
                                             </TableCell>
+                                            <TableCell class="text-xs tabular-nums">
+                                                <template v-if="t.tokens_input !== null || t.tokens_output !== null">
+                                                    <span class="text-muted-foreground">In {{ (t.tokens_input || 0).toLocaleString('id-ID') }}</span>
+                                                    &middot;
+                                                    <span class="text-muted-foreground">Out {{ (t.tokens_output || 0).toLocaleString('id-ID') }}</span>
+                                                </template>
+                                                <span v-else class="text-muted-foreground">-</span>
+                                            </TableCell>
                                             <TableCell class="text-xs text-muted-foreground">
                                                 <template v-if="t.model">{{ t.model.model_key }} &middot; </template>
                                                 <template v-if="t.package">{{ t.package.name }} &middot; </template>
                                                 {{ t.description || '-' }}
                                             </TableCell>
                                         </TableRow>
-                                        <TableRow v-if="transactions.length === 0">
-                            <TableCell colspan="4" class="text-center text-muted-foreground">Belum ada transaksi. Beli token untuk mulai memakai.</TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
-            </div>
-        </div>
-    </div>
+                                        <TableRow v-if="historyRows.length === 0">
+                                            <TableCell colspan="5" class="text-center text-muted-foreground">Belum ada transaksi. Beli token untuk mulai memakai.</TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </div>
+                        <!-- Paginasi -->
+                        <div v-if="historyLastPage > 1" class="mt-4 flex items-center justify-between">
+                            <span class="text-sm text-muted-foreground">Halaman {{ historyPage }} dari {{ historyLastPage }}</span>
+                            <div class="flex gap-2">
+                                <Button variant="outline" size="sm" class="cursor-pointer" :disabled="historyPage <= 1" @click="historyPrev">
+                                    <ChevronLeft class="h-4 w-4" /> Sebelumnya
+                                </Button>
+                                <Button variant="outline" size="sm" class="cursor-pointer" :disabled="historyPage >= historyLastPage" @click="historyNext">
+                                    Berikutnya <ChevronRight class="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
 
     <!-- Dokumentasi -->
     <div v-if="activeTab === 'docs'" class="space-y-6 p-4 sm:p-6">
