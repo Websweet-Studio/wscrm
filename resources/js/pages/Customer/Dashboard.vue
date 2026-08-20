@@ -342,10 +342,8 @@ const todayLabel = computed(() =>
                         </Link>
                         <Link
                             :href="getCustomerUrl(() => customerRoutes?.ai?.packages?.().url, '/customer/ai/packages')"
-                            class="inline-flex h-10 items-center justify-between rounded-2xl px-3.5 py-1.5 text-sm font-bold transition-colors"
+                            class="inline-flex h-10 items-center justify-between rounded-2xl px-3.5 py-1.5 text-sm font-bold transition-colors hover:bg-[#c8c8c1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/50"
                             style="background-color: #f6f6f3; color: #000000;"
-                            @mouseenter="$event.target.style.backgroundColor = '#c8c8c1'"
-                            @mouseleave="$event.target.style.backgroundColor = '#f6f6f3'"
                         >
                             <span class="inline-flex items-center gap-2">
                                 <Bot class="h-4 w-4" style="color: var(--primary)" />
@@ -612,10 +610,8 @@ const todayLabel = computed(() =>
                     <div class="mt-4 flex flex-col gap-2 sm:flex-row">
                         <Link
                             :href="getCustomerUrl(() => customerRoutes?.invoices?.index?.().url, '/customer/invoices')"
-                            class="inline-flex h-10 items-center justify-center rounded-2xl px-3.5 py-1.5 text-sm font-bold transition-colors"
+                            class="inline-flex h-10 items-center justify-center rounded-2xl px-3.5 py-1.5 text-sm font-bold transition-colors hover:bg-[#c8c8c1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/50"
                             style="background-color: #f6f6f3; color: #000000;"
-                            @mouseenter="$event.target.style.backgroundColor = '#c8c8c1'"
-                            @mouseleave="$event.target.style.backgroundColor = '#f6f6f3'"
                         >
                             Lihat Semua Tagihan
                         </Link>
