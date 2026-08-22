@@ -256,9 +256,9 @@ class AiGateway
                 'description' => "Chat AI pakai model {$model->model_key}",
             ]);
 
-            $credit->decrement('balance', $creditsUsed);
+            AiTransaction::consumeFifo($customerId, $creditsUsed);
 
-            return (int) $credit->fresh()->balance;
+            return (int) AiCredit::where('customer_id', $customerId)->value('balance');
         });
     }
 

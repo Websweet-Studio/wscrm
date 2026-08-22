@@ -14,3 +14,5 @@ Schedule::command('websites:auto-update')->dailyAt('03:00');
 Schedule::command('websites:check-uptime')->dailyAt('08:00');
 // Generate invoice renewal untuk layanan yang hampir habis masa berlakunya
 Schedule::command('invoice:generate-renewals')->dailyAt('09:00');
+// Potong kredit AI customer yang sudah lewat masa aktif (default 30 hari)
+Schedule::command('ai-credits:expire')->dailyAt('09:30');

@@ -19,7 +19,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointEleme
 interface Transaction {
     id: number;
     type: 'in' | 'out';
-    source: 'purchase' | 'usage' | 'manual_adjust';
+    source: 'purchase' | 'usage' | 'manual_adjust' | 'refund' | 'expired';
     credits: number;
     tokens_input: number | null;
     tokens_output: number | null;
@@ -67,6 +67,8 @@ const sourceLabel: Record<string, string> = {
     purchase: 'Pembelian',
     usage: 'Pemakaian',
     manual_adjust: 'Penyesuaian',
+    refund: 'Refund',
+    expired: 'Hangus',
 };
 
 const formatDate = (d: string) => new Date(d).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
@@ -262,6 +264,8 @@ const doughnutOptions = {
                                 <option value="purchase">Pembelian</option>
                                 <option value="usage">Pemakaian</option>
                                 <option value="manual_adjust">Penyesuaian</option>
+                                <option value="refund">Refund</option>
+                                <option value="expired">Hangus</option>
                             </select>
                         </div>
                         <div>

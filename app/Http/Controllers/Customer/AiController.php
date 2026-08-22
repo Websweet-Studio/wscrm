@@ -58,6 +58,14 @@ class AiController extends CustomerBaseController
             ->where('type', 'in')
             ->sum('credits');
 
+        // Tanggal kedaluwarsa terdekat dari kredit yang masih tersisa.
+        $creditExpiresAt = AiTransaction::where('customer_id', $customer->id)
+            ->where('type', 'in')
+            ->where('remaining', '>', 0)
+            ->whereNotNull('expires_at')
+            ->orderBy('expires_at')
+            ->value('expires_at');
+
         // Ringkasan pemakaian token (input+output) dari transaksi usage.
         $tokenSum = function (?string $since) use ($customer) {
             $q = AiTransaction::where('customer_id', $customer->id)->where('type', 'out');
@@ -99,6 +107,7 @@ class AiController extends CustomerBaseController
         return Inertia::render('Customer/Ai/Index', [
             'balance' => (int) $credit->balance,
             'total_credits' => $totalCredits,
+            'credit_expires_at' => $creditExpiresAt ? Carbon::parse($creditExpiresAt)->toIso8601String() : null,
             'api_key' => $apiKey,
             'endpoint' => url('/api/v1'),
             'models' => $models,

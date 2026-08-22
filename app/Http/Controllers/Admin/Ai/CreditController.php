@@ -77,15 +77,32 @@ class CreditController extends Controller
                 return 0;
             }
 
+            if ($delta > 0) {
+                AiTransaction::create([
+                    'customer_id' => $validated['customer_id'],
+                    'type' => 'in',
+                    'source' => 'manual_adjust',
+                    'credits' => $delta,
+                    'expires_at' => now()->addDays((int) config('ai.credit_ttl_days', 30)),
+                    'remaining' => $delta,
+                    'description' => $validated['description'] ?: 'Penyesuaian manual oleh admin',
+                ]);
+
+                $credit->increment('balance', $delta);
+
+                return $delta;
+            }
+
+            // Pengurangan saldo (subtract/set ke nilai lebih rendah): konsumsi FIFO.
             AiTransaction::create([
                 'customer_id' => $validated['customer_id'],
-                'type' => $delta > 0 ? 'in' : 'out',
+                'type' => 'out',
                 'source' => 'manual_adjust',
                 'credits' => $delta,
                 'description' => $validated['description'] ?: 'Penyesuaian manual oleh admin',
             ]);
 
-            $credit->update(['balance' => $current + $delta]);
+            AiTransaction::consumeFifo($validated['customer_id'], abs($delta));
 
             return $delta;
         });

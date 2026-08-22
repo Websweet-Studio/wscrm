@@ -48,6 +48,7 @@ interface Paginated<T> {
 interface Props {
     balance: number;
     total_credits: number;
+    credit_expires_at: string | null;
     api_key: string | null;
     endpoint: string;
     models: Model[];
@@ -158,6 +159,11 @@ const priceOutput = (m: Model): string =>
 const maskKey = (key: string): string => `${key.slice(0, 8)}••••••••${key.slice(-4)}`;
 
 const formatDate = (d: string) => new Date(d).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
+
+const creditExpiryLabel = computed(() => {
+    if (!props.credit_expires_at) return null;
+    return new Date(props.credit_expires_at).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
+});
 
 const creditPercent = computed(() => {
     if (!props.total_credits) return 0;
@@ -359,6 +365,9 @@ const historyExportUrl = computed(() => {
                     </div>
                     <p class="mt-2 text-xs text-muted-foreground">
                         {{ balance.toLocaleString('id-ID') }} dari {{ total_credits.toLocaleString('id-ID') }} kredit terpakai
+                    </p>
+                    <p v-if="creditExpiryLabel" class="mt-1 text-xs text-muted-foreground">
+                        Masa aktif kredit hingga {{ creditExpiryLabel }}
                     </p>
                 </CardContent>
             </Card>

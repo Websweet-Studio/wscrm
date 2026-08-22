@@ -61,6 +61,8 @@ class InvoiceObserver
             'type' => 'in',
             'source' => 'purchase',
             'credits' => $package->credits,
+            'expires_at' => now()->addDays((int) config('ai.credit_ttl_days', 30)),
+            'remaining' => $package->credits,
             'ai_package_id' => $package->id,
             'invoice_id' => $invoice->id,
             'description' => "Topup paket {$package->name}",
@@ -100,9 +102,7 @@ class InvoiceObserver
             'description' => 'Refund topup (invoice dibatalkan)',
         ]);
 
-        // Kurangi saldo tanpa membuatnya negatif.
-        $credit = AiCredit::firstOrCreate(['customer_id' => $invoice->customer_id]);
-        $credit->balance = max(0, (int) $credit->balance - $credits);
-        $credit->save();
+        // Kurangi saldo tanpa membuatnya negatif; konsumsi FIFO dari baris kredit masuk.
+        AiTransaction::consumeFifo($invoice->customer_id, $credits);
     }
 }

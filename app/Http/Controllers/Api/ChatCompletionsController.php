@@ -216,7 +216,7 @@ class ChatCompletionsController extends Controller
                     'description' => "Chat AI pakai model {$model->model_key}",
                 ]);
 
-                $row->decrement('balance', $credits);
+                AiTransaction::consumeFifo($credit->customer_id, $credits);
             });
         } catch (\Throwable $e) {
             Log::warning('AI proxy billing gagal: ' . $e->getMessage());
