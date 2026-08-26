@@ -11,7 +11,7 @@ class AiCombo extends Model
 {
     protected $table = 'ai_combos';
 
-    protected $fillable = ['name', 'slug', 'description', 'is_active', 'sort_order'];
+    protected $fillable = ['name', 'slug', 'description', 'label', 'is_active', 'sort_order'];
 
     protected function casts(): array
     {

@@ -134,7 +134,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\Admin\Ai\ModelController::update
- * @see app/Http/Controllers/Admin/Ai/ModelController.php:75
+ * @see app/Http/Controllers/Admin/Ai/ModelController.php:77
  * @route '/admin/ai/models/{model}'
  */
 export const update = (args: { model: number | { id: number } } | [model: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -149,7 +149,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\ModelController::update
- * @see app/Http/Controllers/Admin/Ai/ModelController.php:75
+ * @see app/Http/Controllers/Admin/Ai/ModelController.php:77
  * @route '/admin/ai/models/{model}'
  */
 update.url = (args: { model: number | { id: number } } | [model: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -182,7 +182,7 @@ update.url = (args: { model: number | { id: number } } | [model: number | { id: 
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\ModelController::update
- * @see app/Http/Controllers/Admin/Ai/ModelController.php:75
+ * @see app/Http/Controllers/Admin/Ai/ModelController.php:77
  * @route '/admin/ai/models/{model}'
  */
 update.put = (args: { model: number | { id: number } } | [model: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -191,7 +191,7 @@ update.put = (args: { model: number | { id: number } } | [model: number | { id: 
 })
 /**
 * @see \App\Http\Controllers\Admin\Ai\ModelController::update
- * @see app/Http/Controllers/Admin/Ai/ModelController.php:75
+ * @see app/Http/Controllers/Admin/Ai/ModelController.php:77
  * @route '/admin/ai/models/{model}'
  */
 update.patch = (args: { model: number | { id: number } } | [model: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -201,7 +201,7 @@ update.patch = (args: { model: number | { id: number } } | [model: number | { id
 
     /**
 * @see \App\Http\Controllers\Admin\Ai\ModelController::update
- * @see app/Http/Controllers/Admin/Ai/ModelController.php:75
+ * @see app/Http/Controllers/Admin/Ai/ModelController.php:77
  * @route '/admin/ai/models/{model}'
  */
     const updateForm = (args: { model: number | { id: number } } | [model: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -216,7 +216,7 @@ update.patch = (args: { model: number | { id: number } } | [model: number | { id
 
             /**
 * @see \App\Http\Controllers\Admin\Ai\ModelController::update
- * @see app/Http/Controllers/Admin/Ai/ModelController.php:75
+ * @see app/Http/Controllers/Admin/Ai/ModelController.php:77
  * @route '/admin/ai/models/{model}'
  */
         updateForm.put = (args: { model: number | { id: number } } | [model: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -230,7 +230,7 @@ update.patch = (args: { model: number | { id: number } } | [model: number | { id
         })
             /**
 * @see \App\Http\Controllers\Admin\Ai\ModelController::update
- * @see app/Http/Controllers/Admin/Ai/ModelController.php:75
+ * @see app/Http/Controllers/Admin/Ai/ModelController.php:77
  * @route '/admin/ai/models/{model}'
  */
         updateForm.patch = (args: { model: number | { id: number } } | [model: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -246,7 +246,7 @@ update.patch = (args: { model: number | { id: number } } | [model: number | { id
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\Ai\ModelController::destroy
- * @see app/Http/Controllers/Admin/Ai/ModelController.php:104
+ * @see app/Http/Controllers/Admin/Ai/ModelController.php:108
  * @route '/admin/ai/models/{model}'
  */
 export const destroy = (args: { model: number | { id: number } } | [model: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -261,7 +261,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\ModelController::destroy
- * @see app/Http/Controllers/Admin/Ai/ModelController.php:104
+ * @see app/Http/Controllers/Admin/Ai/ModelController.php:108
  * @route '/admin/ai/models/{model}'
  */
 destroy.url = (args: { model: number | { id: number } } | [model: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -294,7 +294,7 @@ destroy.url = (args: { model: number | { id: number } } | [model: number | { id:
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\ModelController::destroy
- * @see app/Http/Controllers/Admin/Ai/ModelController.php:104
+ * @see app/Http/Controllers/Admin/Ai/ModelController.php:108
  * @route '/admin/ai/models/{model}'
  */
 destroy.delete = (args: { model: number | { id: number } } | [model: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -304,7 +304,7 @@ destroy.delete = (args: { model: number | { id: number } } | [model: number | { 
 
     /**
 * @see \App\Http\Controllers\Admin\Ai\ModelController::destroy
- * @see app/Http/Controllers/Admin/Ai/ModelController.php:104
+ * @see app/Http/Controllers/Admin/Ai/ModelController.php:108
  * @route '/admin/ai/models/{model}'
  */
     const destroyForm = (args: { model: number | { id: number } } | [model: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -319,7 +319,7 @@ destroy.delete = (args: { model: number | { id: number } } | [model: number | { 
 
             /**
 * @see \App\Http\Controllers\Admin\Ai\ModelController::destroy
- * @see app/Http/Controllers/Admin/Ai/ModelController.php:104
+ * @see app/Http/Controllers/Admin/Ai/ModelController.php:108
  * @route '/admin/ai/models/{model}'
  */
         destroyForm.delete = (args: { model: number | { id: number } } | [model: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

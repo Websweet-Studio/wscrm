@@ -17,6 +17,7 @@ interface AiModel {
     id: number;
     model_key: string;
     display_name: string | null;
+    label: string | null;
     input_rate: string;
     output_rate: string;
     is_active: boolean;
@@ -51,6 +52,7 @@ const form = useForm({
     provider_id: '' as string | number,
     model_key: '',
     display_name: '',
+    label: '',
     input_rate: 0,
     output_rate: 0,
     is_active: true,
@@ -63,7 +65,7 @@ const form = useForm({
 const isRupiah = computed(() => props.credit_price !== null && props.credit_price > 0);
 
 const openCreate = () => {
-    form.reset('model_key', 'display_name', 'input_rate', 'output_rate', 'is_active', 'supports_vision', 'supports_deep_thinking', 'sort_order');
+    form.reset('model_key', 'display_name', 'label', 'input_rate', 'output_rate', 'is_active', 'supports_vision', 'supports_deep_thinking', 'sort_order');
     form.provider_id = props.providers[0]?.id ?? '';
     form.clearErrors();
     showCreateModal.value = true;
@@ -75,6 +77,7 @@ const openEdit = (m: AiModel) => {
     form.provider_id = m.provider?.id ?? '';
     form.model_key = m.model_key;
     form.display_name = m.display_name || '';
+    form.label = m.label || '';
     // Tampilkan dalam Rupiah jika credit_price tersedia.
     form.input_rate = isRupiah.value ? Math.round(Number(m.input_rate) * props.credit_price!) : Number(m.input_rate);
     form.output_rate = isRupiah.value ? Math.round(Number(m.output_rate) * props.credit_price!) : Number(m.output_rate);
@@ -259,6 +262,22 @@ const previewOutput = (): string =>
                     <div>
                         <Label>Nama Tampilan</Label>
                         <Input v-model="form.display_name" placeholder="mis. GPT-4o Mini" />
+                    </div>
+                    <div>
+                        <Label>Label</Label>
+                        <select
+                            v-model="form.label"
+                            class="mt-1 flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+                        >
+                            <option value="">Tanpa label</option>
+                            <option value="recommended">Recommended</option>
+                            <option value="popular">Popular</option>
+                            <option value="new">New</option>
+                            <option value="discount">Discount</option>
+                            <option value="beta">Beta</option>
+                            <option value="fast">Fast</option>
+                            <option value="cheap">Cheap</option>
+                        </select>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>

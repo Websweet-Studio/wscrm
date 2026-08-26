@@ -19,6 +19,7 @@ interface Model {
     id: number;
     model_key: string;
     display_name: string | null;
+    label: string | null;
     input_rate: string;
     output_rate: string;
     supports_vision: boolean;
@@ -31,10 +32,12 @@ interface Combo {
     name: string;
     slug: string;
     description: string | null;
+    label: string | null;
     models: Array<{
         id: number;
         model_key: string;
         display_name: string | null;
+        label: string | null;
         input_rate: string;
         output_rate: string;
         supports_vision: boolean;
@@ -192,6 +195,16 @@ const comboPriceOutput = (c: Combo): string => {
 };
 
 const maskKey = (key: string): string => `${key.slice(0, 8)}••••••••${key.slice(-4)}`;
+
+const labelConfig: Record<string, { text: string; class: string }> = {
+    recommended: { text: 'Recommended', class: 'bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/30' },
+    popular: { text: 'Popular', class: 'bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30' },
+    new: { text: 'New', class: 'bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30' },
+    discount: { text: 'Discount', class: 'bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/30' },
+    beta: { text: 'Beta', class: 'bg-orange-500/15 text-orange-700 dark:text-orange-400 border-orange-500/30' },
+    fast: { text: 'Fast', class: 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border-cyan-500/30' },
+    cheap: { text: 'Cheap', class: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30' },
+};
 
 const formatDate = (d: string) => new Date(d).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
 
@@ -560,7 +573,12 @@ const historyExportUrl = computed(() => {
                                     <TableBody>
                                         <TableRow v-for="m in models" :key="m.id">
                                             <TableCell>
-                                                <div class="font-mono font-medium">{{ m.model_key }}</div>
+                                                <div class="flex items-center gap-2">
+                                                    <span class="font-mono font-medium">{{ m.model_key }}</span>
+                                                    <span v-if="m.label && labelConfig[m.label]" :class="labelConfig[m.label].class" class="rounded-full border px-1.5 py-0.5 text-[10px] font-medium leading-none">
+                                                        {{ labelConfig[m.label].text }}
+                                                    </span>
+                                                </div>
                                                 <div v-if="m.display_name" class="text-xs text-muted-foreground">{{ m.display_name }}</div>
                                             </TableCell>
                                             <TableCell>{{ m.provider?.name || '-' }}</TableCell>
@@ -603,7 +621,12 @@ const historyExportUrl = computed(() => {
                                         <TableBody>
                                             <TableRow v-for="c in combos" :key="c.id">
                                                 <TableCell>
-                                                    <div class="font-medium">{{ c.name }}</div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="font-medium">{{ c.name }}</span>
+                                                        <span v-if="c.label && labelConfig[c.label]" :class="labelConfig[c.label].class" class="rounded-full border px-1.5 py-0.5 text-[10px] font-medium leading-none">
+                                                            {{ labelConfig[c.label].text }}
+                                                        </span>
+                                                    </div>
                                                     <div v-if="c.description" class="text-xs text-muted-foreground">{{ c.description }}</div>
                                                 </TableCell>
                                                 <TableCell>

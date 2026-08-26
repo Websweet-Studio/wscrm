@@ -45,6 +45,7 @@ class ComboController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:500',
+            'label' => 'nullable|string|max:50',
             'is_active' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
             'models' => 'required|array|min:1',
@@ -55,6 +56,7 @@ class ComboController extends Controller
         $combo = AiCombo::create([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
+            'label' => $validated['label'] ?: null,
             'is_active' => $validated['is_active'] ?? true,
             'sort_order' => $validated['sort_order'] ?? 0,
         ]);
@@ -74,6 +76,7 @@ class ComboController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:500',
+            'label' => 'nullable|string|max:50',
             'is_active' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
             'models' => 'required|array|min:1',
@@ -84,6 +87,7 @@ class ComboController extends Controller
         $combo->update([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
+            'label' => $validated['label'] ?: null,
             'is_active' => $validated['is_active'] ?? true,
             'sort_order' => $validated['sort_order'] ?? 0,
         ]);

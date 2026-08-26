@@ -24,6 +24,7 @@ interface Combo {
     name: string;
     slug: string;
     description: string | null;
+    label: string | null;
     is_active: boolean;
     sort_order: number;
     models: Array<{
@@ -62,6 +63,7 @@ interface ComboFormItem {
 const form = useForm({
     name: '',
     description: '',
+    label: '',
     is_active: true,
     sort_order: 0,
     models: [] as ComboFormItem[],
@@ -103,7 +105,7 @@ const reindexPriorities = () => {
 };
 
 const openCreate = () => {
-    form.reset('name', 'description', 'is_active', 'sort_order');
+    form.reset('name', 'description', 'label', 'is_active', 'sort_order');
     form.models = [];
     comboModels.value = [];
     form.clearErrors();
@@ -115,6 +117,7 @@ const openEdit = (c: Combo) => {
     form.clearErrors();
     form.name = c.name;
     form.description = c.description || '';
+    form.label = c.label || '';
     form.is_active = c.is_active;
     form.sort_order = c.sort_order;
     comboModels.value = c.models.map((m) => ({
@@ -250,6 +253,22 @@ const confirmDelete = (c: Combo) => {
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <Label>Label</Label>
+                            <select
+                                v-model="form.label"
+                                class="mt-1 flex h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+                            >
+                                <option value="">Tanpa label</option>
+                                <option value="recommended">Recommended</option>
+                                <option value="popular">Popular</option>
+                                <option value="new">New</option>
+                                <option value="discount">Discount</option>
+                                <option value="beta">Beta</option>
+                                <option value="fast">Fast</option>
+                                <option value="cheap">Cheap</option>
+                            </select>
+                        </div>
                         <div>
                             <Label>Sort Order</Label>
                             <Input v-model.number="form.sort_order" type="number" min="0" />

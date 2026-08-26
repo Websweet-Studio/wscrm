@@ -134,7 +134,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\Admin\Ai\ComboController::update
- * @see app/Http/Controllers/Admin/Ai/ComboController.php:72
+ * @see app/Http/Controllers/Admin/Ai/ComboController.php:74
  * @route '/admin/ai/combos/{combo}'
  */
 export const update = (args: { combo: number | { id: number } } | [combo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -149,7 +149,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\ComboController::update
- * @see app/Http/Controllers/Admin/Ai/ComboController.php:72
+ * @see app/Http/Controllers/Admin/Ai/ComboController.php:74
  * @route '/admin/ai/combos/{combo}'
  */
 update.url = (args: { combo: number | { id: number } } | [combo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -182,7 +182,7 @@ update.url = (args: { combo: number | { id: number } } | [combo: number | { id: 
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\ComboController::update
- * @see app/Http/Controllers/Admin/Ai/ComboController.php:72
+ * @see app/Http/Controllers/Admin/Ai/ComboController.php:74
  * @route '/admin/ai/combos/{combo}'
  */
 update.put = (args: { combo: number | { id: number } } | [combo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -191,7 +191,7 @@ update.put = (args: { combo: number | { id: number } } | [combo: number | { id: 
 })
 /**
 * @see \App\Http\Controllers\Admin\Ai\ComboController::update
- * @see app/Http/Controllers/Admin/Ai/ComboController.php:72
+ * @see app/Http/Controllers/Admin/Ai/ComboController.php:74
  * @route '/admin/ai/combos/{combo}'
  */
 update.patch = (args: { combo: number | { id: number } } | [combo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -201,7 +201,7 @@ update.patch = (args: { combo: number | { id: number } } | [combo: number | { id
 
     /**
 * @see \App\Http\Controllers\Admin\Ai\ComboController::update
- * @see app/Http/Controllers/Admin/Ai/ComboController.php:72
+ * @see app/Http/Controllers/Admin/Ai/ComboController.php:74
  * @route '/admin/ai/combos/{combo}'
  */
     const updateForm = (args: { combo: number | { id: number } } | [combo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -216,7 +216,7 @@ update.patch = (args: { combo: number | { id: number } } | [combo: number | { id
 
             /**
 * @see \App\Http\Controllers\Admin\Ai\ComboController::update
- * @see app/Http/Controllers/Admin/Ai/ComboController.php:72
+ * @see app/Http/Controllers/Admin/Ai/ComboController.php:74
  * @route '/admin/ai/combos/{combo}'
  */
         updateForm.put = (args: { combo: number | { id: number } } | [combo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -230,7 +230,7 @@ update.patch = (args: { combo: number | { id: number } } | [combo: number | { id
         })
             /**
 * @see \App\Http\Controllers\Admin\Ai\ComboController::update
- * @see app/Http/Controllers/Admin/Ai/ComboController.php:72
+ * @see app/Http/Controllers/Admin/Ai/ComboController.php:74
  * @route '/admin/ai/combos/{combo}'
  */
         updateForm.patch = (args: { combo: number | { id: number } } | [combo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -246,7 +246,7 @@ update.patch = (args: { combo: number | { id: number } } | [combo: number | { id
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\Ai\ComboController::destroy
- * @see app/Http/Controllers/Admin/Ai/ComboController.php:103
+ * @see app/Http/Controllers/Admin/Ai/ComboController.php:107
  * @route '/admin/ai/combos/{combo}'
  */
 export const destroy = (args: { combo: number | { id: number } } | [combo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -261,7 +261,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\ComboController::destroy
- * @see app/Http/Controllers/Admin/Ai/ComboController.php:103
+ * @see app/Http/Controllers/Admin/Ai/ComboController.php:107
  * @route '/admin/ai/combos/{combo}'
  */
 destroy.url = (args: { combo: number | { id: number } } | [combo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -294,7 +294,7 @@ destroy.url = (args: { combo: number | { id: number } } | [combo: number | { id:
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\ComboController::destroy
- * @see app/Http/Controllers/Admin/Ai/ComboController.php:103
+ * @see app/Http/Controllers/Admin/Ai/ComboController.php:107
  * @route '/admin/ai/combos/{combo}'
  */
 destroy.delete = (args: { combo: number | { id: number } } | [combo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -304,7 +304,7 @@ destroy.delete = (args: { combo: number | { id: number } } | [combo: number | { 
 
     /**
 * @see \App\Http\Controllers\Admin\Ai\ComboController::destroy
- * @see app/Http/Controllers/Admin/Ai/ComboController.php:103
+ * @see app/Http/Controllers/Admin/Ai/ComboController.php:107
  * @route '/admin/ai/combos/{combo}'
  */
     const destroyForm = (args: { combo: number | { id: number } } | [combo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -319,7 +319,7 @@ destroy.delete = (args: { combo: number | { id: number } } | [combo: number | { 
 
             /**
 * @see \App\Http\Controllers\Admin\Ai\ComboController::destroy
- * @see app/Http/Controllers/Admin/Ai/ComboController.php:103
+ * @see app/Http/Controllers/Admin/Ai/ComboController.php:107
  * @route '/admin/ai/combos/{combo}'
  */
         destroyForm.delete = (args: { combo: number | { id: number } } | [combo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
