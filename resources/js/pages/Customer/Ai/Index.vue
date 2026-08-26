@@ -8,7 +8,7 @@ import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowDownCircle, ArrowRight, ArrowUpCircle, BookOpen, Check, ChevronLeft, ChevronRight, Copy, Cpu, Download, History, KeyRound, Megaphone, RefreshCw, Server, ShoppingCart, TrendingUp, Zap } from 'lucide-vue-next';
+import { ArrowDownCircle, ArrowRight, ArrowUpCircle, BookOpen, Brain, Check, ChevronLeft, ChevronRight, Copy, Cpu, Download, Eye, History, KeyRound, Megaphone, RefreshCw, Server, ShoppingCart, TrendingUp, Zap } from 'lucide-vue-next';
 import { computed, onMounted, ref, watch } from 'vue';
 import { Bar } from 'vue-chartjs';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
@@ -21,7 +21,27 @@ interface Model {
     display_name: string | null;
     input_rate: string;
     output_rate: string;
+    supports_vision: boolean;
+    supports_deep_thinking: boolean;
     provider: { id: number; name: string } | null;
+}
+
+interface Combo {
+    id: number;
+    name: string;
+    slug: string;
+    description: string | null;
+    models: Array<{
+        id: number;
+        model_key: string;
+        display_name: string | null;
+        input_rate: string;
+        output_rate: string;
+        supports_vision: boolean;
+        supports_deep_thinking: boolean;
+        provider: { id: number; name: string } | null;
+        pivot: { priority: number };
+    }>;
 }
 
 interface Transaction {
@@ -52,6 +72,7 @@ interface Props {
     api_key: string | null;
     endpoint: string;
     models: Model[];
+    combos: Combo[];
     credit_price: number | null;
     transactions: Paginated<Transaction>;
     usage_daily: Array<{ date: string; label: string; credits: number; runs: number }>;
@@ -156,6 +177,19 @@ const priceInput = (m: Model): string =>
     props.credit_price === null ? `${formatNum(Number(m.input_rate))} kredit / 1M` : formatRupiah(Number(m.input_rate) * props.credit_price);
 const priceOutput = (m: Model): string =>
     props.credit_price === null ? `${formatNum(Number(m.output_rate))} kredit / 1M` : formatRupiah(Number(m.output_rate) * props.credit_price);
+
+// Harga combo = harga model utama (priority 0).
+const comboPrimary = (c: Combo) => [...c.models].sort((a, b) => a.pivot.priority - b.pivot.priority)[0];
+const comboPriceInput = (c: Combo): string => {
+    const primary = comboPrimary(c);
+    if (!primary) return '-';
+    return props.credit_price === null ? `${formatNum(Number(primary.input_rate))} kredit / 1M` : formatRupiah(Number(primary.input_rate) * props.credit_price);
+};
+const comboPriceOutput = (c: Combo): string => {
+    const primary = comboPrimary(c);
+    if (!primary) return '-';
+    return props.credit_price === null ? `${formatNum(Number(primary.output_rate))} kredit / 1M` : formatRupiah(Number(primary.output_rate) * props.credit_price);
+};
 
 const maskKey = (key: string): string => `${key.slice(0, 8)}••••••••${key.slice(-4)}`;
 
@@ -510,10 +544,7 @@ const historyExportUrl = computed(() => {
 
                     <!-- Harga Token -->
                     <div v-if="activeTab === 'pricing'" class="p-4 sm:p-6">
-                        <p v-if="credit_price !== null" class="mb-4 text-sm text-muted-foreground">
-                            Harga per 1 juta token input/output, referensi 1 kredit &approx; {{ formatRupiah(credit_price) }}
-                        </p>
-                        <p v-else class="mb-4 text-sm text-muted-foreground">Belum ada paket kredit aktif — harga menampilkan rate kredit per 1 juta token.</p>
+                        <p v-if="credit_price === null" class="mb-4 text-sm text-muted-foreground">Belum ada paket kredit aktif — harga menampilkan rate kredit per 1 juta token.</p>
                         <div class="overflow-hidden rounded-lg border border-border/60">
                             <div class="overflow-x-auto">
                                 <Table>
@@ -523,6 +554,7 @@ const historyExportUrl = computed(() => {
                                             <TableHead>Provider</TableHead>
                                             <TableHead>Input / 1M token</TableHead>
                                             <TableHead>Output / 1M token</TableHead>
+                                            <TableHead>Fitur</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -534,12 +566,60 @@ const historyExportUrl = computed(() => {
                                             <TableCell>{{ m.provider?.name || '-' }}</TableCell>
                                             <TableCell>{{ priceInput(m) }}</TableCell>
                                             <TableCell>{{ priceOutput(m) }}</TableCell>
+                                            <TableCell>
+                                                <div class="flex gap-1.5">
+                                                    <span v-if="m.supports_vision" title="Vision" class="inline-flex items-center justify-center rounded-md border border-border/60 bg-muted/40 p-1">
+                                                        <Eye class="h-3.5 w-3.5 text-muted-foreground" />
+                                                    </span>
+                                                    <span v-if="m.supports_deep_thinking" title="Deep Thinking" class="inline-flex items-center justify-center rounded-md border border-border/60 bg-muted/40 p-1">
+                                                        <Brain class="h-3.5 w-3.5 text-muted-foreground" />
+                                                    </span>
+                                                    <span v-if="!m.supports_vision && !m.supports_deep_thinking" class="text-xs text-muted-foreground">-</span>
+                                                </div>
+                                            </TableCell>
                                         </TableRow>
                                         <TableRow v-if="models.length === 0">
-                                            <TableCell colspan="4" class="text-center text-muted-foreground">Belum ada model aktif.</TableCell>
+                                            <TableCell colspan="5" class="text-center text-muted-foreground">Belum ada model aktif.</TableCell>
                                         </TableRow>
                                     </TableBody>
                                 </Table>
+                            </div>
+                        </div>
+
+                        <!-- Combo Models -->
+                        <div v-if="combos.length > 0" class="mt-6">
+                            <p class="mb-3 text-sm font-medium text-muted-foreground">Combo Model</p>
+                            <div class="overflow-hidden rounded-lg border border-border/60">
+                                <div class="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Combo</TableHead>
+                                                <TableHead>Urutan Model</TableHead>
+                                                <TableHead>Input / 1M token</TableHead>
+                                                <TableHead>Output / 1M token</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            <TableRow v-for="c in combos" :key="c.id">
+                                                <TableCell>
+                                                    <div class="font-medium">{{ c.name }}</div>
+                                                    <div v-if="c.description" class="text-xs text-muted-foreground">{{ c.description }}</div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div class="flex flex-wrap items-center gap-1">
+                                                        <template v-for="(m, idx) in [...c.models].sort((a, b) => a.pivot.priority - b.pivot.priority)" :key="m.id">
+                                                            <span v-if="idx > 0" class="text-xs text-muted-foreground">→</span>
+                                                            <Badge variant="outline" class="font-mono text-xs">{{ m.model_key }}</Badge>
+                                                        </template>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>{{ comboPriceInput(c) }}</TableCell>
+                                                <TableCell>{{ comboPriceOutput(c) }}</TableCell>
+                                            </TableRow>
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -677,6 +757,16 @@ const historyExportUrl = computed(() => {
             <div class="flex flex-wrap gap-2">
                 <span v-for="m in models" :key="m.id" class="rounded-full border border-border/60 bg-muted/40 px-3 py-1 font-mono text-xs">{{ m.model_key }}</span>
                 <span v-if="models.length === 0" class="text-sm text-muted-foreground">Belum ada model aktif.</span>
+            </div>
+        </div>
+
+        <!-- Combo tersedia -->
+        <div v-if="combos.length > 0" class="space-y-2">
+            <Label class="text-xs font-medium text-muted-foreground">Combo yang tersedia</Label>
+            <div class="flex flex-wrap gap-2">
+                <span v-for="c in combos" :key="c.id" class="rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 font-mono text-xs text-amber-700 dark:text-amber-400">
+                    {{ c.name }}: {{ [...c.models].sort((a, b) => a.pivot.priority - b.pivot.priority).map(m => m.model_key).join(' → ') }}
+                </span>
             </div>
         </div>
 

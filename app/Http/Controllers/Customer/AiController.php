@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\AiCombo;
 use App\Models\AiCredit;
 use App\Models\AiModel;
 use App\Models\AiPackage;
@@ -107,6 +108,14 @@ class AiController extends CustomerBaseController
 
         $customerNotice = AiSetting::getValue('customer_notice', '');
 
+        $combos = AiCombo::active()
+            ->with(['models' => function ($q) {
+                $q->with('provider:id,name')->orderByPivot('priority');
+            }])
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
         return Inertia::render('Customer/Ai/Index', [
             'balance' => (int) $credit->balance,
             'total_credits' => $totalCredits,
@@ -114,6 +123,7 @@ class AiController extends CustomerBaseController
             'api_key' => $apiKey,
             'endpoint' => url('/api/v1'),
             'models' => $models,
+            'combos' => $combos,
             'credit_price' => $creditPrice !== null ? round($creditPrice, 2) : null,
             'transactions' => $transactions,
             'usage_daily' => array_values($daily),

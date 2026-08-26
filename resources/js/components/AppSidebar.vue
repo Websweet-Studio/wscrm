@@ -23,6 +23,7 @@ import {
     FileText,
     Folder,
     Globe,
+    Layers,
     LayoutGrid,
     Megaphone,
     Monitor,
@@ -197,6 +198,11 @@ const mainNavItems: NavItem[] = [
                 title: 'Models',
                 href: '/admin/ai/models',
                 icon: Bot,
+            },
+            {
+                title: 'Combos',
+                href: '/admin/ai/combos',
+                icon: Layers,
             },
             {
                 title: 'Paket Kredit',

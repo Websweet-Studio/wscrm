@@ -9,7 +9,7 @@ class AiModel extends Model
 {
     protected $table = 'ai_models';
 
-    protected $fillable = ['provider_id', 'model_key', 'display_name', 'input_rate', 'output_rate', 'is_active', 'sort_order'];
+    protected $fillable = ['provider_id', 'model_key', 'display_name', 'input_rate', 'output_rate', 'is_active', 'supports_vision', 'supports_deep_thinking', 'sort_order'];
 
     protected function casts(): array
     {
@@ -17,6 +17,8 @@ class AiModel extends Model
             'input_rate' => 'decimal:4',
             'output_rate' => 'decimal:4',
             'is_active' => 'boolean',
+            'supports_vision' => 'boolean',
+            'supports_deep_thinking' => 'boolean',
         ];
     }
 

@@ -36,6 +36,7 @@ use App\Http\Controllers\Admin\Ai\ModelController as AiModelController;
 use App\Http\Controllers\Admin\Ai\PackageController as AiPackageController;
 use App\Http\Controllers\Admin\Ai\ProviderController as AiProviderController;
 use App\Http\Controllers\Admin\Ai\SettingController as AiSettingController;
+use App\Http\Controllers\Admin\Ai\ComboController as AiComboController;
 use App\Http\Controllers\Admin\Ai\TransactionController as AiTransactionController;
 use Illuminate\Support\Facades\Route;
 
@@ -171,6 +172,7 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
         Route::resource('providers', AiProviderController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('models', AiModelController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('packages', AiPackageController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('combos', AiComboController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::get('credits', [AiCreditController::class, 'index'])->name('credits.index');
         Route::post('credits/adjust', [AiCreditController::class, 'adjust'])->name('credits.adjust');
         Route::get('transactions', [AiTransactionController::class, 'index'])->name('transactions.index');

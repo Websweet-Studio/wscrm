@@ -10,8 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { Edit, Plus, Search, Trash2, X } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { Brain, Edit, Eye, Plus, Search, Trash2, X } from 'lucide-vue-next';
+import { ref, computed } from 'vue';
 
 interface AiModel {
     id: number;
@@ -20,6 +20,8 @@ interface AiModel {
     input_rate: string;
     output_rate: string;
     is_active: boolean;
+    supports_vision: boolean;
+    supports_deep_thinking: boolean;
     sort_order: number;
     provider: { id: number; name: string } | null;
 }
@@ -52,11 +54,16 @@ const form = useForm({
     input_rate: 0,
     output_rate: 0,
     is_active: true,
+    supports_vision: false,
+    supports_deep_thinking: false,
     sort_order: 0,
 });
 
+// Saat credit_price tersedia, form input dalam Rupiah, konversi ke kredit saat submit.
+const isRupiah = computed(() => props.credit_price !== null && props.credit_price > 0);
+
 const openCreate = () => {
-    form.reset('model_key', 'display_name', 'input_rate', 'output_rate', 'is_active', 'sort_order');
+    form.reset('model_key', 'display_name', 'input_rate', 'output_rate', 'is_active', 'supports_vision', 'supports_deep_thinking', 'sort_order');
     form.provider_id = props.providers[0]?.id ?? '';
     form.clearErrors();
     showCreateModal.value = true;
@@ -68,27 +75,42 @@ const openEdit = (m: AiModel) => {
     form.provider_id = m.provider?.id ?? '';
     form.model_key = m.model_key;
     form.display_name = m.display_name || '';
-    form.input_rate = Number(m.input_rate);
-    form.output_rate = Number(m.output_rate);
+    // Tampilkan dalam Rupiah jika credit_price tersedia.
+    form.input_rate = isRupiah.value ? Math.round(Number(m.input_rate) * props.credit_price!) : Number(m.input_rate);
+    form.output_rate = isRupiah.value ? Math.round(Number(m.output_rate) * props.credit_price!) : Number(m.output_rate);
     form.is_active = m.is_active;
+    form.supports_vision = m.supports_vision;
+    form.supports_deep_thinking = m.supports_deep_thinking;
     form.sort_order = m.sort_order;
     showEditModal.value = true;
 };
 
 const submitCreate = () => {
-    form.post('/admin/ai/models', {
+    const payload = { ...form.data() };
+    if (isRupiah.value) {
+        payload.input_rate = Math.round((payload.input_rate / props.credit_price!) * 10000) / 10000;
+        payload.output_rate = Math.round((payload.output_rate / props.credit_price!) * 10000) / 10000;
+    }
+    form.transform(() => payload).post('/admin/ai/models', {
         preserveScroll: true,
         onSuccess: () => {
             showCreateModal.value = false;
+            form.transform((data) => data);
         },
     });
 };
 
 const submitEdit = () => {
-    form.put(`/admin/ai/models/${editing.value!.id}`, {
+    const payload = { ...form.data() };
+    if (isRupiah.value) {
+        payload.input_rate = Math.round((payload.input_rate / props.credit_price!) * 10000) / 10000;
+        payload.output_rate = Math.round((payload.output_rate / props.credit_price!) * 10000) / 10000;
+    }
+    form.transform(() => payload).put(`/admin/ai/models/${editing.value!.id}`, {
         preserveScroll: true,
         onSuccess: () => {
             showEditModal.value = false;
+            form.transform((data) => data);
         },
     });
 };
@@ -126,9 +148,9 @@ const priceOutput = (m: AiModel): string =>
 
 // Preview harga /1M token di form edit, konsisten dgn rumus tabel.
 const previewInput = (): string =>
-    props.credit_price === null ? `${formatNum(Number(form.input_rate))} kredit / 1M` : formatRupiah(Number(form.input_rate) * props.credit_price);
+    isRupiah.value ? formatRupiah(Number(form.input_rate)) : `${formatNum(Number(form.input_rate))} kredit / 1M`;
 const previewOutput = (): string =>
-    props.credit_price === null ? `${formatNum(Number(form.output_rate))} kredit / 1M` : formatRupiah(Number(form.output_rate) * props.credit_price);
+    isRupiah.value ? formatRupiah(Number(form.output_rate)) : `${formatNum(Number(form.output_rate))} kredit / 1M`;
 </script>
 
 <template>
@@ -140,8 +162,7 @@ const previewOutput = (): string =>
                 <CardHeader class="flex flex-row items-center justify-between space-y-0">
                     <div>
                         <CardTitle>Model AI</CardTitle>
-                        <CardDescription v-if="credit_price !== null">Harga per 1 juta token input/output, referensi 1 kredit ≈ {{ formatRupiah(credit_price) }}</CardDescription>
-                        <CardDescription v-else>Belum ada paket kredit aktif — kolom harga menampilkan rate kredit per 1 juta token.</CardDescription>
+                        <CardDescription v-if="credit_price === null">Belum ada paket kredit aktif — kolom harga menampilkan rate kredit per 1 juta token.</CardDescription>
                     </div>
                     <Button class="cursor-pointer" :disabled="providers.length === 0" @click="openCreate">
                         <Plus class="mr-2 h-4 w-4" /> Tambah Model
@@ -166,8 +187,9 @@ const previewOutput = (): string =>
                                 <TableHead>Model</TableHead>
                                 <TableHead>Nama Tampilan</TableHead>
                                 <TableHead>Provider</TableHead>
-                                <TableHead>Harga Input / 1M token</TableHead>
-                                <TableHead>Harga Output / 1M token</TableHead>
+                                <TableHead>{{ credit_price !== null ? 'Harga Input / 1M token' : 'Rate Input (kredit/1M)' }}</TableHead>
+                                <TableHead>{{ credit_price !== null ? 'Harga Output / 1M token' : 'Rate Output (kredit/1M)' }}</TableHead>
+                                <TableHead>Fitur</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead class="text-right">Aksi</TableHead>
                             </TableRow>
@@ -180,6 +202,17 @@ const previewOutput = (): string =>
                                 <TableCell>{{ priceInput(m) }}</TableCell>
                                 <TableCell>{{ priceOutput(m) }}</TableCell>
                                 <TableCell>
+                                    <div class="flex gap-1.5">
+                                        <span v-if="m.supports_vision" title="Vision" class="inline-flex items-center justify-center rounded-md border border-border/60 bg-muted/40 p-1">
+                                            <Eye class="h-3.5 w-3.5 text-muted-foreground" />
+                                        </span>
+                                        <span v-if="m.supports_deep_thinking" title="Deep Thinking" class="inline-flex items-center justify-center rounded-md border border-border/60 bg-muted/40 p-1">
+                                            <Brain class="h-3.5 w-3.5 text-muted-foreground" />
+                                        </span>
+                                        <span v-if="!m.supports_vision && !m.supports_deep_thinking" class="text-xs text-muted-foreground">-</span>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
                                     <Badge :variant="m.is_active ? 'default' : 'secondary'">{{ m.is_active ? 'Aktif' : 'Nonaktif' }}</Badge>
                                 </TableCell>
                                 <TableCell class="text-right">
@@ -190,7 +223,7 @@ const previewOutput = (): string =>
                                 </TableCell>
                             </TableRow>
                             <TableRow v-if="models.data.length === 0">
-                                <TableCell colspan="7" class="py-10 text-center text-muted-foreground">Belum ada model.</TableCell>
+                                <TableCell colspan="8" class="py-10 text-center text-muted-foreground">Belum ada model.</TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
@@ -229,14 +262,14 @@ const previewOutput = (): string =>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <Label>Rate Input (kredit/1M)</Label>
-                            <Input v-model.number="form.input_rate" type="number" min="0" step="0.0001" required />
-                            <p class="mt-1 text-xs text-muted-foreground">≈ {{ previewInput() }} / 1M token</p>
+                            <Label>{{ isRupiah ? 'Harga Input / 1M token (Rp)' : 'Rate Input (kredit/1M)' }}</Label>
+                            <Input v-model.number="form.input_rate" type="number" min="0" :step="isRupiah ? '1' : '0.0001'" required />
+                            <p class="mt-1 text-xs text-muted-foreground">≈ {{ previewInput() }}</p>
                         </div>
                         <div>
-                            <Label>Rate Output (kredit/1M)</Label>
-                            <Input v-model.number="form.output_rate" type="number" min="0" step="0.0001" required />
-                            <p class="mt-1 text-xs text-muted-foreground">≈ {{ previewOutput() }} / 1M token</p>
+                            <Label>{{ isRupiah ? 'Harga Output / 1M token (Rp)' : 'Rate Output (kredit/1M)' }}</Label>
+                            <Input v-model.number="form.output_rate" type="number" min="0" :step="isRupiah ? '1' : '0.0001'" required />
+                            <p class="mt-1 text-xs text-muted-foreground">≈ {{ previewOutput() }}</p>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
@@ -247,6 +280,19 @@ const previewOutput = (): string =>
                         <div class="flex items-end gap-2 pb-2">
                             <Label class="flex cursor-pointer items-center gap-2 text-sm">
                                 <input v-model="form.is_active" type="checkbox" class="h-4 w-4" /> Aktif
+                            </Label>
+                        </div>
+                    </div>
+                    <div class="space-y-2 rounded-lg border border-border/60 p-3">
+                        <Label class="text-xs font-medium text-muted-foreground">Fitur Model</Label>
+                        <div class="flex flex-wrap gap-4">
+                            <Label class="flex cursor-pointer items-center gap-2 text-sm">
+                                <input v-model="form.supports_vision" type="checkbox" class="h-4 w-4" />
+                                <Eye class="h-3.5 w-3.5 text-muted-foreground" /> Vision (gambar)
+                            </Label>
+                            <Label class="flex cursor-pointer items-center gap-2 text-sm">
+                                <input v-model="form.supports_deep_thinking" type="checkbox" class="h-4 w-4" />
+                                <Brain class="h-3.5 w-3.5 text-muted-foreground" /> Deep Thinking
                             </Label>
                         </div>
                     </div>

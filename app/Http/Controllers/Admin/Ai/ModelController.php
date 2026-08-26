@@ -52,6 +52,8 @@ class ModelController extends Controller
             'input_rate' => 'required|numeric|min:0',
             'output_rate' => 'required|numeric|min:0',
             'is_active' => 'boolean',
+            'supports_vision' => 'boolean',
+            'supports_deep_thinking' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
@@ -62,6 +64,8 @@ class ModelController extends Controller
             'input_rate' => $validated['input_rate'],
             'output_rate' => $validated['output_rate'],
             'is_active' => $validated['is_active'] ?? true,
+            'supports_vision' => $validated['supports_vision'] ?? false,
+            'supports_deep_thinking' => $validated['supports_deep_thinking'] ?? false,
             'sort_order' => $validated['sort_order'] ?? 0,
         ]);
 
@@ -77,6 +81,8 @@ class ModelController extends Controller
             'input_rate' => 'required|numeric|min:0',
             'output_rate' => 'required|numeric|min:0',
             'is_active' => 'boolean',
+            'supports_vision' => 'boolean',
+            'supports_deep_thinking' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
@@ -87,6 +93,8 @@ class ModelController extends Controller
             'input_rate' => $validated['input_rate'],
             'output_rate' => $validated['output_rate'],
             'is_active' => $validated['is_active'] ?? true,
+            'supports_vision' => $validated['supports_vision'] ?? false,
+            'supports_deep_thinking' => $validated['supports_deep_thinking'] ?? false,
             'sort_order' => $validated['sort_order'] ?? 0,
         ]);
 
