@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Customer\AiController::index
- * @see app/Http/Controllers/Customer/AiController.php:25
+ * @see app/Http/Controllers/Customer/AiController.php:26
  * @route '/customer/ai'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Customer\AiController::index
- * @see app/Http/Controllers/Customer/AiController.php:25
+ * @see app/Http/Controllers/Customer/AiController.php:26
  * @route '/customer/ai'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Customer\AiController::index
- * @see app/Http/Controllers/Customer/AiController.php:25
+ * @see app/Http/Controllers/Customer/AiController.php:26
  * @route '/customer/ai'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Customer\AiController::index
- * @see app/Http/Controllers/Customer/AiController.php:25
+ * @see app/Http/Controllers/Customer/AiController.php:26
  * @route '/customer/ai'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Customer\AiController::index
- * @see app/Http/Controllers/Customer/AiController.php:25
+ * @see app/Http/Controllers/Customer/AiController.php:26
  * @route '/customer/ai'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Customer\AiController::index
- * @see app/Http/Controllers/Customer/AiController.php:25
+ * @see app/Http/Controllers/Customer/AiController.php:26
  * @route '/customer/ai'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Customer\AiController::index
- * @see app/Http/Controllers/Customer/AiController.php:25
+ * @see app/Http/Controllers/Customer/AiController.php:26
  * @route '/customer/ai'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Customer\AiController::apiKey
- * @see app/Http/Controllers/Customer/AiController.php:192
+ * @see app/Http/Controllers/Customer/AiController.php:205
  * @route '/customer/ai/api-key'
  */
 export const apiKey = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -94,7 +94,7 @@ apiKey.definition = {
 
 /**
 * @see \App\Http\Controllers\Customer\AiController::apiKey
- * @see app/Http/Controllers/Customer/AiController.php:192
+ * @see app/Http/Controllers/Customer/AiController.php:205
  * @route '/customer/ai/api-key'
  */
 apiKey.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ apiKey.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Customer\AiController::apiKey
- * @see app/Http/Controllers/Customer/AiController.php:192
+ * @see app/Http/Controllers/Customer/AiController.php:205
  * @route '/customer/ai/api-key'
  */
 apiKey.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -113,7 +113,7 @@ apiKey.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Customer\AiController::apiKey
- * @see app/Http/Controllers/Customer/AiController.php:192
+ * @see app/Http/Controllers/Customer/AiController.php:205
  * @route '/customer/ai/api-key'
  */
     const apiKeyForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -123,7 +123,7 @@ apiKey.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Customer\AiController::apiKey
- * @see app/Http/Controllers/Customer/AiController.php:192
+ * @see app/Http/Controllers/Customer/AiController.php:205
  * @route '/customer/ai/api-key'
  */
         apiKeyForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -134,7 +134,7 @@ apiKey.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     apiKey.form = apiKeyForm
 /**
 * @see \App\Http\Controllers\Customer\AiController::history
- * @see app/Http/Controllers/Customer/AiController.php:129
+ * @see app/Http/Controllers/Customer/AiController.php:142
  * @route '/customer/ai/history'
  */
 export const history = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -149,7 +149,7 @@ history.definition = {
 
 /**
 * @see \App\Http\Controllers\Customer\AiController::history
- * @see app/Http/Controllers/Customer/AiController.php:129
+ * @see app/Http/Controllers/Customer/AiController.php:142
  * @route '/customer/ai/history'
  */
 history.url = (options?: RouteQueryOptions) => {
@@ -158,7 +158,7 @@ history.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Customer\AiController::history
- * @see app/Http/Controllers/Customer/AiController.php:129
+ * @see app/Http/Controllers/Customer/AiController.php:142
  * @route '/customer/ai/history'
  */
 history.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -167,7 +167,7 @@ history.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Customer\AiController::history
- * @see app/Http/Controllers/Customer/AiController.php:129
+ * @see app/Http/Controllers/Customer/AiController.php:142
  * @route '/customer/ai/history'
  */
 history.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -177,7 +177,7 @@ history.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Customer\AiController::history
- * @see app/Http/Controllers/Customer/AiController.php:129
+ * @see app/Http/Controllers/Customer/AiController.php:142
  * @route '/customer/ai/history'
  */
     const historyForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -187,7 +187,7 @@ history.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Customer\AiController::history
- * @see app/Http/Controllers/Customer/AiController.php:129
+ * @see app/Http/Controllers/Customer/AiController.php:142
  * @route '/customer/ai/history'
  */
         historyForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -196,7 +196,7 @@ history.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Customer\AiController::history
- * @see app/Http/Controllers/Customer/AiController.php:129
+ * @see app/Http/Controllers/Customer/AiController.php:142
  * @route '/customer/ai/history'
  */
         historyForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -212,7 +212,7 @@ history.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     history.form = historyForm
 /**
 * @see \App\Http\Controllers\Customer\AiController::exportMethod
- * @see app/Http/Controllers/Customer/AiController.php:152
+ * @see app/Http/Controllers/Customer/AiController.php:165
  * @route '/customer/ai/export'
  */
 export const exportMethod = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -227,7 +227,7 @@ exportMethod.definition = {
 
 /**
 * @see \App\Http\Controllers\Customer\AiController::exportMethod
- * @see app/Http/Controllers/Customer/AiController.php:152
+ * @see app/Http/Controllers/Customer/AiController.php:165
  * @route '/customer/ai/export'
  */
 exportMethod.url = (options?: RouteQueryOptions) => {
@@ -236,7 +236,7 @@ exportMethod.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Customer\AiController::exportMethod
- * @see app/Http/Controllers/Customer/AiController.php:152
+ * @see app/Http/Controllers/Customer/AiController.php:165
  * @route '/customer/ai/export'
  */
 exportMethod.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -245,7 +245,7 @@ exportMethod.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Customer\AiController::exportMethod
- * @see app/Http/Controllers/Customer/AiController.php:152
+ * @see app/Http/Controllers/Customer/AiController.php:165
  * @route '/customer/ai/export'
  */
 exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -255,7 +255,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Customer\AiController::exportMethod
- * @see app/Http/Controllers/Customer/AiController.php:152
+ * @see app/Http/Controllers/Customer/AiController.php:165
  * @route '/customer/ai/export'
  */
     const exportMethodForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -265,7 +265,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Customer\AiController::exportMethod
- * @see app/Http/Controllers/Customer/AiController.php:152
+ * @see app/Http/Controllers/Customer/AiController.php:165
  * @route '/customer/ai/export'
  */
         exportMethodForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -274,7 +274,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Customer\AiController::exportMethod
- * @see app/Http/Controllers/Customer/AiController.php:152
+ * @see app/Http/Controllers/Customer/AiController.php:165
  * @route '/customer/ai/export'
  */
         exportMethodForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -290,7 +290,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     exportMethod.form = exportMethodForm
 /**
 * @see \App\Http\Controllers\Customer\AiController::packages
- * @see app/Http/Controllers/Customer/AiController.php:208
+ * @see app/Http/Controllers/Customer/AiController.php:221
  * @route '/customer/ai/packages'
  */
 export const packages = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -305,7 +305,7 @@ packages.definition = {
 
 /**
 * @see \App\Http\Controllers\Customer\AiController::packages
- * @see app/Http/Controllers/Customer/AiController.php:208
+ * @see app/Http/Controllers/Customer/AiController.php:221
  * @route '/customer/ai/packages'
  */
 packages.url = (options?: RouteQueryOptions) => {
@@ -314,7 +314,7 @@ packages.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Customer\AiController::packages
- * @see app/Http/Controllers/Customer/AiController.php:208
+ * @see app/Http/Controllers/Customer/AiController.php:221
  * @route '/customer/ai/packages'
  */
 packages.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -323,7 +323,7 @@ packages.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Customer\AiController::packages
- * @see app/Http/Controllers/Customer/AiController.php:208
+ * @see app/Http/Controllers/Customer/AiController.php:221
  * @route '/customer/ai/packages'
  */
 packages.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -333,7 +333,7 @@ packages.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Customer\AiController::packages
- * @see app/Http/Controllers/Customer/AiController.php:208
+ * @see app/Http/Controllers/Customer/AiController.php:221
  * @route '/customer/ai/packages'
  */
     const packagesForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -343,7 +343,7 @@ packages.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Customer\AiController::packages
- * @see app/Http/Controllers/Customer/AiController.php:208
+ * @see app/Http/Controllers/Customer/AiController.php:221
  * @route '/customer/ai/packages'
  */
         packagesForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -352,7 +352,7 @@ packages.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Customer\AiController::packages
- * @see app/Http/Controllers/Customer/AiController.php:208
+ * @see app/Http/Controllers/Customer/AiController.php:221
  * @route '/customer/ai/packages'
  */
         packagesForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -368,7 +368,7 @@ packages.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     packages.form = packagesForm
 /**
 * @see \App\Http\Controllers\Customer\AiController::buy
- * @see app/Http/Controllers/Customer/AiController.php:226
+ * @see app/Http/Controllers/Customer/AiController.php:239
  * @route '/customer/ai/packages/{package}/buy'
  */
 export const buy = (args: { package: number | { id: number } } | [packageParam: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -383,7 +383,7 @@ buy.definition = {
 
 /**
 * @see \App\Http\Controllers\Customer\AiController::buy
- * @see app/Http/Controllers/Customer/AiController.php:226
+ * @see app/Http/Controllers/Customer/AiController.php:239
  * @route '/customer/ai/packages/{package}/buy'
  */
 buy.url = (args: { package: number | { id: number } } | [packageParam: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -416,7 +416,7 @@ buy.url = (args: { package: number | { id: number } } | [packageParam: number | 
 
 /**
 * @see \App\Http\Controllers\Customer\AiController::buy
- * @see app/Http/Controllers/Customer/AiController.php:226
+ * @see app/Http/Controllers/Customer/AiController.php:239
  * @route '/customer/ai/packages/{package}/buy'
  */
 buy.post = (args: { package: number | { id: number } } | [packageParam: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -426,7 +426,7 @@ buy.post = (args: { package: number | { id: number } } | [packageParam: number |
 
     /**
 * @see \App\Http\Controllers\Customer\AiController::buy
- * @see app/Http/Controllers/Customer/AiController.php:226
+ * @see app/Http/Controllers/Customer/AiController.php:239
  * @route '/customer/ai/packages/{package}/buy'
  */
     const buyForm = (args: { package: number | { id: number } } | [packageParam: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -436,7 +436,7 @@ buy.post = (args: { package: number | { id: number } } | [packageParam: number |
 
             /**
 * @see \App\Http\Controllers\Customer\AiController::buy
- * @see app/Http/Controllers/Customer/AiController.php:226
+ * @see app/Http/Controllers/Customer/AiController.php:239
  * @route '/customer/ai/packages/{package}/buy'
  */
         buyForm.post = (args: { package: number | { id: number } } | [packageParam: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

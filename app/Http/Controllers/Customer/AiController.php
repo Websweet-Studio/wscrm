@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AiCredit;
 use App\Models\AiModel;
 use App\Models\AiPackage;
+use App\Models\AiSetting;
 use App\Models\AiTransaction;
 use App\Models\Invoice;
 use App\Services\InvoiceGeneratorService;
@@ -104,6 +105,8 @@ class AiController extends CustomerBaseController
                 }
             });
 
+        $customerNotice = AiSetting::getValue('customer_notice', '');
+
         return Inertia::render('Customer/Ai/Index', [
             'balance' => (int) $credit->balance,
             'total_credits' => $totalCredits,
@@ -117,6 +120,7 @@ class AiController extends CustomerBaseController
             'tokens_today' => $tokensToday,
             'tokens_30d' => $tokens30d,
             'tokens_total' => $tokensTotal,
+            'customer_notice' => $customerNotice,
         ]);
     }
 

@@ -23,6 +23,7 @@ class SettingController extends Controller
             'api_key' => $settings['api_key'] !== '' ? '********' : '',
             'api_key_set' => $settings['api_key'] !== '',
             'model' => $settings['model'],
+            'customer_notice' => AiSetting::getValue('customer_notice', ''),
         ];
 
         return Inertia::render('Admin/Ai/Settings/Index', [
@@ -36,10 +37,12 @@ class SettingController extends Controller
             'endpoint' => 'required|url|max:255',
             'api_key' => 'nullable|string|max:500',
             'model' => 'required|string|max:255',
+            'customer_notice' => 'nullable|string|max:1000',
         ]);
 
         AiSetting::setValue('endpoint', rtrim($validated['endpoint'], '/'));
         AiSetting::setValue('model', $validated['model']);
+        AiSetting::setValue('customer_notice', $validated['customer_notice'] ?? '');
 
         // api_key kosong / masih "********" → pertahankan yang tersimpan.
         if (! empty($validated['api_key']) && $validated['api_key'] !== '********') {

@@ -8,7 +8,7 @@ import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowDownCircle, ArrowRight, ArrowUpCircle, BookOpen, Check, ChevronLeft, ChevronRight, Copy, Cpu, Download, History, KeyRound, RefreshCw, Server, ShoppingCart, TrendingUp, Zap } from 'lucide-vue-next';
+import { ArrowDownCircle, ArrowRight, ArrowUpCircle, BookOpen, Check, ChevronLeft, ChevronRight, Copy, Cpu, Download, History, KeyRound, Megaphone, RefreshCw, Server, ShoppingCart, TrendingUp, Zap } from 'lucide-vue-next';
 import { computed, onMounted, ref, watch } from 'vue';
 import { Bar } from 'vue-chartjs';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
@@ -58,6 +58,7 @@ interface Props {
     tokens_today: number;
     tokens_30d: number;
     tokens_total: number;
+    customer_notice: string;
 }
 
 const props = defineProps<Props>();
@@ -246,6 +247,18 @@ const historyExportUrl = computed(() => {
 
     <CustomerLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-4 p-4 sm:space-y-6 sm:p-6">
+            <!-- Customer Notice Banner -->
+            <div
+                v-if="customer_notice"
+                class="flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm dark:border-amber-400/30 dark:bg-amber-400/5"
+            >
+                <Megaphone class="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+                <div>
+                    <p class="font-medium text-amber-800 dark:text-amber-300">Pemberitahuan</p>
+                    <p class="mt-0.5 text-amber-700 dark:text-amber-400/80 whitespace-pre-line">{{ customer_notice }}</p>
+                </div>
+            </div>
+
             <!-- Hero Card -->
             <Card class="relative overflow-hidden border-border/60 bg-card/70 shadow-sm backdrop-blur">
                 <div class="pointer-events-none absolute inset-0 opacity-60 dark:opacity-80">

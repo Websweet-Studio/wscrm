@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useForm } from '@inertiajs/vue3';
-import { Cpu, KeyRound, Link2, Save } from 'lucide-vue-next';
+import { Cpu, KeyRound, Link2, Megaphone, Save } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface Props {
@@ -14,6 +14,7 @@ interface Props {
         api_key: string;
         api_key_set: boolean;
         model: string;
+        customer_notice: string;
     };
 }
 
@@ -23,6 +24,7 @@ const form = useForm({
     endpoint: props.settings.endpoint,
     api_key: '',
     model: props.settings.model,
+    customer_notice: props.settings.customer_notice,
 });
 
 const saving = ref(false);
@@ -105,6 +107,24 @@ const save = () => {
                                 />
                                 <p v-if="form.errors.api_key" class="mt-1 text-sm text-destructive">{{ form.errors.api_key }}</p>
                             </div>
+                        </div>
+
+                        <div class="space-y-1.5 pt-2">
+                            <Label for="customer_notice">
+                                <Megaphone class="mr-1 inline h-3.5 w-3.5" />
+                                Customer Notice
+                            </Label>
+                            <textarea
+                                id="customer_notice"
+                                v-model="form.customer_notice"
+                                rows="3"
+                                placeholder="Contoh: Saat ini semua resource diarahkan menggunakan model xiaomi/mimo-v2.5"
+                                class="mt-1 flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            />
+                            <p class="text-xs text-muted-foreground">
+                                Notice ini akan ditampilkan sebagai banner di halaman AI customer. Kosongkan untuk menyembunyikan.
+                            </p>
+                            <p v-if="form.errors.customer_notice" class="mt-1 text-sm text-destructive">{{ form.errors.customer_notice }}</p>
                         </div>
 
                         <div class="flex items-center gap-3">

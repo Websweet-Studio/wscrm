@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\Ai\SettingController::save
- * @see app/Http/Controllers/Admin/Ai/SettingController.php:33
+ * @see app/Http/Controllers/Admin/Ai/SettingController.php:34
  * @route '/admin/ai/settings'
  */
 export const save = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -94,7 +94,7 @@ save.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\SettingController::save
- * @see app/Http/Controllers/Admin/Ai/SettingController.php:33
+ * @see app/Http/Controllers/Admin/Ai/SettingController.php:34
  * @route '/admin/ai/settings'
  */
 save.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ save.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\Ai\SettingController::save
- * @see app/Http/Controllers/Admin/Ai/SettingController.php:33
+ * @see app/Http/Controllers/Admin/Ai/SettingController.php:34
  * @route '/admin/ai/settings'
  */
 save.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -113,7 +113,7 @@ save.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\Ai\SettingController::save
- * @see app/Http/Controllers/Admin/Ai/SettingController.php:33
+ * @see app/Http/Controllers/Admin/Ai/SettingController.php:34
  * @route '/admin/ai/settings'
  */
     const saveForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -128,7 +128,7 @@ save.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\Ai\SettingController::save
- * @see app/Http/Controllers/Admin/Ai/SettingController.php:33
+ * @see app/Http/Controllers/Admin/Ai/SettingController.php:34
  * @route '/admin/ai/settings'
  */
         saveForm.patch = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
