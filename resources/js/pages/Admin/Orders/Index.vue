@@ -341,7 +341,9 @@ const getItemName = (item: OrderItem) => {
 
 const getItemLabel = (orderItem: OrderItem, order: Order) => {
     if (orderItem.item_type === 'hosting') {
-        return getItemName(orderItem);
+        const name = getItemName(orderItem);
+        const domain = orderItem.domain_name || order.domain_name;
+        return domain ? `${name} — ${domain}` : name;
     }
     return orderItem.domain_name || order.domain_name || getItemName(orderItem);
 };
