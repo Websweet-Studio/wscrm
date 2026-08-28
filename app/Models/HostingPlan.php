@@ -13,6 +13,7 @@ class HostingPlan extends Model
     protected $fillable = [
         'plan_name',
         'service_type',
+        'billing_period',
         'storage_gb',
         'cpu_cores',
         'ram_gb',

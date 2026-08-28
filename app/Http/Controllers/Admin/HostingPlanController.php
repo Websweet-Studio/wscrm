@@ -39,6 +39,7 @@ class HostingPlanController extends Controller
         $validated = $request->validate([
             'plan_name' => 'required|string|unique:hosting_plans,plan_name',
             'service_type' => 'required|in:hosting,vps',
+            'billing_period' => 'required|in:monthly,quarterly,semi_annually,annually',
             'storage_gb' => 'required|numeric|min:0',
             'cpu_cores' => 'required|numeric|min:1',
             'ram_gb' => 'required|numeric|min:0',
@@ -76,6 +77,7 @@ class HostingPlanController extends Controller
         $validated = $request->validate([
             'plan_name' => 'required|string|unique:hosting_plans,plan_name,'.$hostingPlan->id,
             'service_type' => 'required|in:hosting,vps',
+            'billing_period' => 'required|in:monthly,quarterly,semi_annually,annually',
             'storage_gb' => 'required|numeric|min:0',
             'cpu_cores' => 'required|numeric|min:1',
             'ram_gb' => 'required|numeric|min:0',

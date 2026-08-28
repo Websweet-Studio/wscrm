@@ -11,6 +11,7 @@ interface HostingPlan {
     id: number;
     plan_name: string;
     service_type: string;
+    billing_period: string;
     storage_gb: number;
     cpu_cores: number;
     ram_gb: number;
@@ -44,6 +45,13 @@ const formatPrice = (price: number) => {
         currency: 'IDR',
         minimumFractionDigits: 0,
     }).format(price);
+};
+
+const billingPeriodLabels: Record<string, string> = {
+    monthly: '/bulan',
+    quarterly: '/3 bulan',
+    semi_annually: '/6 bulan',
+    annually: '/tahun',
 };
 
 const companyWhatsapp = computed(() => {
@@ -229,7 +237,7 @@ const filteredPlans = computed(() => {
                                         <div class="text-base font-bold" style="color: var(--primary);">
                                             {{ formatPrice(getHostingPlanFinalPrice(plan)) }}
                                         </div>
-                                        <div class="text-xs" style="color: #62625b;">/tahun</div>
+                                        <div class="text-xs" style="color: #62625b;">{{ billingPeriodLabels[plan.billing_period] || '/tahun' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center">
                                         <Button

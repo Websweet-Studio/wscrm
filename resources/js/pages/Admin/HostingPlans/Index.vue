@@ -17,6 +17,7 @@ interface HostingPlan {
     id: number;
     plan_name: string;
     service_type: string;
+    billing_period: string;
     storage_gb: number;
     cpu_cores: number;
     ram_gb: number;
@@ -121,6 +122,7 @@ const bulkDelete = () => {
 const createForm = useForm({
     plan_name: '',
     service_type: 'hosting',
+    billing_period: 'annually',
     storage_gb: '',
     cpu_cores: '',
     ram_gb: '',
@@ -136,6 +138,7 @@ const createForm = useForm({
 const editForm = useForm({
     plan_name: '',
     service_type: 'hosting',
+    billing_period: 'annually',
     storage_gb: '',
     cpu_cores: '',
     ram_gb: '',
@@ -159,6 +162,13 @@ const formatPrice = (price: number) => {
         currency: 'IDR',
         minimumFractionDigits: 0,
     }).format(price);
+};
+
+const billingPeriodLabels: Record<string, string> = {
+    monthly: '/bulan',
+    quarterly: '/3 bulan',
+    semi_annually: '/6 bulan',
+    annually: '/tahun',
 };
 
 const handleSearch = () => {
@@ -204,6 +214,7 @@ const openEditModal = (plan: HostingPlan) => {
     editForm.reset();
     editForm.plan_name = plan.plan_name;
     editForm.service_type = plan.service_type || 'hosting';
+    editForm.billing_period = plan.billing_period || 'annually';
     editForm.storage_gb = plan.storage_gb;
     editForm.cpu_cores = plan.cpu_cores;
     editForm.ram_gb = plan.ram_gb;
@@ -464,6 +475,20 @@ const confirmDelete = () => {
                         </select>
                         <p v-if="createForm.errors.service_type" class="mt-1 text-xs text-red-500">{{ createForm.errors.service_type }}</p>
                     </div>
+                    <div>
+                        <Label for="create-billing-period">Periode Tagihan *</Label>
+                        <select
+                            id="create-billing-period"
+                            v-model="createForm.billing_period"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                            <option value="monthly">Bulanan</option>
+                            <option value="quarterly">3 Bulan</option>
+                            <option value="semi_annually">6 Bulan</option>
+                            <option value="annually">Tahunan</option>
+                        </select>
+                        <p v-if="createForm.errors.billing_period" class="mt-1 text-xs text-red-500">{{ createForm.errors.billing_period }}</p>
+                    </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -662,6 +687,20 @@ const confirmDelete = () => {
                             <option value="vps">VPS</option>
                         </select>
                         <p v-if="editForm.errors.service_type" class="mt-1 text-xs text-red-500">{{ editForm.errors.service_type }}</p>
+                    </div>
+                    <div>
+                        <Label for="edit-billing-period">Periode Tagihan *</Label>
+                        <select
+                            id="edit-billing-period"
+                            v-model="editForm.billing_period"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                            <option value="monthly">Bulanan</option>
+                            <option value="quarterly">3 Bulan</option>
+                            <option value="semi_annually">6 Bulan</option>
+                            <option value="annually">Tahunan</option>
+                        </select>
+                        <p v-if="editForm.errors.billing_period" class="mt-1 text-xs text-red-500">{{ editForm.errors.billing_period }}</p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
