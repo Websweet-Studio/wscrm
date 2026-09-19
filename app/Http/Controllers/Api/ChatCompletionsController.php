@@ -67,22 +67,31 @@ class ChatCompletionsController extends Controller
             ? Crypt::decryptString($provider->api_key)
             : (string) config('services.ai.api_key', env('AI_API_KEY', ''));
 
+        // Body MENTAH diteruskan apa adanya. Decode→encode ulang lewat PHP
+        // mengubah objek kosong `{}` menjadi array `[]` (mis. tool schema
+        // `"parameters": {"type":"object","properties":{}}`), dan provider
+        // ketat (CommandCode) menolaknya: 400 "Invalid schema for function ...:
+        // [] is not of type object". Klien agent (Hermes/Trae) lalu melihat
+        // stream kosong. Kirim byte aslinya supaya struktur JSON tetap utuh.
+        $rawBody = (string) $request->getContent();
+
         return ! empty($payload['stream'])
-            ? $this->proxyStream($upstream, $apiKey, $credit, $model, $payload)
-            : $this->proxyJson($upstream, $apiKey, $credit, $model, $payload);
+            ? $this->proxyStream($upstream, $apiKey, $credit, $model, $rawBody)
+            : $this->proxyJson($upstream, $apiKey, $credit, $model, $rawBody);
     }
 
     /**
      * Passthrough non-stream: forward ke upstream, kembalikan JSON apa adanya,
      * catat usage dari response lalu potong saldo.
      */
-    private function proxyJson(string $upstream, string $apiKey, AiCredit $credit, ?AiModel $model, array $payload): JsonResponse
+    private function proxyJson(string $upstream, string $apiKey, AiCredit $credit, ?AiModel $model, string $rawBody): JsonResponse
     {
         try {
             $resp = Http::withToken($apiKey)
-                ->withHeaders(['Accept' => 'application/json'])
+                ->withHeaders(['Accept' => 'application/json', 'Content-Type' => 'application/json'])
                 ->timeout(300)
-                ->post($upstream, $payload);
+                ->withBody($rawBody, 'application/json')
+                ->post($upstream);
         } catch (\Throwable $e) {
             Log::warning('AI proxy non-stream gagal: ' . $e->getMessage());
 
@@ -100,11 +109,13 @@ class ChatCompletionsController extends Controller
      * Passthrough stream: pipa SSE dari upstream verbatim ke client, tangkap
      * usage dari trailing chunk untuk billing, potong saldo di akhir.
      */
-    private function proxyStream(string $upstream, string $apiKey, AiCredit $credit, ?AiModel $model, array $payload): StreamedResponse
+    private function proxyStream(string $upstream, string $apiKey, AiCredit $credit, ?AiModel $model, string $rawBody): StreamedResponse
     {
-        return response()->stream(function () use ($upstream, $apiKey, $credit, $model, $payload) {
+        return response()->stream(function () use ($upstream, $apiKey, $credit, $model, $rawBody) {
             $usage = null;
             $finish = '';
+            $sse = null;      // null: belum tahu — true: SSE, false: body non-SSE (error)
+            $nonSse = '';
 
             // Stream via curl: kontrol header & baca SSE line-by-line dapat diandalkan.
             $ch = curl_init($upstream);
@@ -114,14 +125,26 @@ class ChatCompletionsController extends Controller
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_TIMEOUT => 600,
                 CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => json_encode($payload),
+                CURLOPT_POSTFIELDS => $rawBody,
                 CURLOPT_HTTPHEADER => [
                     'Content-Type: application/json',
                     'Accept: text/event-stream',
                     'Authorization: Bearer ' . $apiKey,
                     'X-Accel-Buffering: no',
                 ],
-                CURLOPT_WRITEFUNCTION => function ($ch, $data) use (&$usage, &$finish) {
+                CURLOPT_WRITEFUNCTION => function ($ch, $data) use (&$usage, &$finish, &$sse, &$nonSse) {
+                    if ($sse === null) {
+                        $sse = str_starts_with(ltrim($data), 'data:') || str_contains($data, "\ndata:");
+                    }
+
+                    if ($sse === false) {
+                        // Upstream balas body non-SSE (umumnya error JSON). Tahan dulu:
+                        // dikirim mentah ke klien SSE, klien hanya melihat "stream kosong".
+                        $nonSse .= $data;
+
+                        return strlen($data);
+                    }
+
                     // Forward verbatim ke client.
                     echo $data;
                     @ob_flush();
@@ -158,7 +181,26 @@ class ChatCompletionsController extends Controller
             // Billing berdasarkan usage yang tertangkap dari stream.
             $this->billFromUsage($credit, $model, $finish, $usage);
 
-            if (! $ok && $usage === null) {
+            if ($sse === false) {
+                // Upstream membalas JSON, bukan SSE — hampir selalu berarti error
+                // provider. Kirim sebagai event SSE yang benar (bukan body mentah
+                // plus `[DONE]`) supaya klien menampilkan sebabnya, bukan "empty stream".
+                $decoded = json_decode($nonSse, true);
+                $upErr = $decoded['error'] ?? null;
+
+                $errPayload = is_array($upErr)
+                    ? $upErr
+                    : [
+                        'message' => is_string($upErr) && $upErr !== ''
+                            ? $upErr
+                            : (mb_substr(trim($nonSse), 0, 600) ?: 'Upstream tidak mengirim stream SSE.'),
+                        'type' => 'upstream_error',
+                    ];
+
+                Log::warning('AI proxy stream: body non-SSE dari upstream: ' . ($errPayload['message'] ?? ''));
+
+                echo 'data: ' . json_encode(['error' => $errPayload], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
+            } elseif (! $ok && $usage === null) {
                 echo 'data: ' . json_encode(['error' => ['message' => 'Terjadi kesalahan saat memproses request. Coba lagi nanti.', 'type' => 'server_error']]) . "\n\n";
             }
 
