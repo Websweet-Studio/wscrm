@@ -18,6 +18,7 @@ class RdashSyncPrices extends Command
         {--create-missing : Buat baris baru untuk TLD yang ada di RDash tapi belum ada di domain_prices}
         {--fix-selling : Hitung ulang harga jual untuk TLD yang marginnya di bawah batas --min-margin}
         {--min-margin=0 : Batas margin minimum (% dari modal); 0 = hanya perbaiki yang rugi}
+        {--margin=0 : Margin NOMINAL (Rp) per domain, mis. 10000 → harga jual = modal + 10.000 lalu dibulatkan. Bila >0, menggantikan --markup dan menormalkan SEMUA harga jual (naik maupun turun)}
         {--keep= : Ekstensi (dipisah koma) yang harga jualnya DIPERTAHANKAN apa adanya walau marginnya tipis/negatif, contoh: .com,.my.id}
         {--markup=15 : Persen markup dari modal untuk harga jual (baris baru & perbaikan harga)}
         {--round=5000 : Bulatkan harga jual ke atas ke kelipatan ini}
@@ -33,6 +34,7 @@ class RdashSyncPrices extends Command
         $createMissing = (bool) $this->option('create-missing');
         $fixSelling = (bool) $this->option('fix-selling');
         $minMargin = (float) $this->option('min-margin');
+        $flatMargin = (float) $this->option('margin');
         $keep = $this->parseList((string) ($this->option('keep') ?? ''));
 
         // Cadangan dari konfigurasi (RDASH_KEEP_SELLING) bila --keep tidak diberikan,
@@ -91,8 +93,8 @@ class RdashSyncPrices extends Command
                     continue;
                 }
 
-                $selling = $this->markUp($base, $markup, $round);
-                $renewalSell = $this->markUp($renewal ?? $base, $markup, $round);
+                $selling = $this->priceFor($base, $flatMargin, $markup, $round);
+                $renewalSell = $this->priceFor($renewal ?? $base, $flatMargin, $markup, $round);
 
                 $created[] = [
                     'extension' => $extension,
@@ -153,11 +155,20 @@ class RdashSyncPrices extends Command
                 continue;
             }
 
-            // Perbaiki harga jual yang di bawah modal (atau marginnya di bawah --min-margin).
+            // Perbaiki harga jual yang di bawah modal (atau marginnya di bawah batas --min-margin).
+            // Bila --margin=N diberikan, SEMUA harga jual dinormalkan ke modal + N (naik maupun turun).
             $sellNow = (float) $local->selling_price;
             $renewSellNow = (float) $local->renewal_price_with_tax;
-            $needSell = $this->belowMargin($sellNow, $newBase, $minMargin);
-            $needRenewSell = $this->belowMargin($renewSellNow, $newRenewal, $minMargin);
+            $targetSell = $this->priceFor($newBase, $flatMargin, $markup, $round);
+            $targetRenewSell = $this->priceFor($newRenewal, $flatMargin, $markup, $round);
+
+            if ($flatMargin > 0) {
+                $needSell = abs($sellNow - $targetSell) >= 0.01;
+                $needRenewSell = abs($renewSellNow - $targetRenewSell) >= 0.01;
+            } else {
+                $needSell = $this->belowMargin($sellNow, $newBase, $minMargin);
+                $needRenewSell = $this->belowMargin($renewSellNow, $newRenewal, $minMargin);
+            }
 
             // Harga jual yang dikunci manual (--keep) tidak pernah dihitung ulang
             // walau marginnya tipis/negatif — mis. harga promo TLD tertentu.
@@ -177,8 +188,8 @@ class RdashSyncPrices extends Command
                 continue;
             }
 
-            $newSell = $needSell ? $this->markUp($newBase, $markup, $round) : $sellNow;
-            $newRenewSell = $needRenewSell ? $this->markUp($newRenewal, $markup, $round) : $renewSellNow;
+            $newSell = $needSell ? $targetSell : $sellNow;
+            $newRenewSell = $needRenewSell ? $targetRenewSell : $renewSellNow;
 
             $rollbackUpdates[$local->id] ??= ['id' => $local->id, 'base_cost' => $oldBase, 'renewal_cost' => $oldRenewal];
             $rollbackUpdates[$local->id]['selling_price'] = $sellNow;
@@ -224,6 +235,7 @@ class RdashSyncPrices extends Command
                 'dry_run' => ! $apply,
                 'tax_percent' => $taxPercent,
                 'markup_percent' => $markup,
+                'margin_flat' => $flatMargin,
                 'fetched' => count($prices),
                 'changed' => count($changed),
                 'created' => count($created),
@@ -245,11 +257,14 @@ class RdashSyncPrices extends Command
         $taxNote = $taxPercent > 0 ? ' + pajak '.rtrim(rtrim(number_format($taxPercent, 2, ',', '.'), '0'), ',').'%' : ' (tanpa pajak)';
         $this->info('Sinkronisasi harga domain RDASH — '.($apply ? 'APPLY (perubahan ditulis)' : 'DRY-RUN (tidak ada perubahan ditulis)'));
         $this->line('Biaya dasar = harga RDash'.$taxNote.'.');
+        if ($flatMargin > 0) {
+            $this->line('Harga jual = modal + '.$this->money($flatMargin).' (margin nominal), dibulatkan ke atas '.$this->money($round).'.');
+        }
         $this->table(['Ringkasan', 'Jumlah'], [
             ['Produk harga di RDash', count($prices)],
             ['TLD dengan perubahan biaya dasar', count($changed)],
             ['TLD baru dibuat', count($created)],
-            ['TLD harga jualnya diperbaiki (rugi)', count($repriced)],
+            [$flatMargin > 0 ? 'TLD harga jual dinormalkan (margin nominal)' : 'TLD harga jualnya diperbaiki (rugi)', count($repriced)],
             ['TLD harga jual dikunci manual (--keep)', count($kept)],
             ['TLD sudah sama', $unchanged],
             ['TLD di RDash yang belum ada di domain_prices', count(array_unique($unknown))],
@@ -274,7 +289,9 @@ class RdashSyncPrices extends Command
 
         if ($repriced !== []) {
             $this->newLine();
-            $this->line('Harga jual diperbaiki (markup '.$this->percent($markup).' dari modal termasuk pajak):');
+            $this->line($flatMargin > 0
+                ? 'Harga jual dinormalkan (modal + '.$this->money($flatMargin).', bulat ke atas '.$this->money($round).'):'
+                : 'Harga jual diperbaiki (markup '.$this->percent($markup).' dari modal termasuk pajak):');
             $this->table(
                 ['Ekstensi', 'Modal', 'Jual lama', 'Jual baru', 'Renew lama', 'Renew baru', 'Margin baru'],
                 array_map(fn (array $r) => [
@@ -365,12 +382,24 @@ class RdashSyncPrices extends Command
         return $extension === '' || str_starts_with($extension, '.') ? $extension : '.'.$extension;
     }
 
+    /** Harga jual memakai margin NOMINAL (modal + N, bulat ke atas) atau markup persen. */
+    private function priceFor(float $cost, float $flatMargin, float $markupPercent, float $round): float
+    {
+        return $flatMargin > 0
+            ? $this->roundUp($cost + $flatMargin, $round)
+            : $this->markUp($cost, $markupPercent, $round);
+    }
+
+    /** Bulatkan ke atas ke kelipatan $round (mis. 107.000 → 110.000). */
+    private function roundUp(float $value, float $round): float
+    {
+        return ceil($value / $round) * $round;
+    }
+
     /** Harga jual = modal + markup%, dibulatkan ke atas ke kelipatan $round. */
     private function markUp(float $cost, float $markupPercent, float $round): float
     {
-        $target = $cost * (1 + ($markupPercent / 100));
-
-        return ceil($target / $round) * $round;
+        return $this->roundUp($cost * (1 + ($markupPercent / 100)), $round);
     }
 
     /** true bila harga jual di bawah modal, atau marginnya di bawah $minMargin%. */

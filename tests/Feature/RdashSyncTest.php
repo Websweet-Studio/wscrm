@@ -384,6 +384,59 @@ it('konfigurasi RDASH_KEEP_SELLING melindungi harga jual dari cron/sinkronisasi'
     expect((float) $local->selling_price)->toBe(225000.0);
 });
 
+it('margin nominal 10.000 dengan pembulatan ke atas 5.000', function () {
+    $local = DomainPrice::query()->create([
+        'extension' => '.example',
+        'base_cost' => 50000,
+        'renewal_cost' => 50000,
+        'selling_price' => 60000,
+        'renewal_price_with_tax' => 60000,
+        'is_active' => true,
+    ]);
+
+    rdashFakeApi([], [[
+        'id' => 73,
+        'domain_extension' => ['id' => 4, 'extension' => '.example'],
+        'currency' => 'IDR',
+        'registration' => ['1' => 97000],
+        'renewal' => ['1' => 97000],
+        'transfer' => '97000.00',
+    ]]);
+
+    $this->artisan('rdash:sync-prices --apply --fix-selling --margin=10000 --no-tax')->assertExitCode(0);
+
+    $local->refresh();
+    // 97.000 + 10.000 = 107.000 → dibulatkan ke atas ke 110.000.
+    expect((float) $local->base_cost)->toBe(97000.0)
+        ->and((float) $local->selling_price)->toBe(110000.0)
+        ->and((float) $local->renewal_price_with_tax)->toBe(110000.0);
+});
+
+it('margin nominal juga menurunkan harga jual yang terlalu tinggi', function () {
+    $local = DomainPrice::query()->create([
+        'extension' => '.example',
+        'base_cost' => 100000,
+        'renewal_cost' => 100000,
+        'selling_price' => 300000,
+        'renewal_price_with_tax' => 300000,
+        'is_active' => true,
+    ]);
+
+    rdashFakeApi([], [[
+        'id' => 73,
+        'domain_extension' => ['id' => 4, 'extension' => '.example'],
+        'currency' => 'IDR',
+        'registration' => ['1' => 100000],
+        'renewal' => ['1' => 100000],
+        'transfer' => '100000.00',
+    ]]);
+
+    $this->artisan('rdash:sync-prices --apply --fix-selling --margin=10000 --no-tax')->assertExitCode(0);
+
+    $local->refresh();
+    expect((float) $local->selling_price)->toBe(110000.0);
+});
+
 it('cek ketersediaan domain memakai Basic Auth dan hasil asli RDash', function () {
     rdashFakeApi([rdashDomainRow('websweetstudio.my.id')]);
 
