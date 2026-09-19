@@ -212,15 +212,9 @@ const alerts = computed<Alert[]>(() => {
         }
     }
 
-    for (const s of props.expiringSoon) {
-        list.push({
-            id: `service-${s.id}`,
-            kind: s.is_expired ? 'danger' : 'warning',
-            title: s.is_expired ? 'Layanan kadaluarsa' : 'Layanan hampir habis',
-            message: `${s.name} · ${s.is_expired ? 'sudah berakhir' : `sisa ${s.days_left} hari (${formatDate(s.expires_at)})`}`,
-            href: getCustomerUrl(() => customerRoutes?.services?.index?.().url, '/customer/services'),
-        });
-    }
+    // Catatan: layanan hampir habis / kadaluarsa TIDAK diulang di sini —
+    // sudah ditampilkan pada kartu "Layanan perlu perhatian" (dengan CTA perpanjang).
+    // Mengulang di daftar notifikasi membuat info dobel di dashboard.
 
     if (props.aiBalance <= 0) {
         list.push({
