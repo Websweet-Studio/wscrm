@@ -43,6 +43,13 @@ class BlogPost extends Model
         ];
     }
 
+    /**
+     * Accessor yang ikut diserialisasi ke frontend (Inertia props).
+     * Tanpa ini, blog_frontend menerima `featured_image` mentah tanpa URL —
+     * gambar sampul tidak pernah tampil (fallback placeholder dipakai).
+     */
+    protected $appends = ['featured_image_url', 'reading_time', 'formatted_date'];
+
     // Relationships
     public function category(): BelongsTo
     {
@@ -136,11 +143,16 @@ class BlogPost extends Model
 
     public function getFeaturedImageUrlAttribute()
     {
-        if ($this->featured_image) {
-            return asset('storage/'.$this->featured_image);
+        if (! $this->featured_image) {
+            return null;
         }
 
-        return asset('images/blog-placeholder.jpg'); // Default image
+        // Gambar dari sumber luar (mis. Unsplash) disimpan sebagai URL penuh
+        if (Str::startsWith($this->featured_image, ['http://', 'https://'])) {
+            return $this->featured_image;
+        }
+
+        return asset('storage/'.$this->featured_image);
     }
 
     // Helper methods
