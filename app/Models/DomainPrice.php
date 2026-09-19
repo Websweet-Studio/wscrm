@@ -29,6 +29,7 @@ class DomainPrice extends Model
 
     protected $appends = [
         'promo_active',
+        'promo_muted',
         'effective_selling_price',
         'promo_days_left',
         'promo_savings',
@@ -66,7 +67,8 @@ class DomainPrice extends Model
     }
 
     /**
-     * Punya data promo registrasi dari RDash (belum tentu sedang berlaku).
+     * Punya data promo registrasi dari RDash (belum tentu sedang berlaku
+     * dan belum tentu menurunkan harga klien).
      */
     public function hasPromo(): bool
     {
@@ -74,9 +76,9 @@ class DomainPrice extends Model
     }
 
     /**
-     * Promo registrasi sedang berlaku pada tanggal tertentu (default: sekarang).
+     * Jendela waktu promo sedang terbuka (tanggal saja, tanpa menilai harganya).
      */
-    public function promoIsActive(?\DateTimeInterface $at = null): bool
+    public function promoWindowOpen(?\DateTimeInterface $at = null): bool
     {
         if ($this->promo_selling_price === null) {
             return false;
@@ -96,6 +98,50 @@ class DomainPrice extends Model
         }
 
         return true;
+    }
+
+    /**
+     * Harga promo benar-benar lebih murah dari harga jual normal.
+     */
+    public function promoIsCheaper(): bool
+    {
+        if ($this->promo_selling_price === null) {
+            return false;
+        }
+
+        return (float) $this->promo_selling_price < (float) $this->selling_price;
+    }
+
+    /**
+     * Promo registrasi sedang BERLAKU untuk klien: jendela waktu terbuka DAN
+     * harganya lebih murah dari harga normal.
+     *
+     * TLD yang harga jualnya dikunci manual (mis. `.com` 225.000 lewat opsi
+     * `--keep` / `RDASH_KEEP_SELLING`) tetap menyimpan data promo RDash, tetapi
+     * tidak dihitung sebagai promo: klien tidak mendapat potongan apa pun, jadi
+     * menampilkan badge "PROMO" + harga coret akan menyesatkan.
+     */
+    public function promoIsActive(?\DateTimeInterface $at = null): bool
+    {
+        if (! $this->promoWindowOpen($at)) {
+            return false;
+        }
+
+        return $this->promoIsCheaper();
+    }
+
+    /**
+     * Ada data promo & jendelanya berlaku, tetapi TIDAK menurunkan harga klien
+     * karena harga jualnya lebih murah/lebih mahal dari harga promo.
+     * Dipakai halaman admin untuk memberi keterangan "tidak dipakai".
+     */
+    public function promoIsMuted(?\DateTimeInterface $at = null): bool
+    {
+        if ($this->promo_selling_price === null) {
+            return false;
+        }
+
+        return $this->promoWindowOpen($at) && ! $this->promoIsCheaper();
     }
 
     /**
@@ -154,6 +200,7 @@ class DomainPrice extends Model
         $now = now('UTC')->toDateTimeString();
 
         return $query->whereNotNull('promo_selling_price')
+            ->whereColumn('promo_selling_price', '<', 'selling_price') // promo harus benar-benar lebih murah
             ->where(function ($q) use ($now) {
                 $q->whereNull('promo_starts_at')->orWhere('promo_starts_at', '<=', $now);
             })
@@ -165,6 +212,11 @@ class DomainPrice extends Model
     protected function promoActive(): Attribute
     {
         return Attribute::make(get: fn () => $this->promoIsActive());
+    }
+
+    protected function promoMuted(): Attribute
+    {
+        return Attribute::make(get: fn () => $this->promoIsMuted());
     }
 
     protected function effectiveSellingPrice(): Attribute

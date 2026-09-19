@@ -19,6 +19,7 @@ interface DomainPrice {
     created_at: string;
     updated_at: string;
     promo_active?: boolean;
+    promo_muted?: boolean;
     effective_selling_price?: number;
     promo_price?: number | null;
     promo_base_cost?: number | null;
@@ -72,6 +73,8 @@ const formatDate = (date: string) => {
 const promoStatus = computed(() => {
     if (props.domainPrice.promo_selling_price === null || props.domainPrice.promo_selling_price === undefined) return null;
     if (props.domainPrice.promo_active) return { label: 'AKTIF', variant: 'default' as const };
+    // Harga jual dikunci manual (mis. `.com` 225.000) sehingga promo RDash tidak menurunkan harga klien.
+    if (props.domainPrice.promo_muted) return { label: 'Tidak Dipakai', variant: 'secondary' as const };
 
     const startsAt = props.domainPrice.promo_starts_at ? new Date(props.domainPrice.promo_starts_at).getTime() : null;
     if (startsAt !== null && startsAt > Date.now()) return { label: 'Akan Datang', variant: 'secondary' as const };
@@ -258,6 +261,10 @@ const promoMargin = computed(() => {
                         <Badge :variant="promoStatus.variant" class="ml-2">{{ promoStatus.label }}</Badge>
                     </CardTitle>
                     <CardDescription> Harga promo registrasi yang disinkronkan dari RDash (tidak berlaku untuk perpanjangan) </CardDescription>
+                    <p v-if="domainPrice.promo_muted" class="text-xs text-amber-700">
+                        Promo tidak dipakai: harga jual ekstensi ini dikunci manual
+                        ({{ formatPrice(domainPrice.selling_price) }}), jadi klien tidak menerima potongan.
+                    </p>
                 </CardHeader>
                 <CardContent class="space-y-4">
                     <div class="grid grid-cols-2 gap-4 md:grid-cols-3">

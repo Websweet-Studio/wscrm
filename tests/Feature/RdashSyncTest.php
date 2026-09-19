@@ -636,6 +636,60 @@ it('harga jual efektif mengikuti promo dan otomatis kembali normal di luar perio
         ->and($row->priceNow())->toBe(495000.0);
 });
 
+it('promo yang tidak menurunkan harga klien tidak dianggap promo (kasus .com dikunci 225.000)', function () {
+    // Kondisi nyata hasil `--keep=.com`: promo RDash 190.000 dipetakan jadi harga
+    // jual promo 225.000 — sama dengan harga jual normal yang dikunci manual.
+    $row = DomainPrice::query()->create([
+        'extension' => '.com',
+        'base_cost' => 227550,
+        'renewal_cost' => 227550,
+        'selling_price' => 225000,
+        'renewal_price_with_tax' => 240000,
+        'promo_price' => 190000,
+        'promo_base_cost' => 210900,
+        'promo_selling_price' => 225000,
+        'promo_starts_at' => now('UTC')->subDay(),
+        'promo_ends_at' => now('UTC')->addDays(3),
+        'is_active' => true,
+    ]);
+
+    // Jendela promo terbuka & data promo tersimpan, tapi harga klien tidak turun
+    // → jangan ditandai promo (badge PROMO + harga coret akan menyesatkan).
+    expect($row->promoWindowOpen())->toBeTrue()
+        ->and($row->promoIsCheaper())->toBeFalse()
+        ->and($row->promoIsActive())->toBeFalse()
+        ->and($row->promoIsMuted())->toBeTrue()
+        ->and($row->priceNow())->toBe(225000.0)
+        ->and($row->effective_selling_price)->toBe(225000.0)
+        ->and($row->promo_active)->toBeFalse()
+        ->and($row->promo_muted)->toBeTrue()
+        ->and($row->promoCutAmount())->toBeNull()
+        ->and($row->promoDaysRemaining())->toBeNull()
+        ->and($row->costNow())->toBe(227550.0);
+
+    // Tidak ikut terhitung di daftar promo aktif, sedangkan TLD yang benar-benar
+    // lebih murah tetap masuk.
+    expect(DomainPrice::query()->withActivePromo()->pluck('extension')->all())->not->toContain('.com');
+
+    $cheaper = DomainPrice::query()->create([
+        'extension' => '.xyz',
+        'base_cost' => 257000,
+        'renewal_cost' => 257000,
+        'selling_price' => 290000,
+        'renewal_price_with_tax' => 290000,
+        'promo_price' => 33000,
+        'promo_base_cost' => 36630,
+        'promo_selling_price' => 55000,
+        'promo_starts_at' => now('UTC')->subDay(),
+        'promo_ends_at' => now('UTC')->addDays(3),
+        'is_active' => true,
+    ]);
+
+    expect($cheaper->promoIsActive())->toBeTrue()
+        ->and($cheaper->promo_muted)->toBeFalse()
+        ->and(DomainPrice::query()->withActivePromo()->pluck('extension')->all())->toContain('.xyz');
+});
+
 it('opsi --no-promo tidak menyimpan data promo dari RDash', function () {
     $local = DomainPrice::query()->create([
         'extension' => '.my.id',
