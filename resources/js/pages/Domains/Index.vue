@@ -12,6 +12,11 @@ interface DomainPrice {
     extension: string;
     selling_price: number;
     renewal_price_with_tax: number;
+    promo_active?: boolean;
+    effective_selling_price?: number;
+    promo_savings?: number | null;
+    promo_days_left?: number | null;
+    promo_ends_at?: string | null;
 }
 
 interface Props {
@@ -30,6 +35,13 @@ const formatPrice = (price: number) => {
         currency: 'IDR',
         minimumFractionDigits: 0,
     }).format(price);
+};
+
+/** Tanggal promo dari RDash (ISO) → format ringkas bahasa Indonesia. */
+const formatDate = (date?: string | null) => {
+    if (!date) return '';
+
+    return new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
 const searchDomainAvailability = () => {
@@ -91,7 +103,26 @@ const otherExtensions = props.domainPrices.filter(
                             <CardContent class="space-y-3">
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm text-muted-foreground">Registration</span>
-                                    <span class="text-lg font-bold">{{ formatPrice(domain.selling_price) }}</span>
+                                    <div class="flex flex-col items-end gap-0.5">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-lg font-bold">{{ formatPrice(domain.effective_selling_price ?? domain.selling_price) }}</span>
+                                            <span
+                                                v-if="domain.promo_active"
+                                                class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700"
+                                            >
+                                                PROMO
+                                            </span>
+                                        </div>
+                                        <span v-if="domain.promo_active" class="text-xs line-through text-muted-foreground">
+                                            {{ formatPrice(domain.selling_price) }}
+                                        </span>
+                                        <span v-if="domain.promo_active && domain.promo_ends_at" class="text-[11px] text-muted-foreground">
+                                            s/d {{ formatDate(domain.promo_ends_at) }}
+                                        </span>
+                                        <span v-if="domain.promo_active && domain.promo_savings" class="text-[11px] text-muted-foreground">
+                                            hemat {{ formatPrice(domain.promo_savings) }}
+                                        </span>
+                                    </div>
                                 </div>
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm text-muted-foreground">Renewal</span>
@@ -109,7 +140,19 @@ const otherExtensions = props.domainPrices.filter(
                         <Card v-for="domain in idExtensions" :key="domain.id" class="text-center">
                             <CardHeader>
                                 <CardTitle class="text-lg">{{ domain.extension }}</CardTitle>
-                                <CardDescription>{{ formatPrice(domain.selling_price) }}/year</CardDescription>
+                                <CardDescription>
+                                    <span>{{ formatPrice(domain.effective_selling_price ?? domain.selling_price) }}/year</span>
+                                    <span
+                                        v-if="domain.promo_active"
+                                        class="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700"
+                                    >
+                                        PROMO
+                                    </span>
+                                </CardDescription>
+                                <div v-if="domain.promo_active" class="text-xs text-muted-foreground">
+                                    <span class="line-through">{{ formatPrice(domain.selling_price) }}</span>
+                                    <span v-if="domain.promo_ends_at"> &middot; s/d {{ formatDate(domain.promo_ends_at) }}</span>
+                                </div>
                             </CardHeader>
                         </Card>
                     </div>
@@ -122,7 +165,19 @@ const otherExtensions = props.domainPrices.filter(
                         <Card v-for="domain in otherExtensions" :key="domain.id" class="text-center">
                             <CardHeader>
                                 <CardTitle class="text-lg">{{ domain.extension }}</CardTitle>
-                                <CardDescription>{{ formatPrice(domain.selling_price) }}/year</CardDescription>
+                                <CardDescription>
+                                    <span>{{ formatPrice(domain.effective_selling_price ?? domain.selling_price) }}/year</span>
+                                    <span
+                                        v-if="domain.promo_active"
+                                        class="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700"
+                                    >
+                                        PROMO
+                                    </span>
+                                </CardDescription>
+                                <div v-if="domain.promo_active" class="text-xs text-muted-foreground">
+                                    <span class="line-through">{{ formatPrice(domain.selling_price) }}</span>
+                                    <span v-if="domain.promo_ends_at"> &middot; s/d {{ formatDate(domain.promo_ends_at) }}</span>
+                                </div>
                             </CardHeader>
                         </Card>
                     </div>

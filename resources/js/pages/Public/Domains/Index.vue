@@ -18,6 +18,11 @@ interface DomainPrice {
     selling_price: number;
     renewal_price_with_tax: number;
     is_active: boolean;
+    promo_active?: boolean;
+    effective_selling_price?: number;
+    promo_savings?: number | null;
+    promo_days_left?: number | null;
+    promo_ends_at?: string | null;
 }
 
 interface Props {
@@ -39,6 +44,13 @@ const formatPrice = (price: number) => {
         currency: 'IDR',
         minimumFractionDigits: 0,
     }).format(price);
+};
+
+/** Tanggal promo dari RDash (ISO) → format ringkas bahasa Indonesia. */
+const formatDate = (date?: string | null) => {
+    if (!date) return '';
+
+    return new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
 /** Ekstensi selalu ditampilkan dengan satu titik di depan (.com), apa pun format tersimpannya. */
@@ -204,8 +216,29 @@ const getWhatsappLink = (text: string) => {
                                         </span>
                                         <span v-else class="text-sm" style="color: #91918c;">&mdash;</span>
                                     </td>
-                                    <td class="px-4 py-4 text-right text-base font-bold" style="color: var(--primary);">
-                                        {{ formatPrice(domain.selling_price) }}
+                                    <td class="px-4 py-4 text-right">
+                                        <div class="flex flex-col items-end gap-0.5">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="text-base font-bold" style="color: var(--primary);">
+                                                    {{ formatPrice(domain.effective_selling_price ?? domain.selling_price) }}
+                                                </span>
+                                                <span
+                                                    v-if="domain.promo_active"
+                                                    class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700"
+                                                >
+                                                    PROMO
+                                                </span>
+                                            </div>
+                                            <span v-if="domain.promo_active" class="text-xs line-through text-muted-foreground">
+                                                {{ formatPrice(domain.selling_price) }}
+                                            </span>
+                                            <span v-if="domain.promo_active && domain.promo_ends_at" class="text-[11px]" style="color: #62625b;">
+                                                Promo s/d {{ formatDate(domain.promo_ends_at) }}
+                                            </span>
+                                            <span v-if="domain.promo_active && domain.promo_savings" class="text-[11px]" style="color: #62625b;">
+                                                hemat {{ formatPrice(domain.promo_savings) }}
+                                            </span>
+                                        </div>
                                     </td>
                                     <td class="px-4 py-4 text-right text-sm font-medium" style="color: #33332e;">
                                         {{ formatPrice(domain.renewal_price_with_tax) }}

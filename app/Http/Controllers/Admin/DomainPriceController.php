@@ -19,7 +19,7 @@ class DomainPriceController extends Controller
         $direction = $request->get('direction', 'asc');
 
         // Validate sort field
-        $allowedSorts = ['extension', 'base_cost', 'renewal_cost', 'selling_price', 'renewal_price_with_tax', 'is_active'];
+        $allowedSorts = ['extension', 'base_cost', 'renewal_cost', 'selling_price', 'renewal_price_with_tax', 'promo_selling_price', 'is_active'];
         if (! in_array($sort, $allowedSorts)) {
             $sort = 'extension';
         }

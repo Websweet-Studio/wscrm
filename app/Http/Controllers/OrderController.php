@@ -84,7 +84,8 @@ class OrderController extends Controller
                         break;
                     case 'domain':
                         $domainPrice = DomainPrice::findOrFail($item['item_id']);
-                        $price = $domainPrice->selling_price;
+                        // Harga promo registrasi berlaku otomatis bila promonya sedang aktif.
+                        $price = $domainPrice->priceNow();
                         break;
                     case 'app':
                     case 'web':

@@ -15,6 +15,11 @@ interface DomainPrice {
     selling_price: number;
     renewal_price_with_tax: number;
     is_active: boolean;
+    promo_active?: boolean;
+    effective_selling_price?: number;
+    promo_savings?: number | null;
+    promo_days_left?: number | null;
+    promo_ends_at?: string | null;
 }
 
 interface Props {
@@ -83,7 +88,7 @@ const getExtensionPrice = (extension: string): number => {
         domain = props.domainPrices.find((d) => d.extension === extension);
     }
 
-    return domain?.selling_price || 0;
+    return domain?.effective_selling_price ?? domain?.selling_price ?? 0;
 };
 
 const getExtensionRenewalPrice = (extension: string): number => {

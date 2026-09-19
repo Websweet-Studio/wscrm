@@ -6,6 +6,7 @@ use App\Exceptions\RdashException;
 use App\Models\DomainPrice;
 use App\Services\RdashService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 class RdashSyncPrices extends Command
@@ -20,6 +21,7 @@ class RdashSyncPrices extends Command
         {--min-margin=0 : Batas margin minimum (% dari modal); 0 = hanya perbaiki yang rugi}
         {--margin=0 : Margin NOMINAL (Rp) per domain, mis. 10000 → harga jual = modal + 10.000 lalu dibulatkan. Bila >0, menggantikan --markup dan menormalkan SEMUA harga jual (naik maupun turun)}
         {--keep= : Ekstensi (dipisah koma) yang harga jualnya DIPERTAHANKAN apa adanya walau marginnya tipis/negatif, contoh: .com,.my.id}
+        {--no-promo : Abaikan harga promo registrasi dari RDash (jangan simpan/tinjau promo_registration)}
         {--markup=15 : Persen markup dari modal untuk harga jual (baris baru & perbaikan harga)}
         {--round=5000 : Bulatkan harga jual ke atas ke kelipatan ini}
         {--activate : Baris baru langsung is_active = true (default: nonaktif dulu untuk ditinjau)}
@@ -43,6 +45,7 @@ class RdashSyncPrices extends Command
             $keep = $this->parseList((string) config('services.rdash.keep_selling', ''));
         }
 
+        $usePromo = ! (bool) $this->option('no-promo');
         $markup = (float) $this->option('markup');
         $round = max(1.0, (float) $this->option('round'));
         $activate = (bool) $this->option('activate');
@@ -69,6 +72,7 @@ class RdashSyncPrices extends Command
         $created = [];
         $repriced = [];
         $kept = [];
+        $promos = [];
         $rollbackUpdates = [];
         $rollbackDeletes = [];
 
@@ -95,6 +99,7 @@ class RdashSyncPrices extends Command
 
                 $selling = $this->priceFor($base, $flatMargin, $markup, $round);
                 $renewalSell = $this->priceFor($renewal ?? $base, $flatMargin, $markup, $round);
+                $promo = $usePromo ? $this->promoFor($item['promo_registration'] ?? null, $taxFactor, $flatMargin, $markup, $round, $base) : null;
 
                 $created[] = [
                     'extension' => $extension,
@@ -104,17 +109,22 @@ class RdashSyncPrices extends Command
                     'renewal_price_with_tax' => $renewalSell,
                     'is_active' => $activate,
                     'margin' => $selling - $base,
+                    'promo_selling_price' => $promo['promo_selling_price'] ?? null,
                 ];
 
                 if ($apply) {
-                    $row = DomainPrice::create([
+                    $row = DomainPrice::create(array_merge([
                         'extension' => $extension,
                         'base_cost' => $base,
                         'renewal_cost' => $renewal ?? $base,
                         'selling_price' => $selling,
                         'renewal_price_with_tax' => $renewalSell,
                         'is_active' => $activate,
-                    ]);
+                    ], $promo ?? []));
+
+                    if ($promo !== null) {
+                        $promos[] = $this->promoRow($row, $promo);
+                    }
                     $rollbackDeletes[] = $row->id;
                 }
 
@@ -149,6 +159,13 @@ class RdashSyncPrices extends Command
                 ];
             } else {
                 $unchanged++;
+            }
+
+            if ($usePromo) {
+                $promoRow = $this->syncPromo($local, $item['promo_registration'] ?? null, $taxFactor, $flatMargin, $markup, $round, $apply, $rollbackUpdates);
+                if ($promoRow !== null) {
+                    $promos[] = $promoRow;
+                }
             }
 
             if (! $fixSelling) {
@@ -242,11 +259,13 @@ class RdashSyncPrices extends Command
                 'unchanged' => $unchanged,
                 'repriced' => count($repriced),
                 'kept' => count($kept),
+                'promos' => count($promos),
                 'unknown' => array_values(array_unique($unknown)),
                 'rows' => $changed,
                 'created_rows' => $created,
                 'repriced_rows' => $repriced,
                 'kept_rows' => $kept,
+                'promo_rows' => $promos,
                 'negative_margin' => $negative,
                 'rollback_file' => $rollbackFile,
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
@@ -266,6 +285,7 @@ class RdashSyncPrices extends Command
             ['TLD baru dibuat', count($created)],
             [$flatMargin > 0 ? 'TLD harga jual dinormalkan (margin nominal)' : 'TLD harga jualnya diperbaiki (rugi)', count($repriced)],
             ['TLD harga jual dikunci manual (--keep)', count($kept)],
+            ['TLD dengan data promo registrasi (RDash)', count($promos)],
             ['TLD sudah sama', $unchanged],
             ['TLD di RDash yang belum ada di domain_prices', count(array_unique($unknown))],
             ['TLD dengan margin negatif (harga jual < modal)', count($negative)],
@@ -337,6 +357,26 @@ class RdashSyncPrices extends Command
             );
         }
 
+        if ($promos !== []) {
+            $this->newLine();
+            $this->line('Promo registrasi RDash (hanya registrasi siklus 1 tahun — perpanjangan tetap harga normal):');
+            $this->table(
+                ['Ekstensi', 'Modal normal', 'Modal promo', 'Jual normal', 'Jual promo', 'Margin promo', 'Berlaku sampai', 'Status'],
+                array_map(fn (array $r) => [
+                    $r['extension'],
+                    $this->money($r['base_cost'] ?? 0),
+                    $this->money($r['promo_base_cost'] ?? 0),
+                    $this->money($r['selling_price'] ?? 0),
+                    $this->money($r['promo_selling_price'] ?? 0),
+                    ($r['promo_base_cost'] ?? null) !== null && ($r['promo_selling_price'] ?? null) !== null
+                        ? $this->money($r['margin_promo'])
+                        : '—',
+                    $r['promo_ends_at'] ? substr((string) $r['promo_ends_at'], 0, 10) : '-',
+                    $r['active'] ? 'AKTIF' : (($r['added'] ?? false) ? 'akan datang' : 'berakhir'),
+                ], $promos)
+            );
+        }
+
         if ($negative !== []) {
             $this->newLine();
             $this->error('MASIH RUGI (harga jual < modal): pakai --fix-selling untuk memperbaiki.');
@@ -364,6 +404,160 @@ class RdashSyncPrices extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Petakan promo_registration dari RDash ke kolom promo_* (null bila TLD tanpa promo).
+     *
+     * @return array<string, mixed>|null
+     */
+    private function promoFor(mixed $raw, float $taxFactor, float $flatMargin, float $markup, float $round, ?float $normalBase = null): ?array
+    {
+        if (! is_array($raw) || $raw === []) {
+            return null;
+        }
+
+        // Promo RDash hanya untuk REGISTRASI SIKLUS 1 TAHUN. Bila harga periode 1
+        // kosong (mis. promo hanya untuk 2 tahun), promo diabaikan — jangan sampai
+        // harga promo dipakai untuk siklus yang berbeda lalu jadi lebih mahal.
+        $registration = $raw['registration'] ?? null;
+        $price = is_numeric($registration) ? (float) $registration : null;
+        if (is_array($registration) && isset($registration['1']) && is_numeric($registration['1'])) {
+            $price = (float) $registration['1'];
+        }
+
+        if ($price === null || $price <= 0) {
+            return null;
+        }
+
+        // Modal promo juga kena PPN; harga jual promo = modal promo + margin (bulat ke atas).
+        $base = round($price * $taxFactor, 2);
+
+        // Pengaman: promo yang ternyata TIDAK lebih murah dari modal normal diabaikan.
+        if ($normalBase !== null && $normalBase > 0 && $base > $normalBase - 0.01) {
+            return null;
+        }
+
+        return [
+            'promo_price' => $price,
+            'promo_base_cost' => $base,
+            'promo_selling_price' => $this->priceFor($base, $flatMargin, $markup, $round),
+            'promo_starts_at' => $this->promoTime($raw['start_date'] ?? null),
+            'promo_ends_at' => $this->promoTime($raw['end_date'] ?? null),
+            'promo_note' => $this->promoNote($raw['description'] ?? null),
+        ];
+    }
+
+    /**
+     * Selaraskan kolom promo pada baris yang sudah ada. Mengembalikan baris laporan
+     * bila ada perubahan (null bila tidak ada perubahan).
+     *
+     * @param  array<int, array<string, mixed>>  $rollbackUpdates
+     * @return array<string, mixed>|null
+     */
+    private function syncPromo(DomainPrice $local, mixed $raw, float $taxFactor, float $flatMargin, float $markup, float $round, bool $apply, array &$rollbackUpdates): ?array
+    {
+        $promo = $this->promoFor($raw, $taxFactor, $flatMargin, $markup, $round, (float) $local->base_cost);
+
+        $old = [
+            'promo_price' => $local->promo_price === null ? null : (float) $local->promo_price,
+            'promo_base_cost' => $local->promo_base_cost === null ? null : (float) $local->promo_base_cost,
+            'promo_selling_price' => $local->promo_selling_price === null ? null : (float) $local->promo_selling_price,
+            'promo_starts_at' => optional($local->promo_starts_at)->toDateTimeString(),
+            'promo_ends_at' => optional($local->promo_ends_at)->toDateTimeString(),
+            'promo_note' => $local->promo_note,
+        ];
+
+        $new = [
+            'promo_price' => $promo['promo_price'] ?? null,
+            'promo_base_cost' => $promo['promo_base_cost'] ?? null,
+            'promo_selling_price' => $promo['promo_selling_price'] ?? null,
+            'promo_starts_at' => optional($promo['promo_starts_at'] ?? null)->toDateTimeString(),
+            'promo_ends_at' => optional($promo['promo_ends_at'] ?? null)->toDateTimeString(),
+            'promo_note' => $promo['promo_note'] ?? null,
+        ];
+
+        if ($old === $new) {
+            return null;
+        }
+
+        $rollbackUpdates[$local->id] ??= [
+            'id' => $local->id,
+            'base_cost' => (float) $local->base_cost,
+            'renewal_cost' => (float) $local->renewal_cost,
+        ];
+        foreach ($old as $column => $value) {
+            $rollbackUpdates[$local->id][$column] = $value;
+        }
+
+        if ($apply) {
+            $local->fill($new);
+            $local->save();
+        }
+
+        return [
+            'extension' => $this->normExt((string) $local->extension),
+            'base_cost' => (float) $local->base_cost,
+            'selling_price' => (float) $local->selling_price,
+            'promo_price' => $new['promo_price'],
+            'promo_base_cost' => $new['promo_base_cost'],
+            'promo_selling_price' => $new['promo_selling_price'],
+            'margin_promo' => (float) ($new['promo_selling_price'] ?? 0) - (float) ($new['promo_base_cost'] ?? 0),
+            'promo_ends_at' => $new['promo_ends_at'],
+            'active' => $promo !== null && $local->promoIsActive(),
+            'added' => $promo !== null,
+        ];
+    }
+
+    /**
+     * Baris laporan promo untuk TLD yang baru dibuat.
+     *
+     * @param  array<string, mixed>  $promo
+     * @return array<string, mixed>
+     */
+    private function promoRow(DomainPrice $row, array $promo): array
+    {
+        return [
+            'extension' => $this->normExt((string) $row->extension),
+            'base_cost' => (float) $row->base_cost,
+            'selling_price' => (float) $row->selling_price,
+            'promo_price' => $promo['promo_price'],
+            'promo_base_cost' => $promo['promo_base_cost'],
+            'promo_selling_price' => $promo['promo_selling_price'],
+            'margin_promo' => (float) $promo['promo_selling_price'] - (float) $promo['promo_base_cost'],
+            'promo_ends_at' => optional($promo['promo_ends_at'])->toDateTimeString(),
+            'active' => $row->promoIsActive(),
+            'added' => true,
+        ];
+    }
+
+    /** Tanggal promo dari RDash (UTC) dinormalkan ke UTC agar perbandingan status konsisten. */
+    private function promoTime(mixed $value): ?Carbon
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value, 'UTC')->setTimezone('UTC');
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /** Syarat promo: HTML dari RDash dibersihkan jadi teks biasa. */
+    private function promoNote(mixed $value): ?string
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        $text = (string) preg_replace('/<\/(li|p|ul|ol|div)>/i', "\n", $value);
+        $text = strip_tags($text);
+        $text = (string) preg_replace('/[ \t]+/', ' ', $text);
+        $text = (string) preg_replace('/\n{2,}/', "\n", $text);
+
+        return trim($text) ?: null;
     }
 
     /** Pisahkan opsi daftar "a,b,c" menjadi array ekstensi ternormalisasi (".com"). */
@@ -415,7 +609,12 @@ class RdashSyncPrices extends Command
         return (($selling - $cost) / $cost) * 100 < $minMargin;
     }
 
-    /** Ambil harga periode 1 tahun dari map {periode: harga}. */
+    /**
+     * Ambil harga periode 1 tahun dari map {periode: harga}.
+     *
+     * Tidak ada fallback ke periode lain: harga periode 2/3 tahun tidak boleh
+     * dipakai sebagai harga 1 tahun (bisa jauh berbeda).
+     */
     private function firstAmount(mixed $value): ?float
     {
         if (is_numeric($value)) {
@@ -426,11 +625,6 @@ class RdashSyncPrices extends Command
         }
         if (isset($value['1']) && is_numeric($value['1'])) {
             return (float) $value['1'];
-        }
-        foreach ($value as $amount) {
-            if (is_numeric($amount)) {
-                return (float) $amount;
-            }
         }
 
         return null;
@@ -474,6 +668,20 @@ class RdashSyncPrices extends Command
             }
             if (isset($row['renewal_price_with_tax'])) {
                 $sets[] = sprintf('renewal_price_with_tax = %.2f', $row['renewal_price_with_tax']);
+            }
+            foreach (['promo_price', 'promo_base_cost', 'promo_selling_price'] as $numeric) {
+                if (array_key_exists($numeric, $row)) {
+                    $sets[] = $row[$numeric] === null
+                        ? sprintf('%s = NULL', $numeric)
+                        : sprintf('%s = %.2f', $numeric, $row[$numeric]);
+                }
+            }
+            foreach (['promo_starts_at', 'promo_ends_at', 'promo_note'] as $textual) {
+                if (array_key_exists($textual, $row)) {
+                    $sets[] = $row[$textual] === null || $row[$textual] === ''
+                        ? sprintf('%s = NULL', $textual)
+                        : sprintf("%s = '%s'", $textual, str_replace("'", "''", (string) $row[$textual]));
+                }
             }
             $lines[] = sprintf('UPDATE domain_prices SET %s WHERE id = %d;', implode(', ', $sets), $row['id']);
         }

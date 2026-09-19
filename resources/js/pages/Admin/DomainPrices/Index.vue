@@ -20,6 +20,12 @@ interface DomainPrice {
     selling_price: number;
     renewal_price_with_tax: number;
     is_active: boolean;
+    promo_active?: boolean;
+    effective_selling_price?: number;
+    promo_savings?: number | null;
+    promo_days_left?: number | null;
+    promo_selling_price?: number | null;
+    promo_ends_at?: string | null;
 }
 
 interface Props {
@@ -148,6 +154,13 @@ const extLabel = (extension?: string) => {
     if (ext === '') return '';
 
     return ext.startsWith('.') ? ext : `.${ext}`;
+};
+
+/** Tanggal promo dari RDash (ISO) → format ringkas bahasa Indonesia. */
+const formatDate = (date?: string | null) => {
+    if (!date) return '';
+
+    return new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
 const marginOf = (domain: DomainPrice) => Number(domain.selling_price) - Number(domain.base_cost);
@@ -341,6 +354,9 @@ const confirmDelete = () => {
                                         </button>
                                     </TableHead>
                                     <TableHead>
+                                        <span title="Promo registrasi dari RDash (tidak berlaku untuk perpanjangan).">Promo</span>
+                                    </TableHead>
+                                    <TableHead>
                                         <span title="Harga jual dikurangi biaya dasar (modal RDash). Merah = harga jual di bawah modal.">Margin</span>
                                     </TableHead>
                                     <TableHead>
@@ -381,7 +397,33 @@ const confirmDelete = () => {
                                     <TableCell class="font-medium">{{ extLabel(domain.extension) }}</TableCell>
                                     <TableCell>{{ formatPrice(domain.base_cost) }}</TableCell>
                                     <TableCell>{{ formatPrice(domain.renewal_cost) }}</TableCell>
-                                    <TableCell>{{ formatPrice(domain.selling_price) }}</TableCell>
+                                    <TableCell>
+                                        <div class="flex flex-col gap-0.5">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="font-medium">
+                                                    {{ formatPrice(domain.effective_selling_price ?? domain.selling_price) }}
+                                                </span>
+                                                <span
+                                                    v-if="domain.promo_active"
+                                                    class="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700"
+                                                >
+                                                    PROMO
+                                                </span>
+                                            </div>
+                                            <span v-if="domain.promo_active" class="text-xs line-through text-muted-foreground">
+                                                {{ formatPrice(domain.selling_price) }}
+                                            </span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div v-if="domain.promo_selling_price" class="flex flex-col gap-0.5">
+                                            <span class="font-medium text-amber-700">{{ formatPrice(domain.promo_selling_price) }}</span>
+                                            <span class="text-xs text-muted-foreground">
+                                                {{ formatDate(domain.promo_ends_at) || '—' }}
+                                            </span>
+                                        </div>
+                                        <span v-else class="text-sm text-muted-foreground">&mdash;</span>
+                                    </TableCell>
                                     <TableCell>
                                         <span
                                             :class="marginOf(domain) < 0 ? 'font-medium text-red-600' : 'text-emerald-600'"

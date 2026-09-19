@@ -91,7 +91,14 @@ class PublicAiChatController extends Controller
     {
         // Katalog di-cache 5 menit — dibangun ulang per pesan terlalu boros.
         $catalog = \Illuminate\Support\Facades\Cache::remember('public_ai_chat_catalog', 300, function () {
-            $domains = DomainPrice::active()->orderBy('selling_price')->get(['extension', 'selling_price', 'renewal_price_with_tax']);
+            $domains = DomainPrice::active()->orderBy('selling_price')->get()
+                ->map(fn (DomainPrice $d) => [
+                    'extension' => $d->extension,
+                    'selling_price' => $d->priceNow(),
+                    'promo_active' => $d->promoIsActive(),
+                    'promo_ends_at' => optional($d->promo_ends_at)->toDateString(),
+                    'renewal_price_with_tax' => (float) $d->renewal_price_with_tax,
+                ])->values();
             $hosting = HostingPlan::active()->orderBy('selling_price')->get(['plan_name', 'service_type', 'storage_gb', 'cpu_cores', 'ram_gb', 'bandwidth', 'selling_price', 'features']);
             $services = ServicePlan::where('is_active', true)->orderBy('price')->get(['name', 'category', 'price', 'description']);
 

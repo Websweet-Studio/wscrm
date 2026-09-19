@@ -190,7 +190,7 @@ class OrderController extends Controller
                         break;
                     case 'domain':
                         $domain = DomainPrice::findOrFail($item['item_id']);
-                        $totalAmount += $domain->selling_price;
+                        $totalAmount += $domain->priceNow();
                         break;
                     case 'service':
                         $service = ServicePlan::findOrFail($item['item_id']);
@@ -226,7 +226,7 @@ class OrderController extends Controller
                         break;
                     case 'domain':
                         $domain = DomainPrice::findOrFail($item['item_id']);
-                        $price = $domain->selling_price;
+                        $price = $domain->priceNow();
                         break;
                     case 'service':
                         $service = ServicePlan::findOrFail($item['item_id']);

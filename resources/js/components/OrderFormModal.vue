@@ -29,6 +29,11 @@ interface DomainPrice {
     id: number;
     extension: string;
     selling_price: number;
+    promo_active?: boolean;
+    effective_selling_price?: number;
+    promo_savings?: number | null;
+    promo_days_left?: number | null;
+    promo_ends_at?: string | null;
 }
 
 interface ServicePlan {
@@ -387,11 +392,14 @@ const getPlansForType = (type: string) => {
                 };
             });
         case 'domain':
-            return props.domainPrices.map((domain) => ({
-                id: domain.id,
-                name: `${domain.extension} - ${formatPrice(domain.selling_price)}`,
-                price: domain.selling_price,
-            }));
+            return props.domainPrices.map((domain) => {
+                const price = domain.effective_selling_price ?? domain.selling_price;
+                return {
+                    id: domain.id,
+                    name: `${domain.extension} - ${formatPrice(price)}`,
+                    price,
+                };
+            });
         case 'service':
             return props.servicePlans.map((service) => ({
                 id: service.id,

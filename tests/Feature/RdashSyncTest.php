@@ -437,6 +437,208 @@ it('margin nominal juga menurunkan harga jual yang terlalu tinggi', function () 
     expect((float) $local->selling_price)->toBe(110000.0);
 });
 
+/*
+|--------------------------------------------------------------------------
+| Harga promo registrasi (promo_registration) dari RDASH
+|--------------------------------------------------------------------------
+| RDash hanya memberi promo untuk registrasi siklus 1 tahun — perpanjangan
+| dan transfer tetap harga normal. Promo disimpan terpisah dari harga normal
+| sehingga harga jual otomatis kembali normal begitu periode promo lewat.
+*/
+
+it('menyimpan harga promo registrasi dan memakai modal promo untuk harga jual', function () {
+    $local = DomainPrice::query()->create([
+        'extension' => '.com',
+        'base_cost' => 227550,
+        'renewal_cost' => 227550,
+        'selling_price' => 225000,
+        'renewal_price_with_tax' => 225000,
+        'is_active' => true,
+    ]);
+
+    rdashFakeApi([], [[
+        'id' => 1796,
+        'domain_extension' => ['id' => 5, 'extension' => '.com'],
+        'currency' => 'IDR',
+        'registration' => ['1' => 205000],
+        'renewal' => ['1' => 205000],
+        'transfer' => '205000.00',
+        'promo_registration' => [
+            'registration' => ['1' => '190000'],
+            'start_date' => '2026-03-31T18:00:00.000000Z',
+            'end_date' => '2026-09-30T16:59:00.000000Z',
+            'description' => '<ul><li>Harga promo hanya berlaku untuk registrasi siklus 1 tahun</li><li>Tidak berlaku untuk perpanjang dan transfer domain</li></ul>',
+        ],
+    ]]);
+
+    $this->artisan('rdash:sync-prices --apply --fix-selling --margin=10000 --keep=.com')->assertExitCode(0);
+
+    $local->refresh();
+
+    // Modal promo = 190.000 × 1,11 = 210.900 → + margin 10.000 = 220.900 → bulat ke atas 5.000 = 225.000
+    expect((float) $local->promo_price)->toBe(190000.0)
+        ->and((float) $local->promo_base_cost)->toBe(210900.0)
+        ->and((float) $local->promo_selling_price)->toBe(225000.0)
+        ->and((float) $local->selling_price)->toBe(225000.0)
+        ->and($local->promo_starts_at?->setTimezone('UTC')->toDateString())->toBe('2026-03-31')
+        ->and($local->promo_ends_at?->setTimezone('UTC')->toDateString())->toBe('2026-09-30')
+        ->and($local->promo_note)->toContain('registrasi siklus 1 tahun')
+        ->and($local->promo_note)->not->toContain('<li>');
+});
+
+it('mengabaikan promo yang bukan untuk siklus 1 tahun (mis. .id hanya promo 2 tahun)', function () {
+    $local = DomainPrice::query()->create([
+        'extension' => '.id',
+        'base_cost' => 233100,
+        'renewal_cost' => 238650,
+        'selling_price' => 245000,
+        'renewal_price_with_tax' => 250000,
+        'is_active' => true,
+    ]);
+
+    rdashFakeApi([], [[
+        'id' => 1802,
+        'domain_extension' => ['id' => 3, 'extension' => '.id'],
+        'currency' => 'IDR',
+        'registration' => ['1' => 210000, '2' => 420000],
+        'renewal' => ['1' => 215000],
+        'transfer' => '210000.00',
+        'promo_registration' => [
+            // Promo hanya berlaku untuk siklus 2 tahun → HARUS diabaikan untuk harga 1 tahun.
+            'registration' => ['1' => '', '2' => '300000'],
+            'start_date' => '2026-09-15T01:00:00.000000Z',
+            'end_date' => '2026-12-31T16:59:00.000000Z',
+            'description' => 'promo 2 tahun',
+        ],
+    ]]);
+
+    $this->artisan('rdash:sync-prices --apply --fix-selling --margin=10000')->assertExitCode(0);
+
+    $local->refresh();
+
+    expect($local->promo_selling_price)->toBeNull()
+        ->and($local->promo_price)->toBeNull()
+        ->and((float) $local->selling_price)->toBe(245000.0)
+        ->and($local->priceNow())->toBe(245000.0);
+});
+
+it('memperpanjang TIDAK memakai harga promo — perpanjangan tetap harga normal', function () {
+    $local = DomainPrice::query()->create([
+        'extension' => '.xyz',
+        'base_cost' => 277500,
+        'renewal_cost' => 277500,
+        'selling_price' => 290000,
+        'renewal_price_with_tax' => 290000,
+        'is_active' => true,
+    ]);
+
+    rdashFakeApi([], [[
+        'id' => 1800,
+        'domain_extension' => ['id' => 9, 'extension' => '.xyz'],
+        'currency' => 'IDR',
+        'registration' => ['1' => 250000],
+        'renewal' => ['1' => 250000],
+        'transfer' => '250000.00',
+        'promo_registration' => [
+            'registration' => ['1' => '38000'],
+            'start_date' => '2025-02-24T08:00:00.000000Z',
+            'end_date' => '2026-09-30T16:59:00.000000Z',
+            'description' => 'Harga promo hanya untuk registrasi 1 tahun',
+        ],
+    ]]);
+
+    $this->artisan('rdash:sync-prices --apply --fix-selling --margin=10000')->assertExitCode(0);
+
+    $local->refresh();
+
+    // Registrasi pakai modal promo (38.000 × 1,11 = 42.180 → +10.000 → 55.000),
+    // perpanjangan tetap dihitung dari modal normal (250.000 × 1,11 = 277.500 → +10.000 → 290.000).
+    expect((float) $local->promo_selling_price)->toBe(55000.0)
+        ->and((float) $local->renewal_price_with_tax)->toBe(290000.0)
+        ->and((float) $local->selling_price)->toBe(290000.0);
+});
+
+it('harga jual efektif mengikuti promo dan otomatis kembali normal di luar periode promo', function () {
+    $row = DomainPrice::query()->create([
+        'extension' => '.cloud',
+        'base_cost' => 482850,
+        'renewal_cost' => 482850,
+        'selling_price' => 495000,
+        'renewal_price_with_tax' => 495000,
+        'promo_price' => 39900,
+        'promo_base_cost' => 44289,
+        'promo_selling_price' => 55000,
+        'promo_starts_at' => now('UTC')->subDays(2),
+        'promo_ends_at' => now('UTC')->addDays(3),
+        'is_active' => true,
+    ]);
+
+    // Promo sedang berjalan → harga jual = harga promo, modal = modal promo.
+    expect($row->priceNow())->toBe(55000.0)
+        ->and($row->costNow())->toBe(44289.0)
+        ->and($row->promoIsActive())->toBeTrue()
+        ->and($row->promoDaysRemaining())->toBe(3)
+        ->and($row->promoCutAmount())->toBe(440000.0)
+        ->and($row->effective_selling_price)->toBe(55000.0)
+        ->and($row->promo_active)->toBeTrue();
+
+    // Promo berakhir → harga jual & modal otomatis kembali ke harga normal.
+    $row->promo_ends_at = now('UTC')->subDay();
+    $row->save();
+    $row->refresh();
+
+    expect($row->promoIsActive())->toBeFalse()
+        ->and($row->priceNow())->toBe(495000.0)
+        ->and($row->costNow())->toBe(482850.0)
+        ->and($row->promoCutAmount())->toBeNull();
+
+    // Promo berakhir tepat kemarin → tidak aktif tetapi ada data promo.
+    expect($row->promo_active)->toBeFalse()
+        ->and((float) $row->promo_selling_price)->toBe(55000.0);
+
+    // Belum mulai → juga memakai harga normal.
+    $row->promo_starts_at = now('UTC')->addDay();
+    $row->promo_ends_at = now('UTC')->addDays(5);
+    $row->save();
+
+    expect($row->promoIsActive())->toBeFalse()
+        ->and($row->priceNow())->toBe(495000.0);
+});
+
+it('opsi --no-promo tidak menyimpan data promo dari RDash', function () {
+    $local = DomainPrice::query()->create([
+        'extension' => '.my.id',
+        'base_cost' => 25000,
+        'renewal_cost' => 25000,
+        'selling_price' => 35000,
+        'renewal_price_with_tax' => 35000,
+        'is_active' => true,
+    ]);
+
+    rdashFakeApi([], [[
+        'id' => 71,
+        'domain_extension' => ['id' => 2, 'extension' => '.my.id'],
+        'currency' => 'IDR',
+        'registration' => ['1' => 22000],
+        'renewal' => ['1' => 22000],
+        'transfer' => '22000.00',
+        'promo_registration' => [
+            'registration' => ['1' => '9500'],
+            'start_date' => '2025-06-30T17:00:00.000000Z',
+            'end_date' => '2026-09-30T16:59:00.000000Z',
+            'description' => 'promo',
+        ],
+    ]]);
+
+    $this->artisan('rdash:sync-prices --apply --no-promo')->assertExitCode(0);
+
+    $local->refresh();
+
+    expect($local->promo_selling_price)->toBeNull()
+        ->and($local->promo_price)->toBeNull()
+        ->and($local->promo_ends_at)->toBeNull();
+});
+
 it('cek ketersediaan domain memakai Basic Auth dan hasil asli RDash', function () {
     rdashFakeApi([rdashDomainRow('websweetstudio.my.id')]);
 

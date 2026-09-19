@@ -6,6 +6,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowLeft, DollarSign, Globe, Settings } from 'lucide-vue-next';
+import { computed } from 'vue';
 
 interface DomainPrice {
     id: number;
@@ -17,6 +18,16 @@ interface DomainPrice {
     is_active: boolean;
     created_at: string;
     updated_at: string;
+    promo_active?: boolean;
+    effective_selling_price?: number;
+    promo_price?: number | null;
+    promo_base_cost?: number | null;
+    promo_selling_price?: number | null;
+    promo_savings?: number | null;
+    promo_days_left?: number | null;
+    promo_starts_at?: string | null;
+    promo_ends_at?: string | null;
+    promo_note?: string | null;
 }
 
 interface Props {
@@ -56,6 +67,26 @@ const formatDate = (date: string) => {
         minute: '2-digit',
     }).format(new Date(date));
 };
+
+/** Status promo registrasi dari RDash (null bila ekstensi ini tidak punya promo). */
+const promoStatus = computed(() => {
+    if (props.domainPrice.promo_selling_price === null || props.domainPrice.promo_selling_price === undefined) return null;
+    if (props.domainPrice.promo_active) return { label: 'AKTIF', variant: 'default' as const };
+
+    const startsAt = props.domainPrice.promo_starts_at ? new Date(props.domainPrice.promo_starts_at).getTime() : null;
+    if (startsAt !== null && startsAt > Date.now()) return { label: 'Akan Datang', variant: 'secondary' as const };
+
+    return { label: 'Berakhir', variant: 'secondary' as const };
+});
+
+/** Margin promo = harga jual promo - modal promo (null bila data tidak lengkap). */
+const promoMargin = computed(() => {
+    const selling = props.domainPrice.promo_selling_price;
+    const cost = props.domainPrice.promo_base_cost;
+    if (selling === null || selling === undefined || cost === null || cost === undefined) return null;
+
+    return Number(selling) - Number(cost);
+});
 </script>
 
 <template>
@@ -214,6 +245,69 @@ const formatDate = (date: string) => {
                             <div class="text-xl font-bold text-blue-600">{{ formatPrice(domainPrice.renewal_price_with_tax) }}</div>
                             <div class="mt-1 text-xs text-muted-foreground">Customer</div>
                         </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <!-- Promo Registrasi Card (RDash) -->
+            <Card v-if="promoStatus">
+                <CardHeader>
+                    <CardTitle class="flex items-center">
+                        <DollarSign class="mr-2 h-5 w-5" />
+                        Promo Registrasi (RDash)
+                        <Badge :variant="promoStatus.variant" class="ml-2">{{ promoStatus.label }}</Badge>
+                    </CardTitle>
+                    <CardDescription> Harga promo registrasi yang disinkronkan dari RDash (tidak berlaku untuk perpanjangan) </CardDescription>
+                </CardHeader>
+                <CardContent class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4 md:grid-cols-3">
+                        <div class="rounded-lg border p-4 text-center">
+                            <div class="mb-1 text-sm text-muted-foreground">Harga Promo RDash</div>
+                            <div class="text-xl font-bold text-blue-600">{{ formatPrice(domainPrice.promo_price ?? 0) }}</div>
+                            <div class="mt-1 text-xs text-muted-foreground">Excl. PPN</div>
+                        </div>
+                        <div class="rounded-lg border p-4 text-center">
+                            <div class="mb-1 text-sm text-muted-foreground">Modal Promo</div>
+                            <div class="text-xl font-bold text-red-600">{{ formatPrice(domainPrice.promo_base_cost ?? 0) }}</div>
+                            <div class="mt-1 text-xs text-muted-foreground">Incl. PPN</div>
+                        </div>
+                        <div class="rounded-lg border p-4 text-center">
+                            <div class="mb-1 text-sm text-muted-foreground">Harga Jual Promo</div>
+                            <div class="text-xl font-bold text-green-600">{{ formatPrice(domainPrice.promo_selling_price ?? 0) }}</div>
+                            <div class="mt-1 text-xs text-muted-foreground">Ke klien</div>
+                        </div>
+                        <div class="rounded-lg border p-4 text-center">
+                            <div class="mb-1 text-sm text-muted-foreground">Penghematan Klien</div>
+                            <div class="text-xl font-bold text-emerald-600">{{ formatPrice(domainPrice.promo_savings ?? 0) }}</div>
+                            <div class="mt-1 text-xs text-muted-foreground">vs harga normal</div>
+                        </div>
+                        <div class="rounded-lg border p-4 text-center">
+                            <div class="mb-1 text-sm text-muted-foreground">Margin Promo</div>
+                            <div class="text-xl font-bold" :class="promoMargin !== null && promoMargin < 0 ? 'text-red-600' : 'text-emerald-600'">
+                                {{ formatPrice(promoMargin ?? 0) }}
+                            </div>
+                            <div class="mt-1 text-xs text-muted-foreground">Jual - modal</div>
+                        </div>
+                        <div class="rounded-lg border p-4 text-center">
+                            <div class="mb-1 text-sm text-muted-foreground">Sisa Hari</div>
+                            <div class="text-xl font-bold">{{ domainPrice.promo_days_left ?? '—' }}</div>
+                            <div class="mt-1 text-xs text-muted-foreground">hari</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                        <div class="flex items-center justify-between rounded-lg bg-muted p-3">
+                            <span class="text-muted-foreground">Mulai</span>
+                            <span>{{ domainPrice.promo_starts_at ? formatDate(domainPrice.promo_starts_at) : '—' }}</span>
+                        </div>
+                        <div class="flex items-center justify-between rounded-lg bg-muted p-3">
+                            <span class="text-muted-foreground">Berakhir</span>
+                            <span>{{ domainPrice.promo_ends_at ? formatDate(domainPrice.promo_ends_at) : '—' }}</span>
+                        </div>
+                    </div>
+
+                    <div v-if="domainPrice.promo_note" class="whitespace-pre-line rounded-lg bg-muted p-3 text-xs text-muted-foreground">
+                        {{ domainPrice.promo_note }}
                     </div>
                 </CardContent>
             </Card>
