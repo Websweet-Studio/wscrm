@@ -32,6 +32,7 @@ interface Invoice {
     id: number;
     invoice_number: string;
     amount: number;
+    discount?: number;
     status: string;
     due_date: string;
     paid_at?: string;
@@ -246,7 +247,7 @@ const deleteBank = () => {
                                         <TableRow>
                                             <TableHead>Invoice</TableHead>
                                             <TableHead>Customer</TableHead>
-                                            <TableHead>Amount</TableHead>
+                                            <TableHead>Tagihan</TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead>Due Date</TableHead>
                                         </TableRow>
@@ -268,7 +269,7 @@ const deleteBank = () => {
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <span class="font-medium">{{ formatPrice(invoice.amount) }}</span>
+                                                <span class="font-medium">{{ formatPrice(Number(invoice.amount) - Number(invoice.discount || 0)) }}</span>
                                             </TableCell>
                                             <TableCell>
                                                 <Badge :class="getInvoiceStatusClass(invoice.status)">

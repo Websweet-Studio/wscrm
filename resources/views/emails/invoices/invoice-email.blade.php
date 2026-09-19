@@ -99,8 +99,12 @@
                     {{-- Items Table --}}
                     @if($orderItems->count() > 0)
                         @php
-                            $subtotal = $orderItems->sum(fn($item) => $item->price * $item->quantity);
-                            $discountAmount = $invoice->discount > 0 ? $invoice->discount : ($invoice->order?->discount_amount ?? 0);
+                            // Sumber tunggal nilai tagihan = baris invoice (sama dengan PDF, halaman admin & halaman pelanggan).
+                            // Jangan pakai diskon dari order — dulu di sini potongannya bisa dobel/beda dari invoice.
+                            $itemsSum = $orderItems->sum(fn($item) => $item->price * $item->quantity);
+                            $subtotal = (float) $invoice->amount;
+                            $discountAmount = (float) $invoice->discount;
+                            $adjustment = round($subtotal - $itemsSum, 2);
                             $finalTotal = $subtotal - $discountAmount;
                             if ($finalTotal < 0) $finalTotal = 0;
                         @endphp
@@ -136,6 +140,14 @@
                                     <td style="padding: 10px 10px; font-size: 13px; color: #000000; border-bottom: 1px solid #dddddd; text-align: right;">Rp {{ number_format($item->price * $item->quantity, 0, ',', '.') }}</td>
                                 </tr>
                                 @endforeach
+                                @if(abs($adjustment) > 0.004)
+                                <tr>
+                                    <td style="padding: 10px 10px; font-size: 13px; color: #000000; border-bottom: 1px solid #dddddd;">Penyesuaian harga</td>
+                                    <td style="padding: 10px 10px; font-size: 13px; color: #000000; border-bottom: 1px solid #dddddd; text-align: center;">1</td>
+                                    <td style="padding: 10px 10px; font-size: 13px; color: #000000; border-bottom: 1px solid #dddddd; text-align: right;">&mdash;</td>
+                                    <td style="padding: 10px 10px; font-size: 13px; color: #000000; border-bottom: 1px solid #dddddd; text-align: right;">Rp {{ number_format($adjustment, 0, ',', '.') }}</td>
+                                </tr>
+                                @endif
                             </table>
 
                             {{-- Summary --}}
@@ -159,7 +171,8 @@
                     </tr>
                     @else
                         @php
-                            $discountAmount = $invoice->discount > 0 ? $invoice->discount : ($invoice->order?->discount_amount ?? 0);
+                            // Sama seperti cabang ber-item: nilai tagihan murni dari baris invoice.
+                            $discountAmount = (float) $invoice->discount;
                             $finalTotal = $invoice->amount - $discountAmount;
                             if ($finalTotal < 0) $finalTotal = 0;
                         @endphp

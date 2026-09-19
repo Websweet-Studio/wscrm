@@ -221,6 +221,12 @@
         </thead>
         <tbody>
             @if($invoice->order && $invoice->order->orderItems)
+                @php
+                    // Rincian di bawah = snapshot order; nilainya bisa beda dari nilai tagihan invoice.
+                    // Baris penyesuaian dipasang supaya kolom rincian selalu menjumlah ke Subtotal.
+                    $pdfItemsSum = $invoice->order->orderItems->sum(fn($item) => $item->price * ($item->quantity ?? 1));
+                    $pdfAdjustment = round((float) $invoice->amount - $pdfItemsSum, 2);
+                @endphp
                 @foreach($invoice->order->orderItems as $item)
                     <tr>
                         <td>
@@ -251,6 +257,14 @@
                         <td class="text-right">Rp {{ number_format($item->price, 0, ',', '.') }}</td>
                     </tr>
                 @endforeach
+                @if(abs($pdfAdjustment) > 0.004)
+                    <tr>
+                        <td>Penyesuaian</td>
+                        <td>Penyesuaian harga</td>
+                        <td>1</td>
+                        <td class="text-right">Rp {{ number_format($pdfAdjustment, 0, ',', '.') }}</td>
+                    </tr>
+                @endif
             @else
                 <tr>
                     <td>{{ $invoice->invoice_type === 'setup' ? 'Setup' : 'Perpanjangan' }}</td>
