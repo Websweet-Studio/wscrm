@@ -54,6 +54,64 @@
             }
         </style>
 
+        {{-- Tipografi konten artikel dari editor (v-html).
+             Aturan .prose di komponen Vue (Blog/Show.vue, Admin/Blog/Show.vue) memakai
+             <style scoped>, sehingga TIDAK berlaku untuk elemen hasil v-html karena
+             elemen tersebut tidak punya atribut data-v-*. Tipografi efektif didefinisikan
+             di sini supaya berlaku di pratinjau admin maupun halaman publik.
+             Ruang lingkup dibatasi ke wadah .prose-lg (blog publik) & .prose-gray (admin). --}}
+        <style>
+            .prose-lg h1, .prose-gray h1,
+            .prose-lg h2, .prose-gray h2,
+            .prose-lg h3, .prose-gray h3 {
+                font-weight: 700;
+                line-height: 1.3;
+                margin: 1.75rem 0 0.75rem;
+            }
+            .prose-lg h1, .prose-gray h1 { font-size: 1.875rem; }
+            .prose-lg h2, .prose-gray h2 { font-size: 1.5rem; }
+            .prose-lg h3, .prose-gray h3 { font-size: 1.25rem; }
+            .prose-lg p, .prose-gray p { margin: 0 0 1rem; line-height: 1.75; }
+            .prose-lg ul, .prose-gray ul { list-style: disc; margin: 0 0 1.25rem; padding-left: 1.5rem; }
+            .prose-lg ol, .prose-gray ol { list-style: decimal; margin: 0 0 1.25rem; padding-left: 1.5rem; }
+            .prose-lg li, .prose-gray li { margin-bottom: 0.5rem; line-height: 1.7; }
+            .prose-lg li::marker, .prose-gray li::marker { color: var(--primary, #c96442); }
+            .prose-lg strong, .prose-gray strong { font-weight: 700; }
+            .prose-lg a, .prose-gray a {
+                color: var(--primary, #c96442);
+                font-weight: 500;
+                text-decoration: underline;
+                text-underline-offset: 2px;
+            }
+            .prose-lg a:hover, .prose-gray a:hover { opacity: 0.85; }
+            .prose-lg blockquote, .prose-gray blockquote {
+                border-left: 4px solid var(--primary, #c96442);
+                margin: 1.5rem 0;
+                padding-left: 1rem;
+                font-style: italic;
+                color: #4b5563;
+            }
+            .prose-lg code, .prose-gray code {
+                background: #f3f4f6;
+                border-radius: 0.25rem;
+                padding: 0.125rem 0.35rem;
+                font-size: 0.875em;
+            }
+            .prose-lg pre, .prose-gray pre {
+                background: #1f2937;
+                color: #f9fafb;
+                border-radius: 0.5rem;
+                margin: 0 0 1.25rem;
+                padding: 1rem;
+                overflow-x: auto;
+            }
+            .prose-lg pre code, .prose-gray pre code { background: transparent; color: inherit; padding: 0; }
+            .prose-lg img, .prose-gray img { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1.5rem 0; }
+            .prose-lg hr, .prose-gray hr { border: 0; border-top: 1px solid #e5e7eb; margin: 2rem 0; }
+            .dark .prose-lg blockquote, .dark .prose-gray blockquote { border-color: #6b7280; color: #d1d5db; }
+            .dark .prose-lg code, .dark .prose-gray code { background: #374151; color: #f3f4f6; }
+        </style>
+
         <script>
             (function() {
                 var vars = @json(\App\Models\BrandingSetting::getCssVariableMap());
