@@ -41,6 +41,14 @@ const formatPrice = (price: number) => {
     }).format(price);
 };
 
+/** Ekstensi selalu ditampilkan dengan satu titik di depan (.com), apa pun format tersimpannya. */
+const extLabel = (extension?: string) => {
+    const ext = (extension || '').trim();
+    if (ext === '') return '';
+
+    return ext.startsWith('.') ? ext : `.${ext}`;
+};
+
 const filteredDomainPrices = computed(() => {
     let domains = props.domainPrices.filter(d => d.is_active);
     if (search.value) {
@@ -183,7 +191,7 @@ const getWhatsappLink = (text: string) => {
                                 >
                                     <td class="px-4 py-4 text-sm" style="color: #62625b;">{{ index + 1 }}</td>
                                     <td class="px-4 py-4">
-                                        <span class="text-base font-semibold" style="color: #000000;">.{{ domain.extension }}</span>
+                                        <span class="text-base font-semibold" style="color: #000000;">{{ extLabel(domain.extension) }}</span>
                                     </td>
                                     <td class="px-4 py-4">
                                         <span
@@ -209,7 +217,7 @@ const getWhatsappLink = (text: string) => {
                                             style="background-color: var(--primary); color: #ffffff; border-radius: 16px;"
                                         >
                                             <a
-                                                :href="getWhatsappLink(`Halo, saya ingin beli Domain .${domain.extension}.`)"
+                                                :href="getWhatsappLink(`Halo, saya ingin beli Domain ${extLabel(domain.extension)}.`)"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >

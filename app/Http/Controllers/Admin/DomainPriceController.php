@@ -52,6 +52,11 @@ class DomainPriceController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $extension = $request->input('extension');
+        if (is_string($extension) && trim($extension) !== '') {
+            $request->merge(['extension' => $this->normalizeExtension($extension)]);
+        }
+
         $validated = $request->validate([
             'extension' => 'required|string|unique:domain_prices,extension',
             'base_cost' => 'required|numeric|min:0',
@@ -65,6 +70,12 @@ class DomainPriceController extends Controller
 
         return redirect()->route('admin.domain-prices.index')
             ->with('success', 'Harga domain berhasil dibuat.');
+    }
+
+    /** Ekstensi selalu disimpan dengan satu titik di depan (.com) supaya tidak ada baris kembar. */
+    private function normalizeExtension(mixed $extension): string
+    {
+        return '.'.ltrim(trim((string) $extension), '.');
     }
 
     public function show(DomainPrice $domainPrice): Response
@@ -83,6 +94,11 @@ class DomainPriceController extends Controller
 
     public function update(Request $request, DomainPrice $domainPrice): RedirectResponse
     {
+        $extension = $request->input('extension');
+        if (is_string($extension) && trim($extension) !== '') {
+            $request->merge(['extension' => $this->normalizeExtension($extension)]);
+        }
+
         $validated = $request->validate([
             'extension' => 'required|string|unique:domain_prices,extension,'.$domainPrice->id,
             'base_cost' => 'required|numeric|min:0',

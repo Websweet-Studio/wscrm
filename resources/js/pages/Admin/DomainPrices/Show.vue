@@ -25,10 +25,18 @@ interface Props {
 
 const props = defineProps<Props>();
 
+/** Ekstensi selalu ditampilkan dengan satu titik di depan (.com), apa pun format tersimpannya. */
+const extLabel = (extension?: string) => {
+    const ext = (extension || '').trim();
+    if (ext === '') return '';
+
+    return ext.startsWith('.') ? ext : `.${ext}`;
+};
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Domain Prices', href: '/admin/domain-prices' },
-    { title: `.${props.domainPrice.extension}`, href: `/admin/domain-prices/${props.domainPrice.id}` },
+    { title: extLabel(props.domainPrice.extension), href: `/admin/domain-prices/${props.domainPrice.id}` },
 ];
 
 const formatPrice = (price: number) => {
@@ -51,7 +59,7 @@ const formatDate = (date: string) => {
 </script>
 
 <template>
-    <Head :title="`Domain Price - .${domainPrice.extension}`" />
+    <Head :title="`Domain Price - ${extLabel(domainPrice.extension)}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6">
@@ -66,7 +74,7 @@ const formatDate = (date: string) => {
                     <div>
                         <h1 class="flex items-center text-3xl font-bold tracking-tight">
                             <Globe class="mr-3 h-8 w-8 text-blue-500" />
-                            .{{ domainPrice.extension }}
+                            {{ extLabel(domainPrice.extension) }}
                         </h1>
                         <p class="text-muted-foreground">Domain extension pricing details</p>
                     </div>
@@ -92,7 +100,7 @@ const formatDate = (date: string) => {
                             <DollarSign class="mr-2 h-5 w-5" />
                             Pricing Information
                         </CardTitle>
-                        <CardDescription> Current pricing structure for .{{ domainPrice.extension }} domain </CardDescription>
+                        <CardDescription> Current pricing structure for {{ extLabel(domainPrice.extension) }} domain </CardDescription>
                     </CardHeader>
                     <CardContent class="space-y-4">
                         <div class="grid grid-cols-1 gap-4">
@@ -149,7 +157,7 @@ const formatDate = (date: string) => {
                         <div class="space-y-3">
                             <div class="flex items-center justify-between">
                                 <span class="font-medium">Extension:</span>
-                                <span class="font-mono text-lg">.{{ domainPrice.extension }}</span>
+                                <span class="font-mono text-lg">{{ extLabel(domainPrice.extension) }}</span>
                             </div>
 
                             <div class="flex items-center justify-between">
@@ -182,7 +190,7 @@ const formatDate = (date: string) => {
             <Card>
                 <CardHeader>
                     <CardTitle>Price Comparison</CardTitle>
-                    <CardDescription> Compare different pricing options for .{{ domainPrice.extension }} </CardDescription>
+                    <CardDescription> Compare different pricing options for {{ extLabel(domainPrice.extension) }} </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div class="grid grid-cols-4 gap-4">

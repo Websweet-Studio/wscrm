@@ -143,6 +143,13 @@ const formatPrice = (price: number) => {
     }).format(price);
 };
 
+const extLabel = (extension?: string) => {
+    const ext = (extension || '').trim();
+    if (ext === '') return '';
+
+    return ext.startsWith('.') ? ext : `.${ext}`;
+};
+
 const marginOf = (domain: DomainPrice) => Number(domain.selling_price) - Number(domain.base_cost);
 const renewalMarginOf = (domain: DomainPrice) => Number(domain.renewal_price_with_tax) - Number(domain.renewal_cost);
 
@@ -371,7 +378,7 @@ const confirmDelete = () => {
                                             @change="toggleDomainPriceSelection(domain.id)"
                                         />
                                     </TableCell>
-                                    <TableCell class="font-medium">.{{ domain.extension }}</TableCell>
+                                    <TableCell class="font-medium">{{ extLabel(domain.extension) }}</TableCell>
                                     <TableCell>{{ formatPrice(domain.base_cost) }}</TableCell>
                                     <TableCell>{{ formatPrice(domain.renewal_cost) }}</TableCell>
                                     <TableCell>{{ formatPrice(domain.selling_price) }}</TableCell>
@@ -677,7 +684,7 @@ const confirmDelete = () => {
                                 <h3 class="text-sm font-medium text-red-800 dark:text-red-200">Peringatan: Tindakan ini tidak dapat dibatalkan</h3>
                                 <div class="mt-2 text-sm text-red-700 dark:text-red-300">
                                     <p>
-                                        Anda akan menghapus secara permanen harga domain <strong>.{{ domainToDelete?.extension }}</strong
+                                        Anda akan menghapus secara permanen harga domain <strong>{{ extLabel(domainToDelete?.extension) }}</strong
                                         >.
                                     </p>
                                     <div class="mt-3 space-y-1">
@@ -695,7 +702,7 @@ const confirmDelete = () => {
 
                     <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
                         <p class="text-sm text-gray-600 dark:text-gray-400">
-                            <strong>Ekstensi:</strong> .{{ domainToDelete?.extension }}<br />
+                            <strong>Ekstensi:</strong> {{ extLabel(domainToDelete?.extension) }}<br />
                             <strong>Biaya Dasar:</strong> {{ domainToDelete ? formatPrice(domainToDelete.base_cost) : '' }}<br />
                             <strong>Harga Jual:</strong> {{ domainToDelete ? formatPrice(domainToDelete.selling_price) : '' }}<br />
                             <strong>Status:</strong> {{ domainToDelete?.is_active ? 'Aktif' : 'Nonaktif' }}
