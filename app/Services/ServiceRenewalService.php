@@ -18,6 +18,11 @@ use Illuminate\Support\Facades\Log;
  * Sebelumnya perpanjangan dilakukan manual satu per satu (order, tiap item, dan
  * invoice harus disamakan sendiri) sehingga sering tidak sinkron — mis. invoice
  * renewal sudah lunas tapi layanan tetap `expired`.
+ *
+ * CATATAN PENTING: perpanjangan di WSCRM SELALU manual. Tidak ada perpanjangan
+ * otomatis saat invoice ditandai lunas (pembayaran pun manual: transfer lalu
+ * diverifikasi admin). Peringatan "invoice lunas tapi layanan belum diperpanjang"
+ * ada di halaman detail invoice admin — lihat Invoice::serviceRenewalPending().
  */
 class ServiceRenewalService
 {
@@ -70,9 +75,9 @@ class ServiceRenewalService
         $orderDiscount = (float) ($order->discount_amount ?? 0);
         $netBeforeLoyalty = max(0, $subtotal - $orderDiscount);
 
-        $loyalty = Carbon::parse($order->created_at)->diffInMonths(Carbon::now()) >= 12
-            ? $netBeforeLoyalty * 0.05
-            : 0.0;
+        // Perhitungan diskon loyalitas ada di model Order (satu tempat, tidak
+        // bergantung pada tanda diffInMonths() yang berbeda antar versi Carbon).
+        $loyalty = $order->loyaltyDiscount($netBeforeLoyalty);
 
         return [
             'subtotal' => $subtotal,
@@ -120,6 +125,9 @@ class ServiceRenewalService
             'discount' => $discount,
             'issue_date' => Carbon::now()->toDateString(),
             'due_date' => $dueDate->toDateString(),
+            // Periode yang ditagih = tanggal jatuh tempo layanan saat invoice dibuat.
+            // Dipakai untuk mencegah invoice ganda untuk periode yang sama.
+            'period_end' => $order->expires_at ? Carbon::parse($order->expires_at)->toDateString() : null,
             'status' => 'pending',
             'billing_cycle' => $order->billing_cycle,
             'notes' => $notes,
@@ -129,12 +137,11 @@ class ServiceRenewalService
     /**
      * Perpanjang layanan + (opsional) catat pembayaran.
      *
-     * @param  array{years?:int, extend?:bool, mark_paid?:bool, paid_at?:string, create_invoice?:bool, amount?:float, no_discount?:bool, activate_items?:bool, dry_run?:bool}  $options
+     * @param  array{months?:int, years?:int, extend?:bool, mark_paid?:bool, paid_at?:string, create_invoice?:bool, amount?:float, no_discount?:bool, activate_items?:bool, dry_run?:bool}  $options
      * @return array<string, mixed>
      */
     public function renew(Order $order, array $options = []): array
     {
-        $years = max(1, (int) ($options['years'] ?? 1));
         $extend = (bool) ($options['extend'] ?? true);
         $markPaid = (bool) ($options['mark_paid'] ?? false);
         $createInvoice = (bool) ($options['create_invoice'] ?? false);
@@ -145,10 +152,28 @@ class ServiceRenewalService
         $amountOverride = ($amountOption !== null && $amountOption !== '') ? (float) $amountOption : null;
         $paidAt = Carbon::parse($options['paid_at'] ?? Carbon::now()->toDateTimeString());
 
+        // Panjang perpanjangan mengikuti SIKLUS TAGIHAN order (bulanan → 1 bulan,
+        // tahunan → 12 bulan). `--months`/`--years` tetap bisa menimpanya.
+        $monthsOption = $options['months'] ?? null;
+        $yearsOption = $options['years'] ?? null;
+
+        if ($monthsOption !== null && $monthsOption !== '') {
+            $months = max(0, (int) $monthsOption);
+        } elseif ($yearsOption !== null && $yearsOption !== '') {
+            $months = max(0, (int) $yearsOption) * 12;
+        } else {
+            $months = $order->billingCycleMonths();
+        }
+
+        if ($extend && $months <= 0) {
+            $months = 12;
+        }
+
         $oldExpiry = $order->expires_at ? Carbon::parse($order->expires_at)->toDateString() : null;
-        $from = $order->expires_at ? Carbon::parse($order->expires_at) : Carbon::now();
-        // --no-extend: tanggal tetap; hanya invoice/pembayaran/kerapian item yang diurus.
-        $to = $extend ? $from->copy()->addYears($years) : $from->copy();
+        // Hitung dari tanggal jatuh tempo yang ada; kalau sudah lewat, mulai dari
+        // hari ini supaya perpanjangan tidak "termakan" masa yang sudah hilang.
+        $from = $order->renewalBaseDate();
+        $to = $extend ? $from->copy()->addMonths($months) : $from->copy();
         $target = $extend ? $to->toDateString() : $oldExpiry;
 
         $items = $order->orderItems()->get();
@@ -173,7 +198,8 @@ class ServiceRenewalService
             'status' => $order->status,
             'old_expiry' => $oldExpiry,
             'new_expiry' => $target,
-            'years' => $years,
+            'months' => $months,
+            'years' => $months / 12,
             'extended' => $extend,
             'items_total' => $items->count(),
             'items_updated' => 0,
@@ -206,7 +232,11 @@ class ServiceRenewalService
 
         DB::transaction(function () use ($order, $target, $extend, $activateItems, $createInvoice, $amountOverride, $noDiscount, $markPaid, $paidAt, &$invoice, &$result) {
             if ($extend) {
-                $order->update(['expires_at' => $target, 'updated_at' => Carbon::now()]);
+                $order->update([
+                    'expires_at' => $target,
+                    'next_billing_date' => $target,
+                    'updated_at' => Carbon::now(),
+                ]);
             }
 
             // Selaraskan item ke tanggal jatuh tempo order (termasuk saat --no-extend).
@@ -234,7 +264,13 @@ class ServiceRenewalService
             }
 
             if ($invoice && $markPaid && $invoice->status !== 'paid') {
-                $invoice->update(['status' => 'paid', 'paid_at' => $paidAt->toDateTimeString()]);
+                // Perpanjangan manual: tidak ada observer yang ikut memperpanjang,
+                // jadi pembayaran + periode yang ditagih dicatat sekaligus.
+                $invoice->update([
+                    'status' => 'paid',
+                    'paid_at' => $paidAt->toDateTimeString(),
+                    'period_end' => ($extend && $target) ? $target : $invoice->period_end,
+                ]);
             }
 
             if ($invoice) {
@@ -250,7 +286,7 @@ class ServiceRenewalService
             'domain' => $order->domain_name,
             'from' => $result['old_expiry'],
             'to' => $result['new_expiry'],
-            'years' => $years,
+            'months' => $months,
             'items_updated' => $result['items_updated'],
             'invoice' => $result['invoice_number'],
             'invoice_status' => $result['invoice_status'],

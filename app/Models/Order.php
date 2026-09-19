@@ -147,6 +147,92 @@ class Order extends Model
         return $this->billing_cycle !== 'onetime';
     }
 
+    /**
+     * Jumlah bulan per siklus tagihan. Dipakai untuk perpanjangan:
+     * masa aktif bertambah sesuai siklus yang ditagih (bukan selalu 12 bulan).
+     */
+    public const BILLING_CYCLE_MONTHS = [
+        'monthly' => 1,
+        'quarterly' => 3,
+        'semi_annually' => 6,
+        'semi_annual' => 6,
+        'annual' => 12,
+        'annually' => 12,
+        'yearly' => 12,
+    ];
+
+    /**
+     * Diskon loyalitas untuk layanan yang sudah aktif >= 12 bulan.
+     *
+     * Dibiarkan 0.0 (nonaktif) sampai keputusan harga dari pemilik: mengaktifkannya
+     * menurunkan tagihan perpanjangan semua klien lama. Ubah ke 0.05 untuk menyalakan.
+     */
+    public const LOYALTY_DISCOUNT_RATE = 0.0;
+
+    public const LOYALTY_DISCOUNT_MIN_MONTHS = 12;
+
+    public function billingCycleMonths(?string $cycle = null): int
+    {
+        $cycle = $cycle ?? $this->billing_cycle;
+
+        return self::BILLING_CYCLE_MONTHS[$cycle ?? ''] ?? 0;
+    }
+
+    /**
+     * Umur layanan dalam bulan (selalu positif — Carbon 3 diffInMonths() bertanda).
+     */
+    public function serviceAgeMonths(): int
+    {
+        if (! $this->created_at) {
+            return 0;
+        }
+
+        return (int) abs(Carbon::parse($this->created_at)->diffInMonths(Carbon::now()));
+    }
+
+    /**
+     * Nilai diskon loyalitas dari sebuah basis net (0 bila fitur nonaktif).
+     */
+    public function loyaltyDiscount(float $netBase): float
+    {
+        $rate = (float) self::LOYALTY_DISCOUNT_RATE;
+
+        if ($rate <= 0 || $this->serviceAgeMonths() < self::LOYALTY_DISCOUNT_MIN_MONTHS) {
+            return 0.0;
+        }
+
+        return round($netBase * $rate, 2);
+    }
+
+    /**
+     * Titik awal perpanjangan: jatuh tempo berjalan bila masih di depan,
+     * kalau sudah lewat pakai hari ini (masa aktif tidak boleh menyusut).
+     */
+    public function renewalBaseDate(): Carbon
+    {
+        $now = Carbon::now()->startOfDay();
+
+        if ($this->expires_at && $this->expires_at->copy()->startOfDay()->greaterThan($now)) {
+            return $this->expires_at->copy()->startOfDay();
+        }
+
+        return $now;
+    }
+
+    /**
+     * Tanggal jatuh tempo berikutnya menurut siklus tagihan.
+     */
+    public function nextExpiryFor(?int $months = null): ?Carbon
+    {
+        $months = $months ?? $this->billingCycleMonths();
+
+        if ($months <= 0) {
+            return null;
+        }
+
+        return $this->renewalBaseDate()->copy()->addMonths($months);
+    }
+
     // Upgrade/Downgrade helpers
     public function hasPendingChange(): bool
     {

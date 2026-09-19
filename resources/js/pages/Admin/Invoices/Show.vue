@@ -6,7 +6,8 @@ import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { Calendar, DollarSign, Download, FileText, Globe, Server, User } from 'lucide-vue-next';
+import { AlertTriangle, Calendar, DollarSign, Download, FileText, Globe, Server, User } from 'lucide-vue-next';
+import { computed } from 'vue';
 
 interface Customer {
     id: number;
@@ -30,6 +31,7 @@ interface Order {
 
 interface Invoice {
     id: number;
+    order_id?: number;
     invoice_number: string;
     invoice_type: 'setup' | 'renewal';
     amount: number;
@@ -41,6 +43,8 @@ interface Invoice {
     payment_method?: string;
     paid_at?: string;
     notes?: string;
+    period_end?: string;
+    service_renewal_pending?: boolean;
     created_at: string;
     customer: Customer;
     service?: Service;
@@ -52,6 +56,15 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+// `amount` = subtotal bruto, `discount` = potongan → yang ditagih adalah selisihnya.
+const netAmount = computed(() => Math.max(0, Number(props.invoice.amount) - Number(props.invoice.discount ?? 0)));
+
+const renewalCommand = computed(() => {
+    const target = props.invoice.order?.domain_name ?? (props.invoice.order_id ? String(props.invoice.order_id) : '<domain/order-id>');
+
+    return `php8.3 artisan service:renew ${target}`;
+});
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -139,6 +152,29 @@ const getTypeColor = (type: string) => {
                 </div>
             </div>
 
+            <!-- Peringatan: pembayaran sudah masuk tapi masa aktif layanan belum digeser.
+                 Perpanjangan di WSCRM memang manual (tidak ada perpanjangan otomatis). -->
+            <div
+                v-if="invoice.service_renewal_pending"
+                class="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-200"
+            >
+                <div class="flex items-start gap-2">
+                    <AlertTriangle class="mt-0.5 h-4 w-4 shrink-0" />
+                    <div class="space-y-1">
+                        <div class="font-medium">Layanan belum diperpanjang</div>
+                        <p>
+                            Invoice ini sudah lunas, tetapi tanggal jatuh tempo layanan belum digeser. Perpanjangan bersifat manual — jalankan:
+                        </p>
+                        <code class="mt-1 block rounded bg-amber-100 px-2 py-1 font-mono text-xs text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
+                            {{ renewalCommand }}
+                        </code>
+                        <p v-if="invoice.period_end" class="text-xs">
+                            Invoice menagih periode sampai {{ formatDate(invoice.period_end) }} — masa aktif layanan harus minimal sampai tanggal itu.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid gap-6 md:grid-cols-3">
                 <!-- Invoice Overview -->
                 <div class="md:col-span-2">
@@ -187,26 +223,29 @@ const getTypeColor = (type: string) => {
                                 <div v-if="invoice.discount && invoice.discount > 0" class="space-y-2">
                                     <div class="flex justify-between text-sm">
                                         <span>Subtotal:</span>
-                                        <span>{{ formatPrice(Number(invoice.amount) + Number(invoice.discount)) }}</span>
+                                        <span>{{ formatPrice(Number(invoice.amount)) }}</span>
                                     </div>
                                     <div class="flex justify-between text-sm text-green-600">
                                         <span>Diskon:</span>
-                                        <span>-{{ formatPrice(invoice.discount) }}</span>
+                                        <span>-{{ formatPrice(Number(invoice.discount)) }}</span>
                                     </div>
                                     <Separator />
                                     <div class="flex justify-between text-lg font-semibold">
                                         <span>Total:</span>
-                                        <span>{{ formatPrice(invoice.amount) }}</span>
+                                        <span>{{ formatPrice(netAmount) }}</span>
                                     </div>
                                 </div>
                                 <div v-else class="space-y-2">
                                     <div class="flex justify-between text-lg font-semibold">
                                         <span>Total:</span>
-                                        <span>{{ formatPrice(invoice.amount) }}</span>
+                                        <span>{{ formatPrice(netAmount) }}</span>
                                     </div>
                                 </div>
-                                <div class="mt-2 text-3xl font-bold">{{ formatPrice(invoice.amount) }}</div>
+                                <div class="mt-2 text-3xl font-bold">{{ formatPrice(netAmount) }}</div>
                                 <div class="mt-1 text-sm text-muted-foreground">Siklus Tagihan: {{ invoice.billing_cycle.replace('_', ' ') }}</div>
+                                <div v-if="invoice.period_end" class="text-sm text-muted-foreground">
+                                    Periode layanan ditagih sampai: {{ formatDate(invoice.period_end) }}
+                                </div>
                             </div>
 
                             <Separator v-if="invoice.payment_method || invoice.paid_at" />

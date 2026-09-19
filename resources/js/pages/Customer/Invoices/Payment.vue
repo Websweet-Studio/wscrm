@@ -92,10 +92,18 @@ const isOverdue = computed(() => {
     return new Date(props.invoice.due_date) < new Date();
 });
 
-const totalWithFee = computed(() => {
-    const baseAmount = parseFloat(props.invoice.amount);
-    return baseAmount;
+// Nilai yang harus dibayar = amount (bruto) - discount. `final_amount` dikirim backend.
+const discountAmount = computed(() => Number(props.invoice?.discount ?? 0));
+
+const netAmount = computed(() => {
+    const explicit = Number(props.invoice?.final_amount);
+    if (Number.isFinite(explicit) && explicit > 0) return explicit;
+
+    const gross = Number(props.invoice?.amount ?? 0);
+    return Math.max(0, gross - discountAmount.value);
 });
+
+const totalWithFee = computed(() => netAmount.value);
 
 const copyValue = async (value: string) => {
     try {
@@ -186,6 +194,10 @@ if (props.invoice.payment_account_id) {
                                 <div class="flex items-center justify-between text-sm">
                                     <span class="text-muted-foreground">Subtotal</span>
                                     <span class="font-medium">{{ formatPrice(invoice.amount) }}</span>
+                                </div>
+                                <div v-if="discountAmount > 0" class="mt-1 flex items-center justify-between text-sm">
+                                    <span class="text-muted-foreground">Potongan</span>
+                                    <span class="font-medium text-emerald-700 dark:text-green-400">-{{ formatPrice(discountAmount) }}</span>
                                 </div>
                                 <Separator class="my-2" />
                                 <div class="flex items-center justify-between">
@@ -415,6 +427,10 @@ if (props.invoice.payment_account_id) {
                             <div class="flex items-center justify-between text-sm">
                                 <span class="text-muted-foreground">Subtotal</span>
                                 <span class="font-medium">{{ formatPrice(invoice.amount) }}</span>
+                            </div>
+                            <div v-if="discountAmount > 0" class="flex items-center justify-between text-sm">
+                                <span class="text-muted-foreground">Potongan</span>
+                                <span class="font-medium text-emerald-700 dark:text-green-400">-{{ formatPrice(discountAmount) }}</span>
                             </div>
                             <div class="flex items-center justify-between text-sm">
                                 <span class="text-muted-foreground">Metode</span>

@@ -9,7 +9,8 @@ class RenewService extends Command
 {
     protected $signature = 'service:renew
         {target : Domain atau ID order (beberapa dipisah koma)}
-        {--years=1 : Jumlah tahun perpanjangan}
+        {--months= : Jumlah bulan perpanjangan (default: ikut siklus tagihan order)}
+        {--years= : Jumlah tahun perpanjangan (menimpa --months)}
         {--paid : Tandai invoice renewal sebagai lunas}
         {--paid-at= : Tanggal bayar (Y-m-d atau Y-m-d H:i:s), default hari ini}
         {--invoice : Buat invoice renewal kalau belum ada (tanpa kirim email)}
@@ -57,7 +58,8 @@ class RenewService extends Command
             }
 
             $result = $renewal->renew($order, [
-                'years' => (int) $this->option('years'),
+                'months' => $this->option('months'),
+                'years' => $this->option('years'),
                 'mark_paid' => (bool) $this->option('paid'),
                 'paid_at' => $this->option('paid-at'),
                 'create_invoice' => (bool) $this->option('invoice'),
@@ -72,7 +74,7 @@ class RenewService extends Command
             $this->info(sprintf('%s (#%d · %s)', $result['domain'] ?? '-', $result['order_id'], $result['customer'] ?? '-'));
             $this->line(sprintf('  status layanan : %s', $result['status']));
             $this->line($result['extended']
-                ? sprintf('  jatuh tempo    : %s → %s (+%d tahun)', $result['old_expiry'] ?? '-', $result['new_expiry'], $result['years'])
+                ? sprintf('  jatuh tempo    : %s → %s (+%d bulan)', $result['old_expiry'] ?? '-', $result['new_expiry'], $result['months'])
                 : sprintf('  jatuh tempo    : %s (TIDAK diubah, --no-extend)', $result['new_expiry'] ?? '-'));
             $this->line(sprintf('  item           : %d/%d diperbarui', $result['items_updated'], $result['items_total']));
 

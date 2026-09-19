@@ -262,7 +262,7 @@
                         @endif
                     </td>
                     <td>1</td>
-                    <td class="text-right">Rp {{ number_format($invoice->amount + ($invoice->discount ?? 0), 0, ',', '.') }}</td>
+                    <td class="text-right">Rp {{ number_format($invoice->amount, 0, ',', '.') }}</td>
                 </tr>
             @endif
         </tbody>
@@ -273,7 +273,7 @@
         <table class="totals-table">
             <tr>
                 <td><strong>Subtotal:</strong></td>
-                <td class="text-right"><strong>Rp {{ number_format($invoice->amount + ($invoice->discount ?? 0), 0, ',', '.') }}</strong></td>
+                <td class="text-right"><strong>Rp {{ number_format($invoice->amount, 0, ',', '.') }}</strong></td>
             </tr>
             @if($invoice->discount && $invoice->discount > 0)
                 <tr>
@@ -283,7 +283,7 @@
             @endif
             <tr class="total-row">
                 <td><strong>TOTAL:</strong></td>
-                <td class="text-right"><strong>Rp {{ number_format($invoice->amount, 0, ',', '.') }}</strong></td>
+                <td class="text-right"><strong>Rp {{ number_format(max(0, $invoice->amount - ($invoice->discount ?? 0)), 0, ',', '.') }}</strong></td>
             </tr>
         </table>
     </div>

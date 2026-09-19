@@ -21,6 +21,7 @@ Artisan::command('inspire', function () {
 |   - websites:check-uptime        02:00 WIB
 |   - invoice:generate-renewals    02:30 WIB
 |   - ai-credits:expire            03:00 WIB
+|   - services:expire              04:00 WIB (invoice → overdue, layanan → expired)
 |   (harga & status domain RDash: /etc/cron.d/wscrm-rdash, 01:15 WIB)
 |
 | Log semua tugas: storage/logs/cron-jobs.log
@@ -42,3 +43,7 @@ Schedule::command('invoice:generate-renewals')->dailyAt('09:00');
 
 // Potong kredit AI customer yang sudah lewat masa aktif (default 30 hari)
 Schedule::command('ai-credits:expire')->dailyAt('09:30');
+
+// Rapikan status menggantung: invoice lewat jatuh tempo → overdue, layanan lewat
+// masa aktif → expired (toleransi 7 hari supaya tidak buru-buru mematikan layanan).
+Schedule::command('services:expire', ['--grace' => 7])->dailyAt('10:00');

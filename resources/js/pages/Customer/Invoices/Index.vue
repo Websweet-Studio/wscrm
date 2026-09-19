@@ -23,6 +23,14 @@ interface Props {
 
 const props = defineProps<Props>();
 
+// Nilai yang ditagih = amount (bruto) - discount. `final_amount` dikirim backend.
+const netAmountOf = (inv: any): number => {
+    const explicit = Number(inv?.final_amount);
+    if (Number.isFinite(explicit) && explicit > 0) return explicit;
+
+    return Math.max(0, Number(inv?.amount ?? 0) - Number(inv?.discount ?? 0));
+};
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: customer.dashboard().url },
     { title: 'Invoices', href: customer.invoices.index().url },
@@ -75,7 +83,10 @@ const getOrderTypeDisplay = (order) => {
 };
 
 const totalInvoices = computed(() => props.invoices.total ?? props.invoices.data.length);
-const unpaidInvoices = computed(() => props.invoices.data.filter((i) => i.status === 'sent' || i.status === 'overdue').length);
+// Status di DB memakai 'pending' untuk invoice terbit yang belum dibayar (bukan
+// 'sent'), jadi menyaring 'sent' saja membuat kartu "Belum Bayar" selalu 0.
+const UNPAID_STATUSES = ['pending', 'sent', 'overdue'];
+const unpaidInvoices = computed(() => props.invoices.data.filter((i) => UNPAID_STATUSES.includes(i.status)).length);
 const paidInvoices = computed(() => props.invoices.data.filter((i) => i.status === 'paid').length);
 </script>
 
@@ -174,7 +185,7 @@ const paidInvoices = computed(() => props.invoices.data.filter((i) => i.status =
                                         </div>
                                     </div>
                                     <div class="flex shrink-0 flex-col items-end gap-2">
-                                        <div class="font-serif font-medium text-emerald-700 dark:text-green-400">{{ formatPrice(invoice.amount) }}</div>
+                                        <div class="font-serif font-medium text-emerald-700 dark:text-green-400">{{ formatPrice(netAmountOf(invoice)) }}</div>
                                         <div class="flex items-center gap-2">
                                             <Button :as="Link" :href="customer.invoices.show(invoice.id).url" variant="outline" size="sm" class="h-8 px-3">
                                                 <Eye class="h-4 w-4" />

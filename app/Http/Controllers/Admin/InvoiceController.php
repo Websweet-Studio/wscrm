@@ -69,11 +69,26 @@ class InvoiceController extends Controller
 
         $invoices = $query->paginate(20)->withQueryString();
 
-        // Statistics
+        // Tandai invoice lunas yang layanannya BELUM diperpanjang (perpanjangan
+        // manual) supaya badge peringatan bisa tampil di daftar.
+        $invoices->getCollection()->each(fn (Invoice $invoice) => $invoice->append('service_renewal_pending'));
+
+        // Layanan yang sudah dibayar tapi belum diperpanjang — pekerjaan manual
+        // yang sering terlewat.
+        $renewalPending = Invoice::query()
+            ->paid()
+            ->whereNotNull('order_id')
+            ->with('order:id,status,expires_at,domain_name')
+            ->get()
+            ->filter(fn (Invoice $invoice) => $invoice->serviceRenewalPending())
+            ->count();
+
+        // Statistics — semua pakai NILAI BERSIH (amount - discount), bukan bruto.
+        $netAmount = DB::raw('amount - COALESCE(discount, 0)');
         $totalInvoices = Invoice::count();
-        $totalRevenue = Invoice::where('status', 'paid')->sum('amount');
-        $pendingAmount = Invoice::where('status', 'pending')->sum('amount');
-        $overdueAmount = Invoice::where('status', 'overdue')->sum('amount');
+        $totalRevenue = (float) Invoice::where('status', 'paid')->sum($netAmount);
+        $pendingAmount = (float) Invoice::query()->unpaid()->sum($netAmount);
+        $overdueAmount = (float) Invoice::query()->overdue()->sum($netAmount);
 
         return Inertia::render('Admin/Invoices/Index', [
             'invoices' => $invoices,
@@ -89,6 +104,7 @@ class InvoiceController extends Controller
                 'revenue' => $totalRevenue,
                 'pending' => $pendingAmount,
                 'overdue' => $overdueAmount,
+                'renewal_pending' => $renewalPending,
             ],
             'customers' => Customer::orderBy('name')->get(['id', 'name', 'email']),
             'services' => Order::services()
@@ -132,6 +148,7 @@ class InvoiceController extends Controller
     public function show(Invoice $invoice): Response
     {
         $invoice->load(['customer', 'order']);
+        $invoice->append('service_renewal_pending');
 
         return Inertia::render('Admin/Invoices/Show', [
             'invoice' => $invoice,
@@ -243,6 +260,8 @@ class InvoiceController extends Controller
             'discount' => $discountAmount,
             'issue_date' => now()->toDateString(),
             'due_date' => $dueDate->toDateString(),
+            // Periode tagihan = jatuh tempo layanan (penjaga anti invoice ganda).
+            'period_end' => $order->expires_at?->toDateString(),
             'status' => 'pending',
             'billing_cycle' => $order->billing_cycle,
             'notes' => 'Tagihan untuk ' . ($order->domain_name ?: 'Order #' . $order->id),
@@ -274,6 +293,15 @@ class InvoiceController extends Controller
             'paid_at' => now(),
         ]);
 
+        // Perpanjangan layanan TIDAK otomatis — ingatkan operator kalau belum dikerjakan.
+        $invoice->loadMissing('order');
+
+        if ($invoice->serviceRenewalPending()) {
+            $domain = $invoice->order?->domain_name ?? ('order #'.$invoice->order_id);
+
+            return back()->with('success', 'Invoice berhasil ditandai sebagai dibayar. Perhatian: layanan '.$domain.' belum diperpanjang — jalankan `php8.3 artisan service:renew '.$domain.'` agar masa aktifnya ikut bergeser.');
+        }
+
         return back()->with('success', 'Invoice berhasil ditandai sebagai dibayar.');
     }
 
@@ -286,21 +314,40 @@ class InvoiceController extends Controller
 
         $ids = array_values(array_unique($validated['ids']));
 
-        $alreadyPaid = Invoice::whereIn('id', $ids)->where('status', 'paid')->count();
-        $now = now();
+        // Tandai lunas SATU PER SATU lewat model (bukan query builder update) supaya
+        // observer jalan (kredit AI topup bertambah). Layanan TIDAK diperpanjang
+        // otomatis — perpanjangan tetap manual lewat `service:renew`.
+        $invoices = Invoice::with('order')->whereIn('id', $ids)->get();
+        $alreadyPaid = $invoices->where('status', 'paid')->count();
+        $updated = 0;
+        $pendingRenewal = [];
 
-        $updated = Invoice::whereIn('id', $ids)
-            ->where('status', '!=', 'paid')
-            ->update([
+        foreach ($invoices as $invoice) {
+            if ($invoice->status === 'paid') {
+                continue;
+            }
+
+            $invoice->update([
                 'status' => 'paid',
-                'paid_at' => $now,
+                'paid_at' => now(),
             ]);
+
+            $updated++;
+
+            if ($invoice->serviceRenewalPending()) {
+                $pendingRenewal[] = $invoice->order?->domain_name ?? ('order #'.$invoice->order_id);
+            }
+        }
 
         if ($updated === 0 && $alreadyPaid > 0) {
             return back()->with('message', 'Semua invoice yang dipilih sudah dalam status dibayar.');
         }
 
-        return back()->with('success', "Berhasil menandai {$updated} invoice sebagai dibayar. {$alreadyPaid} invoice sudah dibayar.");
+        $extra = $pendingRenewal !== []
+            ? ' Belum diperpanjang (jalankan `service:renew`): '.implode(', ', $pendingRenewal).'.'
+            : '';
+
+        return back()->with('success', "Berhasil menandai {$updated} invoice sebagai dibayar. {$alreadyPaid} invoice sudah dibayar.{$extra}");
     }
 
     public function bulkDestroy(Request $request)

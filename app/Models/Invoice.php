@@ -29,7 +29,15 @@ class Invoice extends Model
         'ai_package_id',
         'notes',
         'payment_proof',
+        'period_end',
     ];
+
+    /**
+     * `amount` = subtotal BRUTO, `discount` = total potongan.
+     * Nilai yang benar-benar ditagih/dibayar = amount - discount (final_amount).
+     * Ikut diserialisasi supaya frontend tidak perlu menebak-nebak.
+     */
+    protected $appends = ['final_amount'];
 
     protected function casts(): array
     {
@@ -38,6 +46,7 @@ class Invoice extends Model
             'discount' => 'decimal:2',
             'issue_date' => 'date',
             'due_date' => 'date',
+            'period_end' => 'date',
             'paid_at' => 'datetime',
         ];
     }
@@ -72,23 +81,34 @@ class Invoice extends Model
         return $query->where('status', 'paid');
     }
 
+    /**
+     * Semua invoice yang belum lunas. WAJIB memuat 'pending' — semua invoice
+     * diterbitkan dengan status 'pending', jadi tanpa ini daftar tagihan kosong.
+     */
     public function scopeUnpaid($query)
     {
-        return $query->whereIn('status', ['sent', 'overdue']);
-    }
-
-    public function scopeOverdue($query)
-    {
-        return $query->where('status', 'overdue')
-            ->orWhere(function ($q) {
-                $q->where('due_date', '<', Carbon::now())
-                    ->where('status', 'sent');
-            });
+        return $query->whereIn('status', ['pending', 'sent', 'overdue']);
     }
 
     public function scopeByCustomer($query, int $customerId)
     {
         return $query->where('customer_id', $customerId);
+    }
+
+    /**
+     * Invoice lewat jatuh tempo (status 'overdue' ATAU tanggalnya sudah lewat).
+     * Dikelompokkan agar aman dirantai dengan filter lain (dulu `orWhere` lepas
+     * bisa membocorkan invoice customer lain).
+     */
+    public function scopeOverdue($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('status', 'overdue')
+                ->orWhere(function ($q2) {
+                    $q2->where('due_date', '<', Carbon::now()->startOfDay())
+                        ->whereIn('status', ['pending', 'sent']);
+                });
+        });
     }
 
     public function isPaid(): bool
@@ -113,6 +133,47 @@ class Invoice extends Model
     public function getFinalAmountAttribute(): float
     {
         return max(0, $this->amount - $this->discount);
+    }
+
+    /**
+     * Invoice LUNAS tapi layanan yang ditagih belum diperpanjang.
+     *
+     * Perpanjangan di WSCRM SELALU manual (`service:renew`) karena pembayarannya
+     * juga manual (transfer → verifikasi admin). Jadi ini bukan proses otomatis,
+     * hanya peringatan supaya langkah manual itu tidak terlewat.
+     *
+     * Aturan:
+     * - `period_end` terisi → order.expires_at harus >= period_end
+     * - `period_end` kosong → order yang masih `expired` dianggap belum diperpanjang
+     */
+    public function serviceRenewalPending(): bool
+    {
+        if (! $this->isPaid() || ! $this->order_id) {
+            return false;
+        }
+
+        $order = $this->relationLoaded('order') ? $this->order : $this->order()->first();
+
+        if (! $order) {
+            return false;
+        }
+
+        // Order yang sudah berhenti memang tidak perlu diperpanjang.
+        if (in_array($order->status, ['cancelled', 'terminated'], true)) {
+            return false;
+        }
+
+        if ($this->period_end) {
+            return ! $order->expires_at
+                || Carbon::parse($order->expires_at)->startOfDay()->lt($this->period_end->copy()->startOfDay());
+        }
+
+        return $order->status === 'expired';
+    }
+
+    public function getServiceRenewalPendingAttribute(): bool
+    {
+        return $this->serviceRenewalPending();
     }
 
     public function getDiscountedAttribute(): bool

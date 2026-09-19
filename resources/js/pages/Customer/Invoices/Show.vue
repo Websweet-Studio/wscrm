@@ -83,6 +83,16 @@ const isOverdue = () => {
 const canPay = () => {
     return props.invoice.status !== 'paid' && props.invoice.status !== 'cancelled';
 };
+
+// Nilai yang benar-benar ditagih = amount (bruto) - discount. `final_amount` dari backend.
+const discountOf = (inv: any): number => Number(inv?.discount ?? 0);
+
+const netAmountOf = (inv: any): number => {
+    const explicit = Number(inv?.final_amount);
+    if (Number.isFinite(explicit) && explicit > 0) return explicit;
+
+    return Math.max(0, Number(inv?.amount ?? 0) - discountOf(inv));
+};
 </script>
 
 <template>
@@ -144,7 +154,10 @@ const canPay = () => {
                             <div class="rounded-lg border border-border/60 bg-background/60 p-3">
                                 <div class="text-xs text-muted-foreground">Total</div>
                                 <div class="mt-0.5 font-serif text-xl font-medium text-emerald-700 dark:text-green-400">
-                                    {{ formatPrice(invoice.amount) }}
+                                    {{ formatPrice(netAmountOf(invoice)) }}
+                                </div>
+                                <div v-if="discountOf(invoice) > 0" class="mt-1 text-xs text-muted-foreground">
+                                    sudah termasuk potongan {{ formatPrice(discountOf(invoice)) }}
                                 </div>
                             </div>
                         </div>
@@ -211,7 +224,11 @@ const canPay = () => {
                                 </div>
                                 <div>
                                     <label class="text-sm font-medium text-muted-foreground">Total Amount</label>
-                                    <p class="text-2xl font-bold text-primary">{{ formatPrice(invoice.amount) }}</p>
+                                    <p class="text-2xl font-bold text-primary">{{ formatPrice(netAmountOf(invoice)) }}</p>
+                                    <div v-if="discountOf(invoice) > 0" class="mt-1 text-xs text-muted-foreground">
+                                        Subtotal {{ formatPrice(invoice.amount) }} &middot; potongan
+                                        <span class="font-medium text-emerald-700 dark:text-green-400">-{{ formatPrice(discountOf(invoice)) }}</span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="space-y-4">
@@ -394,9 +411,18 @@ const canPay = () => {
                                 <span class="text-muted-foreground">Dibuat</span>
                                 <span class="font-medium">{{ formatDate(invoice.created_at) }}</span>
                             </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-muted-foreground">Subtotal</span>
+                                <span class="font-medium">{{ formatPrice(invoice.amount) }}</span>
+                            </div>
+                            <div v-if="discountOf(invoice) > 0" class="flex items-center justify-between text-sm">
+                                <span class="text-muted-foreground">Potongan</span>
+                                <span class="font-medium text-emerald-700 dark:text-green-400">-{{ formatPrice(discountOf(invoice)) }}</span>
+                            </div>
+                            <div class="border-t border-border/60"></div>
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-muted-foreground">Total</span>
-                                <span class="font-serif text-xl font-medium text-emerald-700 dark:text-green-400">{{ formatPrice(invoice.amount) }}</span>
+                                <span class="font-serif text-xl font-medium text-emerald-700 dark:text-green-400">{{ formatPrice(netAmountOf(invoice)) }}</span>
                             </div>
                             <Button
                                 v-if="canPay()"

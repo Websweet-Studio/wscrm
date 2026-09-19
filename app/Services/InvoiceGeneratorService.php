@@ -5,96 +5,187 @@ namespace App\Services;
 use App\Models\Invoice;
 use App\Models\Order;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class InvoiceGeneratorService
 {
+    /**
+     * Terbitkan invoice perpanjangan untuk layanan aktif yang akan jatuh tempo.
+     *
+     * Dua penjaga anti-dobel (dulu bocor → invoice ganda untuk periode yang sama):
+     *  1. Tidak ada invoice renewal yang belum lunas untuk order ini (status
+     *     pending/sent/overdue) — apa pun tanggalnya.
+     *  2. Belum ada invoice renewal untuk periode jatuh tempo yang sama
+     *     (`invoices.period_end` = tanggal jatuh tempo yang ditagih).
+     */
     public function generateRenewalInvoices(int $daysBefore = 30): int
     {
-        $expiryDate = Carbon::now()->addDays($daysBefore);
+        // PENTING: jangan pernah memutasi objek Carbon ini setelah dipakai binding
+        // (Carbon bersifat mutable — dulu `$expiryDate->addDays(30)` di dalam closure
+        // mengubah objek yang sama sehingga jendela 30 hari menjadi 60 hari).
+        $windowStart = Carbon::now();
+        $windowEnd = $windowStart->copy()->addDays($daysBefore);
 
-        // Find active services (orders) that will expire within the specified days
         $expiringOrders = Order::where('status', 'active')
-            ->where('auto_renew', true) // Only generate for auto-renewing services
-            ->where('expires_at', '<=', $expiryDate)
-            ->whereDoesntHave('invoices', function ($query) use ($expiryDate) {
-                // Don't generate if there's already a renewal invoice for this period
+            ->where('auto_renew', true)
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<=', $windowEnd->copy())
+            ->whereDoesntHave('invoices', function ($query) {
                 $query->where('invoice_type', 'renewal')
-                    ->where('due_date', '>=', Carbon::now())
-                    ->where('due_date', '<=', $expiryDate->addDays(30));
+                    ->whereIn('status', ['pending', 'sent', 'overdue']);
             })
-            ->with(['customer'])
+            ->with(['customer', 'orderItems', 'invoices'])
             ->get();
 
         $generatedCount = 0;
 
         foreach ($expiringOrders as $order) {
-            // Hitung ulang dari item (bukan total_amount) agar tahan data stale,
-            // lalu kurangi diskon order. Konsisten dengan createAndSendInvoice.
-            $subtotal = (float) $order->orderItems->sum(fn ($item) => $item->price * $item->quantity);
-            $orderDiscount = (float) ($order->discount_amount ?? 0);
-            $netAmount = max(0, $subtotal - $orderDiscount);
+            $periodEnd = $order->expires_at ? Carbon::parse($order->expires_at)->toDateString() : null;
 
-            // Apply renewal discount if service has been active for more than 1 year
-            $serviceAge = Carbon::parse($order->created_at)->diffInMonths(Carbon::now());
-            $loyaltyDiscount = 0;
-            if ($serviceAge >= 12) {
-                $loyaltyDiscount = $netAmount * 0.05; // 5% discount for loyal customers
+            // Sudah pernah ditagih untuk periode ini? (walau sudah lunas / dibatalkan)
+            if ($periodEnd && $order->invoices
+                ->where('invoice_type', 'renewal')
+                ->where('status', '!=', 'cancelled')
+                ->contains(fn ($inv) => $inv->period_end
+                    && Carbon::parse($inv->period_end)->toDateString() === $periodEnd)) {
+                continue;
             }
 
-            // Generate due date (7 days before expiry)
-            $dueDate = Carbon::parse($order->expires_at)->subDays(7);
-            if ($dueDate->lt(Carbon::now())) {
-                $dueDate = Carbon::now()->addDays(3); // If already past, give 3 days
-            }
+            $invoice = DB::transaction(function () use ($order, $periodEnd) {
+                // Kunci baris order supaya cron & tombol admin tidak bisa balapan.
+                $fresh = Order::query()->lockForUpdate()->with(['customer'])->find($order->id);
 
-            // Create renewal invoice (amount = subtotal, discount = semua diskon
-            // digabung, agar netTotal() dan template email konsisten)
-            $invoice = Invoice::create([
-                'customer_id' => $order->customer_id,
-                'order_id' => $order->id,
-                'invoice_number' => $this->generateInvoiceNumber(),
-                'invoice_type' => 'renewal',
-                'amount' => $subtotal,
-                'discount' => $orderDiscount + $loyaltyDiscount,
-                'issue_date' => Carbon::now()->toDateString(),
-                'due_date' => $dueDate->toDateString(),
-                'status' => 'pending',
-                'billing_cycle' => $order->billing_cycle,
-                'notes' => "Renewal invoice for {$order->domain_name} - {$order->service_type} service expiring on ".Carbon::parse($order->expires_at)->format('d M Y'),
-            ]);
+                if (! $fresh || $fresh->status !== 'active' || ! $fresh->expires_at) {
+                    return null;
+                }
+
+                $existing = Invoice::query()
+                    ->where('order_id', $fresh->id)
+                    ->where('invoice_type', 'renewal')
+                    ->whereIn('status', ['pending', 'sent', 'overdue'])
+                    ->lockForUpdate()
+                    ->exists();
+
+                if ($existing) {
+                    return null;
+                }
+
+                if ($periodEnd) {
+                    $alreadyBilled = Invoice::query()
+                        ->where('order_id', $fresh->id)
+                        ->where('invoice_type', 'renewal')
+                        ->where('status', '!=', 'cancelled')
+                        ->whereDate('period_end', $periodEnd)
+                        ->lockForUpdate()
+                        ->exists();
+
+                    if ($alreadyBilled) {
+                        return null;
+                    }
+                }
+
+                return $this->createRenewalInvoiceFor($fresh, $periodEnd);
+            });
+
+            if (! $invoice) {
+                continue;
+            }
 
             // Kirim email invoice renewal ke customer (antri via InvoiceEmail/ShouldQueue).
-            $invoice->setRelation('customer', $order->customer);
-            $invoice->setRelation('order', $order);
-            \Illuminate\Support\Facades\Mail::to($order->customer->email)
-                ->queue(new \App\Mail\InvoiceEmail($invoice));
+            try {
+                if ($order->customer?->email) {
+                    $invoice->setRelation('customer', $order->customer);
+                    $invoice->setRelation('order', $order);
+                    Mail::to($order->customer->email)
+                        ->queue(new \App\Mail\InvoiceEmail($invoice));
+                } else {
+                    Log::warning("Invoice #{$invoice->invoice_number}: customer tanpa email, email dilewati.");
+                }
+            } catch (\Throwable $e) {
+                // Kegagalan email tidak boleh menghentikan penerbitan invoice berikutnya.
+                Log::error("Gagal kirim email invoice #{$invoice->invoice_number}: ".$e->getMessage());
+            }
 
-            \Log::info("Generated renewal invoice #{$invoice->invoice_number} for order #{$order->id} - {$order->domain_name}");
+            Log::info("Generated renewal invoice #{$invoice->invoice_number} for order #{$order->id} - {$order->domain_name}");
 
-            // TODO: Send notification to admin about generated renewal invoices
             $generatedCount++;
         }
 
         return $generatedCount;
     }
 
+    /**
+     * Buat baris invoice renewal untuk satu order (dipanggil di dalam transaksi).
+     */
+    private function createRenewalInvoiceFor(Order $order, ?string $periodEnd): Invoice
+    {
+        // Hitung ulang dari item (bukan total_amount) agar tahan data stale,
+        // lalu kurangi diskon order. Konsisten dengan createAndSendInvoice.
+        $subtotal = (float) $order->orderItems->sum(fn ($item) => $item->price * $item->quantity);
+        $orderDiscount = (float) ($order->discount_amount ?? 0);
+        $netAmount = max(0, $subtotal - $orderDiscount);
+
+        // Diskon loyalitas (>= 12 bulan) — perhitungannya di Order supaya tidak
+        // bergantung pada quirks Carbon 3 dan bisa dinyalakan/dimatikan satu tempat.
+        $loyaltyDiscount = $order->loyaltyDiscount($netAmount);
+
+        // Jatuh tempo = 7 hari sebelum masa aktif berakhir.
+        $dueDate = Carbon::parse($order->expires_at)->copy()->subDays(7);
+        if ($dueDate->lt(Carbon::now())) {
+            $dueDate = Carbon::now()->copy()->addDays(3); // Sudah lewat → beri 3 hari
+        }
+
+        return Invoice::create([
+            'customer_id' => $order->customer_id,
+            'order_id' => $order->id,
+            'invoice_number' => $this->generateInvoiceNumber(),
+            'invoice_type' => 'renewal',
+            // amount = subtotal BRUTO, discount = total potongan → net = amount - discount.
+            'amount' => $subtotal,
+            'discount' => $orderDiscount + $loyaltyDiscount,
+            'issue_date' => Carbon::now()->toDateString(),
+            'due_date' => $dueDate->toDateString(),
+            'period_end' => $periodEnd,
+            'status' => 'pending',
+            'billing_cycle' => $order->billing_cycle,
+            'notes' => "Renewal invoice for {$order->domain_name} - {$order->service_type} service expiring on ".Carbon::parse($order->expires_at)->format('d M Y'),
+        ]);
+    }
+
+    /**
+     * Nomor invoice urut per bulan: INV-YYYY-MM-NNNN.
+     *
+     * Ambil nomor TERBESAR (bukan baris terbaru) supaya nomor yang pernah dipakai
+     * tidak diulang setelah invoice dihapus, dan dukung nomor > 9999.
+     */
     public function generateInvoiceNumber(): string
     {
         $year = Carbon::now()->year;
         $month = Carbon::now()->format('m');
+        $prefix = "INV-{$year}-{$month}-";
 
-        $lastInvoice = Invoice::query()
-            ->where('invoice_number', 'like', "INV-{$year}-{$month}-%")
-            ->latest('id')
-            ->first();
+        $maxNumber = Invoice::query()
+            ->where('invoice_number', 'like', $prefix.'%')
+            ->get()
+            ->map(function ($invoice) use ($prefix) {
+                $suffix = substr($invoice->invoice_number, strlen($prefix));
 
-        if ($lastInvoice) {
-            $lastNumber = (int) substr($lastInvoice->invoice_number, -4);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
+                return ctype_digit((string) $suffix) ? (int) $suffix : 0;
+            })
+            ->max() ?? 0;
+
+        $candidate = sprintf('%s%04d', $prefix, $maxNumber + 1);
+
+        // Jaring pengaman terakhir: nomor invoice punya unique index di DB.
+        $attempt = 0;
+        while (Invoice::where('invoice_number', $candidate)->exists() && $attempt < 50) {
+            $maxNumber++;
+            $candidate = sprintf('%s%04d', $prefix, $maxNumber + 1);
+            $attempt++;
         }
 
-        return sprintf('INV-%d-%s-%04d', $year, $month, $newNumber);
+        return $candidate;
     }
 }

@@ -15,11 +15,20 @@ use Illuminate\Support\Facades\Log;
  *
  * Idempoten: transaksi purchase/refund hanya dibuat sekali per invoice.
  * Seluruh perubahan saldo dibungkus transaksi database.
+ *
+ * Catatan: observer ini TIDAK menyentuh perpanjangan layanan — perpanjangan
+ * selalu manual (`service:renew`), lihat Invoice::serviceRenewalPending().
  */
 class InvoiceObserver
 {
     public function saved(Invoice $invoice): void
     {
+        // TIDAK ADA perpanjangan otomatis di sini. Perpanjangan layanan sengaja
+        // tetap 100% manual (`service:renew`) karena pembayaran klien manual
+        // (transfer + verifikasi admin) sehingga durasinya pun harus diputuskan
+        // operator. Peringatan kalau invoice lunas tapi layanan belum diperpanjang:
+        // Invoice::serviceRenewalPending() (tampil di halaman invoice admin).
+
         if (! $invoice->ai_package_id) {
             return;
         }

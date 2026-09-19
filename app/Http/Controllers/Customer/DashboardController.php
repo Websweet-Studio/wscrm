@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AiCredit;
 use App\Models\JournalEntry;
 use App\Models\PaymentAccount;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -35,7 +36,10 @@ class DashboardController extends CustomerBaseController
             ->limit(10)
             ->get();
 
-        $unpaidTotal = (float) $customer->invoices()->unpaid()->sum('amount');
+        // Nilai bersih (amount - discount), bukan bruto — konsisten dengan yang dibayar.
+        $unpaidTotal = (float) $customer->invoices()
+            ->unpaid()
+            ->sum(DB::raw('amount - COALESCE(discount, 0)'));
 
         // Ringkasan pengeluaran: total lunas bulan ini + total outstanding (belum dibayar).
         // Pakai final amount (amount - discount) supaya konsisten dengan yang dibayar customer.

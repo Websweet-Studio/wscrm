@@ -175,6 +175,14 @@ const unpaidOverdueCount = computed(() => props.unpaidInvoices.filter((i) => new
 
 const primaryInvoice = computed(() => props.unpaidInvoices[0] || null);
 
+// Nilai yang ditagih = amount (bruto) - discount. `final_amount` dikirim backend.
+const netAmountOf = (inv: any): number => {
+    const explicit = Number(inv?.final_amount);
+    if (Number.isFinite(explicit) && explicit > 0) return explicit;
+
+    return Math.max(0, Number(inv?.amount ?? 0) - Number(inv?.discount ?? 0));
+};
+
 // Label due date relatif: hari ini / terlewati / sisa hari.
 const dueLabel = (invoice: Invoice) => {
     const now = new Date();
@@ -198,7 +206,7 @@ const alerts = computed<Alert[]>(() => {
                 id: `invoice-${inv.id}`,
                 kind: 'danger',
                 title: 'Tagihan terlambat',
-                message: `${inv.invoice_number} · ${formatPrice(inv.amount)} · jatuh tempo ${formatDate(inv.due_date)}`,
+                message: `${inv.invoice_number} · ${formatPrice(netAmountOf(inv))} · jatuh tempo ${formatDate(inv.due_date)}`,
                 href: getCustomerUrl(() => customerRoutes?.invoices?.payment?.(inv.id).url, `/customer/invoices/${inv.id}/payment`),
             });
         }
@@ -592,7 +600,7 @@ const todayLabel = computed(() =>
                                 </div>
                             </div>
                             <div class="flex shrink-0 flex-col items-end gap-1.5">
-                                <div class="text-base font-bold" style="color: var(--primary);">{{ formatPrice(invoice.amount) }}</div>
+                                <div class="text-base font-bold" style="color: var(--primary);">{{ formatPrice(netAmountOf(invoice)) }}</div>
                                 <Link
                                     :href="getCustomerUrl(() => customerRoutes?.invoices?.payment?.(invoice.id).url, `/customer/invoices/${invoice.id}/payment`)"
                                     class="inline-flex h-8 items-center rounded-2xl px-3.5 text-xs font-bold transition-opacity hover:opacity-90"

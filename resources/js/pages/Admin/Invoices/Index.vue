@@ -38,6 +38,8 @@ interface Invoice {
     paid_at?: string;
     created_at: string;
     order_id?: number;
+    period_end?: string;
+    service_renewal_pending?: boolean;
     customer: Customer;
     service?: Service;
     order?: {
@@ -76,6 +78,7 @@ interface Props {
         revenue: number;
         pending: number;
         overdue: number;
+        renewal_pending: number;
     };
     customers: Customer[];
     services: Service[];
@@ -413,6 +416,21 @@ const markAsPaid = (invoice: Invoice) => {
                 </Card>
             </div>
 
+            <!-- Pekerjaan manual yang paling sering terlewat: invoice sudah dibayar
+                 tapi masa aktif layanan belum digeser. -->
+            <div
+                v-if="statistics.renewal_pending > 0"
+                class="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-200"
+            >
+                <AlertTriangle class="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                    <span class="font-medium">{{ statistics.renewal_pending }} invoice sudah lunas tapi layanan belum diperpanjang.</span>
+                    Perpanjangan manual — jalankan
+                    <code class="rounded bg-amber-100 px-1 font-mono text-xs dark:bg-amber-900/40">php8.3 artisan service:renew &lt;domain&gt;</code>
+                    lalu pastikan tanggal jatuh tempo di halaman Layanan sudah bergeser.
+                </div>
+            </div>
+
             <Card>
                 <CardHeader>
                     <CardTitle class="font-serif font-medium text-2xl leading-[1.20]">All Invoices</CardTitle>
@@ -598,6 +616,14 @@ const markAsPaid = (invoice: Invoice) => {
                                     <Badge :class="getStatusColor(invoice.status)">
                                         {{ invoice.status }}
                                     </Badge>
+                                    <div v-if="invoice.service_renewal_pending" class="mt-1">
+                                        <Badge
+                                            class="whitespace-nowrap bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                                            title="Invoice sudah lunas tapi masa aktif layanan belum digeser — perpanjangan manual lewat service:renew"
+                                        >
+                                            belum diperpanjang
+                                        </Badge>
+                                    </div>
                                 </TableCell>
                                 <TableCell>
                                     <div class="flex items-center justify-center gap-1">
