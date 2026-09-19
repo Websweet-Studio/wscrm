@@ -106,12 +106,12 @@ const filteredPlans = computed(() => {
 </script>
 
 <template>
-    <CustomerPublicLayout title="Paket Shared Hosting & VPS Profesional">
+    <CustomerPublicLayout title="Hosting & VPS Profesional">
         <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:py-20">
             <!-- Hero -->
             <div class="mb-12 text-center sm:mb-16">
                 <h1 class="mb-4 text-4xl leading-tight font-medium sm:text-5xl md:text-6xl" style="color: #141413; line-height: 1.1; font-family: Georgia, serif;">
-                    Paket Shared Hosting &amp; VPS Profesional
+                    Hosting &amp; VPS Profesional untuk Website &amp; Aplikasi Anda
                 </h1>
                 <p class="mx-auto mb-6 max-w-2xl text-base sm:text-lg lg:text-xl" style="color: #5e5d59; line-height: 1.6;">
                     Pilih paket hosting atau VPS yang sempurna untuk website dan aplikasi Anda. Cepat, terpercaya, dan aman.

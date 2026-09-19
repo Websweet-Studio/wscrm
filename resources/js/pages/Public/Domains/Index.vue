@@ -321,7 +321,7 @@ const getWhatsappLink = (text: string) => {
                             <Link href="/customer/register">Buat Akun</Link>
                         </Button>
                         <Button asChild variant="outline" size="lg" class="text-lg px-6 py-4" style="background-color: #ffffff; color: #000000; border: 1px solid #30302e; border-radius: 16px;">
-                            <Link href="/hosting">Lihat Paket Hosting</Link>
+                            <Link href="/hosting">Lihat Paket Hosting &amp; VPS</Link>
                         </Button>
                     </div>
                 </div>

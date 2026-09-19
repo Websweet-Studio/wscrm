@@ -208,7 +208,7 @@ const getWhatsAppUrl = () => {
                 </p>
                 <div class="flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4">
                     <Button asChild class="text-lg px-6 py-4" style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;">
-                        <Link href="/hosting">Lihat Paket Hosting</Link>
+                        <Link href="/hosting">Lihat Paket Hosting &amp; VPS</Link>
                     </Button>
                     <Button asChild variant="outline" class="text-lg px-6 py-4" style="background-color: var(--primary-foreground); color: #4d4c48; border: 1px solid #e8e6dc; border-radius: 12px;">
                         <Link href="/domains">Cari Domain</Link>

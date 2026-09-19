@@ -21,7 +21,7 @@ const footerText = computed(() => brandingSettings.value.footer_text || '© 2024
                     <span class="text-lg font-bold sm:text-xl" style="color: #faf9f5; font-family: Georgia, serif;">{{ appName }}</span>
                 </div>
                 <div class="flex flex-wrap justify-center gap-4 text-sm sm:gap-6">
-                    <Link href="/hosting" class="transition-colors" style="color: #b0aea5;">Hosting</Link>
+                    <Link href="/hosting" class="transition-colors" style="color: #b0aea5;">Hosting &amp; VPS</Link>
                     <Link href="/domains" class="transition-colors" style="color: #b0aea5;">Domain</Link>
                     <Link href="/demo-web" class="transition-colors" style="color: #b0aea5;">Demo Web</Link>
                     <Link href="/customer/login" class="transition-colors" style="color: #b0aea5;">Login Pelanggan</Link>

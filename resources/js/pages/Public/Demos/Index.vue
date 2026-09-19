@@ -735,7 +735,7 @@ curl "{{ appUrl }}/api/demos?package=instant"</pre>
                                 class="text-lg px-6 py-4"
                                 style="background-color: #ffffff; color: #141413; border: 1px solid #30302e; border-radius: 12px"
                             >
-                                <a href="/hosting">Lihat Paket Hosting</a>
+                                <a href="/hosting">Lihat Paket Hosting &amp; VPS</a>
                             </Button>
                         </div>
                     </CardContent>

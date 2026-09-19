@@ -38,7 +38,7 @@ const handleLogout = () => {
                 <!-- Desktop Navigation -->
                 <div class="hidden items-center space-x-2 md:flex">
                     <Button variant="ghost" size="sm" asChild>
-                        <Link href="/hosting">Hosting</Link>
+                        <Link href="/hosting">Hosting &amp; VPS</Link>
                     </Button>
                     <Button variant="ghost" size="sm" asChild>
                         <Link href="/domains">Domain</Link>
@@ -121,7 +121,7 @@ const handleLogout = () => {
                             <!-- Navigation Links -->
                             <div class="flex-1 space-y-2 p-4">
                                 <Button variant="ghost" class="w-full justify-start" asChild>
-                                    <Link href="/hosting" @click="mobileMenuOpen = false">Hosting</Link>
+                                    <Link href="/hosting" @click="mobileMenuOpen = false">Hosting &amp; VPS</Link>
                                 </Button>
                                 <Button variant="ghost" class="w-full justify-start" asChild>
                                     <Link href="/domains" @click="mobileMenuOpen = false">Domain</Link>

@@ -117,7 +117,7 @@ const getExtensionRenewalPrice = (extension: string): number => {
                 </Link>
                 <div class="flex items-center space-x-4">
                     <Button variant="ghost" asChild>
-                        <Link href="/hosting">Hosting</Link>
+                        <Link href="/hosting">Hosting &amp; VPS</Link>
                     </Button>
                     <Button variant="ghost" asChild>
                         <Link href="/domains">Domain</Link>
@@ -212,7 +212,7 @@ const getExtensionRenewalPrice = (extension: string): number => {
                                     <Button variant="outline"> Lihat Semua Ekstensi </Button>
                                 </Link>
                                 <Link href="/hosting">
-                                    <Button> Lihat Paket Hosting </Button>
+                                    <Button> Lihat Paket Hosting &amp; VPS </Button>
                                 </Link>
                             </div>
                         </div>
@@ -230,7 +230,7 @@ const getExtensionRenewalPrice = (extension: string): number => {
                         <span class="text-xl font-bold text-white">Ws.</span>
                     </Link>
                     <div class="flex space-x-6 text-sm">
-                        <Link href="/hosting" class="hover:text-white">Hosting</Link>
+                        <Link href="/hosting" class="hover:text-white">Hosting &amp; VPS</Link>
                         <Link href="/domains" class="hover:text-white">Domain</Link>
                         <Link href="/customer/login" class="hover:text-white">Login Pelanggan</Link>
                         <Link href="/login" class="hover:text-white">Login Admin</Link>
