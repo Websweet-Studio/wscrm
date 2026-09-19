@@ -200,21 +200,11 @@ const dueLabel = (invoice: Invoice) => {
 const alerts = computed<Alert[]>(() => {
     const list: Alert[] = [];
 
-    for (const inv of props.unpaidInvoices) {
-        if (new Date(inv.due_date) < new Date()) {
-            list.push({
-                id: `invoice-${inv.id}`,
-                kind: 'danger',
-                title: 'Tagihan terlambat',
-                message: `${inv.invoice_number} · ${formatPrice(netAmountOf(inv))} · jatuh tempo ${formatDate(inv.due_date)}`,
-                href: getCustomerUrl(() => customerRoutes?.invoices?.payment?.(inv.id).url, `/customer/invoices/${inv.id}/payment`),
-            });
-        }
-    }
-
-    // Catatan: layanan hampir habis / kadaluarsa TIDAK diulang di sini —
-    // sudah ditampilkan pada kartu "Layanan perlu perhatian" (dengan CTA perpanjang).
-    // Mengulang di daftar notifikasi membuat info dobel di dashboard.
+    // Catatan: tagihan belum bayar / terlambat TIDAK diulang di sini — sudah tampil lengkap
+    // di seksi "Tagihan Belum Bayar" (nomor invoice, jatuh tempo, tombol Bayar) + CTA
+    // "Bayar Menunggak" di atas. Sama untuk layanan hampir habis/kadaluarsa: sudah ada kartu
+    // "Layanan perlu perhatian" (CTA perpanjang + chip per layanan).
+    // Alerts = hanya info yang tidak punya kartu khusus, yaitu saldo token AI.
 
     if (props.aiBalance <= 0) {
         list.push({
