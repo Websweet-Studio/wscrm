@@ -249,7 +249,7 @@ it('menghormati toleransi selisih hari', function () {
     expect(RdashDomain::query()->first()->match_status)->toBe('matched');
 });
 
-it('sinkronisasi harga modal tidak mengubah harga jual', function () {
+it('sinkronisasi harga modal menambahkan PPN dan tidak mengubah harga jual', function () {
     $local = DomainPrice::query()->create([
         'extension' => '.my.id',
         'base_cost' => 10000,
@@ -271,9 +271,117 @@ it('sinkronisasi harga modal tidak mengubah harga jual', function () {
     $this->artisan('rdash:sync-prices --apply')->assertExitCode(0);
 
     $local->refresh();
-    expect((float) $local->base_cost)->toBe(12000.0)
-        ->and((float) $local->renewal_cost)->toBe(25000.0)
+    // Harga RDash eksklusif pajak → modal = harga API + PPN 11% (12000 × 1,11 = 13320).
+    expect((float) $local->base_cost)->toBe(13320.0)
+        ->and((float) $local->renewal_cost)->toBe(27750.0)
         ->and((float) $local->selling_price)->toBe(15000.0);
+});
+
+it('opsi --no-tax menyimpan modal persis seperti harga RDash', function () {
+    DomainPrice::query()->create([
+        'extension' => '.my.id',
+        'base_cost' => 10000,
+        'renewal_cost' => 22000,
+        'selling_price' => 15000,
+        'renewal_price_with_tax' => 25000,
+        'is_active' => true,
+    ]);
+
+    rdashFakeApi([], [[
+        'id' => 71,
+        'domain_extension' => ['id' => 2, 'extension' => '.my.id'],
+        'currency' => 'IDR',
+        'registration' => ['1' => 12000, '2' => 24000],
+        'renewal' => ['1' => 25000],
+        'transfer' => '12000.00',
+    ]]);
+
+    $this->artisan('rdash:sync-prices --apply --no-tax')->assertExitCode(0);
+
+    $local = DomainPrice::query()->where('extension', '.my.id')->first();
+    expect((float) $local->base_cost)->toBe(12000.0)
+        ->and((float) $local->renewal_cost)->toBe(25000.0);
+});
+
+it('opsi --keep mempertahankan harga jual TLD promo walau marginnya negatif', function () {
+    $local = DomainPrice::query()->create([
+        'extension' => '.com',
+        'base_cost' => 227550,
+        'renewal_cost' => 227550,
+        'selling_price' => 225000,
+        'renewal_price_with_tax' => 265000,
+        'is_active' => true,
+    ]);
+
+    rdashFakeApi([], [[
+        'id' => 72,
+        'domain_extension' => ['id' => 3, 'extension' => '.com'],
+        'currency' => 'IDR',
+        'registration' => ['1' => 205000],
+        'renewal' => ['1' => 205000],
+        'transfer' => '205000.00',
+    ]]);
+
+    // --fix-selling dengan margin 15% + --keep=.com → harga jual dibiarkan 225.000.
+    $this->artisan('rdash:sync-prices --apply --fix-selling --min-margin=15 --keep=.com')->assertExitCode(0);
+
+    $local->refresh();
+    expect((float) $local->selling_price)->toBe(225000.0)
+        ->and((float) $local->renewal_price_with_tax)->toBe(265000.0)
+        ->and((float) $local->base_cost)->toBe(227550.0);
+});
+
+it('tanpa --keep harga jual TLD promo ikut diperbaiki ke modal + markup', function () {
+    $local = DomainPrice::query()->create([
+        'extension' => '.com',
+        'base_cost' => 227550,
+        'renewal_cost' => 227550,
+        'selling_price' => 225000,
+        'renewal_price_with_tax' => 265000,
+        'is_active' => true,
+    ]);
+
+    rdashFakeApi([], [[
+        'id' => 72,
+        'domain_extension' => ['id' => 3, 'extension' => '.com'],
+        'currency' => 'IDR',
+        'registration' => ['1' => 205000],
+        'renewal' => ['1' => 205000],
+        'transfer' => '205000.00',
+    ]]);
+
+    // Daftar --keep diisi TLD lain → .com kembali dihitung (265.000 = 227.550 + 15%, bulat 5.000).
+    $this->artisan('rdash:sync-prices --apply --fix-selling --min-margin=15 --keep=.id')->assertExitCode(0);
+
+    $local->refresh();
+    expect((float) $local->selling_price)->toBe(265000.0);
+});
+
+it('konfigurasi RDASH_KEEP_SELLING melindungi harga jual dari cron/sinkronisasi', function () {
+    config()->set('services.rdash.keep_selling', '.com');
+
+    $local = DomainPrice::query()->create([
+        'extension' => '.com',
+        'base_cost' => 227550,
+        'renewal_cost' => 227550,
+        'selling_price' => 225000,
+        'renewal_price_with_tax' => 265000,
+        'is_active' => true,
+    ]);
+
+    rdashFakeApi([], [[
+        'id' => 72,
+        'domain_extension' => ['id' => 3, 'extension' => '.com'],
+        'currency' => 'IDR',
+        'registration' => ['1' => 205000],
+        'renewal' => ['1' => 205000],
+        'transfer' => '205000.00',
+    ]]);
+
+    $this->artisan('rdash:sync-prices --apply --fix-selling --min-margin=15')->assertExitCode(0);
+
+    $local->refresh();
+    expect((float) $local->selling_price)->toBe(225000.0);
 });
 
 it('cek ketersediaan domain memakai Basic Auth dan hasil asli RDash', function () {
