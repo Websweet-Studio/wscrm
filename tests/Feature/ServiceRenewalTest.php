@@ -184,7 +184,7 @@ it('can tidy up invoice and items only, without extending the expiry (--no-exten
         ->and($result['new_expiry'])->toBe('2027-10-10')
         ->and($result['invoice_created'])->toBeTrue()
         ->and($result['invoice_status'])->toBe('paid')
-        ->and($result['items_stale_status'])->toBe(2);
+        ->and($result['items_stale_status'])->toBe(0);
 
     expect($order->fresh()->expires_at->toDateString())->toBe('2027-10-10');
     expect(OrderItem::where('order_id', $order->id)->whereNull('expires_at')->count())->toBe(0);
@@ -193,6 +193,38 @@ it('can tidy up invoice and items only, without extending the expiry (--no-exten
     expect($order->invoices()->first()->status)->toBe('paid');
 
     Mail::assertNothingQueued();
+});
+
+it('creates an invoice without loyalty discount when --no-discount is used', function () {
+    Mail::fake();
+
+    $order = renewalTestOrder(['domain_name' => 'penuh.web.id', 'total_amount' => 325000]);
+    $order->orderItems()->create(['item_type' => 'hosting', 'item_id' => 2, 'quantity' => 1, 'price' => 325000, 'expires_at' => '2026-10-10', 'status' => 'active']);
+
+    $result = app(ServiceRenewalService::class)->renew($order, [
+        'create_invoice' => true,
+        'no_discount' => true,
+        'mark_paid' => true,
+        'paid_at' => '2026-09-19',
+    ]);
+
+    expect($result['discount'])->toBe(0.0)
+        ->and($result['net'])->toBe(325000.0);
+
+    $invoice = $order->invoices()->first();
+    expect((float) $invoice->discount)->toBe(0.0);
+    expect((float) $invoice->amount)->toBe(325000.0);
+    expect((string) $invoice->notes)->toContain('Renewal invoice for penuh.web.id - hosting service expiring on');
+    expect((string) $invoice->notes)->not->toContain('  ');
+
+    Mail::assertNothingQueued();
+
+    $this->artisan('service:renew', [
+        'target' => 'penuh.web.id',
+        '--no-extend' => true,
+        '--no-discount' => true,
+        '--dry-run' => true,
+    ])->assertSuccessful();
 });
 
 it('lists due services including those already past expiry', function () {

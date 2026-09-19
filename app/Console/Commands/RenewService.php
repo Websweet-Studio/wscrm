@@ -14,6 +14,7 @@ class RenewService extends Command
         {--paid-at= : Tanggal bayar (Y-m-d atau Y-m-d H:i:s), default hari ini}
         {--invoice : Buat invoice renewal kalau belum ada (tanpa kirim email)}
         {--amount= : Override nominal invoice (default: subtotal item)}
+        {--no-discount : Invoice baru tanpa diskon (mis. klien bayar penuh)}
         {--no-extend : Jangan ubah tanggal jatuh tempo (hanya invoice/pembayaran/kerapian item)}
         {--activate-items : Set status item jadi active mengikuti order}
         {--force : Izinkan untuk layanan berstatus cancelled/terminated}
@@ -62,6 +63,7 @@ class RenewService extends Command
                 'create_invoice' => (bool) $this->option('invoice'),
                 'amount' => $this->option('amount'),
                 'extend' => ! (bool) $this->option('no-extend'),
+                'no_discount' => (bool) $this->option('no-discount'),
                 'activate_items' => (bool) $this->option('activate-items'),
                 'dry_run' => $dryRun,
             ]);

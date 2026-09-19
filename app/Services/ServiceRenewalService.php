@@ -86,11 +86,11 @@ class ServiceRenewalService
      * Buat invoice renewal TANPA mengirim email ke customer
      * (dipakai untuk pencatatan pembayaran yang sudah diterima lebih dulu).
      */
-    public function createRenewalInvoice(Order $order, ?float $amount = null, ?string $extraNote = null): Invoice
+    public function createRenewalInvoice(Order $order, ?float $amount = null, ?string $extraNote = null, bool $withoutDiscount = false): Invoice
     {
         $amounts = $this->renewalAmounts($order);
         $subtotal = $amount ?? $amounts['subtotal'];
-        $discount = $amount !== null ? 0.0 : $amounts['discount'];
+        $discount = ($amount !== null || $withoutDiscount) ? 0.0 : $amounts['discount'];
 
         $dueDate = $order->expires_at
             ? Carbon::parse($order->expires_at)->subDays(7)
@@ -100,7 +100,10 @@ class ServiceRenewalService
             $dueDate = Carbon::now()->addDays(3);
         }
 
-        $notes = "Renewal invoice for {$order->domain_name} - {$order->service_type} service expiring on "
+        $serviceLabel = trim((string) $order->service_type);
+        $notes = 'Renewal invoice for '.$order->domain_name
+            .($serviceLabel !== '' ? ' - '.$serviceLabel : '')
+            .' service expiring on '
             .($order->expires_at ? Carbon::parse($order->expires_at)->format('d M Y') : '-')
             .' [manual service:renew, tanpa email]';
 
@@ -126,7 +129,7 @@ class ServiceRenewalService
     /**
      * Perpanjang layanan + (opsional) catat pembayaran.
      *
-     * @param  array{years?:int, mark_paid?:bool, paid_at?:string, create_invoice?:bool, amount?:float, activate_items?:bool, dry_run?:bool}  $options
+     * @param  array{years?:int, extend?:bool, mark_paid?:bool, paid_at?:string, create_invoice?:bool, amount?:float, no_discount?:bool, activate_items?:bool, dry_run?:bool}  $options
      * @return array<string, mixed>
      */
     public function renew(Order $order, array $options = []): array
@@ -136,6 +139,7 @@ class ServiceRenewalService
         $markPaid = (bool) ($options['mark_paid'] ?? false);
         $createInvoice = (bool) ($options['create_invoice'] ?? false);
         $activateItems = (bool) ($options['activate_items'] ?? false);
+        $noDiscount = (bool) ($options['no_discount'] ?? false);
         $dryRun = (bool) ($options['dry_run'] ?? false);
         $amountOption = $options['amount'] ?? null;
         $amountOverride = ($amountOption !== null && $amountOption !== '') ? (float) $amountOption : null;
@@ -200,7 +204,7 @@ class ServiceRenewalService
             return $result;
         }
 
-        DB::transaction(function () use ($order, $target, $extend, $activateItems, $createInvoice, $amountOverride, $markPaid, $paidAt, &$invoice, &$result) {
+        DB::transaction(function () use ($order, $target, $extend, $activateItems, $createInvoice, $amountOverride, $noDiscount, $markPaid, $paidAt, &$invoice, &$result) {
             if ($extend) {
                 $order->update(['expires_at' => $target, 'updated_at' => Carbon::now()]);
             }
@@ -212,12 +216,16 @@ class ServiceRenewalService
                     $itemUpdate['status'] = 'active';
                 }
                 $result['items_updated'] = $order->orderItems()->update($itemUpdate);
+                if (isset($itemUpdate['status'])) {
+                    // Item sudah ikut diaktifkan → tidak perlu lagi diperingatkan.
+                    $result['items_stale_status'] = 0;
+                }
             } else {
                 $result['warnings'][] = 'Order belum punya tanggal jatuh tempo — item tidak diselaraskan.';
             }
 
             if (! $invoice && $createInvoice) {
-                $invoice = $this->createRenewalInvoice($order, $amountOverride);
+                $invoice = $this->createRenewalInvoice($order, $amountOverride, null, $noDiscount);
                 $result['invoice_created'] = true;
                 $result['invoice_id'] = $invoice->id;
                 $result['invoice_number'] = $invoice->invoice_number;
