@@ -110,6 +110,31 @@
             .prose-lg hr, .prose-gray hr { border: 0; border-top: 1px solid #e5e7eb; margin: 2rem 0; }
             .dark .prose-lg blockquote, .dark .prose-gray blockquote { border-color: #6b7280; color: #d1d5db; }
             .dark .prose-lg code, .dark .prose-gray code { background: #374151; color: #f3f4f6; }
+
+            /* Polesan tipografi halaman artikel publik (.prose-lg) — 19 Sep 2026.
+               Ukuran baca lebih besar, jarak antar-seksi lebih lega, aksen warna brand
+               untuk marker/kutipan. (Admin tetap memakai .prose-gray apa adanya.) */
+            .prose-lg { font-size: 1.0625rem; line-height: 1.8; color: var(--foreground, #141413); }
+            .prose-lg h1:first-child, .prose-lg h2:first-child, .prose-lg h3:first-child { margin-top: 0; }
+            .prose-lg h2 { margin: 2.5rem 0 0.85rem; font-size: 1.5rem; letter-spacing: -0.01em; }
+            .prose-lg h3 { margin: 2rem 0 0.6rem; font-size: 1.2rem; letter-spacing: -0.01em; }
+            .prose-lg p { margin: 0 0 1.25rem; line-height: 1.8; }
+            .prose-lg ul, .prose-lg ol { margin: 0 0 1.4rem; padding-left: 1.35rem; }
+            .prose-lg li { margin-bottom: 0.6rem; line-height: 1.75; }
+            .prose-lg strong { font-weight: 600; color: var(--foreground, #141413); }
+            .prose-lg a { text-underline-offset: 3px; text-decoration-thickness: 1px; }
+            .prose-lg a:hover { opacity: 1; text-decoration-thickness: 2px; }
+            .prose-lg blockquote {
+                border-left-width: 3px;
+                border-radius: 0 0.75rem 0.75rem 0;
+                background: rgba(201, 100, 66, 0.06);
+                margin: 1.75rem 0;
+                padding: 0.9rem 1.25rem;
+                color: var(--muted-foreground, #5e5d59);
+            }
+            .prose-lg img { border-radius: 1rem; margin: 2rem 0; }
+            .prose-lg hr { border-top-color: var(--border, #f0eee6); margin: 2.5rem 0; }
+            .prose-lg > :last-child { margin-bottom: 0; }
         </style>
 
         <script>
