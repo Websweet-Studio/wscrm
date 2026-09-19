@@ -143,6 +143,9 @@ const formatPrice = (price: number) => {
     }).format(price);
 };
 
+const marginOf = (domain: DomainPrice) => Number(domain.selling_price) - Number(domain.base_cost);
+const renewalMarginOf = (domain: DomainPrice) => Number(domain.renewal_price_with_tax) - Number(domain.renewal_cost);
+
 const handleSearch = () => {
     router.get(
         '/admin/domain-prices',
@@ -331,6 +334,9 @@ const confirmDelete = () => {
                                         </button>
                                     </TableHead>
                                     <TableHead>
+                                        <span title="Harga jual dikurangi biaya dasar (modal RDash). Merah = harga jual di bawah modal.">Margin</span>
+                                    </TableHead>
+                                    <TableHead>
                                         <button
                                             @click="sortBy('renewal_price_with_tax')"
                                             class="flex cursor-pointer items-center space-x-1 hover:text-foreground"
@@ -369,6 +375,14 @@ const confirmDelete = () => {
                                     <TableCell>{{ formatPrice(domain.base_cost) }}</TableCell>
                                     <TableCell>{{ formatPrice(domain.renewal_cost) }}</TableCell>
                                     <TableCell>{{ formatPrice(domain.selling_price) }}</TableCell>
+                                    <TableCell>
+                                        <span
+                                            :class="marginOf(domain) < 0 ? 'font-medium text-red-600' : 'text-emerald-600'"
+                                            :title="'Margin perpanjangan: ' + formatPrice(renewalMarginOf(domain))"
+                                        >
+                                            {{ formatPrice(marginOf(domain)) }}
+                                        </span>
+                                    </TableCell>
                                     <TableCell>{{ formatPrice(domain.renewal_price_with_tax) }}</TableCell>
                                     <TableCell>
                                         <Badge :variant="domain.is_active ? 'default' : 'secondary'">
