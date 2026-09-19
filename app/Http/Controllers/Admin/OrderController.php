@@ -186,7 +186,7 @@ class OrderController extends Controller
                 switch ($item['item_type']) {
                     case 'hosting':
                         $plan = HostingPlan::findOrFail($item['item_id']);
-                        $totalAmount += $plan->finalPrice();
+                        $totalAmount += $plan->priceForCycle($item['billing_cycle'] ?? $request->billing_cycle);
                         break;
                     case 'domain':
                         $domain = DomainPrice::findOrFail($item['item_id']);
@@ -222,7 +222,7 @@ class OrderController extends Controller
                 switch ($item['item_type']) {
                     case 'hosting':
                         $plan = HostingPlan::findOrFail($item['item_id']);
-                        $price = $plan->finalPrice();
+                        $price = $plan->priceForCycle($item['billing_cycle'] ?? $request->billing_cycle);
                         break;
                     case 'domain':
                         $domain = DomainPrice::findOrFail($item['item_id']);
@@ -320,7 +320,7 @@ class OrderController extends Controller
             }
 
             foreach ($items as $item) {
-                $price = $item['price'] ?? $this->getDefaultPrice($item['item_type'], $item['item_id']);
+                $price = $item['price'] ?? $this->getDefaultPrice($item['item_type'], $item['item_id'], $item['billing_cycle'] ?? $request->billing_cycle);
                 $totalAmount += (float) $price;
 
                 $attributes = [
@@ -352,13 +352,13 @@ class OrderController extends Controller
         return redirect()->back()->with('success', 'Pesanan berhasil diperbarui!');
     }
 
-    private function getDefaultPrice(string $itemType, int $itemId): float
+    private function getDefaultPrice(string $itemType, int $itemId, ?string $cycle = null): float
     {
         switch ($itemType) {
             case 'hosting':
                 $plan = HostingPlan::find($itemId);
 
-                return $plan ? $plan->selling_price * (1 - $plan->discount_percent / 100) : 500000;
+                return $plan ? $plan->priceForCycle($cycle) : 500000;
             case 'domain':
                 $domain = DomainPrice::find($itemId);
 

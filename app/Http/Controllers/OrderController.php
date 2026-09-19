@@ -75,7 +75,7 @@ class OrderController extends Controller
                 switch ($item['item_type']) {
                     case 'hosting':
                         $hostingPlan = HostingPlan::findOrFail($item['item_id']);
-                        $price = $hostingPlan->finalPrice();
+                        $price = $hostingPlan->priceForCycle($request->billing_cycle);
 
                         // Apply bundle discount if eligible (10% off hosting)
                         if ($isBundleEligible) {

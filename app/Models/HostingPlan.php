@@ -88,4 +88,34 @@ class HostingPlan extends Model
 
         return $base * (1 - ($discount / 100));
     }
+
+    /** Jumlah bulan untuk setiap periode tagihan. */
+    public const PERIOD_MONTHS = [
+        'monthly' => 1,
+        'quarterly' => 3,
+        'semi_annually' => 6,
+        'annually' => 12,
+    ];
+
+    /** Lama periode tagihan paket ini dalam bulan (default: tahunan). */
+    public function billingPeriodMonths(): int
+    {
+        return self::PERIOD_MONTHS[$this->billing_period ?? ''] ?? 12;
+    }
+
+    /**
+     * Harga jual paket untuk satu siklus tagihan tertentu.
+     *
+     * Paket bisa dijual per BULAN (VPS: `billing_period = monthly`) atau per TAHUN
+     * (shared hosting), jadi basis perhitungan diambil dari `billing_period` paket —
+     * bukan diasumsikan tahunan. Contoh: VPS CE 3 (Rp290.000/bulan) siklus 6 bulan
+     * = 290.000 × 6 = Rp1.740.000, siklus 1 tahun = Rp3.480.000.
+     */
+    public function priceForCycle(?string $cycle): float
+    {
+        $baseMonths = $this->billingPeriodMonths();
+        $cycleMonths = self::PERIOD_MONTHS[$cycle ?? ''] ?? $baseMonths;
+
+        return round($this->finalPrice() * ($cycleMonths / $baseMonths), 2);
+    }
 }

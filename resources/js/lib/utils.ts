@@ -39,6 +39,46 @@ export function getHostingPlanFinalPrice(plan: {
     return base * (1 - safeDiscount / 100);
 }
 
+/** Jumlah bulan setiap periode/siklus tagihan. */
+export const BILLING_CYCLE_MONTHS: Record<string, number> = {
+    monthly: 1,
+    quarterly: 3,
+    semi_annually: 6,
+    semi_annual: 6,
+    annually: 12,
+    annual: 12,
+};
+
+/** Label periode tagihan paket, mis. "/bulan" atau "/tahun". */
+export const BILLING_PERIOD_LABELS: Record<string, string> = {
+    monthly: '/bulan',
+    quarterly: '/3 bulan',
+    semi_annually: '/6 bulan',
+    annually: '/tahun',
+};
+
+/**
+ * Harga jual paket hosting/VPS untuk satu siklus tagihan tertentu.
+ *
+ * Basis diambil dari `billing_period` paket: VPS dijual per BULAN (Rp290.000/bulan
+ * → 6 bulan = Rp1.740.000), shared hosting per TAHUN. Jangan asumsikan tahunan.
+ */
+export function getHostingPlanPriceForCycle(
+    plan: {
+        selling_price: number | string;
+        discount_percent?: number | string | null;
+        use_bulk_pricing?: boolean | null;
+        billing_period?: string | null;
+    },
+    cycle?: string | null,
+): number {
+    const base = getHostingPlanFinalPrice(plan);
+    const baseMonths = BILLING_CYCLE_MONTHS[plan.billing_period ?? 'annually'] ?? 12;
+    const cycleMonths = BILLING_CYCLE_MONTHS[cycle ?? ''] ?? baseMonths;
+
+    return Math.round((base * cycleMonths) / baseMonths * 100) / 100;
+}
+
 export function formatDate(date: string | Date, format: string = 'short'): string {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
 

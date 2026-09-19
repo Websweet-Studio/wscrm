@@ -4,7 +4,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { getHostingPlanFinalPrice } from '@/lib/utils';
+import { BILLING_PERIOD_LABELS, getHostingPlanFinalPrice, getHostingPlanPriceForCycle } from '@/lib/utils';
 import { Check, ChevronsUpDown, Plus, Trash2, X } from 'lucide-vue-next';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
@@ -17,6 +17,8 @@ interface Customer {
 interface HostingPlan {
     id: number;
     plan_name: string;
+    service_type?: string;
+    billing_period?: string;
     selling_price: number;
     storage_gb: number;
     cpu_cores: number;
@@ -180,30 +182,24 @@ const getItemPrice = (item: OrderItem): number => {
     return price !== undefined && price !== null ? Number(price) : 0;
 };
 
+const findHostingPlan = (itemId: string | number) => props.hostingPlans.find((plan) => plan.id.toString() === itemId.toString());
+
 // Calculate total price for an item based on its billing cycle
 const calculateItemTotal = (item: OrderItem): number => {
-    const basePrice = getItemPrice(item);
     const cycle = item.billing_cycle || formData.value.billing_cycle;
-    
-    if (isNaN(basePrice)) return 0;
-    
+
+    // Basis harga hosting/VPS mengikuti billing_period paket (VPS dijual per BULAN,
+    // shared hosting per TAHUN) — bukan selalu tahunan.
     if (item.item_type === 'hosting') {
-        // Hosting price is Annual (per year)
-        switch (cycle) {
-            case 'monthly':
-                return basePrice / 12;
-            case 'quarterly':
-                return basePrice / 4;
-            case 'semi_annually':
-            case 'semi_annual':
-                return basePrice / 2;
-            case 'annually':
-            case 'annual':
-                return basePrice;
-            default:
-                return basePrice;
-        }
-    } else if (item.item_type === 'domain') {
+        const plan = findHostingPlan(item.item_id);
+        return plan ? getHostingPlanPriceForCycle(plan, cycle) : 0;
+    }
+
+    const basePrice = getItemPrice(item);
+
+    if (isNaN(basePrice)) return 0;
+
+    if (item.item_type === 'domain') {
         // Domain price is Annual
         return basePrice;
     } else if (['service', 'app', 'web'].includes(item.item_type)) {
@@ -385,9 +381,10 @@ const getPlansForType = (type: string) => {
         case 'hosting':
             return props.hostingPlans.map((plan) => {
                 const discountedPrice = getHostingPlanFinalPrice(plan);
+                const periodLabel = BILLING_PERIOD_LABELS[plan.billing_period ?? 'annually'] ?? '/tahun';
                 return {
                     id: plan.id,
-                    name: `${plan.plan_name} (${plan.storage_gb}GB, ${plan.cpu_cores} CPU, ${plan.ram_gb}GB RAM) - ${formatPrice(discountedPrice)}`,
+                    name: `${plan.plan_name} (${plan.storage_gb}GB, ${plan.cpu_cores} CPU, ${plan.ram_gb}GB RAM) - ${formatPrice(discountedPrice)}${periodLabel}`,
                     price: discountedPrice,
                 };
             });
