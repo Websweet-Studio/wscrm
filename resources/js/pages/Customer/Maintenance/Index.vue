@@ -11,6 +11,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { Activity, Calendar, ClipboardList, Download, Search, Wrench, X } from 'lucide-vue-next';
 import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import { Bar } from 'vue-chartjs';
+import { alpha, baseChartOptions, barDataset, cartesianScales, chartColors, legendOptions, tooltipOptions } from '@/lib/chartTheme';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { computed, ref } from 'vue';
 
@@ -87,23 +88,25 @@ const totalActivities = computed(() =>
 );
 const uniqueWebsites = computed(() => new Set(props.journals.data.map(j => j.website_client?.name)).size);
 
-const chartJsData = computed(() => ({
-    labels: props.chartData.map(d => d.label),
-    datasets: [
-        { label: 'WP Update', data: props.chartData.map(d => d.byType.wp_update || 0), backgroundColor: '#3b82f6' },
-        { label: 'Update Plugin', data: props.chartData.map(d => d.byType.plugin_update || 0), backgroundColor: '#a855f7' },
-        { label: 'Update Tema', data: props.chartData.map(d => d.byType.theme_update || 0), backgroundColor: '#6366f1' },
-        { label: 'Artikel', data: props.chartData.map(d => d.byType.article || 0), backgroundColor: '#10b981' },
-        { label: 'Optimasi Halaman', data: props.chartData.map(d => d.byType.page_optimization || 0), backgroundColor: '#f59e0b' },
-        { label: 'Lainnya', data: props.chartData.map(d => d.byType.other || 0), backgroundColor: '#9ca3af' },
-    ],
-}));
+const chartJsData = computed(() => {
+    const p = chartColors.primary();
+    const seg = { borderRadius: 4, maxBarThickness: 26 };
+    return {
+        labels: props.chartData.map(d => d.label),
+        datasets: [
+            barDataset('WP Update', props.chartData.map(d => d.byType.wp_update || 0), { backgroundColor: p, ...seg }),
+            barDataset('Update Plugin', props.chartData.map(d => d.byType.plugin_update || 0), { backgroundColor: alpha(p, 0.78), ...seg }),
+            barDataset('Update Tema', props.chartData.map(d => d.byType.theme_update || 0), { backgroundColor: alpha(p, 0.55), ...seg }),
+            barDataset('Artikel', props.chartData.map(d => d.byType.article || 0), { backgroundColor: '#10b981', ...seg }),
+            barDataset('Optimasi Halaman', props.chartData.map(d => d.byType.page_optimization || 0), { backgroundColor: '#f59e0b', ...seg }),
+            barDataset('Lainnya', props.chartData.map(d => d.byType.other || 0), { backgroundColor: '#9ca3af', ...seg }),
+        ],
+    };
+});
 
 const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: { x: { stacked: true, grid: { display: false }, ticks: { maxTicksLimit: 10, font: { size: 10 } } }, y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } } } },
-    plugins: { legend: { position: 'top' as const, labels: { boxWidth: 12, boxHeight: 12, padding: 12, font: { size: 11 } } }, tooltip: { mode: 'index' as const, intersect: false } },
+    ...baseChartOptions({ plugins: { legend: legendOptions(true), tooltip: tooltipOptions() } }),
+    scales: cartesianScales({ stacked: true, xTicks: 8, yTicks: 5 }),
 };
 
 const showActivityModal = ref(false);

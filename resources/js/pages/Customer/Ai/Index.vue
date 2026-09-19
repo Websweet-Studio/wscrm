@@ -12,6 +12,7 @@ import { ArrowDownCircle, ArrowRight, ArrowUpCircle, BookOpen, Brain, Check, Che
 import { computed, onMounted, ref, watch } from 'vue';
 import { Bar } from 'vue-chartjs';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { baseChartOptions, barDataset, cartesianScales, legendOptions, tooltipOptions } from '@/lib/chartTheme';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -293,32 +294,22 @@ const creditPercent = computed(() => {
 
 const usageDailyData = computed(() => ({
     labels: props.usage_daily.map((d) => d.label),
-    datasets: [
-        {
-            label: 'Kredit Terpakai',
-            data: props.usage_daily.map((d) => d.credits),
-            backgroundColor: 'hsl(var(--primary) / 0.85)',
-            borderRadius: 4,
-        },
-    ],
+    datasets: [barDataset('Kredit Terpakai', props.usage_daily.map((d) => d.credits))],
 }));
 
 const usageBarOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-        legend: { display: false },
-        tooltip: {
-            callbacks: {
-                label: (ctx: { parsed: { y: number }; dataIndex: number }) =>
-                    `${props.usage_daily[ctx.dataIndex].runs} request · ${ctx.parsed.y.toLocaleString('id-ID')} kredit`,
-            },
+    ...baseChartOptions({
+        plugins: {
+            legend: legendOptions(false),
+            tooltip: tooltipOptions({
+                callbacks: {
+                    label: (ctx: { parsed: { y: number }; dataIndex: number }) =>
+                        `${props.usage_daily[ctx.dataIndex].runs} request · ${ctx.parsed.y.toLocaleString('id-ID')} kredit`,
+                },
+            }),
         },
-    },
-    scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 15 } },
-        y: { beginAtZero: true, ticks: { font: { size: 10 } }, grid: { color: 'hsl(var(--border) / 0.6)' } },
-    },
+    }),
+    scales: cartesianScales({ xTicks: 12, yTicks: 4 }),
 };
 
 const usage30dTotal = computed(() => props.usage_daily.reduce((sum, d) => sum + d.credits, 0));

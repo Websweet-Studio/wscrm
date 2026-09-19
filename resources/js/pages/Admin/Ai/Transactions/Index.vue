@@ -12,6 +12,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { ArrowDownCircle, ArrowUpCircle, Coins, Search, Cpu, Hash, Zap, TrendingUp } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import { Bar, Doughnut } from 'vue-chartjs';
+import { alpha, baseChartOptions, barDataset, cartesianScales, chartColors, chartPalette, doughnutOptions as doughnutTheme } from '@/lib/chartTheme';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, LineController, ArcElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, LineController, ArcElement, Title, Tooltip, Legend, Filler);
@@ -75,74 +76,48 @@ const formatDate = (d: string) => new Date(d).toLocaleString('id-ID', { dateStyl
 
 const formatNumber = (n: number) => n.toLocaleString('id-ID');
 
-const palette = ['#f59e0b', '#22d3ee', '#a78bfa', '#34d399', '#f87171', '#60a5fa', '#fb923c', '#4ade80'];
-
 const monthlyTokensData = computed(() => ({
     labels: props.analytics.monthly.map(m => m.month),
-    datasets: [{
-        label: 'Token',
-        data: props.analytics.monthly.map(m => m.tokens),
-        backgroundColor: 'hsl(var(--primary) / 0.85)',
-        borderRadius: 6,
-    }],
+    datasets: [barDataset('Token', props.analytics.monthly.map(m => m.tokens))],
 }));
 
 const monthlyRunsData = computed(() => ({
     labels: props.analytics.monthly.map(m => m.month),
-    datasets: [{
-        label: 'Runs',
-        data: props.analytics.monthly.map(m => m.runs),
-        backgroundColor: 'hsl(var(--primary) / 0.55)',
-        borderRadius: 6,
-    }],
+    datasets: [barDataset('Runs', props.analytics.monthly.map(m => m.runs), { backgroundColor: alpha(chartColors.primary(), 0.6) })],
 }));
 
 const barOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false }, tooltip: { mode: 'index' as const, intersect: false } },
-    scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
-        y: { beginAtZero: true, ticks: { font: { size: 10 } }, grid: { color: 'hsl(var(--border) / 0.6)' } },
-    },
+    ...baseChartOptions(),
+    scales: cartesianScales({ xTicks: 8, yTicks: 4 }),
 };
 
-const runsByModelData = computed(() => ({
-    labels: props.analytics.by_model.map(m => m.model_key),
-    datasets: [{
-        label: 'Runs',
-        data: props.analytics.by_model.map(m => m.runs),
-        backgroundColor: props.analytics.by_model.map((_, i) => palette[i % palette.length]),
-        borderRadius: 6,
-    }],
-}));
-
-const tokensByModelData = computed(() => ({
-    labels: props.analytics.by_model.map(m => m.model_key),
-    datasets: [{
-        label: 'Token',
-        data: props.analytics.by_model.map(m => m.tokens_in + m.tokens_out),
-        backgroundColor: props.analytics.by_model.map((_, i) => palette[i % palette.length]),
-        borderRadius: 6,
-    }],
-}));
-
-const spendByModelData = computed(() => ({
-    labels: props.analytics.by_model.map(m => m.model_key),
-    datasets: [{
-        label: 'Kredit',
-        data: props.analytics.by_model.map(m => m.credits),
-        backgroundColor: props.analytics.by_model.map((_, i) => palette[i % palette.length]),
-        borderWidth: 0,
-    }],
-}));
-
-const doughnutOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: '60%',
-    plugins: { legend: { position: 'bottom' as const, labels: { boxWidth: 12, boxHeight: 12, font: { size: 10 } } } },
+const modelBar = (label: string, values: number[]) => {
+    const pal = chartPalette();
+    return {
+        labels: props.analytics.by_model.map(m => m.model_key),
+        datasets: [barDataset(label, values, { backgroundColor: values.map((_, i) => pal[i % pal.length]), maxBarThickness: 28 })],
+    };
 };
+
+const runsByModelData = computed(() => modelBar('Runs', props.analytics.by_model.map(m => m.runs)));
+
+const tokensByModelData = computed(() => modelBar('Token', props.analytics.by_model.map(m => m.tokens_in + m.tokens_out)));
+
+const spendByModelData = computed(() => {
+    const pal = chartPalette();
+    return {
+        labels: props.analytics.by_model.map(m => m.model_key),
+        datasets: [{
+            label: 'Kredit',
+            data: props.analytics.by_model.map(m => m.credits),
+            backgroundColor: props.analytics.by_model.map((_, i) => pal[i % pal.length]),
+            borderWidth: 0,
+            hoverOffset: 4,
+        }],
+    };
+});
+
+const doughnutOptions = doughnutTheme();
 
 </script>
 

@@ -23,8 +23,9 @@ import {
     Users,
 } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
-import { Bar } from 'vue-chartjs';
+import { Bar, Line } from 'vue-chartjs';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, LineController, Title, Tooltip, Legend, Filler } from 'chart.js';
+import { alpha, baseChartOptions, barDataset, cartesianScales, chartColors, legendOptions, lineDataset, tooltipOptions } from '@/lib/chartTheme';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, LineController, Title, Tooltip, Legend, Filler);
 
@@ -231,50 +232,29 @@ const priorityBadge = (priority: Task['priority']) => {
     }
 };
 
+// Grafik pesanan harian — area garis halus (lebih enak dibaca daripada batang tipis).
 const dailyChartData = computed(() => ({
     labels: props.chartData.dailyOrders.map(d => d.day.toString()),
-    datasets: [{
-        label: 'Pesanan',
-        data: props.chartData.dailyOrders.map(d => d.orders),
-        borderColor: 'hsl(var(--primary))',
-        backgroundColor: 'hsla(var(--primary) / 0.12)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 3,
-        pointBackgroundColor: 'hsl(var(--primary))',
-        pointBorderColor: 'hsl(var(--card))',
-        pointBorderWidth: 2,
-    }],
+    datasets: [lineDataset('Pesanan', props.chartData.dailyOrders.map(d => d.orders))],
 }));
 
 const dailyChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false }, tooltip: { mode: 'index' as const, intersect: false } },
-    scales: {
-        x: { grid: { display: false }, ticks: { maxTicksLimit: 10, font: { size: 10 } } },
-        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: 'hsl(var(--border) / 0.6)' } },
-    },
-    interaction: { intersect: false, mode: 'index' as const },
+    ...baseChartOptions(),
+    scales: cartesianScales({ maxTicksLimit: 8, yTicks: 4 }),
 };
 
 const monthlyChartData = computed(() => ({
     labels: props.chartData.monthlyStats.map(m => m.month_short),
     datasets: [
-        { label: 'Pesanan', data: props.chartData.monthlyStats.map(m => m.orders), backgroundColor: 'hsl(var(--primary))', borderRadius: 6 },
-        { label: 'Pelanggan', data: props.chartData.monthlyStats.map(m => m.customers), backgroundColor: 'hsl(var(--primary) / 0.55)', borderRadius: 6 },
-        { label: 'Pendapatan (jt)', data: props.chartData.monthlyStats.map(m => Math.round(m.revenue / 1000000)), backgroundColor: 'hsl(var(--primary) / 0.25)', borderRadius: 6 },
+        barDataset('Pesanan', props.chartData.monthlyStats.map(m => m.orders), { backgroundColor: chartColors.primary() }),
+        barDataset('Pelanggan', props.chartData.monthlyStats.map(m => m.customers), { backgroundColor: alpha(chartColors.primary(), 0.55) }),
+        barDataset('Pendapatan (jt)', props.chartData.monthlyStats.map(m => Math.round(m.revenue / 1000000)), { backgroundColor: alpha(chartColors.primary(), 0.28) }),
     ],
 }));
 
 const monthlyChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { position: 'top' as const, labels: { boxWidth: 12, boxHeight: 12, padding: 16, font: { size: 11 } } }, tooltip: { mode: 'index' as const, intersect: false } },
-    scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
-        y: { beginAtZero: true, ticks: { font: { size: 10 } }, grid: { color: 'hsl(var(--border) / 0.6)' } },
-    },
+    ...baseChartOptions({ plugins: { legend: legendOptions(true), tooltip: tooltipOptions() } }),
+    scales: cartesianScales({ maxTicksLimit: 8, yTicks: 4 }),
 };
 </script>
 
@@ -405,7 +385,7 @@ const monthlyChartOptions = {
                     </CardHeader>
                     <CardContent>
                         <div class="h-56">
-                            <Bar :data="dailyChartData" :options="dailyChartOptions" />
+                            <Line :data="dailyChartData" :options="dailyChartOptions" />
                         </div>
                     </CardContent>
                 </Card>
