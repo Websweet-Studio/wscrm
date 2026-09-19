@@ -108,8 +108,8 @@ class HostingPlan extends Model
      *
      * Paket bisa dijual per BULAN (VPS: `billing_period = monthly`) atau per TAHUN
      * (shared hosting), jadi basis perhitungan diambil dari `billing_period` paket —
-     * bukan diasumsikan tahunan. Contoh: VPS CE 3 (Rp290.000/bulan) siklus 6 bulan
-     * = 290.000 × 6 = Rp1.740.000, siklus 1 tahun = Rp3.480.000.
+     * bukan diasumsikan tahunan. Contoh: VPS CE 3 (Rp180.000/bulan) siklus 6 bulan
+     * = 180.000 × 6 = Rp1.080.000, siklus 1 tahun = Rp2.160.000.
      */
     public function priceForCycle(?string $cycle): float
     {

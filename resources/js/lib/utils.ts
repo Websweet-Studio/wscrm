@@ -60,8 +60,8 @@ export const BILLING_PERIOD_LABELS: Record<string, string> = {
 /**
  * Harga jual paket hosting/VPS untuk satu siklus tagihan tertentu.
  *
- * Basis diambil dari `billing_period` paket: VPS dijual per BULAN (Rp290.000/bulan
- * → 6 bulan = Rp1.740.000), shared hosting per TAHUN. Jangan asumsikan tahunan.
+ * Basis diambil dari `billing_period` paket: VPS dijual per BULAN (Rp180.000/bulan
+ * → 6 bulan = Rp1.080.000), shared hosting per TAHUN. Jangan asumsikan tahunan.
  */
 export function getHostingPlanPriceForCycle(
     plan: {
