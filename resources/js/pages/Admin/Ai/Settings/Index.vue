@@ -49,7 +49,7 @@ const save = () => {
             <div>
                 <h1 class="text-3xl font-medium" style="font-family: Georgia, serif;">Pengaturan AI</h1>
                 <p class="text-muted-foreground">
-                    Konfigurasi endpoint, API key, dan model AI yang dipakai oleh AI Agent & chatbot customer service.
+                    Konfigurasi endpoint, API key, dan model AI yang dipakai chatbot customer service dan API AI untuk customer.
                 </p>
             </div>
 
@@ -60,7 +60,7 @@ const save = () => {
                         <span>Koneksi AI</span>
                     </CardTitle>
                     <CardDescription class="leading-relaxed">
-                        Atur endpoint, model, dan API key yang dipakai AI Agent & chatbot customer service.
+                        Atur endpoint, model, dan API key yang dipakai chatbot customer service dan API AI untuk customer.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

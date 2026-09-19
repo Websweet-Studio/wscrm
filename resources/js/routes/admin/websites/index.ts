@@ -1,84 +1,5 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
-import ai335533 from './ai'
 import plugins4ebc57 from './plugins'
-/**
-* @see \App\Http\Controllers\Admin\AiAgentController::ai
- * @see app/Http/Controllers/Admin/AiAgentController.php:16
- * @route '/admin/websites/ai'
- */
-export const ai = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: ai.url(options),
-    method: 'get',
-})
-
-ai.definition = {
-    methods: ["get","head"],
-    url: '/admin/websites/ai',
-} satisfies RouteDefinition<["get","head"]>
-
-/**
-* @see \App\Http\Controllers\Admin\AiAgentController::ai
- * @see app/Http/Controllers/Admin/AiAgentController.php:16
- * @route '/admin/websites/ai'
- */
-ai.url = (options?: RouteQueryOptions) => {
-    return ai.definition.url + queryParams(options)
-}
-
-/**
-* @see \App\Http\Controllers\Admin\AiAgentController::ai
- * @see app/Http/Controllers/Admin/AiAgentController.php:16
- * @route '/admin/websites/ai'
- */
-ai.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: ai.url(options),
-    method: 'get',
-})
-/**
-* @see \App\Http\Controllers\Admin\AiAgentController::ai
- * @see app/Http/Controllers/Admin/AiAgentController.php:16
- * @route '/admin/websites/ai'
- */
-ai.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: ai.url(options),
-    method: 'head',
-})
-
-    /**
-* @see \App\Http\Controllers\Admin\AiAgentController::ai
- * @see app/Http/Controllers/Admin/AiAgentController.php:16
- * @route '/admin/websites/ai'
- */
-    const aiForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: ai.url(options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\AiAgentController::ai
- * @see app/Http/Controllers/Admin/AiAgentController.php:16
- * @route '/admin/websites/ai'
- */
-        aiForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: ai.url(options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\Admin\AiAgentController::ai
- * @see app/Http/Controllers/Admin/AiAgentController.php:16
- * @route '/admin/websites/ai'
- */
-        aiForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: ai.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    ai.form = aiForm
 /**
 * @see \App\Http\Controllers\Admin\ThirdPartyPluginController::plugins
  * @see app/Http/Controllers/Admin/ThirdPartyPluginController.php:14
@@ -918,7 +839,6 @@ bulkDelete.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => 
     
     bulkDelete.form = bulkDeleteForm
 const websites = {
-    ai: Object.assign(ai, ai335533),
 plugins: Object.assign(plugins, plugins4ebc57),
 index: Object.assign(index, index),
 create: Object.assign(create, create),

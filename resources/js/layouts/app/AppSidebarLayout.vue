@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
-import FloatingAiAssistant from '@/components/FloatingAiAssistant.vue';
 import ToastContainer from '@/components/ToastContainer.vue';
 import { useSidebar } from '@/composables/useSidebar';
 import { usePage } from '@inertiajs/vue3';
@@ -17,9 +16,6 @@ withDefaults(defineProps<Props>(), {
 });
 
 const { isMinimized, isMobileOpen, toggleSidebar, toggleMobileSidebar, closeMobileSidebar } = useSidebar();
-
-// Floating AI hanya untuk admin (web guard), bukan customer.
-const isAdmin = computed(() => !!usePage().props.auth?.user);
 </script>
 
 <template>
@@ -56,8 +52,5 @@ const isAdmin = computed(() => !!usePage().props.auth?.user);
 
         <!-- Toast Container -->
         <ToastContainer />
-
-        <!-- Floating AI Assistant -->
-        <FloatingAiAssistant v-if="isAdmin" />
     </div>
 </template>

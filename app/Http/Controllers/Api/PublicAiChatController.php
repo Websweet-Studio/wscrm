@@ -13,10 +13,10 @@ use Illuminate\Http\Request;
 
 /**
  * Chatbot AI untuk PENGUNJUNG publik (customer service) di halaman website.
- * Berbeda dari AiAgentController (admin): ini tidak memakai kredit, langsung
- * memakai AiClient (AI_ENDPOINT/AI_API_KEY/AI_MODEL dari .env), dan hanya
- * menjawab pertanyaan umum seputar layanan hosting/domain/jasa. Bila AI tidak
- * bisa menjawab, respons mengarahkan pengunjung ke WhatsApp perusahaan.
+ * Mandiri: tidak memakai kredit, langsung memakai AiClient
+ * (AI_ENDPOINT/AI_API_KEY/AI_MODEL dari .env), dan hanya menjawab pertanyaan umum
+ * seputar layanan hosting/domain/jasa. Bila AI tidak bisa menjawab, respons
+ * mengarahkan pengunjung ke WhatsApp perusahaan.
  */
 class PublicAiChatController extends Controller
 {

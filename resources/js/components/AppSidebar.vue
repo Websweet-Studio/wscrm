@@ -180,11 +180,6 @@ const mainNavItems: NavItem[] = [
         icon: Cpu,
         children: [
             {
-                title: 'AI Agent',
-                href: '/admin/websites/ai',
-                icon: Bot,
-            },
-            {
                 title: 'Pengaturan AI',
                 href: '/admin/ai/settings',
                 icon: Settings,

@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminToolsController;
-use App\Http\Controllers\Admin\AiAgentController;
 use App\Http\Controllers\Admin\BankController;
 use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\BroadcastController;
@@ -103,14 +102,6 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
     Route::resource('task-categories', TaskCategoryController::class)->only(['index', 'store', 'update', 'destroy']);
 
     // Website Client & Journal Management
-    // AI Agent - must be before resource route to avoid conflict
-    Route::get('websites/ai', [AiAgentController::class, 'index'])->name('websites.ai');
-    Route::post('websites/ai/chat', [AiAgentController::class, 'chat'])->name('websites.ai.chat')->middleware('throttle:20,1');
-    Route::post('websites/ai/chat/stream', [AiAgentController::class, 'streamChat'])->name('websites.ai.chat.stream')->middleware('throttle:20,1');
-    Route::post('websites/ai/chat/confirm', [AiAgentController::class, 'confirmActions'])->name('websites.ai.chat.confirm')->middleware('throttle:20,1');
-    Route::post('websites/ai/chat/cancel', [AiAgentController::class, 'cancelActions'])->name('websites.ai.chat.cancel');
-    Route::get('websites/ai/conversations/{conversation}', [AiAgentController::class, 'show'])->name('websites.ai.conversations.show');
-    Route::delete('websites/ai/conversations/{conversation}', [AiAgentController::class, 'destroy'])->name('websites.ai.conversations.destroy');
     // Plugin pihak ketiga - must be before resource route to avoid conflict
     Route::get('websites/plugins', [ThirdPartyPluginController::class, 'index'])->name('websites.plugins');
     Route::post('websites/plugins', [ThirdPartyPluginController::class, 'store'])->name('websites.plugins.store');
