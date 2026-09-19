@@ -8,20 +8,24 @@ use Illuminate\Database\Seeder;
 class DomainPriceSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Jalankan seed harga domain (snapshot lama).
+     *
+     * Sumber kebenaran harga = `php8.3 artisan rdash:sync-prices` (harga RDash × PPN).
+     * Seeder ini hanya MENGISI baris yang belum ada (firstOrCreate) supaya tidak
+     * menimpa harga hasil sinkronisasi / harga promo yang dikunci manual.
      */
     public function run(): void
     {
         $domains = [
             ['.biz.id', 10000, 55000, 15000, 65000],
-            ['.my.id', 10000, 22000, 15000, 25000],
+            ['.my.id', 10000, 22000, 30000, 30000],
             ['.cc', 157000, 157000, 180000, 180000],
             ['.xyz', 180000, 180000, 205000, 205000],
             ['.org', 190000, 190000, 215000, 215000],
             ['.net', 195000, 200000, 220000, 225000],
             ['.click', 195000, 195000, 220000, 220000],
             ['.asia', 198000, 198000, 225000, 225000],
-            ['.com', 199000, 199000, 225000, 225000],
+            ['.com', 227550, 227550, 225000, 265000],
             ['.id', 210000, 210000, 240000, 240000],
             ['.biz', 250000, 250000, 280000, 280000],
             ['.co.id', 270000, 270000, 305000, 305000],
@@ -40,7 +44,7 @@ class DomainPriceSeeder extends Seeder
         ];
 
         foreach ($domains as $domain) {
-            DomainPrice::updateOrCreate(
+            DomainPrice::firstOrCreate(
                 ['extension' => $domain[0]],
                 [
                 'extension' => $domain[0],

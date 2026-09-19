@@ -44,6 +44,10 @@ return [
         'api_key' => env('RDASH_API_KEY', env('RNA_API')),
         'base_url' => env('RDASH_BASE_URL', 'https://api.rdash.id/v1'),
         'timeout' => env('RDASH_TIMEOUT', 25),
+
+        // TLD yang harga jualnya DIPERTAHANKAN manual (harga promo), tidak ikut
+        // dihitung ulang oleh `rdash:sync-prices --fix-selling`. Pisahkan dengan koma.
+        'keep_selling' => env('RDASH_KEEP_SELLING', '.com'),
     ],
 
     // Alias lama (kompatibilitas) — config('services.rna.*')

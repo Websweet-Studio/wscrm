@@ -18,6 +18,7 @@ class RdashSyncPrices extends Command
         {--create-missing : Buat baris baru untuk TLD yang ada di RDash tapi belum ada di domain_prices}
         {--fix-selling : Hitung ulang harga jual untuk TLD yang marginnya di bawah batas --min-margin}
         {--min-margin=0 : Batas margin minimum (% dari modal); 0 = hanya perbaiki yang rugi}
+        {--keep= : Ekstensi (dipisah koma) yang harga jualnya DIPERTAHANKAN apa adanya walau marginnya tipis/negatif, contoh: .com,.my.id}
         {--markup=15 : Persen markup dari modal untuk harga jual (baris baru & perbaikan harga)}
         {--round=5000 : Bulatkan harga jual ke atas ke kelipatan ini}
         {--activate : Baris baru langsung is_active = true (default: nonaktif dulu untuk ditinjau)}
@@ -32,6 +33,14 @@ class RdashSyncPrices extends Command
         $createMissing = (bool) $this->option('create-missing');
         $fixSelling = (bool) $this->option('fix-selling');
         $minMargin = (float) $this->option('min-margin');
+        $keep = $this->parseList((string) ($this->option('keep') ?? ''));
+
+        // Cadangan dari konfigurasi (RDASH_KEEP_SELLING) bila --keep tidak diberikan,
+        // supaya sinkronisasi/cron berikutnya tidak diam-diam menaikkan harga jual TLD promo.
+        if ($keep === []) {
+            $keep = $this->parseList((string) config('services.rdash.keep_selling', ''));
+        }
+
         $markup = (float) $this->option('markup');
         $round = max(1.0, (float) $this->option('round'));
         $activate = (bool) $this->option('activate');
@@ -57,6 +66,7 @@ class RdashSyncPrices extends Command
         $unknown = [];
         $created = [];
         $repriced = [];
+        $kept = [];
         $rollbackUpdates = [];
         $rollbackDeletes = [];
 
@@ -149,6 +159,20 @@ class RdashSyncPrices extends Command
             $needSell = $this->belowMargin($sellNow, $newBase, $minMargin);
             $needRenewSell = $this->belowMargin($renewSellNow, $newRenewal, $minMargin);
 
+            // Harga jual yang dikunci manual (--keep) tidak pernah dihitung ulang
+            // walau marginnya tipis/negatif — mis. harga promo TLD tertentu.
+            if (($needSell || $needRenewSell) && in_array($this->normExt($extension), $keep, true)) {
+                $kept[] = [
+                    'extension' => $this->normExt($extension),
+                    'base_cost' => $newBase,
+                    'selling_price' => $sellNow,
+                    'renewal_selling' => $renewSellNow,
+                    'margin' => $sellNow - $newBase,
+                ];
+
+                continue;
+            }
+
             if (! $needSell && ! $needRenewSell) {
                 continue;
             }
@@ -205,10 +229,12 @@ class RdashSyncPrices extends Command
                 'created' => count($created),
                 'unchanged' => $unchanged,
                 'repriced' => count($repriced),
+                'kept' => count($kept),
                 'unknown' => array_values(array_unique($unknown)),
                 'rows' => $changed,
                 'created_rows' => $created,
                 'repriced_rows' => $repriced,
+                'kept_rows' => $kept,
                 'negative_margin' => $negative,
                 'rollback_file' => $rollbackFile,
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
@@ -224,6 +250,7 @@ class RdashSyncPrices extends Command
             ['TLD dengan perubahan biaya dasar', count($changed)],
             ['TLD baru dibuat', count($created)],
             ['TLD harga jualnya diperbaiki (rugi)', count($repriced)],
+            ['TLD harga jual dikunci manual (--keep)', count($kept)],
             ['TLD sudah sama', $unchanged],
             ['TLD di RDash yang belum ada di domain_prices', count(array_unique($unknown))],
             ['TLD dengan margin negatif (harga jual < modal)', count($negative)],
@@ -278,6 +305,21 @@ class RdashSyncPrices extends Command
             );
         }
 
+        if ($kept !== []) {
+            $this->newLine();
+            $this->warn('Harga jual dikunci manual (--keep) — TIDAK dihitung ulang otomatis:');
+            $this->table(
+                ['Ekstensi', 'Modal', 'Harga jual', 'Renew + pajak', 'Margin/domain'],
+                array_map(fn (array $r) => [
+                    $r['extension'],
+                    $this->money($r['base_cost']),
+                    $this->money($r['selling_price']),
+                    $this->money($r['renewal_selling']),
+                    $this->money($r['margin']),
+                ], $kept)
+            );
+        }
+
         if ($negative !== []) {
             $this->newLine();
             $this->error('MASIH RUGI (harga jual < modal): pakai --fix-selling untuk memperbaiki.');
@@ -305,6 +347,22 @@ class RdashSyncPrices extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /** Pisahkan opsi daftar "a,b,c" menjadi array ekstensi ternormalisasi (".com"). */
+    private function parseList(string $value): array
+    {
+        $items = array_filter(array_map('trim', explode(',', $value)), fn ($v) => $v !== '');
+
+        return array_values(array_unique(array_map(fn ($v) => $this->normExt($v), $items)));
+    }
+
+    /** Ekstensi selalu bertitik & huruf kecil: "com" → ".com". */
+    private function normExt(string $extension): string
+    {
+        $extension = strtolower(trim($extension));
+
+        return $extension === '' || str_starts_with($extension, '.') ? $extension : '.'.$extension;
     }
 
     /** Harga jual = modal + markup%, dibulatkan ke atas ke kelipatan $round. */
