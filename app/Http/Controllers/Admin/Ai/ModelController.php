@@ -12,6 +12,47 @@ use Inertia\Response;
 
 class ModelController extends Controller
 {
+    /**
+     * Kolom detail spesifikasi model (opsional) — dipakai di store() & update().
+     */
+    private const DETAIL_COLUMNS = [
+        'description', 'upstream_slug', 'cli_command', 'intelligence_index', 'output_speed',
+        'context_window', 'cache_read_rate', 'agent_loop_cost', 'released_at',
+    ];
+
+    /**
+     * Aturan validasi untuk kolom detail.
+     */
+    private function detailRules(): array
+    {
+        return [
+            'description' => 'nullable|string|max:255',
+            'upstream_slug' => 'nullable|string|max:255',
+            'cli_command' => 'nullable|string|max:255',
+            'intelligence_index' => 'nullable|numeric|min:0|max:999.9',
+            'output_speed' => 'nullable|numeric|min:0|max:99999999',
+            'context_window' => 'nullable|string|max:32',
+            'cache_read_rate' => 'nullable|numeric|min:0',
+            'agent_loop_cost' => 'nullable|numeric|min:0',
+            'released_at' => 'nullable|date',
+        ];
+    }
+
+    /**
+     * Ambil nilai kolom detail dari data tervalidasi (string kosong → null).
+     */
+    private function detailAttributes(array $validated): array
+    {
+        $attributes = [];
+
+        foreach (self::DETAIL_COLUMNS as $column) {
+            $value = $validated[$column] ?? null;
+            $attributes[$column] = $value === '' ? null : $value;
+        }
+
+        return $attributes;
+    }
+
     public function index(): Response
     {
         $models = AiModel::query()
@@ -56,7 +97,7 @@ class ModelController extends Controller
             'supports_vision' => 'boolean',
             'supports_deep_thinking' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
-        ]);
+        ] + $this->detailRules());
 
         AiModel::create([
             'provider_id' => $validated['provider_id'],
@@ -69,7 +110,7 @@ class ModelController extends Controller
             'supports_vision' => $validated['supports_vision'] ?? false,
             'supports_deep_thinking' => $validated['supports_deep_thinking'] ?? false,
             'sort_order' => $validated['sort_order'] ?? 0,
-        ]);
+        ] + $this->detailAttributes($validated));
 
         return redirect()->back()->with('success', 'Model AI berhasil ditambahkan.');
     }
@@ -87,7 +128,7 @@ class ModelController extends Controller
             'supports_vision' => 'boolean',
             'supports_deep_thinking' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
-        ]);
+        ] + $this->detailRules());
 
         $model->update([
             'provider_id' => $validated['provider_id'],
@@ -100,7 +141,7 @@ class ModelController extends Controller
             'supports_vision' => $validated['supports_vision'] ?? false,
             'supports_deep_thinking' => $validated['supports_deep_thinking'] ?? false,
             'sort_order' => $validated['sort_order'] ?? 0,
-        ]);
+        ] + $this->detailAttributes($validated));
 
         return redirect()->back()->with('success', 'Model AI berhasil diperbarui.');
     }

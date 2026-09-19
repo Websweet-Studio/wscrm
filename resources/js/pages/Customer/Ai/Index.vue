@@ -8,7 +8,7 @@ import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowDownCircle, ArrowRight, ArrowUpCircle, BookOpen, Brain, Check, ChevronLeft, ChevronRight, Copy, Cpu, Download, Eye, History, KeyRound, Megaphone, RefreshCw, Server, ShoppingCart, TrendingUp, Zap } from 'lucide-vue-next';
+import { ArrowDownCircle, ArrowRight, ArrowUpCircle, BookOpen, Brain, Check, ChevronLeft, ChevronRight, Copy, Cpu, Download, Eye, History, Info, KeyRound, Megaphone, RefreshCw, Server, ShoppingCart, TrendingUp, X, Zap } from 'lucide-vue-next';
 import { computed, onMounted, ref, watch } from 'vue';
 import { Bar } from 'vue-chartjs';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
@@ -24,6 +24,16 @@ interface Model {
     output_rate: string;
     supports_vision: boolean;
     supports_deep_thinking: boolean;
+    // Detail spesifikasi model (opsional) — tampil di modal "Detail".
+    description: string | null;
+    upstream_slug: string | null;
+    cli_command: string | null;
+    intelligence_index: string | null;
+    output_speed: string | null;
+    context_window: string | null;
+    cache_read_rate: string | null;
+    agent_loop_cost: string | null;
+    released_at: string | null;
     provider: { id: number; name: string } | null;
 }
 
@@ -180,6 +190,69 @@ const priceInput = (m: Model): string =>
     props.credit_price === null ? `${formatNum(Number(m.input_rate))} kredit / 1M` : formatRupiah(Number(m.input_rate) * props.credit_price);
 const priceOutput = (m: Model): string =>
     props.credit_price === null ? `${formatNum(Number(m.output_rate))} kredit / 1M` : formatRupiah(Number(m.output_rate) * props.credit_price);
+
+// ── Detail model: dibuka lewat klik (modal), tidak ditampilkan penuh di tabel ──
+const detailModel = ref<Model | null>(null);
+
+const toNum = (v: string | null | undefined): number | null => {
+    if (v === null || v === undefined || v === '') return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+};
+
+const hasDetail = (m: Model): boolean =>
+    Boolean(
+        m.description ||
+            m.upstream_slug ||
+            m.cli_command ||
+            m.context_window ||
+            m.released_at ||
+            toNum(m.intelligence_index) !== null ||
+            toNum(m.output_speed) !== null ||
+            toNum(m.cache_read_rate) !== null ||
+            toNum(m.agent_loop_cost) !== null,
+    );
+
+const openDetail = (m: Model) => {
+    detailModel.value = m;
+};
+
+const formatUsd = (v: string | null | undefined): string => {
+    const n = toNum(v);
+    if (n === null) return '';
+    return '$' + n.toFixed(4).replace(/0+$/, '').replace(/\.$/, '');
+};
+
+const formatReleased = (v: string | null | undefined): string => {
+    if (!v) return '';
+    const d = new Date(v.length > 10 ? v : v + 'T00:00:00');
+    if (Number.isNaN(d.getTime())) return v;
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+};
+
+// Baris spesifikasi modal detail — hanya baris yang ada isinya yang tampil.
+const detailSpecs = computed<Array<{ label: string; value: string; mono?: boolean }>>(() => {
+    const m = detailModel.value;
+    if (!m) return [];
+
+    const speed = toNum(m.output_speed);
+    const intel = toNum(m.intelligence_index);
+    const cache = formatUsd(m.cache_read_rate);
+    const loop = formatUsd(m.agent_loop_cost);
+
+    const rows: Array<{ label: string; value: string; mono?: boolean }> = [
+        { label: 'Context window', value: m.context_window || '' },
+        { label: 'Intelligence index', value: intel === null ? '' : formatNum(intel) },
+        { label: 'Kecepatan output', value: speed === null ? '' : `${formatNum(speed)} tok/s` },
+        { label: 'Rilis', value: formatReleased(m.released_at) },
+        { label: 'Slug upstream', value: m.upstream_slug || '', mono: true },
+        { label: 'Perintah CLI', value: m.cli_command || '', mono: true },
+        { label: 'Cache read (upstream)', value: cache ? `${cache} / 1M token` : '' },
+        { label: 'Agent-loop cost (upstream)', value: loop ? `${loop} / 1M token input` : '' },
+    ];
+
+    return rows.filter((r) => r.value !== '');
+});
 
 // Harga combo = harga model utama (priority 0).
 const comboPrimary = (c: Combo) => [...c.models].sort((a, b) => a.pivot.priority - b.pivot.priority)[0];
@@ -580,6 +653,16 @@ const historyExportUrl = computed(() => {
                                                     </span>
                                                 </div>
                                                 <div v-if="m.display_name" class="text-xs text-muted-foreground">{{ m.display_name }}</div>
+                                                <div v-if="hasDetail(m)" class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                                                    <button
+                                                        type="button"
+                                                        class="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border/60 bg-muted/40 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground hover:bg-muted"
+                                                        @click="openDetail(m)"
+                                                    >
+                                                        <Info class="h-3 w-3" /> Detail
+                                                    </button>
+                                                    <span v-if="m.context_window" class="text-[11px] text-muted-foreground">Konteks {{ m.context_window }}</span>
+                                                </div>
                                             </TableCell>
                                             <TableCell>{{ m.provider?.name || '-' }}</TableCell>
                                             <TableCell>{{ priceInput(m) }}</TableCell>
@@ -883,6 +966,45 @@ const historyExportUrl = computed(() => {
                 <div class="flex justify-end gap-3">
                     <Button variant="outline" @click="showRegenModal = false" class="cursor-pointer">Batal</Button>
                     <Button @click="confirmRegen" class="cursor-pointer">Generate Baru</Button>
+                </div>
+            </div>
+        </div>
+        <!-- Detail Model Modal -->
+        <div v-if="detailModel" class="fixed inset-0 z-50 flex items-center justify-center">
+            <div class="fixed inset-0 bg-black/50" @click="detailModel = null"></div>
+            <div class="relative mx-4 max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
+                <div class="mb-3 flex items-start justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-semibold">Detail Model</h2>
+                        <p class="mt-1 font-mono text-sm text-muted-foreground">{{ detailModel.model_key }}</p>
+                        <p v-if="detailModel.display_name" class="text-sm font-medium text-foreground">{{ detailModel.display_name }}</p>
+                    </div>
+                    <button type="button" class="cursor-pointer rounded-md p-1 text-muted-foreground hover:bg-muted" aria-label="Tutup" @click="detailModel = null">
+                        <X class="h-4 w-4" />
+                    </button>
+                </div>
+                <p v-if="detailModel.description" class="mb-4 text-sm text-muted-foreground">{{ detailModel.description }}</p>
+                <div v-if="detailSpecs.length" class="space-y-2 rounded-lg border border-border/60 p-3">
+                    <div v-for="row in detailSpecs" :key="row.label" class="flex items-start justify-between gap-4 text-sm">
+                        <span class="shrink-0 text-muted-foreground">{{ row.label }}</span>
+                        <span :class="row.mono ? 'break-all font-mono text-xs' : ''" class="text-right font-medium text-foreground">{{ row.value }}</span>
+                    </div>
+                </div>
+                <div class="mt-3 grid grid-cols-2 gap-3">
+                    <div class="rounded-lg border border-border/60 p-3">
+                        <div class="text-xs text-muted-foreground">Input / 1M token</div>
+                        <div class="font-semibold text-foreground">{{ priceInput(detailModel) }}</div>
+                    </div>
+                    <div class="rounded-lg border border-border/60 p-3">
+                        <div class="text-xs text-muted-foreground">Output / 1M token</div>
+                        <div class="font-semibold text-foreground">{{ priceOutput(detailModel) }}</div>
+                    </div>
+                </div>
+                <p class="mt-3 text-xs text-muted-foreground">
+                    Harga tersebut adalah tarif yang dipotong dari saldo kredit kamu. Biaya cache &amp; agent-loop di atas hanya informasi dari penyedia model (tidak ditagihkan).
+                </p>
+                <div class="mt-4 flex justify-end">
+                    <Button variant="outline" class="cursor-pointer" @click="detailModel = null">Tutup</Button>
                 </div>
             </div>
         </div>

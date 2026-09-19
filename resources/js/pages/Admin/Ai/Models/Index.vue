@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { Brain, Edit, Eye, Plus, Search, Trash2, X } from 'lucide-vue-next';
+import { Brain, ChevronDown, Edit, Eye, Info, Plus, Search, Trash2, X } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 
 interface AiModel {
@@ -24,6 +24,16 @@ interface AiModel {
     supports_vision: boolean;
     supports_deep_thinking: boolean;
     sort_order: number;
+    // Detail spesifikasi model (opsional)
+    description: string | null;
+    upstream_slug: string | null;
+    cli_command: string | null;
+    intelligence_index: string | null;
+    output_speed: string | null;
+    context_window: string | null;
+    cache_read_rate: string | null;
+    agent_loop_cost: string | null;
+    released_at: string | null;
     provider: { id: number; name: string } | null;
 }
 
@@ -59,15 +69,65 @@ const form = useForm({
     supports_vision: false,
     supports_deep_thinking: false,
     sort_order: 0,
+    // Detail model (opsional) — dari katalog provider, tampil ke pelanggan.
+    description: '',
+    upstream_slug: '',
+    cli_command: '',
+    intelligence_index: '' as string | number,
+    output_speed: '' as string | number,
+    context_window: '',
+    cache_read_rate: '' as string | number,
+    agent_loop_cost: '' as string | number,
+    released_at: '',
 });
+
+// Panel detail di form diciutkan selama model belum punya detail.
+const showDetailFields = ref(false);
+
+const hasDetail = (m: AiModel): boolean =>
+    Boolean(
+        m.description ||
+            m.upstream_slug ||
+            m.cli_command ||
+            m.context_window ||
+            m.released_at ||
+            m.intelligence_index !== null ||
+            m.output_speed !== null ||
+            m.cache_read_rate !== null ||
+            m.agent_loop_cost !== null,
+    );
 
 // Saat credit_price tersedia, form input dalam Rupiah, konversi ke kredit saat submit.
 const isRupiah = computed(() => props.credit_price !== null && props.credit_price > 0);
 
+const DETAIL_FORM_KEYS = [
+    'description',
+    'upstream_slug',
+    'cli_command',
+    'intelligence_index',
+    'output_speed',
+    'context_window',
+    'cache_read_rate',
+    'agent_loop_cost',
+    'released_at',
+] as const;
+
 const openCreate = () => {
-    form.reset('model_key', 'display_name', 'label', 'input_rate', 'output_rate', 'is_active', 'supports_vision', 'supports_deep_thinking', 'sort_order');
+    form.reset(
+        'model_key',
+        'display_name',
+        'label',
+        'input_rate',
+        'output_rate',
+        'is_active',
+        'supports_vision',
+        'supports_deep_thinking',
+        'sort_order',
+        ...DETAIL_FORM_KEYS,
+    );
     form.provider_id = props.providers[0]?.id ?? '';
     form.clearErrors();
+    showDetailFields.value = false;
     showCreateModal.value = true;
 };
 
@@ -85,6 +145,17 @@ const openEdit = (m: AiModel) => {
     form.supports_vision = m.supports_vision;
     form.supports_deep_thinking = m.supports_deep_thinking;
     form.sort_order = m.sort_order;
+    // Detail model (opsional)
+    form.description = m.description || '';
+    form.upstream_slug = m.upstream_slug || '';
+    form.cli_command = m.cli_command || '';
+    form.intelligence_index = m.intelligence_index !== null ? Number(m.intelligence_index) : '';
+    form.output_speed = m.output_speed !== null ? Number(m.output_speed) : '';
+    form.context_window = m.context_window || '';
+    form.cache_read_rate = m.cache_read_rate !== null ? Number(m.cache_read_rate) : '';
+    form.agent_loop_cost = m.agent_loop_cost !== null ? Number(m.agent_loop_cost) : '';
+    form.released_at = m.released_at || '';
+    showDetailFields.value = hasDetail(m);
     showEditModal.value = true;
 };
 
@@ -199,7 +270,18 @@ const previewOutput = (): string =>
                         </TableHeader>
                         <TableBody>
                             <TableRow v-for="m in models.data" :key="m.id">
-                                <TableCell class="font-mono font-medium">{{ m.model_key }}</TableCell>
+                                <TableCell>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-mono font-medium">{{ m.model_key }}</span>
+                                        <span
+                                            v-if="hasDetail(m)"
+                                            title="Ada detail spesifikasi model (tampil ke pelanggan)"
+                                            class="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                                        >
+                                            <Info class="h-3 w-3" /> Detail
+                                        </span>
+                                    </div>
+                                </TableCell>
                                 <TableCell class="text-muted-foreground">{{ m.display_name || '-' }}</TableCell>
                                 <TableCell>{{ m.provider?.name || '-' }}</TableCell>
                                 <TableCell>{{ priceInput(m) }}</TableCell>
@@ -313,6 +395,63 @@ const previewOutput = (): string =>
                                 <input v-model="form.supports_deep_thinking" type="checkbox" class="h-4 w-4" />
                                 <Brain class="h-3.5 w-3.5 text-muted-foreground" /> Deep Thinking
                             </Label>
+                        </div>
+                    </div>
+                    <div class="space-y-3 rounded-lg border border-border/60 p-3">
+                        <button
+                            type="button"
+                            class="flex w-full cursor-pointer items-center justify-between text-xs font-medium text-muted-foreground"
+                            @click="showDetailFields = !showDetailFields"
+                        >
+                            <span class="inline-flex items-center gap-1.5"><Info class="h-3.5 w-3.5" /> Detail model (opsional · tampil ke pelanggan)</span>
+                            <ChevronDown class="h-3.5 w-3.5 transition-transform" :class="showDetailFields ? 'rotate-180' : ''" />
+                        </button>
+                        <div v-if="showDetailFields" class="space-y-3">
+                            <div>
+                                <Label>Deskripsi</Label>
+                                <Input v-model="form.description" placeholder="mis. V4.1 hybrid-attention reasoning with vision." />
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label>Slug upstream</Label>
+                                    <Input v-model="form.upstream_slug" placeholder="mis. deepseek/deepseek-v4.1-flash" />
+                                </div>
+                                <div>
+                                    <Label>Perintah CLI</Label>
+                                    <Input v-model="form.cli_command" placeholder="mis. cmdc --model deepseek/deepseek-v4.1-flash" />
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <Label>Intelligence index</Label>
+                                    <Input v-model.number="form.intelligence_index" type="number" min="0" step="0.1" placeholder="39.5" />
+                                </div>
+                                <div>
+                                    <Label>Kecepatan output (tok/s)</Label>
+                                    <Input v-model.number="form.output_speed" type="number" min="0" step="0.1" placeholder="246.8" />
+                                </div>
+                                <div>
+                                    <Label>Context window</Label>
+                                    <Input v-model="form.context_window" placeholder="mis. 1M tokens" />
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <Label>Cache read ($/1M)</Label>
+                                    <Input v-model.number="form.cache_read_rate" type="number" min="0" step="0.000001" placeholder="0.003" />
+                                </div>
+                                <div>
+                                    <Label>Agent-loop cost ($/1M in)</Label>
+                                    <Input v-model.number="form.agent_loop_cost" type="number" min="0" step="0.000001" placeholder="0.05" />
+                                </div>
+                                <div>
+                                    <Label>Rilis</Label>
+                                    <Input v-model="form.released_at" type="date" />
+                                </div>
+                            </div>
+                            <p class="text-xs text-muted-foreground">
+                                Cache read &amp; agent-loop = referensi harga upstream, tidak ditagih ke pelanggan (relay hanya menagih token in/out).
+                            </p>
                         </div>
                     </div>
                     <div class="flex justify-end gap-2 pt-2">
