@@ -2,76 +2,77 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Cek ketersediaan domain lewat API RDASH (Basic Auth).
+ *
+ * Sebelumnya service ini memanggil `X-API-Key` ke endpoint yang salah sehingga
+ * SELALU gagal dan jatuh ke tebakan heuristik ("nama panjang = tersedia").
+ * Sekarang memakai RdashService; fallback heuristik hanya dipakai bila
+ * kredensial belum diisi atau API tidak dapat dihubungi (dan ditandai `fallback = true`).
+ */
 class DomainAvailabilityService
 {
-    private string $apiKey;
-
-    private string $baseUrl;
-
-    public function __construct()
-    {
-        $this->apiKey = config('services.rna.api_key') ?? '';
-        $this->baseUrl = config('services.rna.base_url', 'https://api.rdash.id/v1');
-    }
+    public function __construct(private readonly RdashService $rdash) {}
 
     /**
-     * Check domain availability using RNA API
+     * Check domain availability using RDASH API
      *
      * @param  string  $domain  - Full domain name (e.g., 'example.com')
+     * @return array<string, mixed>
      */
     public function checkAvailability(string $domain): array
     {
+        $domain = strtolower(trim($domain));
+
+        if ($domain === '') {
+            return [
+                'success' => false,
+                'available' => false,
+                'domain' => '',
+                'status' => 'unknown',
+                'message' => 'Nama domain kosong',
+                'fallback' => false,
+            ];
+        }
+
+        if (! $this->rdash->isConfigured()) {
+            return $this->getFallbackAvailability($domain, 'Kredensial RDASH belum diisi (RDASH_RESELLER_ID/RDASH_API_KEY)');
+        }
+
         try {
-            $response = Http::withHeaders([
-                'X-API-Key' => $this->apiKey,
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-            ])->timeout(10)
-                ->get($this->baseUrl.'/domains/availability', [
-                    'domain' => $domain,
-                ]);
+            $data = $this->rdash->availability($domain);
+            $available = (bool) ($data['available'] ?? false);
 
-            if ($response->successful()) {
-                $data = $response->json();
-
-                return [
-                    'success' => true,
-                    'available' => $data['available'] ?? false,
-                    'domain' => $domain,
-                    'status' => $data['status'] ?? 'unknown',
-                    'message' => $data['message'] ?? null,
-                    'data' => $data,
-                ];
-            } else {
-                Log::warning('RNA API domain check failed', [
-                    'domain' => $domain,
-                    'status' => $response->status(),
-                    'response' => $response->body(),
-                ]);
-
-                // Use fallback when API fails
-                return $this->getFallbackAvailability($domain);
-            }
-
-        } catch (\Exception $e) {
-            Log::error('RNA API domain check exception', [
+            return [
+                'success' => true,
+                'available' => $available,
+                'domain' => $data['name'] ?? $domain,
+                'status' => $available ? 'available' : 'taken',
+                'message' => $data['message'] ?? null,
+                'is_premium' => (bool) ($data['is_premium_name'] ?? false),
+                'premium_price' => $data['premium_registration_price'] ?? null,
+                'data' => $data,
+                'fallback' => false,
+            ];
+        } catch (\Throwable $e) {
+            Log::warning('RDASH API domain check gagal', [
                 'domain' => $domain,
                 'error' => $e->getMessage(),
             ]);
 
-            // Fallback: basic heuristic for demo purposes
-            return $this->getFallbackAvailability($domain);
+            return $this->getFallbackAvailability($domain, 'API RDASH tidak dapat dihubungi');
         }
     }
 
     /**
      * Fallback availability check when API is not available
      * This provides reasonable defaults for demo purposes
+     *
+     * @return array<string, mixed>
      */
-    private function getFallbackAvailability(string $domain): array
+    private function getFallbackAvailability(string $domain, string $reason = 'API unavailable'): array
     {
         // Simple heuristic: popular domains are likely taken,
         // unusual/long domains are more likely available
@@ -91,11 +92,11 @@ class DomainAvailabilityService
         $isLikelyAvailable = ! $isCommonDomain && (strlen($baseDomain) > 8 || preg_match('/\d+/', $baseDomain));
 
         return [
-            'success' => true,
-            'available' => $isLikelyAvailable,
+            'success' => false,
+            'available' => (bool) $isLikelyAvailable,
             'domain' => $domain,
             'status' => $isLikelyAvailable ? 'available' : 'taken',
-            'message' => 'Availability check using fallback method (API unavailable)',
+            'message' => 'Hasil tebakan (fallback): '.$reason,
             'fallback' => true,
         ];
     }
@@ -103,7 +104,8 @@ class DomainAvailabilityService
     /**
      * Check multiple domains availability
      *
-     * @param  array  $domains  - Array of domain names
+     * @param  array<int, string>  $domains  - Array of domain names
+     * @return array<string, array<string, mixed>>
      */
     public function checkMultipleAvailability(array $domains): array
     {
@@ -123,7 +125,8 @@ class DomainAvailabilityService
      * Check availability with suggestions
      *
      * @param  string  $baseDomain  - Base domain without extension (e.g., 'example')
-     * @param  array  $extensions  - Array of extensions to check (e.g., ['com', 'net', 'org'])
+     * @param  array<int, string>  $extensions  - Array of extensions to check (e.g., ['com', 'net', 'org'])
+     * @return array<string, array<string, mixed>>
      */
     public function checkWithSuggestions(string $baseDomain, array $extensions = ['com', 'net', 'org', 'id', 'co.id']): array
     {

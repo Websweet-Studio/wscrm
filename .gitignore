@@ -37,3 +37,4 @@ yarn-error.log
 /test-extract.claude/settings.json
 /.claude/
 lsp-*
+.env.testing

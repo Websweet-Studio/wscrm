@@ -35,9 +35,22 @@ return [
         ],
     ],
 
+    /*
+    | RDASH — Domain Reseller Open API (https://api.rdash.id/v1).
+    | Auth: Basic Auth (resellerId:apiKey). IP server wajib di-whitelist di panel RDash.
+    */
+    'rdash' => [
+        'reseller_id' => env('RDASH_RESELLER_ID', env('RNA_RESELLER_ID')),
+        'api_key' => env('RDASH_API_KEY', env('RNA_API')),
+        'base_url' => env('RDASH_BASE_URL', 'https://api.rdash.id/v1'),
+        'timeout' => env('RDASH_TIMEOUT', 25),
+    ],
+
+    // Alias lama (kompatibilitas) — config('services.rna.*')
     'rna' => [
-        'api_key' => env('RNA_API'),
-        'base_url' => env('RNA_BASE_URL', 'https://api.rdash.id/v1'),
+        'reseller_id' => env('RDASH_RESELLER_ID', env('RNA_RESELLER_ID')),
+        'api_key' => env('RDASH_API_KEY', env('RNA_API')),
+        'base_url' => env('RDASH_BASE_URL', 'https://api.rdash.id/v1'),
     ],
 
     'agent' => [

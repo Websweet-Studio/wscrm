@@ -12,6 +12,9 @@ function renewalTestOrder(array $overrides = []): Order
     return Order::factory()->active()->create(array_merge([
         'customer_id' => Customer::factory(),
         'order_type' => 'hosting',
+        // service_type ditulis eksplisit: OrderFactory memilih acak (hosting/domain)
+        // sehingga catatan invoice ("... hosting service expiring on ...") jadi flaky.
+        'service_type' => 'hosting',
         'domain_name' => 'kai.web.id',
         'billing_cycle' => 'annually',
         'status' => 'active',
