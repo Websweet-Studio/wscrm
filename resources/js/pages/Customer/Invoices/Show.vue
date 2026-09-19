@@ -93,6 +93,24 @@ const netAmountOf = (inv: any): number => {
 
     return Math.max(0, Number(inv?.amount ?? 0) - discountOf(inv));
 };
+
+// Rincian tagihan: "produk apa" yang ditagih. Nama & label produk datang dari backend
+// (OrderItem::display_name / type_label / display_spec) supaya halaman ini, PDF, dan email
+// invoice menampilkan hal yang sama.
+const invoiceItems = (): any[] => props.invoice?.order?.order_items ?? [];
+
+const itemsSum = (): number => invoiceItems().reduce((sum, item) => sum + Number(item.price ?? 0) * Number(item.quantity ?? 1), 0);
+
+// Selisih rincian vs nilai tagihan (hanya untuk data lama) — sama dengan baris "Penyesuaian harga"
+// di PDF & email invoice.
+const adjustmentOf = (): number => Math.round((Number(props.invoice?.amount ?? 0) - itemsSum()) * 100) / 100;
+
+const itemTypeBadgeClass = (type: string) =>
+    type === 'hosting'
+        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+        : type === 'domain'
+          ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
+          : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
 </script>
 
 <template>
@@ -243,6 +261,71 @@ const netAmountOf = (inv: any): number => {
                                 <div>
                                     <label class="text-sm font-medium text-muted-foreground">Created Date</label>
                                     <p class="text-lg">{{ formatDate(invoice.created_at) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <!-- Detail Tagihan: produk apa yang ditagih -->
+                <Card v-if="invoiceItems().length > 0 || Math.abs(adjustmentOf()) > 0.004" class="rounded-lg border-border/60 shadow-sm">
+                    <CardHeader>
+                        <CardTitle class="flex items-center gap-2">
+                            <Package class="h-5 w-5" />
+                            Detail Tagihan
+                        </CardTitle>
+                        <p class="text-sm text-muted-foreground">Produk/layanan yang ditagih pada invoice ini</p>
+                    </CardHeader>
+                    <CardContent class="p-0">
+                        <div class="divide-y divide-border/60">
+                            <div v-for="item in invoiceItems()" :key="item.id" class="flex items-start justify-between gap-4 px-5 py-3.5">
+                                <div class="flex min-w-0 items-start gap-3">
+                                    <span
+                                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-xs font-bold uppercase"
+                                        :class="itemTypeBadgeClass(item.item_type)"
+                                    >
+                                        {{ (item.type_label || item.item_type || '?').charAt(0) }}
+                                    </span>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-medium">{{ item.display_name || item.type_label || '-' }}</p>
+                                        <p class="text-xs text-muted-foreground">
+                                            {{ item.type_label }}<template v-if="item.display_spec"> &middot; {{ item.display_spec }}</template>
+                                        </p>
+                                        <p v-if="Number(item.quantity) > 1" class="text-xs text-muted-foreground">
+                                            {{ item.quantity }} &times; {{ formatPrice(Number(item.price)) }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="shrink-0 text-right text-sm font-semibold">
+                                    {{ formatPrice(Number(item.price) * Number(item.quantity)) }}
+                                </div>
+                            </div>
+
+                            <div v-if="Math.abs(adjustmentOf()) > 0.004" class="flex items-start justify-between gap-4 px-5 py-3.5">
+                                <div class="flex min-w-0 items-start gap-3">
+                                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-bold">S</span>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-medium">Penyesuaian harga</p>
+                                        <p class="text-xs text-muted-foreground">Selisih rincian dengan nilai tagihan invoice</p>
+                                    </div>
+                                </div>
+                                <div class="shrink-0 text-right text-sm font-semibold">{{ formatPrice(adjustmentOf()) }}</div>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-border/60 bg-muted/20 px-5 py-4">
+                            <div class="ml-auto w-full max-w-xs space-y-2">
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-muted-foreground">Subtotal</span>
+                                    <span>{{ formatPrice(Number(invoice.amount)) }}</span>
+                                </div>
+                                <div v-if="discountOf(invoice) > 0" class="flex items-center justify-between text-sm">
+                                    <span class="text-muted-foreground">Potongan</span>
+                                    <span class="font-medium text-emerald-700 dark:text-green-400">-{{ formatPrice(discountOf(invoice)) }}</span>
+                                </div>
+                                <div class="flex items-center justify-between border-t border-border/60 pt-2">
+                                    <span class="text-sm font-semibold">Total</span>
+                                    <span class="text-base font-bold text-primary">{{ formatPrice(netAmountOf(invoice)) }}</span>
                                 </div>
                             </div>
                         </div>

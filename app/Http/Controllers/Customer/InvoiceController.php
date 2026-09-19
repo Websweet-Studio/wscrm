@@ -12,6 +12,13 @@ use Inertia\Response;
 
 class InvoiceController extends CustomerBaseController
 {
+    /** Relasi item order yang dibutuhkan untuk menampilkan nama produk pada rincian tagihan. */
+    private const ITEM_RELATIONS = [
+        'order.orderItems.hostingPlan',
+        'order.orderItems.domainPrice',
+        'order.orderItems.servicePlan',
+    ];
+
     /**
      * Display a listing of the resource.
      */
@@ -36,11 +43,23 @@ class InvoiceController extends CustomerBaseController
     {
         $this->authorize('view', $invoice);
 
-        $invoice->load(['bank', 'paymentAccount', 'order', 'customer']);
+        $invoice->load(['bank', 'paymentAccount', 'customer', ...self::ITEM_RELATIONS]);
+        $this->appendItemLabels($invoice);
 
         return Inertia::render('Customer/Invoices/Show', [
             'invoice' => $invoice,
         ]);
+    }
+
+    /**
+     * Sertakan type_label/display_name/display_spec pada tiap item supaya halaman pelanggan
+     * menampilkan "produk apa" dari satu sumber yang sama dengan PDF & email invoice.
+     */
+    private function appendItemLabels(Invoice $invoice): void
+    {
+        foreach ($invoice->order?->orderItems ?? [] as $item) {
+            $item->append(['type_label', 'display_name', 'display_spec']);
+        }
     }
 
     /**
@@ -55,7 +74,8 @@ class InvoiceController extends CustomerBaseController
                 ->with('error', 'Invoice sudah dibayar.');
         }
 
-        $invoice->load(['bank', 'paymentAccount', 'order', 'customer']);
+        $invoice->load(['bank', 'paymentAccount', 'customer', ...self::ITEM_RELATIONS]);
+        $this->appendItemLabels($invoice);
 
         $paymentAccounts = PaymentAccount::query()
             ->active()

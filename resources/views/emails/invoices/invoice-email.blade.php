@@ -120,20 +120,11 @@
                                 @foreach($orderItems as $item)
                                 <tr>
                                     <td style="padding: 10px 10px; font-size: 13px; color: #000000; border-bottom: 1px solid #dddddd;">
-                                        <strong>
-                                            @if($item->item_type === 'hosting' && $item->hostingPlan)
-                                                {{ $item->hostingPlan->plan_name }}
-                                            @elseif($item->item_type === 'domain')
-                                                {{ $item->domain_name ?? $invoice->order?->domain_name ?? '-' }}
-                                            @elseif($item->servicePlan)
-                                                {{ $item->servicePlan->name }}
-                                            @else
-                                                {{ ucfirst($item->item_type) }}
-                                            @endif
-                                        </strong>
-                                        @if($item->item_type === 'hosting' && $item->hostingPlan)
-                                            <br><span style="font-size: 12px; color: #888888;">{{ $item->hostingPlan->storage_gb }}GB SSD &middot; {{ $item->hostingPlan->cpu_cores }} Core CPU &middot; {{ $item->hostingPlan->ram_gb }}GB RAM</span>
-                                        @endif
+                                        {{-- Nama produk & label dari OrderItem (satu sumber dengan PDF & halaman). --}}
+                                        <strong>{{ $item->display_name }}</strong>
+                                        <br><span style="font-size: 12px; color: #888888;">
+                                            {{ $item->type_label }}@if($item->display_spec) &middot; {{ $item->display_spec }}@endif
+                                        </span>
                                     </td>
                                     <td style="padding: 10px 10px; font-size: 13px; color: #000000; border-bottom: 1px solid #dddddd; text-align: center;">{{ $item->quantity }}</td>
                                     <td style="padding: 10px 10px; font-size: 13px; color: #000000; border-bottom: 1px solid #dddddd; text-align: right;">Rp {{ number_format($item->price, 0, ',', '.') }}</td>

@@ -229,28 +229,12 @@
                 @endphp
                 @foreach($invoice->order->orderItems as $item)
                     <tr>
+                        {{-- Label & nama produk diambil dari OrderItem (satu sumber dengan email & halaman). --}}
+                        <td>{{ $item->type_label }}</td>
                         <td>
-                            @if($item->item_type === 'hosting') Hosting
-                            @elseif($item->item_type === 'domain') Domain
-                            @elseif($item->item_type === 'service') Layanan
-                            @elseif($item->item_type === 'app') Aplikasi
-                            @elseif($item->item_type === 'web') Website
-                            @elseif($item->item_type === 'maintenance') Maintenance
-                            @else {{ ucfirst($item->item_type) }}
-                            @endif
-                        </td>
-                        <td>
-                            @if($item->domain_name)
-                                {{ $item->domain_name }}
-                            @else
-                                @if($item->item_type === 'hosting') Layanan Hosting
-                                @elseif($item->item_type === 'domain') Registrasi Domain
-                                @elseif($item->item_type === 'service') Layanan Tambahan
-                                @elseif($item->item_type === 'app') Pengembangan Aplikasi
-                                @elseif($item->item_type === 'web') Pengembangan Website
-                                @elseif($item->item_type === 'maintenance') Layanan Maintenance
-                                @else Layanan {{ ucfirst($item->item_type) }}
-                                @endif
+                            {{ $item->display_name }}
+                            @if($item->display_spec)
+                                <div style="font-size: 10px; color: #777777; margin-top: 2px;">{{ $item->display_spec }}</div>
                             @endif
                         </td>
                         <td>{{ $item->quantity ?? 1 }}</td>

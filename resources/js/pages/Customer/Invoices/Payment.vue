@@ -105,6 +105,14 @@ const netAmount = computed(() => {
 
 const totalWithFee = computed(() => netAmount.value);
 
+// Produk yang ditagih — nama & label dari backend (OrderItem::display_name / type_label / display_spec),
+// sumber yang sama dengan halaman detail invoice, PDF, dan email.
+const invoiceItems = computed<any[]>(() => props.invoice?.order?.order_items ?? []);
+
+const itemsSum = computed(() => invoiceItems.value.reduce((sum, item) => sum + Number(item.price ?? 0) * Number(item.quantity ?? 1), 0));
+
+const adjustmentAmount = computed(() => Math.round((Number(props.invoice?.amount ?? 0) - itemsSum.value) * 100) / 100);
+
 const copyValue = async (value: string) => {
     try {
         await navigator.clipboard.writeText(value);
@@ -422,6 +430,26 @@ if (props.invoice.payment_account_id) {
                             <div class="flex items-center justify-between text-sm">
                                 <span class="text-muted-foreground">Jatuh tempo</span>
                                 <span :class="cn('font-medium', isOverdue ? 'text-red-600 dark:text-red-400' : '')">{{ formatDate(invoice.due_date) }}</span>
+                            </div>
+                            <Separator />
+                            <div v-if="invoiceItems.length > 0" class="space-y-2">
+                                <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Detail tagihan</p>
+                                <div v-for="item in invoiceItems" :key="item.id" class="flex items-start justify-between gap-3 text-sm">
+                                    <div class="min-w-0">
+                                        <p class="truncate font-medium">{{ item.display_name || item.type_label || '-' }}</p>
+                                        <p class="text-xs text-muted-foreground">
+                                            {{ item.type_label }}<template v-if="item.display_spec"> &middot; {{ item.display_spec }}</template>
+                                        </p>
+                                    </div>
+                                    <span class="shrink-0 font-medium">{{ formatPrice(Number(item.price) * Number(item.quantity)) }}</span>
+                                </div>
+                                <div v-if="Math.abs(adjustmentAmount) > 0.004" class="flex items-start justify-between gap-3 text-sm">
+                                    <div class="min-w-0">
+                                        <p class="font-medium">Penyesuaian harga</p>
+                                        <p class="text-xs text-muted-foreground">Selisih rincian dengan nilai tagihan</p>
+                                    </div>
+                                    <span class="shrink-0 font-medium">{{ formatPrice(adjustmentAmount) }}</span>
+                                </div>
                             </div>
                             <Separator />
                             <div class="flex items-center justify-between text-sm">
