@@ -480,10 +480,41 @@ it('menyimpan harga promo registrasi dan memakai modal promo untuk harga jual', 
         ->and((float) $local->promo_base_cost)->toBe(210900.0)
         ->and((float) $local->promo_selling_price)->toBe(225000.0)
         ->and((float) $local->selling_price)->toBe(225000.0)
+        // --keep hanya mengunci REGISTRASI; perpanjangan ikut aturan margin:
+        // 227.550 + 10.000 = 237.550 → bulat ke atas 5.000 = 240.000
+        ->and((float) $local->renewal_price_with_tax)->toBe(240000.0)
         ->and($local->promo_starts_at?->setTimezone('UTC')->toDateString())->toBe('2026-03-31')
         ->and($local->promo_ends_at?->setTimezone('UTC')->toDateString())->toBe('2026-09-30')
         ->and($local->promo_note)->toContain('registrasi siklus 1 tahun')
         ->and($local->promo_note)->not->toContain('<li>');
+});
+
+it('harga perpanjangan ikut margin 10.000 + bulat 5.000 walau registrasi dikunci --keep', function () {
+    $local = DomainPrice::query()->create([
+        'extension' => '.com',
+        'base_cost' => 227550,
+        'renewal_cost' => 227550,
+        'selling_price' => 225000,
+        'renewal_price_with_tax' => 225000,
+        'is_active' => true,
+    ]);
+
+    rdashFakeApi([], [[
+        'id' => 72,
+        'domain_extension' => ['id' => 3, 'extension' => '.com'],
+        'currency' => 'IDR',
+        'registration' => ['1' => 205000],
+        'renewal' => ['1' => 205000],
+        'transfer' => '205000.00',
+    ]]);
+
+    $this->artisan('rdash:sync-prices --apply --fix-selling --margin=10000 --keep=.com')->assertExitCode(0);
+
+    $local->refresh();
+
+    // Registrasi tetap 225.000 (dikunci), perpanjangan naik ke modal + 10.000 dibulatkan.
+    expect((float) $local->selling_price)->toBe(225000.0)
+        ->and((float) $local->renewal_price_with_tax)->toBe(240000.0);
 });
 
 it('mengabaikan promo yang bukan untuk siklus 1 tahun (mis. .id hanya promo 2 tahun)', function () {

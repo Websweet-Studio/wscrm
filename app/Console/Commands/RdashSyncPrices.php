@@ -20,7 +20,7 @@ class RdashSyncPrices extends Command
         {--fix-selling : Hitung ulang harga jual untuk TLD yang marginnya di bawah batas --min-margin}
         {--min-margin=0 : Batas margin minimum (% dari modal); 0 = hanya perbaiki yang rugi}
         {--margin=0 : Margin NOMINAL (Rp) per domain, mis. 10000 → harga jual = modal + 10.000 lalu dibulatkan. Bila >0, menggantikan --markup dan menormalkan SEMUA harga jual (naik maupun turun)}
-        {--keep= : Ekstensi (dipisah koma) yang harga jualnya DIPERTAHANKAN apa adanya walau marginnya tipis/negatif, contoh: .com,.my.id}
+        {--keep= : Ekstensi (dipisah koma) yang HARGA REGISTRASINYA dipertahankan apa adanya walau marginnya tipis/negatif (harga perpanjangan tetap mengikuti aturan margin), contoh: .com,.my.id}
         {--no-promo : Abaikan harga promo registrasi dari RDash (jangan simpan/tinjau promo_registration)}
         {--markup=15 : Persen markup dari modal untuk harga jual (baris baru & perbaikan harga)}
         {--round=5000 : Bulatkan harga jual ke atas ke kelipatan ini}
@@ -187,18 +187,24 @@ class RdashSyncPrices extends Command
                 $needRenewSell = $this->belowMargin($renewSellNow, $newRenewal, $minMargin);
             }
 
-            // Harga jual yang dikunci manual (--keep) tidak pernah dihitung ulang
-            // walau marginnya tipis/negatif — mis. harga promo TLD tertentu.
-            if (($needSell || $needRenewSell) && in_array($this->normExt($extension), $keep, true)) {
+            // --keep hanya mengunci harga REGISTRASI (boleh tipis/negatif, mis. harga promo
+            // TLD tertentu). Harga PERPANJANGAN selalu mengikuti aturan margin — permintaan
+            // user 19 Sep 2026: perpanjangan .com ikut margin Rp10.000 + bulat Rp5.000.
+            if ($needSell && in_array($this->normExt($extension), $keep, true)) {
                 $kept[] = [
                     'extension' => $this->normExt($extension),
                     'base_cost' => $newBase,
                     'selling_price' => $sellNow,
                     'renewal_selling' => $renewSellNow,
+                    'renewal_target' => $targetRenewSell,
                     'margin' => $sellNow - $newBase,
                 ];
 
-                continue;
+                $needSell = false;
+
+                if (! $needRenewSell) {
+                    continue;
+                }
             }
 
             if (! $needSell && ! $needRenewSell) {
@@ -344,14 +350,15 @@ class RdashSyncPrices extends Command
 
         if ($kept !== []) {
             $this->newLine();
-            $this->warn('Harga jual dikunci manual (--keep) — TIDAK dihitung ulang otomatis:');
+            $this->warn('Harga REGISTRASI dikunci manual (--keep) — tidak dihitung ulang otomatis (perpanjangan tetap ikut aturan margin):');
             $this->table(
-                ['Ekstensi', 'Modal', 'Harga jual', 'Renew + pajak', 'Margin/domain'],
+                ['Ekstensi', 'Modal', 'Harga jual', 'Renew + pajak', 'Renew menurut aturan', 'Margin/domain'],
                 array_map(fn (array $r) => [
                     $r['extension'],
                     $this->money($r['base_cost']),
                     $this->money($r['selling_price']),
                     $this->money($r['renewal_selling']),
+                    $this->money($r['renewal_target'] ?? $r['renewal_selling']),
                     $this->money($r['margin']),
                 ], $kept)
             );
