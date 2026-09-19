@@ -268,7 +268,7 @@ const itemTypeBadgeClass = (type: string) =>
                 </Card>
 
                 <!-- Detail Tagihan: produk apa yang ditagih -->
-                <Card v-if="invoiceItems().length > 0 || Math.abs(adjustmentOf()) > 0.004" class="rounded-lg border-border/60 shadow-sm">
+                <Card v-if="invoiceItems().length > 0" class="rounded-lg border-border/60 shadow-sm">
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2">
                             <Package class="h-5 w-5" />
