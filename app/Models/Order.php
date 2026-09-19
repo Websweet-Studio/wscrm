@@ -128,7 +128,18 @@ class Order extends Model
 
     public function daysUntilExpiry(): int
     {
-        return $this->expires_at ? $this->expires_at->diffInDays(Carbon::now()) : 0;
+        if (! $this->expires_at) {
+            return 0;
+        }
+
+        // Carbon 3: diffInDays() mengembalikan float BERTANDA (bukan absolut seperti Carbon 2),
+        // jadi selisih ke depan dihitung eksplisit agar tidak menghasilkan angka negatif.
+        $expiry = $this->expires_at->copy()->startOfDay();
+        $today = Carbon::now()->startOfDay();
+
+        return $expiry->greaterThanOrEqualTo($today)
+            ? (int) $today->diffInDays($expiry)
+            : -(int) $expiry->diffInDays($today);
     }
 
     public function isRecurring(): bool
