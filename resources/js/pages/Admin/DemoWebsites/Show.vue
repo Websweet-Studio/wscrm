@@ -79,12 +79,25 @@ const handleImageChange = (event: Event) => {
 
 const submit = () => {
     form.post(`/admin/demo-websites/${props.demo.id}`, {
+        // WAJIB: tanpa ini Inertia mengirim JSON (bukan multipart) saat ada File
+        // -> berkas tidak sampai ke server & featured_image tidak tersimpan.
+        forceFormData: true,
+        preserveScroll: true,
         onSuccess: () => {
             if (imagePreview.value) {
                 URL.revokeObjectURL(imagePreview.value);
                 imagePreview.value = null;
             }
         },
+    });
+};
+
+const hapusGambar = () => {
+    // Kirim field kosong -> controller hapus berkas lama (dan nilai sampah "0" di DB).
+    form.transform((data) => ({ ...data, featured_image: null })).post(`/admin/demo-websites/${props.demo.id}`, {
+        forceFormData: true,
+        preserveScroll: true,
+        onSuccess: () => router.reload({ only: ['demo'] }),
     });
 };
 
@@ -202,6 +215,12 @@ const handleDelete = () => {
                                     </div>
                                     <Input id="featured-image" type="file" accept="image/*" @input="handleImageChange" />
                                     <p class="mt-1 text-xs text-muted-foreground">Upload gambar screenshot demo (maks 5MB)</p>
+                                    <Button v-if="demo.featured_image_url && !imagePreview" type="button" variant="outline"
+                                        class="mt-2 cursor-pointer text-destructive hover:bg-destructive/10"
+                                        @click="hapusGambar" :disabled="form.processing">
+                                        <Trash2 class="mr-2 h-4 w-4" />
+                                        Hapus gambar
+                                    </Button>
                                     <p v-if="form.errors.featured_image" class="mt-1 text-xs text-red-500">{{ form.errors.featured_image }}</p>
                                 </div>
 

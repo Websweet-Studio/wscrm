@@ -59,6 +59,8 @@ const handleImageChange = (event: Event) => {
 
 const submit = () => {
     form.post('/admin/demo-websites', {
+        // WAJIB: tanpa ini Inertia mengirim JSON saat ada File -> upload gambar gagal.
+        forceFormData: true,
         onSuccess: () => {
             if (imagePreview.value) {
                 URL.revokeObjectURL(imagePreview.value);

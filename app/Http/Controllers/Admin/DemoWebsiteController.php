@@ -124,6 +124,12 @@ class DemoWebsiteController extends Controller
                 Storage::disk('public')->delete($demoWebsite->featured_image);
             }
             $validated['featured_image'] = $request->file('featured_image')->store('demo-websites', 'public');
+        } elseif ($request->exists('featured_image') && blank($request->input('featured_image'))) {
+            // Field dikirim kosong = permintaan hapus gambar (sekaligus membersihkan nilai sampah "0").
+            if ($demoWebsite->featured_image && !filter_var($demoWebsite->featured_image, FILTER_VALIDATE_URL)) {
+                Storage::disk('public')->delete($demoWebsite->featured_image);
+            }
+            $validated['featured_image'] = null;
         } else {
             unset($validated['featured_image']);
         }
