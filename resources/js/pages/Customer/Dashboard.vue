@@ -277,10 +277,10 @@ const todayLabel = computed(() =>
     <Head title="Dashboard Pelanggan" />
 
     <CustomerLayout :breadcrumbs="breadcrumbs">
-        <div class="space-y-6 p-4 sm:p-6 lg:p-8" style="background-color: #fbfbf9;">
+        <div class="mx-auto max-w-7xl space-y-5 p-3 sm:space-y-6 sm:p-6 lg:p-8" style="background-color: #fbfbf9;">
             <!-- Hero welcome card -->
-            <div class="rounded-2xl bg-white p-6 sm:p-8">
-                <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div class="rounded-2xl bg-white p-5 sm:p-8">
+                <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                     <div class="min-w-0">
                         <div class="mb-3 inline-flex items-center gap-1.5 rounded-full bg-[#f6f6f3] px-3 py-1 text-xs font-bold" style="color: #62625b;">
                             <Sparkles class="h-3.5 w-3.5" style="color: var(--primary)" />
@@ -348,8 +348,8 @@ const todayLabel = computed(() =>
             </div>
 
             <!-- Stat cards -->
-            <div class="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
-                <div class="rounded-2xl bg-[#f6f6f3] p-5">
+            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="rounded-2xl bg-[#f6f6f3] p-4 sm:p-5">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold uppercase tracking-wide" style="color: #62625b;">Layanan Aktif</span>
                         <Layers class="h-4 w-4" style="color: var(--primary)" />
@@ -358,7 +358,7 @@ const todayLabel = computed(() =>
                     <p class="mt-0.5" style="color: #91918c; font-size: 14px;">{{ serviceCount }} total layanan</p>
                 </div>
 
-                <div class="rounded-2xl bg-[#f6f6f3] p-5">
+                <div class="rounded-2xl bg-[#f6f6f3] p-4 sm:p-5">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold uppercase tracking-wide" style="color: #62625b;">Tagihan Belum Bayar</span>
                         <CreditCard class="h-4 w-4" style="color: var(--primary)" />
@@ -371,7 +371,7 @@ const todayLabel = computed(() =>
                     <p v-else class="mt-0.5" style="color: #91918c; font-size: 14px;">Semua tagihan lunas</p>
                 </div>
 
-                <div class="rounded-2xl bg-[#f6f6f3] p-5">
+                <div class="rounded-2xl bg-[#f6f6f3] p-4 sm:p-5">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold uppercase tracking-wide" style="color: #62625b;">Saldo Token AI</span>
                         <Bot class="h-4 w-4" style="color: var(--primary)" />
@@ -390,7 +390,7 @@ const todayLabel = computed(() =>
                     </p>
                 </div>
 
-                <div class="rounded-2xl bg-[#f6f6f3] p-5">
+                <div class="rounded-2xl bg-[#f6f6f3] p-4 sm:p-5">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold uppercase tracking-wide" style="color: #62625b;">Status Akun</span>
                         <Sparkles class="h-4 w-4" style="color: var(--primary)" />
@@ -403,7 +403,7 @@ const todayLabel = computed(() =>
             </div>
 
             <!-- Ringkasan pengeluaran -->
-            <div class="rounded-2xl bg-white p-6">
+            <div class="rounded-2xl bg-white p-5 sm:p-6">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <h2 class="font-heading text-lg font-bold" style="letter-spacing: -1px;">Ringkasan Pengeluaran</h2>
                     <div class="flex flex-wrap gap-2 sm:gap-3">
@@ -507,9 +507,9 @@ const todayLabel = computed(() =>
             </div>
 
             <!-- Bottom row -->
-            <div class="grid gap-6 lg:grid-cols-2">
+            <div class="grid gap-5 xl:grid-cols-2">
                 <!-- Payment Methods -->
-                <div class="rounded-2xl bg-white p-6">
+                <div class="rounded-2xl bg-white p-5 sm:p-6">
                     <h2 class="font-heading text-xl font-bold" style="letter-spacing: -1.2px;">Metode Pembayaran</h2>
                     <p class="mt-1" style="color: #62625b; font-size: 14px;">Metode yang tersedia untuk pembayaran tagihan</p>
                     <div v-if="paymentAccounts.length === 0" class="py-8 text-center text-sm" style="color: #91918c;">
@@ -557,7 +557,7 @@ const todayLabel = computed(() =>
 
                 <!-- Unpaid Invoices -->
                 <div
-                    class="rounded-2xl p-6"
+                    class="rounded-2xl p-5 sm:p-6"
                     :style="{
                         backgroundColor: hasUnpaidInvoices ? '#ffffff' : '#ffffff',
                     }"
@@ -625,7 +625,7 @@ const todayLabel = computed(() =>
             </div>
 
             <!-- Pesanan terbaru -->
-            <div class="rounded-2xl border p-5" style="background-color: #ffffff;">
+            <div class="rounded-2xl border p-4 sm:p-5" style="background-color: #ffffff;">
                 <div class="flex items-center justify-between">
                     <h2 class="font-heading text-xl font-bold" style="letter-spacing: -1.2px;">Pesanan Terbaru</h2>
                     <Link
@@ -668,7 +668,7 @@ const todayLabel = computed(() =>
             </div>
 
             <!-- Aktivitas maintenance terbaru -->
-            <div class="rounded-2xl border p-5" style="background-color: #ffffff;">
+            <div class="rounded-2xl border p-4 sm:p-5" style="background-color: #ffffff;">
                 <div class="flex items-center justify-between">
                     <h2 class="font-heading text-xl font-bold" style="letter-spacing: -1.2px;">Aktivitas Maintenance</h2>
                     <Link
