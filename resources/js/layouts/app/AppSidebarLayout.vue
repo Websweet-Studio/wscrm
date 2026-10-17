@@ -43,7 +43,7 @@ const { isMinimized, isMobileOpen, toggleSidebar, toggleMobileSidebar, closeMobi
             <AppSidebarHeader :breadcrumbs="breadcrumbs" @toggle-sidebar="toggleSidebar" @toggle-mobile-sidebar="toggleMobileSidebar" />
             <main class="flex-1 overflow-hidden">
                 <div class="h-full overflow-y-auto">
-                    <div class="p-6">
+                    <div class="mx-auto w-full max-w-7xl p-6">
                         <slot />
                     </div>
                 </div>

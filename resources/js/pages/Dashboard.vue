@@ -262,7 +262,7 @@ const monthlyChartOptions = {
     <Head title="Dashboard" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="mx-auto w-full max-w-7xl space-y-6">
+        <div class="space-y-6">
             <!-- Header -->
             <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>

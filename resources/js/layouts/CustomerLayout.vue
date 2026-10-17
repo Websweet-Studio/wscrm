@@ -30,7 +30,7 @@ onMounted(() => {
         <AppContent variant="sidebar" class="overflow-x-hidden">
             <AppSidebarHeader :breadcrumbs="breadcrumbs" :show-appearance-tabs="false" />
             <main class="flex-1 overflow-hidden">
-                <div class="h-full overflow-y-auto">
+                <div class="mx-auto h-full w-full max-w-7xl overflow-y-auto">
                     <slot />
                 </div>
             </main>
