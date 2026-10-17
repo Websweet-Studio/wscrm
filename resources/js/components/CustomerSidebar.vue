@@ -7,7 +7,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel
 import customer from '@/routes/customer';
 import { type NavItem } from '@/types';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { Headphones, Home, LayoutGrid, Settings, ShoppingCart, Bot, Wrench } from 'lucide-vue-next';
+import { Headphones, LayoutGrid, Settings, ShoppingCart, Bot, Wrench, ShieldAlert } from 'lucide-vue-next';
 import AppSidebarLogo from './AppSidebarLogo.vue';
 import { computed, ref } from 'vue';
 
@@ -48,11 +48,6 @@ const stopImpersonation = () => {
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Beranda',
-        href: '/',
-        icon: Home,
-    },
-    {
         title: 'Dashboard',
         href: getCustomerUrl(() => customerRoutes?.dashboard?.().url, '/customer/dashboard'),
         icon: LayoutGrid,
@@ -72,6 +67,12 @@ const mainNavItems: NavItem[] = [
         title: 'Maintenance',
         href: '/customer/maintenance',
         icon: Wrench,
+    },
+    {
+        // 21 Sep 2026: cek IP yang diblokir di layanan sendiri + ajukan buka blokir sementara.
+        title: 'IP Block',
+        href: '/customer/ip-block',
+        icon: ShieldAlert,
     },
     {
         title: 'Pengaturan',
