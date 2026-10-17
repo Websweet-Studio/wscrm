@@ -25,10 +25,7 @@ class AiGateway
     public function chat(int $customerId, ?string $modelKey, array $messages, float $temperature = 0.3, int $maxTokens = 2000, array $options = []): array
     {
         $credit = AiCredit::firstOrCreate(['customer_id' => $customerId]);
-
-        if ($credit->balance <= 0) {
-            throw new \RuntimeException('Saldo AI tidak mencukupi. Silakan beli paket kredit.');
-        }
+        $this->assertBalanceFor($modelKey, $credit);
 
         $models = $this->candidateModels($modelKey);
 
@@ -98,10 +95,8 @@ class AiGateway
     public function streamChat(int $customerId, ?string $modelKey, array $messages, float $temperature, int $maxTokens, array $options, callable $onChunk): array
     {
         $credit = AiCredit::firstOrCreate(['customer_id' => $customerId]);
+        $this->assertBalanceFor($modelKey, $credit);
 
-        if ($credit->balance <= 0) {
-            throw new \RuntimeException('Saldo AI tidak mencukupi. Silakan beli paket kredit.');
-        }
 
         $models = $this->candidateModels($modelKey);
 
@@ -193,12 +188,35 @@ class AiGateway
 
         $credits = max(0, (int) round($credits));
 
+        // Model free (rate 0 di input & output) benar-benar gratis: tidak kena floor
+        // min 1 kredit. Token tetap dicatat di transaksi untuk statistik pemakaian.
+        if ((float) $model->input_rate === 0.0 && (float) $model->output_rate === 0.0) {
+            return 0;
+        }
+
         // Min 1 kredit bila ada pemakaian, supaya saldo tidak gratis total.
         if ($credits === 0 && ($inputTokens > 0 || $outputTokens > 0)) {
             $credits = 1;
         }
 
         return $credits;
+    }
+
+    /**
+     * Model free (rate 0 di input & output) tetap boleh dipakai walau saldo habis;
+     * model berbayar tetap butuh saldo > 0. Deduct tidak memotong apa pun utk rate 0.
+     */
+    private function assertBalanceFor(?string $modelKey, AiCredit $credit): void
+    {
+        $requestedFree = $modelKey !== null && AiModel::where('model_key', $modelKey)
+            ->where('is_active', true)
+            ->where('input_rate', 0)
+            ->where('output_rate', 0)
+            ->exists();
+
+        if ($credit->balance <= 0 && ! $requestedFree) {
+            throw new \RuntimeException('Saldo AI tidak mencukupi. Silakan beli paket kredit.');
+        }
     }
 
     /**
@@ -219,16 +237,22 @@ class AiGateway
             $max = max($max, $this->calculateCredits($model, $inputTokens, $maxTokens));
         }
 
-        return max(1, $max);
+        return $max;
     }
 
     private function ensureSufficientBalance(int $customerId, int $requiredCredits): void
     {
         $credit = AiCredit::where('customer_id', $customerId)->lockForUpdate()->first();
 
+        // Estimasi 0 = semua kandidat free: tidak perlu cek saldo.
+        if ($requiredCredits <= 0) {
+            return;
+        }
+
         if (! $credit || $credit->balance < $requiredCredits) {
             throw new \RuntimeException('Saldo AI tidak mencukupi. Silakan beli paket kredit.');
         }
+
 
         // ponytail: pre-check melepas lock sebelum panggilan provider, jadi ada jendela race
         // sempit di mana request konkuren bisa lolos (deduct tetap atomic & anti double-spend).
@@ -241,7 +265,7 @@ class AiGateway
         return DB::transaction(function () use ($customerId, $model, $inputTokens, $outputTokens, $creditsUsed) {
             $credit = AiCredit::where('customer_id', $customerId)->lockForUpdate()->first();
 
-            if (! $credit || $credit->balance < $creditsUsed) {
+            if ($creditsUsed > 0 && (! $credit || $credit->balance < $creditsUsed)) {
                 throw new \RuntimeException('Saldo AI tidak mencukupi. Silakan beli paket kredit.');
             }
 
