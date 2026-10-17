@@ -6,6 +6,7 @@ use App\Http\Controllers\Customer\Auth\LoginController;
 use App\Http\Controllers\Customer\Auth\RegisterController;
 use App\Http\Controllers\Customer\AiController;
 use App\Http\Controllers\Customer\DashboardController;
+use App\Http\Controllers\Customer\IpBlockController;
 use App\Http\Controllers\Customer\MaintenanceController;
 use App\Http\Controllers\Customer\SettingsController;
 use App\Http\Controllers\OrderController;
@@ -74,6 +75,13 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::prefix('maintenance')->name('maintenance.')->group(function () {
             Route::get('/', [MaintenanceController::class, 'index'])->name('index');
             Route::get('/export', [MaintenanceController::class, 'export'])->name('export');
+        });
+
+        // IP Block — cek IP yang diblokir pada layanan pelanggan + pengajuan whitelist
+        // sementara (langsung diterima, lihat IpBlockController).
+        Route::prefix('ip-block')->name('ip-block.')->group(function () {
+            Route::get('/', [IpBlockController::class, 'index'])->name('index');
+            Route::post('/whitelist', [IpBlockController::class, 'store'])->name('whitelist');
         });
 
         // Stop Impersonation (available in customer area)

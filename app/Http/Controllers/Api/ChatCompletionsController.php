@@ -56,7 +56,12 @@ class ChatCompletionsController extends Controller
         // Pre-check saldo (limit) — kunci baris biar anti race, dilepas sebelum stream panjang.
         $credit = AiCredit::where('customer_id', $credit->customer_id)->lockForUpdate()->first();
 
-        if (! $credit || $credit->balance < 1) {
+        // Model free (rate 0 di input & output) boleh dipakai walau saldo habis.
+        $requestedFree = $model !== null
+            && (float) $model->input_rate === 0.0
+            && (float) $model->output_rate === 0.0;
+
+        if (! $requestedFree && (! $credit || $credit->balance < 1)) {
             return $this->error('Saldo kredit AI Anda tidak mencukupi. Silakan beli paket kredit di portal customer.', 'insufficient_quota', 429);
         }
 
@@ -234,10 +239,13 @@ class ChatCompletionsController extends Controller
             return; // tak bisa dihitung akurat; jangan tebak-hitam utk hindari charge keliru.
         }
 
-        $credits = max(1, (int) round(
-            ($input / 1_000_000) * (float) $model->input_rate
-            + ($output / 1_000_000) * (float) $model->output_rate
-        ));
+        // Model free (rate 0): 0 kredit, token tetap tercatat di transaksi.
+        $credits = (float) $model->input_rate === 0.0 && (float) $model->output_rate === 0.0
+            ? 0
+            : max(1, (int) round(
+                ($input / 1_000_000) * (float) $model->input_rate
+                + ($output / 1_000_000) * (float) $model->output_rate
+            ));
 
         try {
             DB::transaction(function () use ($credit, $model, $input, $output, $credits) {

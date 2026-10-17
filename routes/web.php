@@ -44,6 +44,16 @@ Route::get('/blog/category/{category:slug}', [App\Http\Controllers\BlogControlle
 Route::post('/api/agent/blog', [App\Http\Controllers\Api\AgentBlogController::class, 'store'])
     ->middleware('agent.auth');
 
+// API data klien untuk mitra (app.digitalkonsultan.com) — Bearer DK_DATA_TOKEN, hanya baca.
+Route::middleware(['dk.auth', 'throttle:120,1'])->prefix('api/dk')->group(function () {
+    Route::get('/ping', [App\Http\Controllers\Api\DkCustomerController::class, 'ping']);
+    Route::get('/ringkasan', [App\Http\Controllers\Api\DkCustomerController::class, 'ringkasan']);
+    Route::get('/klien', [App\Http\Controllers\Api\DkCustomerController::class, 'klien']);
+    Route::get('/klien/{customer}', [App\Http\Controllers\Api\DkCustomerController::class, 'klienDetail']);
+    Route::get('/layanan/jatuh-tempo', [App\Http\Controllers\Api\DkCustomerController::class, 'jatuhTempo']);
+    Route::get('/domains', [App\Http\Controllers\Api\DkCustomerController::class, 'domains']);
+});
+
 // Chatbot AI publik untuk pengunjung (customer service)
 Route::post('/api/public/ai-chat', [App\Http\Controllers\Api\PublicAiChatController::class, 'chat'])
     ->middleware('throttle:30,1');

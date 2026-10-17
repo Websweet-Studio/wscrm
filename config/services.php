@@ -61,4 +61,32 @@ return [
         'token' => env('AGENT_API_TOKEN'),
     ],
 
+    /*
+    | Data klien untuk aplikasi mitra (app.digitalkonsultan.com).
+    | Token mesin TERPISAH dari token agent — hanya boleh membaca data klien.
+    */
+    'dk' => [
+        'token' => env('DK_DATA_TOKEN'),
+        // Lingkup klien yang boleh dibaca aplikasi DK (ID customer WSCRM, dipisah koma).
+        // Kosong = semua klien. Contoh: DK_KLIEN_IDS=39 (hanya akun Hidayat).
+        'klien_ids' => array_values(array_filter(array_map(
+            'intval',
+            explode(',', (string) env('DK_KLIEN_IDS', ''))
+        ))),
+    ],
+
+    /*
+    | WSD Shield — pengaman server (dashboard dash.wsd.my.id).
+    | Dipakai halaman pelanggan "IP Block": cek blokir pada domain pelanggan +
+    | pengajuan whitelist sementara yang langsung diterima.
+    | Token mesin TERPISAH dari token agent (WSD_CUSTOMER_TOKEN di /etc/wsd-shield.env).
+    */
+    'shield' => [
+        'url' => env('WSD_SHIELD_URL', 'http://127.0.0.1:3110'),
+        'token' => env('WSD_SHIELD_CUSTOMER_TOKEN'),
+        'timeout' => env('WSD_SHIELD_TIMEOUT', 6),
+        // Masa berlaku whitelist sementara (jam). Jumlah pengajuan tidak dibatasi.
+        'jam' => env('WSD_SHIELD_JAM', 24),
+    ],
+
 ];
