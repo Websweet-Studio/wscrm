@@ -277,7 +277,7 @@ const todayLabel = computed(() =>
     <Head title="Dashboard Pelanggan" />
 
     <CustomerLayout :breadcrumbs="breadcrumbs">
-        <div class="mx-auto max-w-7xl space-y-5 p-3 sm:space-y-6 sm:p-6 lg:p-8" style="background-color: #fbfbf9;">
+        <div class="mx-auto max-w-7xl space-y-5 p-3 sm:space-y-6 sm:p-6 lg:p-8">
             <!-- Hero welcome card -->
             <div class="rounded-2xl bg-white p-5 sm:p-8">
                 <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
