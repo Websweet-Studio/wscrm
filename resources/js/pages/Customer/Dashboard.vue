@@ -349,7 +349,7 @@ const todayLabel = computed(() =>
 
             <!-- Stat cards -->
             <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <div class="rounded-2xl bg-[#f6f6f3] p-4 sm:p-5">
+                <div class="rounded-2xl border border-[#e5e5e0] bg-[#f6f6f3] p-4 sm:p-5">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold uppercase tracking-wide" style="color: #62625b;">Layanan Aktif</span>
                         <Layers class="h-4 w-4" style="color: var(--primary)" />
@@ -358,7 +358,7 @@ const todayLabel = computed(() =>
                     <p class="mt-0.5" style="color: #91918c; font-size: 14px;">{{ serviceCount }} total layanan</p>
                 </div>
 
-                <div class="rounded-2xl bg-[#f6f6f3] p-4 sm:p-5">
+                <div class="rounded-2xl border border-[#e5e5e0] bg-[#f6f6f3] p-4 sm:p-5">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold uppercase tracking-wide" style="color: #62625b;">Tagihan Belum Bayar</span>
                         <CreditCard class="h-4 w-4" style="color: var(--primary)" />
@@ -371,7 +371,7 @@ const todayLabel = computed(() =>
                     <p v-else class="mt-0.5" style="color: #91918c; font-size: 14px;">Semua tagihan lunas</p>
                 </div>
 
-                <div class="rounded-2xl bg-[#f6f6f3] p-4 sm:p-5">
+                <div class="rounded-2xl border border-[#e5e5e0] bg-[#f6f6f3] p-4 sm:p-5">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold uppercase tracking-wide" style="color: #62625b;">Saldo Token AI</span>
                         <Bot class="h-4 w-4" style="color: var(--primary)" />
@@ -390,7 +390,7 @@ const todayLabel = computed(() =>
                     </p>
                 </div>
 
-                <div class="rounded-2xl bg-[#f6f6f3] p-4 sm:p-5">
+                <div class="rounded-2xl border border-[#e5e5e0] bg-[#f6f6f3] p-4 sm:p-5">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold uppercase tracking-wide" style="color: #62625b;">Status Akun</span>
                         <Sparkles class="h-4 w-4" style="color: var(--primary)" />
