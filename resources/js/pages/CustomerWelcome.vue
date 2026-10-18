@@ -78,7 +78,10 @@ const domainUnggulan = computed(() =>
 /** Paket hosting unggulan: satu per kelas penyimpanan, harga final termurah di kelasnya. */
 const kelasHosting = computed(() => {
     const shared = props.hostingPlans.filter(
-        (p) => p.service_type === 'hosting' && !p.use_bulk_pricing,
+        (p) =>
+            p.service_type === 'hosting' &&
+            !p.use_bulk_pricing &&
+            !p.plan_name.toLowerCase().includes('lite'),
     );
     return [1, 5, 10]
         .map((gb) => {
