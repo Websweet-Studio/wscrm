@@ -1,15 +1,10 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
 import { Link } from '@inertiajs/vue3';
-import { Calculator, Globe, Monitor, Server, Shield, Users } from 'lucide-vue-next';
-import { usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
-import { getHostingPlanFinalPrice } from '@/lib/utils';
+import { Globe, Monitor, Server, Shield, Users } from 'lucide-vue-next';
+import { computed } from 'vue';
 
 interface DomainPrice {
     id: number;
@@ -53,8 +48,6 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const page = usePage();
-const isLoggedIn = computed(() => page.props.auth?.user !== null || page.props.auth?.customer !== null);
 
 const features = [
     {
@@ -84,115 +77,6 @@ const features = [
     },
 ];
 
-const selectedDomain = ref<number | null>(null);
-const selectedHosting = ref<number | null>(null);
-const selectedServices = ref<number[]>([]);
-const domainName = ref('contoh');
-
-const selectedDomainPrice = computed(() => {
-    return filteredDomainPrices.value.find((d) => d.id === selectedDomain.value);
-});
-
-const selectedHostingPlan = computed(() => {
-    return filteredHostingPlans.value.find((h) => h.id === selectedHosting.value);
-});
-
-const selectedServicesList = computed(() => {
-    return filteredServicePlans.value.filter((s) => selectedServices.value.includes(s.id));
-});
-
-const toggleService = (serviceId: number) => {
-    const index = selectedServices.value.indexOf(serviceId);
-    if (index > -1) {
-        selectedServices.value.splice(index, 1);
-    } else {
-        selectedServices.value.push(serviceId);
-    }
-};
-
-const getDomainPrice = (domain: any) => {
-    if (!domain) return 0;
-    const price = parseFloat(String(domain.selling_price).replace(/[^0-9.-]/g, ''));
-    return !isNaN(price) ? price : 0;
-};
-
-const getHostingPrice = (plan: any) => {
-    if (!plan) return 0;
-    const price = parseFloat(String(plan.selling_price).replace(/[^0-9.-]/g, ''));
-    return !isNaN(price) ? price : 0;
-};
-
-const getServicePrice = (service: any) => {
-    if (!service) return 0;
-    const price = parseFloat(String(service.price).replace(/[^0-9.-]/g, ''));
-    return !isNaN(price) ? price : 0;
-};
-
-const calculateTotal = computed(() => {
-    let total = 0;
-
-    if (selectedDomainPrice.value) {
-        total += getDomainPrice(selectedDomainPrice.value);
-    }
-
-    if (selectedHostingPlan.value) {
-        total += getHostingPlanFinalPrice(selectedHostingPlan.value);
-    }
-
-    selectedServicesList.value.forEach((service) => {
-        total += getServicePrice(service);
-    });
-
-    return total;
-});
-
-const filteredDomainPrices = computed(() => {
-    return (props.domainPrices || []).filter((d) => d.is_active);
-});
-
-const filteredHostingPlans = computed(() => {
-    return (props.hostingPlans || []).filter((h) => h.is_active && !h.plan_name.toLowerCase().includes('lite'));
-});
-
-const filteredServicePlans = computed(() => {
-    return (props.servicePlans || []).filter((s) => s.is_active);
-});
-
-const formatPrice = (price: number) => {
-    const validPrice = typeof price === 'number' && !isNaN(price) ? price : 0;
-    return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-    }).format(validPrice);
-};
-
-const getWhatsAppUrl = () => {
-    let message = "Halo WebSweetStudio! Saya ingin memesan paket berikut:\n";
-    
-    if (domainName.value && selectedDomainPrice.value) {
-        message += `\n• Domain: ${domainName.value}.${selectedDomainPrice.value.extension} (${formatPrice(getDomainPrice(selectedDomainPrice.value))})`;
-    }
-    
-    if (selectedHostingPlan.value) {
-        const hostingPrice = getHostingPlanFinalPrice(selectedHostingPlan.value);
-        message += `\n• Hosting: ${selectedHostingPlan.value.plan_name} (${formatPrice(hostingPrice)})`;
-    }
-    
-    if (selectedServicesList.value.length > 0) {
-        message += "\n• Layanan Tambahan:";
-        selectedServicesList.value.forEach(service => {
-            message += `\n  - ${service.name} (${formatPrice(getServicePrice(service))})`;
-        });
-    }
-    
-    message += `\n\nTotal Biaya: ${formatPrice(calculateTotal.value)}`;
-    
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappNumber = props.companyWhatsapp || "6281234567890";
-    
-    return `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-};
 </script>
 
 <template>
@@ -219,161 +103,6 @@ const getWhatsAppUrl = () => {
                 </div>
             </div>
 
-            <!-- Simulation Section -->
-            <div class="mb-12">
-                <template v-if="isLoggedIn">
-                    <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
-                        <CardHeader>
-                            <div class="flex items-center gap-3">
-                                <div class="rounded-full p-2" style="background-color: #e8e6dc;">
-                                    <Calculator class="h-6 w-6" style="color: var(--primary);" />
-                                </div>
-                                <div>
-                                    <CardTitle class="text-xl font-medium" style="color: #141413; font-family: Georgia, serif;">Simulasi Harga</CardTitle>
-                                    <CardDescription style="color: #5e5d59;">Pilih domain, hosting, dan layanan tambahan untuk melihat estimasi biaya</CardDescription>
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div class="grid gap-8 md:grid-cols-2">
-                                <div class="space-y-6">
-                                    <div class="space-y-3">
-                                        <Label style="color: #4d4c48;">Nama Domain</Label>
-                                        <div class="flex gap-2">
-                                            <Input v-model="domainName" placeholder="nama-domain" class="flex-1" style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;" />
-                                            <select
-                                                v-model="selectedDomain"
-                                                class="w-48 rounded-md px-3 py-2 text-sm"
-                                                style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
-                                            >
-                                                <option :value="null" disabled>Pilih ekstensi</option>
-                                                <option v-for="domain in filteredDomainPrices" :key="domain.id" :value="domain.id">
-                                                    {{ domain.extension }} - {{ formatPrice(getDomainPrice(domain)) }}
-                                                </option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="space-y-3">
-                                        <Label style="color: #4d4c48;">Paket Hosting</Label>
-                                        <select
-                                                v-model="selectedHosting"
-                                                class="w-full rounded-md px-3 py-2 text-sm"
-                                                style="background-color: #ffffff; border: 1px solid #e8e6dc; color: #141413; border-radius: 12px;"
-                                            >
-                                                <option :value="null" disabled>Pilih paket hosting</option>
-                                                <option v-for="plan in filteredHostingPlans" :key="plan.id" :value="plan.id">
-                                                    {{ plan.plan_name }} | {{ plan.storage_gb }}GB | {{ plan.cpu_cores }}Core | {{ plan.ram_gb }}GB RAM | {{ formatPrice(getHostingPlanFinalPrice(plan)) }}/tahun
-                                                </option>
-                                            </select>
-                                    </div>
-
-                                    <Separator style="background-color: #f0eee6;" />
-
-                                    <div class="space-y-4">
-                                        <Label class="text-base font-medium" style="color: #4d4c48;">Layanan Tambahan</Label>
-                                        <div v-for="service in filteredServicePlans" :key="service?.id" class="flex items-center space-x-3">
-                                            <input
-                                                v-if="service"
-                                                type="checkbox"
-                                                :id="'service-' + service.id"
-                                                :checked="selectedServices.includes(service.id)"
-                                                @change="toggleService(service.id)"
-                                                class="h-4 w-4 rounded"
-                                                style="border-color: #e8e6dc; accent-color: var(--primary);"
-                                            />
-                                            <label v-if="service" :for="'service-' + service.id" class="font-normal cursor-pointer" style="color: #5e5d59;">
-                                                {{ service.name }} ({{ formatPrice(getServicePrice(service)) }}/tahun)
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <Card class="h-full" style="background-color: #ffffff; border: 1px solid #f0eee6; border-radius: 16px;">
-                                        <CardHeader>
-                                            <CardTitle class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif;">Ringkasan Biaya Tahunan</CardTitle>
-                                        </CardHeader>
-                                        <CardContent class="space-y-4">
-                                            <div v-if="selectedDomainPrice" class="flex justify-between">
-                                                <span style="color: #5e5d59;">
-                                                    Domain {{ selectedDomainPrice.extension }}
-                                                </span>
-                                                <span class="font-medium" style="color: #4d4c48;">{{ formatPrice(getDomainPrice(selectedDomainPrice)) }}</span>
-                                            </div>
-                                            <div v-if="selectedHostingPlan" class="flex justify-between">
-                                                <span style="color: #5e5d59;">
-                                                    Hosting {{ selectedHostingPlan.plan_name }}
-                                                </span>
-                                                <span class="font-medium" style="color: #4d4c48;">
-                                                    {{ formatPrice(getHostingPlanFinalPrice(selectedHostingPlan)) }}
-                                                </span>
-                                            </div>
-                                            <div v-for="service in selectedServicesList" :key="service?.id" class="flex justify-between">
-                                                <span style="color: #5e5d59;">{{ service.name }}</span>
-                                                <span class="font-medium" style="color: #4d4c48;">{{ formatPrice(getServicePrice(service)) }}</span>
-                                            </div>
-                                            <Separator style="background-color: #f0eee6;" />
-                                            <div class="flex justify-between text-xl font-bold" style="color: var(--primary);">
-                                                <span>Total Tahunan</span>
-                                                <span>{{ formatPrice(calculateTotal) }}</span>
-                                            </div>
-                                            <div class="pt-2">
-                                                <Button
-                                                    asChild
-                                                    class="w-full"
-                                                    size="lg"
-                                                    :disabled="!selectedDomain || !selectedHosting"
-                                                    style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;"
-                                                >
-                                                    <a :href="getWhatsAppUrl()" target="_blank" rel="noopener noreferrer">
-                                                        <Calculator class="mr-2 h-4 w-4" />
-                                                        Pesan Sekarang
-                                                    </a>
-                                                </Button>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </template>
-                <template v-else>
-                    <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;">
-                        <CardHeader>
-                            <div class="flex items-center gap-3">
-                                <div class="rounded-full p-2" style="background-color: #e8e6dc;">
-                                    <Calculator class="h-6 w-6" style="color: var(--primary);" />
-                                </div>
-                                <div>
-                                    <CardTitle class="text-xl font-medium" style="color: #141413; font-family: Georgia, serif;">Simulasi Harga</CardTitle>
-                                    <CardDescription style="color: #5e5d59;">Silakan login atau daftar terlebih dahulu untuk mengakses simulasi harga</CardDescription>
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div class="flex flex-col items-center justify-center py-12 text-center">
-                                <div class="mb-6 rounded-full p-4" style="background-color: #e8e6dc;">
-                                    <Users class="h-8 w-8" style="color: var(--primary);" />
-                                </div>
-                                <h3 class="mb-2 text-lg font-medium" style="color: #141413; font-family: Georgia, serif;">Login untuk Membuka Simulasi Harga</h3>
-                                <p class="mb-6 max-w-md" style="color: #5e5d59;">
-                                    Dapatkan akses penuh ke simulasi harga, pilih paket sesuai kebutuhan, dan langsung menghubungi kami via WhatsApp
-                                </p>
-                                <div class="flex flex-col gap-3 sm:flex-row">
-                                    <Button asChild class="text-base px-6 py-3" style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px;">
-                                        <Link href="/customer/login">Masuk</Link>
-                                    </Button>
-                                    <Button asChild variant="outline" class="text-base px-6 py-3" style="background-color: var(--primary-foreground); color: #4d4c48; border: 1px solid #e8e6dc; border-radius: 12px;">
-                                        <Link href="/customer/register">Daftar</Link>
-                                    </Button>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </template>
-            </div>
 
             <!-- Features Grid -->
             <div class="mb-12 grid gap-4 sm:grid-cols-2 sm:gap-6 lg:mb-16 lg:grid-cols-5">
