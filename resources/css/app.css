@@ -76,6 +76,13 @@
     ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
     }
+
+    /* Tailwind v4 menghapus cursor:pointer dari preflight; kembalikan supaya
+       tombol terasa bisa diklik (bukan panah biasa). */
+    button:not(:disabled),
+    [role='button']:not([aria-disabled='true']) {
+        cursor: pointer;
+    }
 }
 
 @layer utilities {

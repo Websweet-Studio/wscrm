@@ -143,7 +143,7 @@
                                             type="button"
                                             variant="outline"
                                             size="sm"
-                                            class="w-full"
+                                            class="w-full cursor-pointer"
                                             @click="openMediaPicker(setting.key)"
                                         >
                                             Pilih dari galeri media
@@ -244,6 +244,7 @@
                     <DialogTitle>Pilih dari galeri media</DialogTitle>
                     <DialogDescription>
                         {{ mediaPickerLabel }} — pilih gambar yang sudah pernah diunggah, tanpa upload ulang.
+                        Satu gambar boleh dipakai untuk beberapa kolom sekaligus.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -275,14 +276,26 @@
                             :key="item.path"
                             type="button"
                             :disabled="mediaSaving === item.path"
-                            class="group overflow-hidden rounded-lg border text-left transition-colors hover:border-primary disabled:opacity-60"
+                            class="group relative cursor-pointer overflow-hidden rounded-lg border text-left transition-colors hover:border-primary disabled:cursor-wait disabled:opacity-60"
                             :class="isCurrentMedia(item) ? 'border-primary ring-2 ring-primary/30' : 'border-border'"
-                            :title="item.path"
+                            :title="`${item.path} — klik untuk memakai`"
                             @click="selectMedia(item)"
                         >
                             <div class="flex h-24 items-center justify-center bg-muted p-1">
                                 <img :src="item.url" :alt="item.name" loading="lazy" class="max-h-full max-w-full object-contain" />
                             </div>
+                            <span
+                                v-if="isCurrentMedia(item)"
+                                class="absolute top-1.5 left-1.5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground"
+                            >
+                                Dipakai di sini
+                            </span>
+                            <span
+                                v-else-if="usedByLabels(item)"
+                                class="absolute top-1.5 left-1.5 rounded-full bg-background/90 px-1.5 py-0.5 text-[10px] font-medium text-foreground ring-1 ring-border"
+                            >
+                                Dipakai: {{ usedByLabels(item) }}
+                            </span>
                             <div class="space-y-0.5 px-2 py-1.5">
                                 <div class="truncate text-xs font-medium">{{ item.name }}</div>
                                 <div class="flex items-center justify-between gap-1 text-[10px] text-muted-foreground">
@@ -706,6 +719,7 @@ interface MediaItem {
     folder: string;
     size: number;
     modified: number;
+    used_by: string[];
 }
 
 const mediaPickerOpen = ref(false);
@@ -724,6 +738,16 @@ const currentMediaValue = computed(
 
 const isCurrentMedia = (item: MediaItem) =>
     currentMediaValue.value !== '' && currentMediaValue.value === item.url;
+
+/**
+ * Kolom lain yang sudah memakai gambar ini. Satu gambar boleh dipakai
+ * di beberapa kolom sekaligus, jadi badge ini hanya informasi — tetap bisa diklik.
+ */
+const usedByLabels = (item: MediaItem): string =>
+    (item.used_by ?? [])
+        .filter((key) => key !== mediaPickerKey.value)
+        .map((key) => getSettingLabel(key))
+        .join(', ');
 
 const formatBytes = (bytes: number): string => {
     if (!bytes) return '0 B';
@@ -770,6 +794,13 @@ const selectMedia = async (item: MediaItem) => {
     const key = mediaPickerKey.value;
 
     if (!key || mediaSaving.value) {
+        return;
+    }
+
+    // Sudah dipakai di kolom ini: cukup beri tahu, tidak perlu request ulang.
+    if (isCurrentMedia(item)) {
+        mediaPickerOpen.value = false;
+        success('Sudah dipakai', `${item.name} memang sedang dipakai di ${getSettingLabel(key)}.`);
         return;
     }
 

@@ -181,6 +181,20 @@ class BrandingController extends Controller
         $search = trim((string) $request->query('q', ''));
         $disk = Storage::disk('public');
 
+        // Peta gambar -> kolom branding mana saja yang memakainya.
+        // Satu gambar boleh dipakai di beberapa kolom sekaligus.
+        $usedBy = [];
+
+        foreach (BrandingSetting::where('type', 'image')->get(['key', 'value']) as $setting) {
+            $relative = $this->relativePath($setting->value);
+
+            if ($relative === '') {
+                continue;
+            }
+
+            $usedBy[$relative][] = $setting->key;
+        }
+
         $items = [];
 
         foreach ($disk->allFiles() as $path) {
@@ -201,6 +215,7 @@ class BrandingController extends Controller
                 'folder' => dirname($path) === '.' ? '' : dirname($path),
                 'size' => (int) $disk->size($path),
                 'modified' => (int) $disk->lastModified($path),
+                'used_by' => $usedBy[$path] ?? [],
             ];
         }
 
