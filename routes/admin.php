@@ -128,6 +128,8 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
         Route::get('branding', [BrandingController::class, 'index'])->name('branding.index');
         Route::patch('branding', [BrandingController::class, 'update'])->name('branding.update');
         Route::post('branding/upload-image', [BrandingController::class, 'uploadImage'])->name('branding.upload-image');
+        Route::get('branding/media', [BrandingController::class, 'media'])->name('branding.media');
+        Route::post('branding/select-image', [BrandingController::class, 'selectImage'])->name('branding.select-image');
         Route::delete('branding/delete-image', [BrandingController::class, 'deleteImage'])->name('branding.delete-image');
     });
 

@@ -12,6 +12,9 @@ use Inertia\Inertia;
 
 class BrandingController extends Controller
 {
+    /** Ekstensi berkas yang boleh dipakai sebagai gambar branding. */
+    private const MEDIA_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'ico', 'bmp', 'avif'];
+
     /**
      * Display branding settings page
      */
@@ -93,7 +96,7 @@ class BrandingController extends Controller
                 ->firstOrFail();
 
             // Delete old image if exists
-            $this->deleteImageFile($setting->value);
+            $this->deleteImageFile($setting->value, $setting->key);
 
             // Upload new image
             $path = $validated['image']->store('branding', 'public');
@@ -141,7 +144,7 @@ class BrandingController extends Controller
                 ->firstOrFail();
 
             // Delete file
-            $this->deleteImageFile($setting->value);
+            $this->deleteImageFile($setting->value, $setting->key);
 
             // Clear setting
             $setting->update(['value' => null]);
@@ -168,15 +171,168 @@ class BrandingController extends Controller
     }
 
     /**
-     * Helper method to delete image file from storage
+     * Daftar gambar yang pernah diunggah (storage/app/public) untuk dipilih
+     * sebagai logo/favicon tanpa mengunggah ulang.
      */
-    private function deleteImageFile(?string $imagePath): void
+    public function media(Request $request): JsonResponse
+    {
+        $request->headers->set('Accept', 'application/json');
+
+        $search = trim((string) $request->query('q', ''));
+        $disk = Storage::disk('public');
+
+        $items = [];
+
+        foreach ($disk->allFiles() as $path) {
+            $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+            if (! in_array($extension, self::MEDIA_EXTENSIONS, true)) {
+                continue;
+            }
+
+            if ($search !== '' && stripos($path, $search) === false) {
+                continue;
+            }
+
+            $items[] = [
+                'path' => $path,
+                'url' => $disk->url($path),
+                'name' => basename($path),
+                'folder' => dirname($path) === '.' ? '' : dirname($path),
+                'size' => (int) $disk->size($path),
+                'modified' => (int) $disk->lastModified($path),
+            ];
+        }
+
+        usort($items, fn (array $a, array $b) => $b['modified'] <=> $a['modified']);
+
+        $total = count($items);
+
+        return response()->json([
+            'success' => true,
+            'media' => array_slice($items, 0, 300),
+            'total' => $total,
+        ]);
+    }
+
+    /**
+     * Pakai gambar yang sudah ada di galeri media sebagai gambar branding.
+     */
+    public function selectImage(Request $request): JsonResponse
+    {
+        $request->headers->set('Accept', 'application/json');
+
+        try {
+            $validated = $request->validate([
+                'key' => 'required|string|exists:branding_settings,key',
+                'path' => 'required|string|max:500',
+            ]);
+
+            $setting = BrandingSetting::where('key', $validated['key'])
+                ->where('type', 'image')
+                ->firstOrFail();
+
+            $path = $this->relativePath($validated['path']);
+
+            if ($path === '' || str_contains($path, '..')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Path gambar tidak valid.',
+                ], 422);
+            }
+
+            $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+            if (! in_array($extension, self::MEDIA_EXTENSIONS, true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Berkas tersebut bukan gambar yang didukung.',
+                ], 422);
+            }
+
+            $disk = Storage::disk('public');
+            if (! $disk->exists($path)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gambar tidak ditemukan di galeri media.',
+                ], 404);
+            }
+
+            $previous = $setting->value;
+            $publicPath = $disk->url($path);
+
+            $setting->update(['value' => $publicPath]);
+
+            if ($previous && $previous !== $publicPath) {
+                $this->deleteImageFile($previous, $setting->key);
+            }
+
+            self::shareBrandingSettings();
+
+            return response()->json([
+                'success' => true,
+                'path' => $publicPath,
+                'name' => basename($path),
+                'message' => 'Gambar dari galeri berhasil dipakai.',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Normalisasi path media menjadi path relatif disk 'public'.
+     */
+    private function relativePath(?string $path): string
+    {
+        $path = ltrim(str_replace('\\', '/', (string) $path), '/');
+
+        return (string) preg_replace('#^storage/#', '', $path);
+    }
+
+    /**
+     * Helper method to delete image file from storage
+     *
+     * Hanya berkas hasil upload branding (folder branding/) yang dihapus fisik.
+     * Gambar yang dipakai bersama galeri media lain (blog, demo, atau setting
+     * branding lain) dibiarkan agar tidak memutus halaman lain.
+     */
+    private function deleteImageFile(?string $imagePath, ?string $exceptKey = null): void
     {
         if (empty($imagePath)) {
             return;
         }
 
-        $relativePath = str_replace('/storage/', '', $imagePath);
+        $relativePath = $this->relativePath($imagePath);
+
+        if ($relativePath === '' || str_contains($relativePath, '..')) {
+            return;
+        }
+
+        if (! str_starts_with($relativePath, 'branding/')) {
+            return;
+        }
+
+        $stillUsed = BrandingSetting::where('type', 'image')
+            ->when($exceptKey, fn ($query) => $query->where('key', '!=', $exceptKey))
+            ->where(function ($query) use ($imagePath, $relativePath) {
+                $query->where('value', $imagePath)
+                    ->orWhere('value', '/storage/'.$relativePath)
+                    ->orWhere('value', $relativePath);
+            })
+            ->exists();
+
+        if ($stillUsed) {
+            return;
+        }
 
         if (Storage::disk('public')->exists($relativePath)) {
             Storage::disk('public')->delete($relativePath);

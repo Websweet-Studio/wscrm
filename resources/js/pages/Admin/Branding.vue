@@ -130,8 +130,8 @@
                                         </div>
                                     </div>
 
-                                    <!-- Upload Input -->
-                                    <div class="space-y-2">
+                                    <!-- Upload baru atau pilih dari galeri media -->
+                                    <div class="space-y-3">
                                         <input
                                             type="file"
                                             :id="`upload_${setting.key}`"
@@ -139,6 +139,18 @@
                                             accept="image/*"
                                             class="block w-full px-4 py-2 text-sm text-muted-foreground file:mr-4 file:rounded-full file:border-0 file:bg-secondary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-secondary-foreground hover:file:bg-accent"
                                         />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            class="w-full"
+                                            @click="openMediaPicker(setting.key)"
+                                        >
+                                            Pilih dari galeri media
+                                        </Button>
+                                        <p class="text-xs text-muted-foreground">
+                                            Pakai gambar yang pernah diunggah (blog, demo web, branding).
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -224,17 +236,84 @@
             </Card>
         </div>
         <ConfirmModal :show="showDeleteImage" message="Yakin ingin menghapus gambar ini?" confirmText="Hapus" variant="destructive" @confirm="deleteImage" @cancel="showDeleteImage = false" />
+
+        <!-- Galeri media: pakai gambar yang sudah pernah diunggah -->
+        <Dialog v-model:open="mediaPickerOpen">
+            <DialogContent class="sm:max-w-4xl">
+                <DialogHeader>
+                    <DialogTitle>Pilih dari galeri media</DialogTitle>
+                    <DialogDescription>
+                        {{ mediaPickerLabel }} — pilih gambar yang sudah pernah diunggah, tanpa upload ulang.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div class="flex items-center gap-2">
+                    <Input
+                        v-model="mediaSearch"
+                        placeholder="Cari nama file atau folder…"
+                        @keyup.enter="loadMedia"
+                    />
+                    <Button type="button" variant="outline" :disabled="mediaLoading" @click="loadMedia">
+                        Cari
+                    </Button>
+                </div>
+
+                <div class="max-h-[55vh] min-h-[180px] overflow-y-auto pr-1">
+                    <div v-if="mediaLoading" class="flex h-40 items-center justify-center text-sm text-muted-foreground">
+                        Memuat galeri…
+                    </div>
+                    <div
+                        v-else-if="!mediaItems.length"
+                        class="flex h-40 flex-col items-center justify-center gap-1 text-center text-sm text-muted-foreground"
+                    >
+                        <span>Belum ada gambar di galeri.</span>
+                        <span class="text-xs">Unggah lewat kolom di atas, gambarnya akan muncul di sini.</span>
+                    </div>
+                    <div v-else class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                        <button
+                            v-for="item in mediaItems"
+                            :key="item.path"
+                            type="button"
+                            :disabled="mediaSaving === item.path"
+                            class="group overflow-hidden rounded-lg border text-left transition-colors hover:border-primary disabled:opacity-60"
+                            :class="isCurrentMedia(item) ? 'border-primary ring-2 ring-primary/30' : 'border-border'"
+                            :title="item.path"
+                            @click="selectMedia(item)"
+                        >
+                            <div class="flex h-24 items-center justify-center bg-muted p-1">
+                                <img :src="item.url" :alt="item.name" loading="lazy" class="max-h-full max-w-full object-contain" />
+                            </div>
+                            <div class="space-y-0.5 px-2 py-1.5">
+                                <div class="truncate text-xs font-medium">{{ item.name }}</div>
+                                <div class="flex items-center justify-between gap-1 text-[10px] text-muted-foreground">
+                                    <span class="truncate">{{ item.folder || '—' }}</span>
+                                    <span class="shrink-0">{{ formatBytes(item.size) }}</span>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <DialogFooter class="gap-2">
+                    <span class="mr-auto text-xs text-muted-foreground">
+                        {{ mediaTotal }} gambar tersedia<span v-if="mediaTotal > mediaItems.length">, menampilkan {{ mediaItems.length }} terbaru</span>
+                    </span>
+                    <Button type="button" variant="outline" @click="mediaPickerOpen = false">Batal</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </AppLayout>
 </template>
 
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useForm } from '@inertiajs/vue3';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import ConfirmModal from '@/components/ConfirmModal.vue';
 
 interface BrandingSetting {
@@ -615,6 +694,131 @@ const deleteImage = async () => {
     } catch (deleteError) {
         console.error('Delete error:', deleteError);
         error('Terjadi kesalahan', 'Terjadi kesalahan saat menghapus gambar');
+    }
+};
+
+/* ── Galeri media: pilih gambar yang sudah pernah diunggah ───────────────── */
+
+interface MediaItem {
+    path: string;
+    url: string;
+    name: string;
+    folder: string;
+    size: number;
+    modified: number;
+}
+
+const mediaPickerOpen = ref(false);
+const mediaPickerKey = ref('');
+const mediaItems = ref<MediaItem[]>([]);
+const mediaLoading = ref(false);
+const mediaSaving = ref('');
+const mediaSearch = ref('');
+const mediaTotal = ref(0);
+
+const mediaPickerLabel = computed(() => getSettingLabel(mediaPickerKey.value));
+
+const currentMediaValue = computed(
+    () => props.settings.image?.find((setting) => setting.key === mediaPickerKey.value)?.value ?? '',
+);
+
+const isCurrentMedia = (item: MediaItem) =>
+    currentMediaValue.value !== '' && currentMediaValue.value === item.url;
+
+const formatBytes = (bytes: number): string => {
+    if (!bytes) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+    return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
+};
+
+const openMediaPicker = async (key: string) => {
+    mediaPickerKey.value = key;
+    mediaSearch.value = '';
+    mediaPickerOpen.value = true;
+    await loadMedia();
+};
+
+const loadMedia = async () => {
+    mediaLoading.value = true;
+
+    try {
+        const query = mediaSearch.value.trim();
+        const suffix = query ? `?q=${encodeURIComponent(query)}` : '';
+        const response = await fetch(`/admin/branding/media${suffix}`, {
+            headers: { Accept: 'application/json' },
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        mediaItems.value = data.media ?? [];
+        mediaTotal.value = data.total ?? mediaItems.value.length;
+    } catch (mediaError) {
+        console.error('Media load error:', mediaError);
+        mediaItems.value = [];
+        mediaTotal.value = 0;
+        error('Gagal memuat galeri', 'Silakan coba lagi');
+    } finally {
+        mediaLoading.value = false;
+    }
+};
+
+const selectMedia = async (item: MediaItem) => {
+    const key = mediaPickerKey.value;
+
+    if (!key || mediaSaving.value) {
+        return;
+    }
+
+    mediaSaving.value = item.path;
+
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!csrfToken) {
+            error('Token tidak valid', 'Silakan refresh halaman dan coba lagi');
+            return;
+        }
+
+        const response = await fetch('/admin/branding/select-image', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                Accept: 'application/json',
+            },
+            body: JSON.stringify({ key, path: item.path }),
+        });
+
+        const data = await response.json().catch(() => null);
+
+        if (!response.ok || !data?.success) {
+            error('Gagal memakai gambar', data?.message || `Server error: ${response.status}`);
+            return;
+        }
+
+        form.settings[key] = data.path;
+
+        const setting = props.settings.image?.find((s) => s.key === key);
+        if (setting) {
+            setting.value = data.path;
+        }
+
+        clearImagePreview(key);
+
+        if (key === 'app_favicon') {
+            updateBrowserFavicon(data.path);
+        }
+
+        mediaPickerOpen.value = false;
+        success('Gambar dipakai', `${item.name} sekarang menjadi ${getSettingLabel(key)}`);
+    } catch (selectError) {
+        console.error('Select media error:', selectError);
+        error('Terjadi kesalahan', 'Gagal memakai gambar dari galeri');
+    } finally {
+        mediaSaving.value = '';
     }
 };
 </script>
