@@ -24,33 +24,22 @@ const handleLogout = () => {
 </script>
 
 <template>
-    <!-- Navigation -->
-    <nav class="sticky top-0 z-40" style="background-color: #faf9f5; border-bottom: 1px solid #f0eee6;">
-        <div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-8">
+    <nav class="sticky top-0 z-40" style="background-color: color-mix(in srgb, var(--kpub-bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--kpub-line);">
+        <div class="mx-auto max-w-6xl px-4 py-4 sm:px-6">
             <div class="flex items-center justify-between">
-                <!-- Logo -->
                 <Link href="/" class="flex items-center space-x-2 transition-opacity hover:opacity-80">
                     <img v-if="appLogo" :src="appLogo" :alt="appName" class="h-8 w-8 object-contain dark:hidden" />
                     <img v-if="appLogoDark" :src="appLogoDark" :alt="appName" class="hidden h-8 w-8 object-contain dark:block" />
-                    <span class="text-lg font-medium sm:text-xl" style="color: #141413; font-family: Georgia, serif;">{{ appName }}</span>
+                    <span class="text-lg font-semibold tracking-tight sm:text-xl" style="color: var(--kpub-ink);">{{ appName }}</span>
                 </Link>
 
-                <!-- Desktop Navigation -->
-                <div class="hidden items-center space-x-2 md:flex">
-                    <Button variant="ghost" size="sm" asChild>
-                        <Link href="/hosting">Hosting &amp; VPS</Link>
-                    </Button>
-                    <Button variant="ghost" size="sm" asChild>
-                        <Link href="/domains">Domain</Link>
-                    </Button>
-                    <Button variant="ghost" size="sm" asChild>
-                        <Link href="/demo-web">Demo Web</Link>
-                    </Button>
-                    <Button variant="ghost" size="sm" asChild>
-                        <Link href="/blog">Blog</Link>
-                    </Button>
+                <div class="hidden items-center gap-1 md:flex">
+                    <Link href="/hosting" class="rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-black/5">Hosting &amp; VPS</Link>
+                    <Link href="/domains" class="rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-black/5">Domain</Link>
+                    <Link href="/demo-web" class="rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-black/5">Demo Web</Link>
+                    <Link href="/blog" class="rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-black/5">Blog</Link>
                     <template v-if="isAdmin">
-                        <Button size="sm" asChild>
+                        <Button size="sm" asChild class="ml-2" style="background-color: var(--kpub-primary); color: var(--kpub-primary-ink); border-radius: 8px;">
                             <Link href="/dashboard" class="flex items-center gap-2">
                                 <LayoutGrid class="h-4 w-4" />
                                 Dashboard Admin
@@ -62,7 +51,7 @@ const handleLogout = () => {
                         </Button>
                     </template>
                     <template v-else-if="isCustomer">
-                        <Button size="sm" asChild>
+                        <Button size="sm" asChild class="ml-2" style="background-color: var(--kpub-primary); color: var(--kpub-primary-ink); border-radius: 8px;">
                             <Link href="/customer/dashboard" class="flex items-center gap-2">
                                 <LayoutGrid class="h-4 w-4" />
                                 Dashboard
@@ -74,109 +63,58 @@ const handleLogout = () => {
                         </Button>
                     </template>
                     <template v-else>
-                        <Button variant="outline" size="sm" asChild>
+                        <Button variant="outline" size="sm" asChild class="ml-2" style="background-color: transparent; color: var(--kpub-ink); border: 1px solid var(--kpub-line); border-radius: 8px;">
                             <Link href="/customer/login">Masuk</Link>
                         </Button>
-                        <Button size="sm" asChild>
+                        <Button size="sm" asChild style="background-color: var(--kpub-primary); color: var(--kpub-primary-ink); border-radius: 8px;">
                             <Link href="/customer/register">Daftar</Link>
                         </Button>
                     </template>
                 </div>
 
-                <!-- Mobile Menu Button -->
-                <Button variant="ghost" size="sm" class="md:hidden" @click="mobileMenuOpen = !mobileMenuOpen">
+                <Button variant="ghost" size="sm" class="md:hidden" @click="mobileMenuOpen = !mobileMenuOpen" aria-label="Buka menu" :aria-expanded="mobileMenuOpen">
                     <Menu v-if="!mobileMenuOpen" class="h-5 w-5" />
                     <X v-else class="h-5 w-5" />
                 </Button>
             </div>
 
-            <!-- Mobile Navigation Overlay -->
             <div v-if="mobileMenuOpen" class="fixed inset-0 z-50 md:hidden">
-                <!-- Backdrop -->
-                <div class="fixed inset-0 bg-black/30 backdrop-blur-md" @click="mobileMenuOpen = false"></div>
-
-                <!-- Menu Content -->
+                <div class="fixed inset-0 bg-black/30" @click="mobileMenuOpen = false"></div>
                 <Transition
-                    enter-active-class="transition-transform duration-500 ease-out"
-                    leave-active-class="transition-transform duration-400 ease-in"
+                    enter-active-class="transition-transform duration-300 ease-out"
+                    leave-active-class="transition-transform duration-200 ease-in"
                     enter-from-class="-translate-x-full"
                     enter-to-class="translate-x-0"
                     leave-from-class="translate-x-0"
                     leave-to-class="-translate-x-full"
                 >
-                    <div v-if="mobileMenuOpen" class="fixed inset-y-0 left-0 w-[70vw] max-w-[350px] bg-white shadow-xl dark:bg-gray-900">
+                    <div v-if="mobileMenuOpen" class="fixed inset-y-0 left-0 w-[70vw] max-w-[350px] bg-white shadow-xl">
                         <div class="flex h-full flex-col">
-                            <!-- Header -->
-                            <div class="flex items-center justify-between border-b p-4">
+                            <div class="flex items-center justify-between border-b p-4" style="border-color: var(--kpub-line);">
                                 <div class="flex items-center space-x-2">
-                                    <img v-if="appLogo" :src="appLogo" :alt="appName" class="h-6 w-6 object-contain dark:hidden" />
-                                    <img v-if="appLogoDark" :src="appLogoDark" :alt="appName" class="hidden h-6 w-6 object-contain dark:block" />
-                                    <span class="text-sm font-bold text-gray-900 dark:text-white">{{ appName }}</span>
+                                    <img v-if="appLogo" :src="appLogo" :alt="appName" class="h-6 w-6 object-contain" />
+                                    <span class="text-sm font-semibold">{{ appName }}</span>
                                 </div>
-                                <Button variant="ghost" size="sm" @click="mobileMenuOpen = false">
+                                <Button variant="ghost" size="sm" @click="mobileMenuOpen = false" aria-label="Tutup menu">
                                     <X class="h-4 w-4" />
                                 </Button>
                             </div>
-
-                            <!-- Navigation Links -->
-                            <div class="flex-1 space-y-2 p-4">
-                                <Button variant="ghost" class="w-full justify-start" asChild>
-                                    <Link href="/hosting" @click="mobileMenuOpen = false">Hosting &amp; VPS</Link>
-                                </Button>
-                                <Button variant="ghost" class="w-full justify-start" asChild>
-                                    <Link href="/domains" @click="mobileMenuOpen = false">Domain</Link>
-                                </Button>
-                                <Button variant="ghost" class="w-full justify-start" asChild>
-                                    <Link href="/demo-web" @click="mobileMenuOpen = false">Demo Web</Link>
-                                </Button>
-                                <Button variant="ghost" class="w-full justify-start" asChild>
-                                    <Link href="/blog" @click="mobileMenuOpen = false">Blog</Link>
-                                </Button>
+                            <div class="flex-1 space-y-1 p-4">
+                                <Link href="/hosting" class="block rounded-md px-3 py-2.5 text-base font-medium hover:bg-black/5" @click="mobileMenuOpen = false">Hosting &amp; VPS</Link>
+                                <Link href="/domains" class="block rounded-md px-3 py-2.5 text-base font-medium hover:bg-black/5" @click="mobileMenuOpen = false">Domain</Link>
+                                <Link href="/demo-web" class="block rounded-md px-3 py-2.5 text-base font-medium hover:bg-black/5" @click="mobileMenuOpen = false">Demo Web</Link>
+                                <Link href="/blog" class="block rounded-md px-3 py-2.5 text-base font-medium hover:bg-black/5" @click="mobileMenuOpen = false">Blog</Link>
                                 <template v-if="isAdmin">
-                                    <Button variant="outline" class="w-full justify-start" asChild>
-                                        <Link href="/dashboard" class="flex items-center gap-2" @click="mobileMenuOpen = false">
-                                            <LayoutGrid class="h-4 w-4" />
-                                            Dashboard Admin
-                                        </Link>
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        class="w-full justify-start text-red-600 hover:text-red-700"
-                                        @click="
-                                            handleLogout();
-                                            mobileMenuOpen = false;
-                                        "
-                                    >
-                                        <LogOut class="mr-2 h-4 w-4" />
-                                        Logout
-                                    </Button>
+                                    <Link href="/dashboard" class="block rounded-md px-3 py-2.5 text-base font-medium hover:bg-black/5" @click="mobileMenuOpen = false">Dashboard Admin</Link>
+                                    <button class="block w-full rounded-md px-3 py-2.5 text-left text-base font-medium text-red-600 hover:bg-red-50" @click="handleLogout(); mobileMenuOpen = false;">Logout</button>
                                 </template>
                                 <template v-else-if="isCustomer">
-                                    <Button variant="outline" class="w-full justify-start" asChild>
-                                        <Link href="/customer/dashboard" class="flex items-center gap-2" @click="mobileMenuOpen = false">
-                                            <LayoutGrid class="h-4 w-4" />
-                                            Dashboard
-                                        </Link>
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        class="w-full justify-start text-red-600 hover:text-red-700"
-                                        @click="
-                                            handleLogout();
-                                            mobileMenuOpen = false;
-                                        "
-                                    >
-                                        <LogOut class="mr-2 h-4 w-4" />
-                                        Logout
-                                    </Button>
+                                    <Link href="/customer/dashboard" class="block rounded-md px-3 py-2.5 text-base font-medium hover:bg-black/5" @click="mobileMenuOpen = false">Dashboard</Link>
+                                    <button class="block w-full rounded-md px-3 py-2.5 text-left text-base font-medium text-red-600 hover:bg-red-50" @click="handleLogout(); mobileMenuOpen = false;">Logout</button>
                                 </template>
                                 <template v-else>
-                                    <Button variant="outline" class="w-full justify-start" asChild>
-                                        <Link href="/customer/login" @click="mobileMenuOpen = false">Masuk</Link>
-                                    </Button>
-                                    <Button class="w-full justify-start" asChild>
-                                        <Link href="/customer/register" @click="mobileMenuOpen = false">Daftar</Link>
-                                    </Button>
+                                    <Link href="/customer/login" class="block rounded-md px-3 py-2.5 text-base font-medium hover:bg-black/5" @click="mobileMenuOpen = false">Masuk</Link>
+                                    <Link href="/customer/register" class="mt-2 block rounded-md px-3 py-2.5 text-center text-base font-semibold" style="background-color: var(--kpub-primary); color: var(--kpub-primary-ink);" @click="mobileMenuOpen = false">Daftar</Link>
                                 </template>
                             </div>
                         </div>

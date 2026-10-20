@@ -11,24 +11,21 @@ const footerText = computed(() => brandingSettings.value.footer_text || '© 2024
 </script>
 
 <template>
-    <!-- Footer -->
-    <footer style="background-color: #141413; border-top: 1px solid #30302e; padding-top: 1.5rem; padding-bottom: 1.5rem; color: #b0aea5;">
+    <footer class="text-sm" style="background-color: var(--kpub-deep); color: var(--kpub-deep-muted); padding-top: 3rem; padding-bottom: 2rem;">
         <div class="mx-auto max-w-6xl px-4 sm:px-6">
-            <div class="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
+            <div class="flex flex-col items-center justify-between gap-6 md:flex-row">
                 <div class="flex items-center space-x-2">
-                    <img v-if="appLogo" :src="appLogo" :alt="appName" class="h-8 w-8 object-contain dark:hidden" />
-                    <img v-if="appLogoDark" :src="appLogoDark" :alt="appName" class="hidden h-8 w-8 object-contain dark:block" />
-                    <span class="text-lg font-bold sm:text-xl" style="color: #faf9f5; font-family: Georgia, serif;">{{ appName }}</span>
+                    <img v-if="appLogo" :src="appLogo" :alt="appName" class="h-8 w-8 object-contain" />
+                    <span class="text-lg font-semibold tracking-tight" style="color: var(--kpub-deep-ink);">{{ appName }}</span>
                 </div>
-                <div class="flex flex-wrap justify-center gap-4 text-sm sm:gap-6">
-                    <Link href="/hosting" class="transition-colors" style="color: #b0aea5;">Hosting &amp; VPS</Link>
-                    <Link href="/domains" class="transition-colors" style="color: #b0aea5;">Domain</Link>
-                    <Link href="/demo-web" class="transition-colors" style="color: #b0aea5;">Demo Web</Link>
-                    <Link href="/customer/login" class="transition-colors" style="color: #b0aea5;">Login Pelanggan</Link>
-                    <Link href="/login" class="transition-colors" style="color: #b0aea5;">Login Admin</Link>
+                <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
+                    <Link href="/hosting" class="transition-colors hover:opacity-80">Hosting &amp; VPS</Link>
+                    <Link href="/domains" class="transition-colors hover:opacity-80">Domain</Link>
+                    <Link href="/demo-web" class="transition-colors hover:opacity-80">Demo Web</Link>
+                    <Link href="/customer/login" class="transition-colors hover:opacity-80">Login Pelanggan</Link>
                 </div>
             </div>
-            <div class="mt-4 pt-4 text-center text-xs sm:mt-6 sm:pt-6 sm:text-sm" style="border-top: 1px solid #30302e; color: #87867f;">
+            <div class="mt-6 pt-5 text-center text-xs" style="border-top: 1px solid var(--kpub-deep-line); color: var(--kpub-deep-muted);">
                 <p>{{ footerText }}</p>
             </div>
         </div>
