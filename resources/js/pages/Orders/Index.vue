@@ -14,6 +14,8 @@ import { computed, ref } from 'vue';
 interface OrderItem {
     id: number;
     item_type: 'hosting' | 'domain' | 'app' | 'web' | 'maintenance' | 'service';
+    display_name?: string;
+    display_spec?: string | null;
     domain_name: string | null;
     quantity: number;
     price: number;
@@ -142,7 +144,7 @@ const getOrderItemsSummary = (order: Order) => {
     }
 
     const first = items[0];
-    const firstLabel = first.domain_name || order.domain_name || first.item_type;
+    const firstLabel = first.display_name || first.domain_name || order.domain_name || first.item_type;
     const extra = items.length > 1 ? ` +${items.length - 1} item` : '';
     return `${firstLabel}${extra}`;
 };

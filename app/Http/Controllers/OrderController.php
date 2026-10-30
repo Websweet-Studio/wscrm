@@ -17,9 +17,13 @@ class OrderController extends Controller
     public function index(): Response
     {
         $orders = Auth::guard('customer')->user()->orders()
-            ->with(['orderItems'])
+            ->with(['orderItems.hostingPlan', 'orderItems.domainPrice', 'orderItems.servicePlan'])
             ->orderBy('created_at', 'desc')
             ->get();
+
+        foreach ($orders as $order) {
+            $order->orderItems->each(fn ($item) => $item->append(['display_name', 'display_spec']));
+        }
 
         return Inertia::render('Orders/Index', [
             'orders' => $orders,
@@ -32,7 +36,8 @@ class OrderController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $order->load(['orderItems']);
+        $order->load(['orderItems.hostingPlan', 'orderItems.domainPrice', 'orderItems.servicePlan']);
+        $order->orderItems->each(fn ($item) => $item->append(['display_name', 'display_spec']));
 
         return Inertia::render('Orders/Show', [
             'order' => $order,

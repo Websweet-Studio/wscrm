@@ -14,6 +14,8 @@ import ConfirmModal from '@/components/ConfirmModal.vue';
 interface OrderItem {
     id: number;
     item_type: string;
+    display_name?: string;
+    display_spec?: string | null;
     domain_name: string | null;
     quantity: number;
     price: number;
@@ -196,7 +198,7 @@ const payableAmount = computed(() => {
                                 <div v-for="item in order.order_items" :key="item.id" class="flex items-start justify-between gap-3 bg-background/40 px-3 py-3">
                                     <div class="min-w-0">
                                         <div class="truncate font-medium">
-                                            {{ item.domain_name || order.domain_name || item.item_type }}
+                                            {{ item.display_name || item.domain_name || order.domain_name || item.item_type }}
                                         </div>
                                         <div class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground capitalize">
                                             <span>{{ item.item_type }}</span>
