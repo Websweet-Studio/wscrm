@@ -13,11 +13,27 @@ Route::get('/', function () {
 
     $companyWhatsapp = \App\Models\BrandingSetting::getValue('company_whatsapp');
 
+    $demoKategori = \App\Models\DemoCategory::active()
+        ->ordered()
+        ->get()
+        ->map(fn ($cat) => [
+            'name' => $cat->name,
+            'slug' => $cat->slug,
+            'jumlah' => \App\Models\DemoWebsite::active()
+                ->where('demo_category_id', $cat->id)
+                ->count(),
+        ])
+        ->filter(fn ($cat) => $cat['jumlah'] > 0)
+        ->sortByDesc('jumlah')
+        ->take(4)
+        ->values();
+
     return Inertia::render('CustomerWelcome', [
         'domainPrices' => $domainPrices,
         'hostingPlans' => $hostingPlans,
         'servicePlans' => $servicePlans,
         'companyWhatsapp' => $companyWhatsapp,
+        'demoKategori' => $demoKategori,
     ]);
 })->name('home');
 

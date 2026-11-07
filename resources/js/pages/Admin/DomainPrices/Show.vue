@@ -73,7 +73,7 @@ const formatDate = (date: string) => {
 const promoStatus = computed(() => {
     if (props.domainPrice.promo_selling_price === null || props.domainPrice.promo_selling_price === undefined) return null;
     if (props.domainPrice.promo_active) return { label: 'AKTIF', variant: 'default' as const };
-    // Harga jual dikunci manual (mis. `.com` 225.000) sehingga promo RDash tidak menurunkan harga klien.
+    // Harga jual dikunci manual (mis. `.com` 260.000) sehingga promo RDash tidak menurunkan harga klien.
     if (props.domainPrice.promo_muted) return { label: 'Tidak Dipakai', variant: 'secondary' as const };
 
     const startsAt = props.domainPrice.promo_starts_at ? new Date(props.domainPrice.promo_starts_at).getTime() : null;

@@ -116,7 +116,7 @@ class DomainPrice extends Model
      * Promo registrasi sedang BERLAKU untuk klien: jendela waktu terbuka DAN
      * harganya lebih murah dari harga normal.
      *
-     * TLD yang harga jualnya dikunci manual (mis. `.com` 225.000 lewat opsi
+     * TLD yang harga jualnya dikunci manual (mis. `.com` 260.000 lewat opsi
      * `--keep` / `RDASH_KEEP_SELLING`) tetap menyimpan data promo RDash, tetapi
      * tidak dihitung sebagai promo: klien tidak mendapat potongan apa pun, jadi
      * menampilkan badge "PROMO" + harga coret akan menyesatkan.

@@ -20,7 +20,7 @@ class RdashSyncPrices extends Command
         {--fix-selling : Hitung ulang harga jual untuk TLD yang marginnya di bawah batas --min-margin}
         {--min-margin=0 : Batas margin minimum (% dari modal); 0 = hanya perbaiki yang rugi}
         {--margin=0 : Margin NOMINAL (Rp) per domain, mis. 10000 → harga jual = modal + 10.000 lalu dibulatkan. Bila >0, menggantikan --markup dan menormalkan SEMUA harga jual (naik maupun turun)}
-        {--keep= : Ekstensi (dipisah koma) yang HARGA REGISTRASINYA dipertahankan apa adanya walau marginnya tipis/negatif (harga perpanjangan tetap mengikuti aturan margin), contoh: .com,.my.id}
+        {--keep= : Ekstensi (dipisah koma) yang HARGA JUALNYA (registrasi & perpanjangan) dipertahankan apa adanya walau marginnya tipis/negatif, contoh: .com,.my.id}
         {--no-promo : Abaikan harga promo registrasi dari RDash (jangan simpan/tinjau promo_registration)}
         {--markup=15 : Persen markup dari modal untuk harga jual (baris baru & perbaikan harga)}
         {--round=5000 : Bulatkan harga jual ke atas ke kelipatan ini}
@@ -187,10 +187,9 @@ class RdashSyncPrices extends Command
                 $needRenewSell = $this->belowMargin($renewSellNow, $newRenewal, $minMargin);
             }
 
-            // --keep hanya mengunci harga REGISTRASI (boleh tipis/negatif, mis. harga promo
-            // TLD tertentu). Harga PERPANJANGAN selalu mengikuti aturan margin — permintaan
-            // user 19 Sep 2026: perpanjangan .com ikut margin Rp10.000 + bulat Rp5.000.
-            if ($needSell && in_array($this->normExt($extension), $keep, true)) {
+            // --keep mengunci harga jual ekstensi tersebut (registrasi & perpanjangan)
+            // apa adanya, walau marginnya tipis/negatif. .com dikunci Rp260.000.
+            if (in_array($this->normExt($extension), $keep, true) && ($needSell || $needRenewSell)) {
                 $kept[] = [
                     'extension' => $this->normExt($extension),
                     'base_cost' => $newBase,
@@ -201,10 +200,7 @@ class RdashSyncPrices extends Command
                 ];
 
                 $needSell = false;
-
-                if (! $needRenewSell) {
-                    continue;
-                }
+                $needRenewSell = false;
             }
 
             if (! $needSell && ! $needRenewSell) {

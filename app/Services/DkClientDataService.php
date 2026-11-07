@@ -156,6 +156,7 @@ class DkClientDataService
                 'orderItems.hostingPlan',
                 'orderItems.domainPrice',
                 'orderItems.servicePlan',
+                'invoices',
             ])
             ->orderBy('expires_at')
             ->limit(min(max($batas, 1), 500))
@@ -268,6 +269,7 @@ class DkClientDataService
                 'orders.orderItems.hostingPlan',
                 'orders.orderItems.domainPrice',
                 'orders.orderItems.servicePlan',
+                'orders.invoices',
                 'invoices' => fn ($q) => $q->unpaid(),
             ]);
         }
@@ -339,6 +341,34 @@ class DkClientDataService
                 'jumlah' => (int) $item->quantity,
                 'nominal' => round((float) $item->price * (int) $item->quantity, 2),
             ])->values()->all(),
+            // Nominal invoice terakhir dipakai mitra (my-dk) untuk menjabarkan
+            // nilai kontrak: komponen order + selisih yang ditagih + diskon.
+            'tagihan' => $this->tagihanTerakhir($order),
+        ];
+    }
+
+    /** Invoice terbaru milik satu order — bahan penjabaran nilai kontrak di mitra. */
+    private function tagihanTerakhir(Order $order): ?array
+    {
+        $invoice = $order->relationLoaded('invoices')
+            ? $order->invoices->sortByDesc(fn ($i) => $i->issue_date?->timestamp ?? 0)->first()
+            : $order->invoices()->orderByDesc('issue_date')->orderByDesc('id')->first();
+
+        if (! $invoice) {
+            return null;
+        }
+
+        return [
+            'id' => $invoice->id,
+            'nomor' => $invoice->invoice_number,
+            'jenis' => $invoice->invoice_type,
+            'nominal' => (float) $invoice->amount,
+            'diskon' => (float) $invoice->discount,
+            'net' => (float) $invoice->final_amount,
+            'status' => $invoice->status,
+            'status_label' => ucfirst((string) $invoice->status),
+            'tanggal' => $invoice->issue_date?->toDateString(),
+            'periode_berakhir' => $invoice->period_end?->toDateString(),
         ];
     }
 
