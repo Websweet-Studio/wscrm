@@ -72,6 +72,18 @@ class CustomerController extends Controller
             'invoices',
         ]);
 
+        // Item domain is often empty on legacy orders; the domain lives on the order.
+        foreach ($customer->orders as $order) {
+            if (! $order->domain_name) {
+                continue;
+            }
+            foreach ($order->orderItems as $item) {
+                if (! $item->domain_name) {
+                    $item->domain_name = $order->domain_name;
+                }
+            }
+        }
+
         // Get services from orders
         $services = \DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
@@ -84,6 +96,7 @@ class CustomerController extends Controller
             ->select([
                 'order_items.id',
                 'order_items.domain_name',
+                'orders.domain_name as order_domain_name',
                 'order_items.item_type as service_type',
                 'orders.status',
                 'orders.expires_at',
@@ -96,7 +109,7 @@ class CustomerController extends Controller
             ->map(function ($service) {
                 return [
                     'id' => $service->id,
-                    'domain_name' => $service->domain_name,
+                    'domain_name' => $service->domain_name ?: $service->order_domain_name,
                     'service_type' => $service->service_type,
                     'status' => $service->status,
                     'expires_at' => $service->expires_at,

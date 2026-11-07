@@ -289,10 +289,10 @@ const getStatusClass = (status: string) => {
                                 <TableCell>
                                     <template v-if="order.discount_amount && order.discount_amount > 0">
                                         <div class="text-xs text-muted-foreground line-through">
-                                            {{ formatPrice(order.total_amount) }}
+                                            {{ formatPrice(Number(order.total_amount) + Number(order.discount_amount)) }}
                                         </div>
                                         <div class="font-medium text-green-600 dark:text-green-400">
-                                            {{ formatPrice(Number(order.total_amount) - Number(order.discount_amount)) }}
+                                            {{ formatPrice(order.total_amount) }}
                                         </div>
                                         <div class="text-xs text-green-600 dark:text-green-400">Hemat: {{ formatPrice(order.discount_amount) }}</div>
                                     </template>
@@ -378,7 +378,7 @@ const getStatusClass = (status: string) => {
                         <TableBody>
                             <TableRow v-for="invoice in customer.invoices" :key="invoice.id">
                                 <TableCell class="font-medium">{{ invoice.invoice_number }}</TableCell>
-                                <TableCell>{{ formatPrice(invoice.total_amount) }}</TableCell>
+                                <TableCell>{{ formatPrice(invoice.final_amount) }}</TableCell>
                                 <TableCell>
                                     <Badge :class="getStatusClass(invoice.status)">
                                         {{ invoice.status }}

@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\Customer;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\User;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
@@ -28,6 +30,28 @@ it('can view customer show page', function () {
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Customers/Show')
             ->has('customer')
+        );
+});
+
+it('falls back to order domain when order item has no domain', function () {
+    $user = User::factory()->admin()->create();
+    $customer = Customer::factory()->create();
+    $order = Order::factory()->forCustomer($customer)->create([
+        'domain_name' => 'fallback.test',
+        'status' => 'active',
+    ]);
+    OrderItem::factory()->hosting()->create([
+        'order_id' => $order->id,
+        'domain_name' => null,
+    ]);
+
+    $response = $this->actingAs($user)->get("/admin/customers/{$customer->id}");
+
+    $response->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Admin/Customers/Show')
+            ->where('customer.services.0.domain_name', 'fallback.test')
+            ->where('customer.orders.0.order_items.0.domain_name', 'fallback.test')
         );
 });
 

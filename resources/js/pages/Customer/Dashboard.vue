@@ -33,11 +33,13 @@ interface OrderItem {
     id: number;
     item_type: string;
     domain_name: string | null;
+    display_name?: string;
     price: number;
 }
 
 interface Order {
     id: number;
+    domain_name?: string | null;
     total_amount: number;
     discount_amount?: number;
     status: string;
@@ -181,6 +183,15 @@ const netAmountOf = (inv: any): number => {
     if (Number.isFinite(explicit) && explicit > 0) return explicit;
 
     return Math.max(0, Number(inv?.amount ?? 0) - Number(inv?.discount ?? 0));
+};
+
+// Nama layanan pada daftar pesanan: domain order, lalu nama produk item pertama.
+const orderLabel = (order: Order): string => {
+    const items = order.order_items || [];
+    const first = items[0];
+    const label = order.domain_name || first?.display_name || first?.domain_name || (items.length ? `${items.length} item` : 'Tanpa item');
+
+    return items.length > 1 ? `${label} +${items.length - 1} item` : label;
 };
 
 // Label due date relatif: hari ini / terlewati / sisa hari.
@@ -643,7 +654,8 @@ const todayLabel = computed(() =>
                                 Pesanan #{{ order.id }}
                             </Link>
                             <div class="mt-0.5 truncate text-sm" style="color: #91918c;">
-                                {{ order.order_items?.length || 0 }} item · {{ formatDate(order.created_at) }}
+                                {{ orderLabel(order) }} · {{ formatDate(order.created_at) }}
+                                <template v-if="order.expires_at"> · Kadaluarsa {{ formatDate(order.expires_at) }}</template>
                             </div>
                         </div>
                         <div class="flex shrink-0 items-center gap-2.5">
