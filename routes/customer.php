@@ -65,6 +65,9 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::prefix('ai')->name('ai.')->group(function () {
             Route::get('/', [AiController::class, 'index'])->name('index');
             Route::post('/api-key', [AiController::class, 'apiKey'])->name('api-key');
+            // Uji API key customer ke gateway AI. Tanpa potong saldo: prompt &
+            // max_tokens dikunci di sini supaya tidak bisa dipakai minta token gratis.
+            Route::post('/test', [AiController::class, 'test'])->name('test')->middleware('throttle:10,1');
             Route::get('/history', [AiController::class, 'history'])->name('history');
             Route::get('/export', [AiController::class, 'exportCsv'])->name('export');
             Route::get('/packages', [AiController::class, 'packages'])->name('packages');

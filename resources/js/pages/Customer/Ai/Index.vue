@@ -172,6 +172,46 @@ const copyApiKey = async () => {
 
 const openRegenModal = () => { showRegenModal.value = true; };
 
+// Uji API key ke gateway. Hasil ditampilkan inline di bawah tombol.
+const testing = ref(false);
+const testResult = ref<{ ok: boolean; title: string; message: string; meta: string } | null>(null);
+
+const runTest = async () => {
+    if (!apiKey.value || testing.value) return;
+
+    testing.value = true;
+    testResult.value = null;
+
+    try {
+        const res = await fetch('/customer/ai/test', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': csrfToken, Accept: 'application/json' },
+        });
+        const data = await res.json().catch(() => ({}));
+        const ok = res.ok && data.ok === true;
+        const meta = [
+            data.model ? `model ${data.model}` : null,
+            typeof data.latency_ms === 'number' ? `${(data.latency_ms / 1000).toFixed(2)} dtk` : null,
+        ].filter(Boolean).join(' · ');
+
+        testResult.value = {
+            ok,
+            title: ok ? 'API key aktif' : 'Uji gagal',
+            message: data.message || (ok ? 'Gateway merespons normal.' : 'Tidak bisa menguji koneksi.'),
+            meta,
+        };
+    } catch {
+        testResult.value = {
+            ok: false,
+            title: 'Uji gagal',
+            message: 'Tidak bisa menghubungi server. Periksa koneksi lalu coba lagi.',
+            meta: '',
+        };
+    } finally {
+        testing.value = false;
+    }
+};
+
 const confirmRegen = async () => {
     showRegenModal.value = false;
     const res = await fetch('/customer/ai/api-key', { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken } });
@@ -590,9 +630,39 @@ const historyExportUrl = computed(() => {
                                         {{ copiedKey ? 'Tersalin' : 'Salin' }}
                                     </button>
                                 </div>
-                                <Button size="sm" variant="outline" class="cursor-pointer" @click="openRegenModal">
-                                    <RefreshCw class="mr-1.5 h-3.5 w-3.5" /> Generate / Ganti Key
-                                </Button>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <Button size="sm" variant="outline" class="cursor-pointer" @click="openRegenModal">
+                                        <RefreshCw class="mr-1.5 h-3.5 w-3.5" /> Generate / Ganti Key
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        class="cursor-pointer"
+                                        :disabled="!apiKey || testing"
+                                        :title="apiKey ? 'Kirim 1 permintaan uji ke gateway' : 'Buat API key dulu'"
+                                        @click="runTest"
+                                    >
+                                        <RefreshCw v-if="testing" class="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                        <Zap v-else class="mr-1.5 h-3.5 w-3.5" />
+                                        {{ testing ? 'Menguji...' : 'Test Koneksi' }}
+                                    </Button>
+                                </div>
+
+                                <div
+                                    v-if="testResult"
+                                    class="mt-2 flex items-start gap-2 rounded-lg border px-3 py-2 text-xs"
+                                    :class="testResult.ok
+                                        ? 'border-green-600/40 bg-green-500/5 text-green-700 dark:text-green-400'
+                                        : 'border-red-600/40 bg-red-500/5 text-red-700 dark:text-red-400'"
+                                >
+                                    <Check v-if="testResult.ok" class="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                    <X v-else class="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                    <div class="min-w-0">
+                                        <p class="font-medium">{{ testResult.title }}</p>
+                                        <p class="break-words">{{ testResult.message }}</p>
+                                        <p v-if="testResult.meta" class="mt-0.5 font-mono text-[11px] opacity-80">{{ testResult.meta }}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

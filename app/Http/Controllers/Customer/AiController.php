@@ -7,6 +7,7 @@ use App\Models\AiCombo;
 use App\Models\AiCredit;
 use App\Models\AiModel;
 use App\Models\AiPackage;
+use App\Models\AiProvider;
 use App\Models\AiSetting;
 use App\Models\AiTransaction;
 use App\Models\Invoice;
@@ -15,6 +16,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -226,6 +229,121 @@ class AiController extends CustomerBaseController
         ]);
 
         return response()->json(['api_key' => $key]);
+    }
+
+    /**
+     * Uji cepat API key customer ke gateway AI.
+     *
+     * Tidak memotong saldo: prompt dan max_tokens dikunci di server, jadi endpoint
+     * ini tidak bisa dipakai untuk mengambil token gratis.
+     */
+    public function test(): JsonResponse
+    {
+        $customer = $this->customer();
+
+        $credit = AiCredit::where('customer_id', $customer->id)->first();
+
+        $apiKey = null;
+        if ($credit?->api_key) {
+            try {
+                $apiKey = Crypt::decryptString($credit->api_key);
+            } catch (\Throwable $e) {
+                $apiKey = null;
+            }
+        }
+
+        if (! $credit || ! $apiKey) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Belum ada API key. Buat dulu lewat tombol Generate / Ganti Key.',
+            ], 422);
+        }
+
+        if ($credit->api_key_hash && ! hash_equals($credit->api_key_hash, hash('sha256', $apiKey))) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'API key tersimpan tidak cocok. Generate ulang key lalu coba lagi.',
+            ], 422);
+        }
+
+        $provider = AiProvider::active()->orderBy('sort_order')->orderBy('id')->first();
+        if (! $provider || ! $provider->endpoint) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Gateway AI belum dikonfigurasi. Hubungi admin.',
+            ], 422);
+        }
+
+        $upstreamKey = null;
+        if ($provider->api_key) {
+            try {
+                $upstreamKey = Crypt::decryptString($provider->api_key);
+            } catch (\Throwable $e) {
+                $upstreamKey = $provider->api_key;
+            }
+        }
+        $upstreamKey = $upstreamKey ?: (string) (config('services.ai.api_key') ?? env('AI_API_KEY', ''));
+
+        // Model gratis dulu supaya uji tidak menimbulkan biaya upstream; kalau tidak ada, yang termurah.
+        $model = AiModel::where('provider_id', $provider->id)
+            ->where('is_active', true)
+            ->orderByRaw('CASE WHEN input_rate = 0 AND output_rate = 0 THEN 0 ELSE 1 END')
+            ->orderBy('input_rate')
+            ->orderBy('sort_order')
+            ->first()
+            ?? AiModel::where('is_active', true)->orderBy('input_rate')->first();
+
+        if (! $model) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Belum ada model aktif di gateway. Hubungi admin.',
+            ], 422);
+        }
+
+        $started = microtime(true);
+
+        try {
+            $response = Http::withToken($upstreamKey)
+                ->acceptJson()
+                ->timeout(30)
+                ->post(rtrim($provider->endpoint, '/') . '/chat/completions', [
+                    'model' => $model->model_key,
+                    'messages' => [['role' => 'user', 'content' => 'ping']],
+                    'max_tokens' => 16,
+                    'stream' => false,
+                ]);
+        } catch (\Throwable $e) {
+            Log::warning('AI key test failed', ['customer_id' => $customer->id, 'error' => $e->getMessage()]);
+
+            return response()->json([
+                'ok' => false,
+                'message' => 'Tidak bisa menghubungi gateway AI: ' . $e->getMessage(),
+                'model' => $model->model_key,
+            ], 502);
+        }
+
+        $latency = (int) round((microtime(true) - $started) * 1000);
+
+        if ($response->failed()) {
+            $error = data_get($response->json(), 'error.message') ?: Str::limit($response->body(), 200);
+
+            return response()->json([
+                'ok' => false,
+                'message' => "Gateway menolak permintaan (HTTP {$response->status()}): {$error}",
+                'latency_ms' => $latency,
+                'model' => $model->model_key,
+            ]);
+        }
+
+        $reply = trim((string) data_get($response->json(), 'choices.0.message.content', ''));
+
+        return response()->json([
+            'ok' => true,
+            'message' => $reply !== '' ? Str::limit($reply, 160) : 'Gateway merespons normal.',
+            'latency_ms' => $latency,
+            'model' => $model->model_key,
+            'balance' => AiCredit::currentBalance($customer->id),
+        ]);
     }
 
     public function packages(): Response
