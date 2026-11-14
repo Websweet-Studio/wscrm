@@ -170,8 +170,8 @@ onMounted(() => {
             <div v-if="open" class="flex w-[400px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl">
                 <!-- Header -->
                 <div class="flex items-center gap-2 border-b bg-muted/40 px-4 py-3">
-                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                        <MessageCircle class="h-4 w-4 text-primary" />
+                    <div class="flex h-8 w-8 items-center justify-center rounded-full" style="background-color: var(--kpub-green-soft, #edf5f1);">
+                        <MessageCircle class="h-4 w-4" style="color: var(--kpub-green, #0a6c4d);" />
                     </div>
                     <div class="flex-1">
                         <p class="text-sm font-semibold leading-tight">Customer Service</p>
@@ -185,12 +185,12 @@ onMounted(() => {
                 <!-- Messages -->
                 <div ref="container" class="flex-1 space-y-3 overflow-y-auto p-4" style="max-height: 60vh; min-height: 200px;">
                     <div v-for="(m, i) in messages" :key="i" class="flex gap-2" :class="m.role === 'user' ? 'justify-end' : ''">
-                        <div v-if="m.role === 'user'" class="max-w-[80%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-primary px-3.5 py-2 text-sm text-primary-foreground">
+                        <div v-if="m.role === 'user'" class="max-w-[80%] whitespace-pre-wrap rounded-2xl rounded-br-md px-3.5 py-2 text-sm text-white" style="background-color: var(--kpub-green, #0a6c4d);">
                             {{ m.content }}
                         </div>
                         <div v-else class="flex max-w-[85%] gap-2">
-                            <div class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                                <MessageCircle class="h-3.5 w-3.5 text-primary" />
+                            <div class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style="background-color: var(--kpub-green-soft, #edf5f1);">
+                                <MessageCircle class="h-3.5 w-3.5" style="color: var(--kpub-green, #0a6c4d);" />
                             </div>
                             <div class="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-bl-md bg-muted/50 px-3.5 py-2.5 text-sm leading-relaxed" v-html="formatMarkdown(m.content)"></div>
                         </div>
@@ -220,7 +220,7 @@ onMounted(() => {
                             rows="1"
                             @keydown="handleKeydown"
                         />
-                        <Button @click="send" :disabled="loading || !input.trim()" class="h-[44px] w-[44px] shrink-0 cursor-pointer">
+                        <Button :disabled="loading || !input.trim()" class="h-[44px] w-[44px] shrink-0 cursor-pointer" style="background-color: var(--kpub-green, #0a6c4d); color: #ffffff;" @click="send">
                             <Send class="h-4 w-4" />
                         </Button>
                     </div>
@@ -229,13 +229,15 @@ onMounted(() => {
         </transition>
 
         <!-- Tombol floating -->
-        <Button
-            @click="toggle"
-            class="h-14 w-14 cursor-pointer rounded-full shadow-lg"
+        <button
+            type="button"
+            class="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full shadow-lg"
+            style="background-color: var(--kpub-green, #0a6c4d); color: #ffffff;"
             :aria-label="open ? 'Tutup chat' : 'Buka chat customer service'"
+            @click="toggle"
         >
             <MessageCircle v-if="!open" class="h-6 w-6" />
             <X v-else class="h-6 w-6" />
-        </Button>
+        </button>
     </div>
 </template>

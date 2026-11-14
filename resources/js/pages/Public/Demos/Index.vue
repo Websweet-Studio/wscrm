@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
-import { ExternalLink, Filter, LayoutGrid, Monitor, Search, Code, Check, Copy, Palette, Terminal } from 'lucide-vue-next';
 import { router, usePage } from '@inertiajs/vue3';
+import { Check, ChevronLeft, ChevronRight, Copy, ExternalLink, LayoutGrid, Monitor, Palette, Search, Terminal } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
 interface DemoItem {
@@ -57,9 +54,7 @@ const search = ref(props.filters?.search || '');
 const selectedCategory = ref(props.filters?.category || null);
 const selectedPackage = ref(props.filters?.package || null);
 
-const hasActiveFilters = () => {
-    return search.value || selectedCategory.value || selectedPackage.value;
-};
+const hasActiveFilters = () => Boolean(search.value || selectedCategory.value || selectedPackage.value);
 
 const applyFilters = (page?: number) => {
     router.get(
@@ -70,10 +65,7 @@ const applyFilters = (page?: number) => {
             package: selectedPackage.value || undefined,
             page: page || 1,
         },
-        {
-            preserveState: true,
-            preserveScroll: true,
-        },
+        { preserveState: true, preserveScroll: true },
     );
 };
 
@@ -93,18 +85,11 @@ const goToPage = (url: string | null) => {
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 watch(search, () => {
     if (searchTimeout) clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        applyFilters(1);
-    }, 400);
+    searchTimeout = setTimeout(() => applyFilters(1), 400);
 });
 
-watch(selectedCategory, () => {
-    applyFilters(1);
-});
-
-watch(selectedPackage, () => {
-    applyFilters(1);
-});
+watch(selectedCategory, () => applyFilters(1));
+watch(selectedPackage, () => applyFilters(1));
 
 const page = usePage();
 const companyWhatsapp = computed(() => (page.props.brandingSettings as any)?.company_whatsapp || '6281234567890');
@@ -113,10 +98,10 @@ const appUrl = window.location.origin;
 const copiedId = ref<string | null>(null);
 const activeTab = ref<'embed' | 'api'>('embed');
 
-// JS Embed Configurator
+// Embed configurator
 const embedCategory = ref<string | null>(null);
 const embedPerPage = ref(6);
-const embedPrimary = ref(document.documentElement.style.getPropertyValue('--primary').trim() || '#c96442');
+const embedPrimary = ref(document.documentElement.style.getPropertyValue('--primary').trim() || '#0a6c4d');
 const embedWhatsapp = ref('');
 
 const jsEmbedCode = computed(() => {
@@ -129,30 +114,24 @@ const jsEmbedCode = computed(() => {
 <script src="${appUrl}/demo-web/embed.js"><\/script>`;
 });
 
-const singleEmbedIframeCode = (demo: DemoItem) => {
-    const embedUrl = `${appUrl}/demo-web/embed/${demo.id}`;
-    return `<iframe src="${embedUrl}" width="800" height="600" frameborder="0" allowfullscreen style="max-width:100%;border:1px solid #e8e6dc;border-radius:12px;overflow:hidden;"></iframe>`;
-};
+const singleEmbedIframeCode = (demo: DemoItem) =>
+    `<iframe src="${appUrl}/demo-web/embed/${demo.id}" width="800" height="600" frameborder="0" allowfullscreen style="max-width:100%;border:1px solid #e6e8e6;border-radius:14px;overflow:hidden;"></iframe>`;
 
-// Preview pagination
 const previewPage = ref(1);
 
 const previewFilteredDemos = computed(() => {
     const all = props.demos?.data || [];
     if (!embedCategory.value) return all;
-    return all.filter(d => d.category_slug === embedCategory.value);
+    return all.filter((d) => d.category_slug === embedCategory.value);
 });
 
-const previewTotalPages = computed(() => {
-    return Math.ceil(previewFilteredDemos.value.length / embedPerPage.value);
-});
+const previewTotalPages = computed(() => Math.ceil(previewFilteredDemos.value.length / embedPerPage.value));
 
 const previewDemos = computed(() => {
     const start = (previewPage.value - 1) * embedPerPage.value;
     return previewFilteredDemos.value.slice(start, start + embedPerPage.value);
 });
 
-// Reset preview page when settings change
 watch([embedCategory, embedPerPage], () => {
     previewPage.value = 1;
 });
@@ -160,8 +139,6 @@ watch([embedCategory, embedPerPage], () => {
 const copyToClipboard = async (text: string, id: string) => {
     try {
         await navigator.clipboard.writeText(text);
-        copiedId.value = id;
-        setTimeout(() => { copiedId.value = null; }, 2000);
     } catch {
         const textarea = document.createElement('textarea');
         textarea.value = text;
@@ -169,528 +146,329 @@ const copyToClipboard = async (text: string, id: string) => {
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        copiedId.value = id;
-        setTimeout(() => { copiedId.value = null; }, 2000);
     }
+    copiedId.value = id;
+    setTimeout(() => (copiedId.value = null), 2000);
 };
+
+/** Nomor halaman yang ditampilkan: ujung + sekitar halaman aktif. */
+const nomorHalaman = computed(() =>
+    Array.from({ length: props.demos.last_page }, (_, i) => i + 1).filter(
+        (p) => props.demos.last_page <= 7 || p === 1 || p === props.demos.last_page || Math.abs(p - props.demos.current_page) <= 1,
+    ),
+);
+
+const warnaAksen = ['#0a6c4d', '#2563eb', '#059669', '#7c3aed', '#db2777', '#ea580c', '#0891b2', '#4d4c48'];
 </script>
 
 <template>
-    <CustomerPublicLayout title="Demo Website - Template & Contoh Website">
-        <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:py-20">
-            <!-- Hero -->
-            <div class="mb-12 text-center sm:mb-16">
-                <h1
-                    class="mb-4 text-4xl leading-tight font-medium sm:text-5xl md:text-6xl"
-                    style="color: #141413; line-height: 1.1; font-family: Georgia, serif"
-                >
-                    Demo Website
-                </h1>
-                <p class="mx-auto mb-6 max-w-2xl text-base sm:text-lg lg:text-xl" style="color: #5e5d59; line-height: 1.6">
-                    Lihat contoh website yang bisa Anda miliki. Pilih template favorit dan hubungi kami untuk memulai.
+    <CustomerPublicLayout title="Demo Website & Template">
+        <section class="kcontainer pt-16 pb-12 md:pt-20">
+            <div class="max-w-2xl">
+                <h1 class="text-4xl sm:text-5xl md:text-[3.25rem] md:leading-[1.08]">Contoh nyata, bukan tangkapan layar.</h1>
+                <p class="mt-4 text-base sm:text-lg" style="color: var(--kpub-muted);">
+                    Setiap demo bisa dibuka langsung. Kalau ada yang cocok, kami pasang versi Anda dengan nama dan isi sendiri.
                 </p>
             </div>
 
-            <!-- Search & Filters -->
-            <div class="mb-8">
-                <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px">
-                    <CardContent class="pt-6">
-                        <div class="flex flex-col gap-4 md:flex-row md:items-center">
-                            <!-- Search -->
-                            <div class="relative flex-1">
-                                <Search class="absolute top-2.5 left-3 h-5 w-5" style="color: #87867f" />
-                                <input
-                                    v-model="search"
-                                    type="text"
-                                    placeholder="Cari demo website..."
-                                    class="w-full rounded-xl border py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2"
-                                    style="background-color: #ffffff; border-color: #e8e6dc; color: #141413"
-                                />
-                            </div>
+            <!-- Filter: pencarian tunggal, sisanya dropdown -->
+            <div class="mt-8 flex flex-col gap-3 border-y py-4 md:flex-row md:items-center" style="border-color: var(--kpub-line);">
+                <div class="relative flex-1">
+                    <Search class="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2" style="color: var(--kpub-faint);" />
+                    <label for="demo-search" class="sr-only">Cari demo</label>
+                    <input id="demo-search" v-model="search" type="search" placeholder="Cari demo website" class="kfield kfield-icon" />
+                </div>
 
-                            <!-- Category Filter -->
-                            <div v-if="categories.length > 0" class="flex items-center gap-2">
-                                <Filter class="h-4 w-4" style="color: #87867f" />
-                                <select
-                                    v-model="selectedCategory"
-                                    class="rounded-xl border py-2.5 px-3 text-sm focus:outline-none focus:ring-2"
-                                    style="background-color: #ffffff; border-color: #e8e6dc; color: #141413"
-                                >
-                                    <option :value="null">Semua Kategori</option>
-                                    <option v-for="cat in categories" :key="cat.id" :value="cat.slug">{{ cat.name }}</option>
-                                </select>
-                            </div>
+                <div v-if="categories.length" class="flex items-center gap-2">
+                    <label for="demo-category" class="sr-only">Kategori</label>
+                    <select id="demo-category" v-model="selectedCategory" class="kfield !rounded-full !py-2.5 md:w-48">
+                        <option :value="null">Semua kategori</option>
+                        <option v-for="cat in categories" :key="cat.id" :value="cat.slug">{{ cat.name }}</option>
+                    </select>
+                </div>
 
-                            <!-- Package Filter -->
-                            <div v-if="packages.length > 0" class="flex items-center gap-2">
-                                <LayoutGrid class="h-4 w-4" style="color: #87867f" />
-                                <select
-                                    v-model="selectedPackage"
-                                    class="rounded-xl border py-2.5 px-3 text-sm focus:outline-none focus:ring-2"
-                                    style="background-color: #ffffff; border-color: #e8e6dc; color: #141413"
-                                >
-                                    <option :value="null">Semua Paket</option>
-                                    <option v-for="pkg in packages" :key="pkg.id" :value="pkg.slug">{{ pkg.name }}</option>
-                                </select>
-                            </div>
+                <div v-if="packages.length" class="flex items-center gap-2">
+                    <label for="demo-package" class="sr-only">Paket</label>
+                    <select id="demo-package" v-model="selectedPackage" class="kfield !rounded-full !py-2.5 md:w-40">
+                        <option :value="null">Semua paket</option>
+                        <option v-for="pkg in packages" :key="pkg.id" :value="pkg.slug">{{ pkg.name }}</option>
+                    </select>
+                </div>
 
-                            <!-- Clear -->
-                            <Button v-if="hasActiveFilters()" variant="ghost" size="sm" @click="clearFilters" style="color: var(--primary)">
-                                Reset Filter
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+                <button v-if="hasActiveFilters()" type="button" class="kbtn kbtn-ghost !px-3" @click="clearFilters">Reset</button>
             </div>
 
-            <!-- Results info -->
-            <div v-if="demos.total > 0" class="mb-6 flex flex-wrap items-center justify-between gap-2 text-sm" style="color: #5e5d59">
-                <span>
-                    Menampilkan {{ demos.from }}-{{ demos.to }} dari {{ demos.total }} demo
-                </span>
-            </div>
+            <p v-if="demos.total > 0" class="knum mt-4 text-sm" style="color: var(--kpub-muted);">
+                Menampilkan {{ demos.from }}–{{ demos.to }} dari {{ demos.total }} demo
+            </p>
 
-            <!-- Demo Grid -->
-            <div v-if="demos.data.length > 0" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                <Card
-                    v-for="demo in demos.data"
-                    :key="demo.id"
-                    class="overflow-hidden transition-all hover:shadow-lg"
-                    style="background-color: #ffffff; border: 1px solid #f0eee6; border-radius: 16px"
-                >
-                    <!-- Image -->
-                    <div class="relative aspect-video w-full overflow-hidden" style="background-color: #e8e6dc">
-                        <img
-                            v-if="demo.featured_image"
-                            :src="demo.featured_image"
-                            :alt="demo.title"
-                            class="h-full w-full object-cover"
-                        />
+            <!-- Grid demo -->
+            <div v-if="demos.data.length > 0" class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <article v-for="demo in demos.data" :key="demo.id" class="kcard group flex flex-col overflow-hidden">
+                    <div class="aspect-video overflow-hidden" style="background-color: var(--kpub-surface);">
+                        <img v-if="demo.featured_image" :src="demo.featured_image" :alt="demo.title" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" loading="lazy" />
                         <div v-else class="flex h-full w-full items-center justify-center">
-                            <Monitor class="h-12 w-12" style="color: #b0aea5" />
-                        </div>
-                        <!-- Category Badge -->
-                        <div v-if="demo.category" class="absolute top-3 left-3">
-                            <Badge style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 8px">
-                                {{ demo.category }}
-                            </Badge>
+                            <Monitor class="h-8 w-8" style="color: var(--kpub-faint);" />
                         </div>
                     </div>
-
-                    <CardContent class="pt-4 space-y-3">
-                        <h3 class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif">
-                            {{ demo.title }}
-                        </h3>
-
-                        <p v-if="demo.description" class="line-clamp-2 text-sm" style="color: #5e5d59">
-                            {{ demo.description }}
-                        </p>
-
-                        <!-- Packages -->
-                        <div v-if="demo.packages.length > 0" class="flex flex-wrap gap-1.5">
-                            <Badge
-                                v-for="pkg in demo.packages"
-                                :key="pkg.id"
-                                variant="outline"
-                                style="border-color: #e8e6dc; color: #4d4c48; border-radius: 6px"
-                            >
-                                {{ pkg.name }}
-                            </Badge>
+                    <div class="flex flex-1 flex-col p-5">
+                        <div class="flex items-center justify-between gap-2">
+                            <span v-if="demo.category" class="text-xs" style="color: var(--kpub-muted);">{{ demo.category }}</span>
+                            <div class="flex flex-wrap gap-1">
+                                <span
+                                    v-for="pkg in demo.packages"
+                                    :key="pkg.id"
+                                    class="rounded-full px-2 py-0.5 text-[10px]"
+                                    style="border: 1px solid var(--kpub-line); color: var(--kpub-muted);"
+                                >{{ pkg.name }}</span>
+                            </div>
                         </div>
-
-                        <!-- Action -->
-                        <div class="flex gap-2">
-                            <Button
-                                asChild
-                                class="flex-1"
-                                style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px"
-                            >
-                                <a :href="demo.url" target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink class="mr-2 h-4 w-4" />
-                                    Lihat Demo
-                                </a>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                class="flex-shrink-0"
-                                style="border-color: #e8e6dc; color: #4d4c48; border-radius: 12px"
+                        <h2 class="mt-1.5 text-lg">
+                            <a :href="demo.url" target="_blank" rel="noopener noreferrer" class="transition-colors hover:opacity-70">{{ demo.title }}</a>
+                        </h2>
+                        <p v-if="demo.description" class="mt-1 line-clamp-2 flex-1 text-sm" style="color: var(--kpub-muted);">{{ demo.description }}</p>
+                        <div class="mt-4 flex items-center gap-2">
+                            <a :href="demo.url" target="_blank" rel="noopener noreferrer" class="kbtn kbtn-primary !px-4 !py-2 !text-xs">
+                                Buka demo
+                                <ExternalLink class="h-3 w-3" />
+                            </a>
+                            <button
+                                type="button"
+                                class="kbtn kbtn-outline !px-3 !py-2"
+                                :aria-label="`Salin kode embed ${demo.title}`"
                                 @click="copyToClipboard(singleEmbedIframeCode(demo), 'card-' + demo.id)"
                             >
-                                <component :is="copiedId === 'card-' + demo.id ? Check : Copy" class="h-4 w-4" />
-                            </Button>
+                                <Check v-if="copiedId === 'card-' + demo.id" class="h-3.5 w-3.5" style="color: var(--kpub-green);" />
+                                <Copy v-else class="h-3.5 w-3.5" />
+                            </button>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </article>
             </div>
 
-            <!-- Empty State -->
-            <div v-else class="py-16 text-center">
-                <Monitor class="mx-auto mb-4 h-16 w-16" style="color: #b0aea5" />
-                <h3 class="mb-2 text-xl font-medium" style="color: #141413; font-family: Georgia, serif">
-                    Tidak ada demo ditemukan
-                </h3>
-                <p class="mb-4" style="color: #5e5d59">
-                    {{ hasActiveFilters() ? 'Coba sesuaikan filter pencarian Anda.' : 'Belum ada demo website yang tersedia saat ini.' }}
+            <div v-else class="kcard mt-6 px-6 py-16 text-center">
+                <h2 class="text-xl">Tidak ada demo yang cocok</h2>
+                <p class="mt-2 text-sm" style="color: var(--kpub-muted);">
+                    {{ hasActiveFilters() ? 'Coba longgarkan filter, atau lihat semuanya.' : 'Belum ada demo yang tayang.' }}
                 </p>
-                <Button v-if="hasActiveFilters()" variant="outline" @click="clearFilters" style="border-color: #e8e6dc; color: #4d4c48">
-                    Reset Filter
-                </Button>
+                <button v-if="hasActiveFilters()" type="button" class="kbtn kbtn-outline mt-5" @click="clearFilters">Reset filter</button>
             </div>
 
-            <!-- Pagination -->
-            <div v-if="demos.last_page > 1" class="mt-8 flex items-center justify-center gap-2">
-                <Button
-                    :disabled="!demos.prev_page_url"
-                    variant="outline"
-                    size="sm"
-                    @click="goToPage(demos.prev_page_url)"
-                    style="border-color: #e8e6dc; color: #4d4c48"
-                >
-                    Sebelumnya
-                </Button>
+            <!-- Paginasi -->
+            <nav v-if="demos.last_page > 1" class="mt-8 flex items-center justify-center gap-1.5" aria-label="Halaman demo">
+                <button type="button" class="kbtn kbtn-outline !px-3 !py-2" :disabled="!demos.prev_page_url" :style="!demos.prev_page_url ? 'opacity:.4' : ''" @click="goToPage(demos.prev_page_url)">
+                    <ChevronLeft class="h-4 w-4" />
+                    <span class="sr-only">Sebelumnya</span>
+                </button>
+                <template v-for="(p, i) in nomorHalaman" :key="p">
+                    <span v-if="i > 0 && p - nomorHalaman[i - 1] > 1" class="px-1" style="color: var(--kpub-faint);">…</span>
+                    <button
+                        type="button"
+                        class="knum inline-flex min-w-9 items-center justify-center rounded-full px-3 py-2 text-sm"
+                        :style="
+                            p === demos.current_page
+                                ? 'background-color: var(--kpub-ink); color: #ffffff;'
+                                : 'border: 1px solid var(--kpub-line); color: var(--kpub-ink);'
+                        "
+                        @click="applyFilters(p)"
+                    >{{ p }}</button>
+                </template>
+                <button type="button" class="kbtn kbtn-outline !px-3 !py-2" :disabled="!demos.next_page_url" :style="!demos.next_page_url ? 'opacity:.4' : ''" @click="goToPage(demos.next_page_url)">
+                    <ChevronRight class="h-4 w-4" />
+                    <span class="sr-only">Selanjutnya</span>
+                </button>
+            </nav>
+        </section>
 
-                <div class="flex items-center gap-1">
-                    <template v-for="page in demos.last_page" :key="page">
-                        <Button
-                            v-if="demos.last_page <= 7 || page === 1 || page === demos.last_page || Math.abs(page - demos.current_page) <= 1"
-                            :variant="page === demos.current_page ? 'default' : 'outline'"
-                            size="sm"
-                            class="min-w-[36px]"
-                            :style="page === demos.current_page ? 'background-color: var(--primary); color: var(--primary-foreground); border-radius: 8px' : 'border-color: #e8e6dc; color: #4d4c48'"
-                            @click="applyFilters(page)"
-                        >
-                            {{ page }}
-                        </Button>
-                        <span
-                            v-else-if="Math.abs(page - demos.current_page) === 2"
-                            class="px-1"
-                            style="color: #87867f"
-                        >
-                            ...
-                        </span>
-                    </template>
+        <!-- Embed & API: alat untuk developer yang ingin menampilkan galeri ini di situs sendiri -->
+        <section class="border-t py-16 md:py-20" style="border-color: var(--kpub-line); background-color: var(--kpub-surface);">
+            <div class="kcontainer">
+                <div class="max-w-2xl">
+                    <h2 class="text-2xl sm:text-3xl">Pasang galeri ini di website Anda</h2>
+                    <p class="mt-2 text-sm" style="color: var(--kpub-muted);">
+                        Satu baris skrip untuk embed, atau REST API kalau Anda ingin tampilan sendiri.
+                    </p>
                 </div>
 
-                <Button
-                    :disabled="!demos.next_page_url"
-                    variant="outline"
-                    size="sm"
-                    @click="goToPage(demos.next_page_url)"
-                    style="border-color: #e8e6dc; color: #4d4c48"
-                >
-                    Selanjutnya
-                </Button>
-            </div>
+                <div class="mt-6 inline-flex rounded-full p-1" style="background-color: #ffffff; border: 1px solid var(--kpub-line);">
+                    <button
+                        v-for="tab in [{ key: 'embed', label: 'Embed', icon: Monitor }, { key: 'api', label: 'REST API', icon: Terminal }]"
+                        :key="tab.key"
+                        type="button"
+                        class="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm transition-colors"
+                        :style="activeTab === tab.key ? 'background-color: var(--kpub-ink); color: #ffffff;' : 'color: var(--kpub-muted);'"
+                        @click="activeTab = tab.key as 'embed' | 'api'"
+                    >
+                        <component :is="tab.icon" class="h-4 w-4" />
+                        {{ tab.label }}
+                    </button>
+                </div>
 
-            <!-- Embed / API Pills -->
-            <div class="mt-12">
-                <Card style="background-color: var(--primary-foreground); border: 1px solid #f0eee6; border-radius: 16px; box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px">
-                    <CardContent class="pt-6">
-                        <!-- Pill Tabs -->
-                        <div class="mb-6 flex items-center justify-center gap-1 rounded-xl p-1" style="background-color: #f5f4ef; max-width: 240px; margin-left: auto; margin-right: auto">
-                            <button
-                                class="cursor-pointer rounded-lg px-5 py-2 text-sm font-medium transition-all duration-200"
-                                :style="activeTab === 'embed'
-                                    ? { backgroundColor: 'var(--primary)', color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,.08)' }
-                                    : { backgroundColor: 'transparent', color: '#5e5d59' }"
-                                @click="activeTab = 'embed'"
-                            >
-                                <Monitor class="mr-1.5 inline-block h-4 w-4" />
-                                Embed
-                            </button>
-                            <button
-                                class="cursor-pointer rounded-lg px-5 py-2 text-sm font-medium transition-all duration-200"
-                                :style="activeTab === 'api'
-                                    ? { backgroundColor: 'var(--primary)', color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,.08)' }
-                                    : { backgroundColor: 'transparent', color: '#5e5d59' }"
-                                @click="activeTab = 'api'"
-                            >
-                                <Terminal class="mr-1.5 inline-block h-4 w-4" />
-                                API
-                            </button>
-                        </div>
-
-                        <!-- Embed Content -->
-                        <div v-if="activeTab === 'embed'">
-                            <div class="mb-6 flex items-center gap-3">
-                                <div class="rounded-full p-2" style="background-color: #e8e6dc">
-                                    <Code class="h-5 w-5" style="color: var(--primary)" />
+                <!-- Embed -->
+                <div v-if="activeTab === 'embed'" class="mt-6 grid gap-4 lg:grid-cols-2">
+                    <div class="space-y-3">
+                        <div class="kcard bg-white p-5" style="background-color: #ffffff;">
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                <div>
+                                    <label for="embed-category" class="text-xs font-medium" style="color: var(--kpub-muted);">Kategori</label>
+                                    <select id="embed-category" v-model="embedCategory" class="kfield mt-1.5 !rounded-[10px]">
+                                        <option :value="null">Semua kategori</option>
+                                        <option v-for="cat in categories" :key="cat.id" :value="cat.slug">{{ cat.name }}</option>
+                                    </select>
                                 </div>
                                 <div>
-                                    <h3 class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif">Embed di Website Anda</h3>
+                                    <label for="embed-per-page" class="text-xs font-medium" style="color: var(--kpub-muted);">Demo per halaman</label>
+                                    <input id="embed-per-page" v-model.number="embedPerPage" type="range" min="3" max="12" step="3" class="mt-3 w-full" style="accent-color: var(--kpub-green);" />
+                                    <p class="knum text-xs" style="color: var(--kpub-faint);">{{ embedPerPage }} per halaman</p>
                                 </div>
                             </div>
 
-                        <div class="grid gap-6 lg:grid-cols-2">
-                            <!-- Left: Configurator -->
-                            <div class="space-y-4">
-                                <div class="rounded-xl p-4" style="background-color: #ffffff; border: 1px solid #f0eee6">
-
-                                    <!-- Category Filter -->
-                                    <div class="mb-4">
-                                        <label class="mb-1.5 flex items-center gap-2 text-xs font-medium" style="color: #4d4c48">
-                                            <Filter class="h-3.5 w-3.5" style="color: #87867f" />
-                                            Kategori
-                                        </label>
-                                        <select
-                                            v-model="embedCategory"
-                                            class="w-full rounded-lg border px-3 py-2 text-sm"
-                                            style="background-color: var(--primary-foreground); border-color: #e8e6dc; color: #141413"
-                                        >
-                                            <option :value="null">Semua Kategori</option>
-                                            <option v-for="cat in categories" :key="cat.id" :value="cat.slug">{{ cat.name }}</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- Per Page -->
-                                    <div class="mb-4">
-                                        <label class="mb-1.5 flex items-center gap-2 text-xs font-medium" style="color: #4d4c48">
-                                            <LayoutGrid class="h-3.5 w-3.5" style="color: #87867f" />
-                                            Demo Per Halaman (Pagination)
-                                        </label>
-                                        <input
-                                            v-model.number="embedPerPage"
-                                            type="range"
-                                            min="3"
-                                            max="12"
-                                            step="3"
-                                            class="w-full accent-[var(--primary)]"
-                                        />
-                                        <div class="mt-1 flex justify-between text-xs" style="color: #87867f">
-                                            <span>3</span>
-                                            <span class="font-medium" style="color: #141413">{{ embedPerPage }} per halaman</span>
-                                            <span>12</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Color palette -->
-                                    <div>
-                                        <label class="mb-1.5 flex items-center gap-2 text-xs font-medium" style="color: #4d4c48">
-                                            <Palette class="h-3.5 w-3.5" style="color: #87867f" />
-                                            Warna Aksen
-                                        </label>
-                                        <div class="flex items-center gap-3">
-                                            <input
-                                                v-model="embedPrimary"
-                                                type="color"
-                                                class="h-8 w-8 cursor-pointer rounded-lg border"
-                                                style="border-color: #e8e6dc"
-                                            />
-                                            <div class="flex flex-wrap gap-2">
-                                                <button
-                                                    v-for="color in ['#c96442', '#2563eb', '#059669', '#7c3aed', '#db2777', '#ea580c', '#0891b2', '#4d4c48']"
-                                                    :key="color"
-                                                    class="h-6 w-6 rounded-full border-2 transition-transform hover:scale-110"
-                                                    :style="{
-                                                        backgroundColor: color,
-                                                        borderColor: embedPrimary === color ? '#141413' : 'transparent',
-                                                    }"
-                                                    @click="embedPrimary = color"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div class="mt-2 flex items-center gap-2">
-                                            <span class="text-xs" style="color: #87867f">Hex:</span>
-                                            <input
-                                                v-model="embedPrimary"
-                                                type="text"
-                                                class="w-24 rounded-lg border px-2 py-1 text-xs font-mono"
-                                                style="background-color: var(--primary-foreground); border-color: #e8e6dc; color: #141413"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <!-- WhatsApp -->
-                                    <div class="mt-4">
-                                        <label class="mb-1.5 flex items-center gap-2 text-xs font-medium" style="color: #4d4c48">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" style="color: #25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                                            No. WhatsApp
-                                        </label>
-                                        <input
-                                            v-model="embedWhatsapp"
-                                            type="text"
-                                            placeholder="081234567890"
-                                            class="w-full rounded-lg border px-3 py-2 text-sm"
-                                            style="background-color: var(--primary-foreground); border-color: #e8e6dc; color: #141413"
-                                        />
-                                        <p class="mt-1 text-xs" style="color: #87867f">Tombol "Order Desain Ini" akan muncul di overlay demo</p>
-                                    </div>
-                                </div>
-
-                                <!-- Code output -->
-                                <div class="rounded-xl p-4" style="background-color: #ffffff; border: 1px solid #f0eee6">
-                                    <h4 class="mb-3 text-sm font-medium" style="color: #141413">Kode Embed</h4>
-                                    <p class="mb-3 text-xs" style="color: #5e5d59">
-                                        Salin kode di bawah dan tempel di HTML website Anda.
-                                    </p>
-                                    <div class="overflow-x-auto rounded-lg p-3 text-xs leading-relaxed" style="background-color: #141413; color: #b0aea5; font-family: 'Fira Code', monospace">
-                                        <pre class="whitespace-pre-wrap break-all" style="color: #b0aea5; font-size: 12px; line-height: 1.7">{{ jsEmbedCode }}</pre>
-                                    </div>
-                                    <div class="mt-3 flex gap-2">
-                                        <Button
-                                            size="sm"
-                                            @click="copyToClipboard(jsEmbedCode, 'js-embed')"
-                                            style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 8px"
-                                        >
-                                            <component :is="copiedId === 'js-embed' ? Check : Copy" class="mr-1 h-3.5 w-3.5" />
-                                            {{ copiedId === 'js-embed' ? 'Tersalin!' : 'Salin Kode' }}
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            style="border-color: #e8e6dc; color: #4d4c48; border-radius: 8px"
-                                            @click="copyToClipboard(appUrl + '/demo-web/embed.js', 'js-url')"
-                                        >
-                                            <component :is="copiedId === 'js-url' ? Check : Copy" class="mr-1 h-3.5 w-3.5" />
-                                            {{ copiedId === 'js-url' ? 'Tersalin!' : 'Salin URL Script' }}
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                <!-- Attributes guide -->
-                                <div class="rounded-xl p-4" style="background-color: #e8e6dc40; border: 1px solid #e8e6dc">
-                                    <h4 class="mb-2 text-xs font-medium" style="color: #141413">Opsi Konfigurasi (data-attributes)</h4>
-                                    <div class="space-y-1 text-xs" style="color: #5e5d59">
-                                        <p><code style="color: var(--primary)">data-category</code> — Filter kategori (slug)</p>
-                                        <p><code style="color: var(--primary)">data-per-page</code> — Demo per halaman (default: 6)</p>
-                                        <p><code style="color: var(--primary)">data-primary</code> — Warna aksen (hex)</p>
-                                        <p><code style="color: var(--primary)">data-bg</code> — Warna background</p>
-                                        <p><code style="color: var(--primary)">data-card-bg</code> — Warna background kartu</p>
-                                        <p><code style="color: var(--primary)">data-text</code> — Warna teks utama</p>
-                                        <p><code style="color: var(--primary)">data-text-secondary</code> — Warna teks sekunder</p>
-                                        <p><code style="color: var(--primary)">data-border</code> — Warna border</p>
-                                        <p><code style="color: var(--primary)">data-whatsapp</code> — No. WhatsApp untuk tombol order</p>
-                                    </div>
+                            <div class="mt-4">
+                                <span class="text-xs font-medium" style="color: var(--kpub-muted);">Warna aksen</span>
+                                <div class="mt-2 flex flex-wrap items-center gap-2">
+                                    <button
+                                        v-for="color in warnaAksen"
+                                        :key="color"
+                                        type="button"
+                                        class="h-6 w-6 rounded-full transition-transform hover:scale-110"
+                                        :style="{
+                                            backgroundColor: color,
+                                            boxShadow: embedPrimary === color ? '0 0 0 2px #ffffff, 0 0 0 4px var(--kpub-ink)' : 'none',
+                                        }"
+                                        :aria-label="`Pilih warna ${color}`"
+                                        @click="embedPrimary = color"
+                                    />
+                                    <input v-model="embedPrimary" type="text" class="kfield !w-24 !rounded-[10px] !py-1 !text-xs" aria-label="Kode warna heksadesimal" />
                                 </div>
                             </div>
 
-                            <!-- Right: Live Preview -->
-                            <div>
-                                <div class="sticky top-4 rounded-xl overflow-hidden" style="background-color: #ffffff; border: 1px solid #f0eee6">
-                                    <div class="px-4 py-3 flex items-center justify-between" style="border-bottom: 1px solid #f0eee6">
-                                        <h4 class="text-sm font-medium" style="color: #141413">Live Preview</h4>
-                                        <div class="flex gap-1.5">
-                                            <span class="h-3 w-3 rounded-full" style="background-color: #f87171"></span>
-                                            <span class="h-3 w-3 rounded-full" style="background-color: #fbbf24"></span>
-                                            <span class="h-3 w-3 rounded-full" style="background-color: #34d399"></span>
-                                        </div>
-                                    </div>
-                                    <div class="p-4" style="min-height: 400px; max-height: 600px; overflow-y: auto;">
-                                        <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))">
-                                            <div
-                                                v-for="demo in previewDemos"
-                                                :key="'preview-' + demo.id"
-                                                class="rounded-lg overflow-hidden transition-shadow hover:shadow-md"
-                                                style="background-color: #ffffff; border: 1px solid #f0eee6"
-                                            >
-                                                <div class="relative aspect-video" style="background-color: #e8e6dc">
-                                                    <img v-if="demo.featured_image" :src="demo.featured_image" :alt="demo.title" class="h-full w-full object-cover" loading="lazy" />
-                                                    <div v-else class="flex h-full w-full items-center justify-center">
-                                                        <Monitor class="h-8 w-8" style="color: #b0aea5" />
-                                                    </div>
-                                                    <span v-if="demo.category" class="absolute top-1.5 left-1.5 rounded px-1.5 py-0.5 text-[10px] font-semibold text-white" :style="{ backgroundColor: embedPrimary }">
-                                                        {{ demo.category }}
-                                                    </span>
-                                                </div>
-                                                <div class="p-2.5">
-                                                    <h3 class="text-xs font-semibold truncate" style="color: #141413">{{ demo.title }}</h3>
-                                                    <a
-                                                        :href="demo.url"
-                                                        target="_blank"
-                                                        class="mt-1.5 flex w-full items-center justify-center gap-1 rounded-md px-2 py-1.5 text-[10px] font-medium text-white transition-opacity hover:opacity-90"
-                                                        :style="{ backgroundColor: embedPrimary }"
-                                                    >
-                                                        Lihat Demo
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!-- Preview pagination -->
-                                        <div v-if="previewTotalPages > 1" class="mt-4 flex items-center justify-center gap-1">
-                                            <button
-                                                class="rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors"
-                                                :style="{ borderColor: '#e8e6dc', color: '#4d4c48', backgroundColor: '#ffffff' }"
-                                                :disabled="previewPage <= 1"
-                                                :class="{ 'opacity-35': previewPage <= 1 }"
-                                                @click="previewPage--"
-                                            >
-                                                &lsaquo; Prev
-                                            </button>
-                                            <button
-                                                v-for="p in previewTotalPages"
-                                                :key="'pp-' + p"
-                                                class="rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors"
-                                                :style="p === previewPage ? { backgroundColor: embedPrimary, color: '#ffffff', borderColor: embedPrimary } : { borderColor: '#e8e6dc', color: '#4d4c48', backgroundColor: '#ffffff' }"
-                                                @click="previewPage = p"
-                                            >
-                                                {{ p }}
-                                            </button>
-                                            <button
-                                                class="rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors"
-                                                :style="{ borderColor: '#e8e6dc', color: '#4d4c48', backgroundColor: '#ffffff' }"
-                                                :disabled="previewPage >= previewTotalPages"
-                                                :class="{ 'opacity-35': previewPage >= previewTotalPages }"
-                                                @click="previewPage++"
-                                            >
-                                                Next &rsaquo;
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                </div>
-            </div>
-                    </div>
-
-                    <!-- API Content -->
-                    <div v-if="activeTab === 'api'">
-                        <div class="mb-6 flex items-center gap-3">
-                            <div class="rounded-full p-2" style="background-color: #e8e6dc">
-                                <Terminal class="h-5 w-5" style="color: var(--primary)" />
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-medium" style="color: #141413; font-family: Georgia, serif">REST API</h3>
+                            <div class="mt-4">
+                                <label for="embed-wa" class="text-xs font-medium" style="color: var(--kpub-muted);">Nomor WhatsApp tombol pesan</label>
+                                <input id="embed-wa" v-model="embedWhatsapp" type="text" placeholder="081234567890" class="kfield mt-1.5 !rounded-[10px]" />
                             </div>
                         </div>
 
-                        <p class="mb-4 text-sm" style="color: #5e5d59">
-                            Gunakan REST API untuk mengambil data demo website dan membangun tampilan kustom sendiri. Bisa juga digunakan dari backend aplikasi Anda.
-                        </p>
+                        <div class="kcard overflow-hidden" style="background-color: #ffffff;">
+                            <div class="flex items-center justify-between border-b px-5 py-3" style="border-color: var(--kpub-line);">
+                                <h3 class="text-sm font-medium">Kode embed</h3>
+                                <div class="flex gap-2">
+                                    <button type="button" class="kbtn kbtn-primary !px-3 !py-1.5 !text-xs" @click="copyToClipboard(jsEmbedCode, 'js-embed')">
+                                        <component :is="copiedId === 'js-embed' ? Check : Copy" class="h-3 w-3" />
+                                        {{ copiedId === 'js-embed' ? 'Tersalin' : 'Salin' }}
+                                    </button>
+                                    <button type="button" class="kbtn kbtn-outline !px-3 !py-1.5 !text-xs" @click="copyToClipboard(appUrl + '/demo-web/embed.js', 'js-url')">
+                                        <component :is="copiedId === 'js-url' ? Check : Copy" class="h-3 w-3" />
+                                        URL skrip
+                                    </button>
+                                </div>
+                            </div>
+                            <pre class="overflow-x-auto px-5 py-4 text-xs leading-relaxed" style="background-color: #0d1210; color: #cfd6d2;"><code>{{ jsEmbedCode }}</code></pre>
+                        </div>
 
-                        <div class="grid gap-8 lg:grid-cols-2">
-                            <div class="rounded-xl p-5" style="background-color: #ffffff; border: 1px solid #f0eee6">
-                                <div class="mb-3 flex items-center gap-2">
-                                    <Badge style="background-color: #059669; color: #fff; border-radius: 6px">GET</Badge>
-                                    <code class="text-sm font-mono" style="color: #141413">{{ appUrl }}/api/demos</code>
+                        <div class="kcard p-5" style="background-color: #ffffff;">
+                            <h3 class="text-sm font-medium">Opsi data-attribute</h3>
+                            <dl class="mt-3 space-y-1.5 text-xs" style="color: var(--kpub-muted);">
+                                <div v-for="opt in [
+                                    ['data-category', 'Filter kategori (slug)'],
+                                    ['data-per-page', 'Demo per halaman (default 6)'],
+                                    ['data-primary', 'Warna aksen (hex)'],
+                                    ['data-bg', 'Warna latar'],
+                                    ['data-card-bg', 'Warna latar kartu'],
+                                    ['data-text', 'Warna teks utama'],
+                                    ['data-text-secondary', 'Warna teks sekunder'],
+                                    ['data-border', 'Warna garis'],
+                                    ['data-whatsapp', 'Nomor WhatsApp tombol pesan'],
+                                ]" :key="opt[0]" class="flex gap-2">
+                                    <dt><code class="rounded px-1 py-0.5" style="background-color: var(--kpub-surface); color: var(--kpub-ink);">{{ opt[0] }}</code></dt>
+                                    <dd>{{ opt[1] }}</dd>
                                 </div>
-                                <p class="mb-3 text-xs" style="color: #5e5d59">Mengembalikan semua demo website aktif beserta kategori dan paket.</p>
-                                <p class="mb-2 text-xs font-medium" style="color: #4d4c48">Query Parameters:</p>
-                                <div class="space-y-1.5 text-xs" style="color: #87867f">
-                                    <p><code style="color: var(--primary)">category</code> — Filter berdasarkan slug kategori</p>
-                                    <p><code style="color: var(--primary)">package</code> — Filter berdasarkan slug paket</p>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Preview -->
+                    <div class="lg:sticky lg:top-20 lg:self-start">
+                        <div class="kcard overflow-hidden" style="background-color: #ffffff;">
+                            <div class="flex items-center justify-between border-b px-4 py-2.5" style="border-color: var(--kpub-line);">
+                                <h3 class="text-sm font-medium">Pratinjau</h3>
+                                <div class="flex gap-1.5">
+                                    <span class="h-2.5 w-2.5 rounded-full" style="background-color: #f87171"></span>
+                                    <span class="h-2.5 w-2.5 rounded-full" style="background-color: #fbbf24"></span>
+                                    <span class="h-2.5 w-2.5 rounded-full" style="background-color: #34d399"></span>
                                 </div>
-                                <p class="mt-3 mb-2 text-xs font-medium" style="color: #4d4c48">Contoh:</p>
-                                <div class="overflow-x-auto rounded-lg p-3 text-xs" style="background-color: #141413; color: #b0aea5; font-family: 'Fira Code', monospace">
-                                    <pre class="whitespace-pre-wrap break-all" style="font-size: 11px; line-height: 1.8">curl {{ appUrl }}/api/demos
+                            </div>
+                            <div class="max-h-[520px] overflow-y-auto p-4">
+                                <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
+                                    <div
+                                        v-for="demo in previewDemos"
+                                        :key="'preview-' + demo.id"
+                                        class="overflow-hidden rounded-[10px]"
+                                        style="border: 1px solid var(--kpub-line);"
+                                    >
+                                        <div class="aspect-video" style="background-color: var(--kpub-surface);">
+                                            <img v-if="demo.featured_image" :src="demo.featured_image" :alt="demo.title" class="h-full w-full object-cover" loading="lazy" />
+                                            <div v-else class="flex h-full w-full items-center justify-center">
+                                                <Monitor class="h-6 w-6" style="color: var(--kpub-faint);" />
+                                            </div>
+                                        </div>
+                                        <div class="p-2.5">
+                                            <h4 class="truncate text-xs font-medium">{{ demo.title }}</h4>
+                                            <a
+                                                :href="demo.url"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                class="mt-1.5 flex w-full items-center justify-center rounded-md px-2 py-1.5 text-[10px] font-medium text-white"
+                                                :style="{ backgroundColor: embedPrimary }"
+                                            >Buka demo</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div v-if="previewTotalPages > 1" class="mt-4 flex items-center justify-center gap-1">
+                                    <button type="button" class="rounded-md px-2 py-1 text-[11px]" style="border: 1px solid var(--kpub-line);" :disabled="previewPage <= 1" :class="{ 'opacity-40': previewPage <= 1 }" @click="previewPage--">‹</button>
+                                    <button
+                                        v-for="p in previewTotalPages"
+                                        :key="'pp-' + p"
+                                        type="button"
+                                        class="knum rounded-md px-2 py-1 text-[11px]"
+                                        :style="p === previewPage ? `background-color: ${embedPrimary}; color: #ffffff;` : 'border: 1px solid var(--kpub-line);'"
+                                        @click="previewPage = p"
+                                    >{{ p }}</button>
+                                    <button type="button" class="rounded-md px-2 py-1 text-[11px]" style="border: 1px solid var(--kpub-line);" :disabled="previewPage >= previewTotalPages" :class="{ 'opacity-40': previewPage >= previewTotalPages }" @click="previewPage++">›</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- REST API -->
+                <div v-else class="mt-6 grid gap-4 lg:grid-cols-2">
+                    <div class="kcard p-5" style="background-color: #ffffff;">
+                        <div class="flex items-center gap-2">
+                            <span class="rounded px-2 py-0.5 text-[10px] font-medium text-white" style="background-color: #0a6c4d;">GET</span>
+                            <code class="text-sm" style="color: var(--kpub-ink);">{{ appUrl }}/api/demos</code>
+                        </div>
+                        <p class="mt-3 text-xs" style="color: var(--kpub-muted);">Semua demo aktif beserta kategori dan paketnya.</p>
+                        <p class="mt-3 text-xs font-medium">Parameter</p>
+                        <div class="mt-1.5 space-y-1 text-xs" style="color: var(--kpub-muted);">
+                            <p><code style="color: var(--kpub-ink);">category</code> — slug kategori</p>
+                            <p><code style="color: var(--kpub-ink);">package</code> — slug paket</p>
+                        </div>
+                        <pre class="mt-3 overflow-x-auto rounded-[10px] p-3 text-xs leading-relaxed" style="background-color: #0d1210; color: #cfd6d2;"><code>curl {{ appUrl }}/api/demos
 
 curl "{{ appUrl }}/api/demos?category=profil-perusahaan"
 
-curl "{{ appUrl }}/api/demos?package=instant"</pre>
-                                </div>
-                            </div>
-                            <div class="rounded-xl p-5" style="background-color: #ffffff; border: 1px solid #f0eee6">
-                                <div class="mb-3 flex items-center gap-2">
-                                    <Badge style="background-color: #059669; color: #fff; border-radius: 6px">GET</Badge>
-                                    <code class="text-sm font-mono" style="color: #141413">{{ appUrl }}/api/demos/{id}</code>
-                                </div>
-                                <p class="mb-3 text-xs" style="color: #5e5d59">Mengembalikan detail satu demo website berdasarkan ID.</p>
-                                <p class="mt-3 mb-2 text-xs font-medium" style="color: #4d4c48">Contoh:</p>
-                                <div class="overflow-x-auto rounded-lg p-3 text-xs" style="background-color: #141413; color: #b0aea5; font-family: 'Fira Code', monospace">
-                                    <pre class="whitespace-pre-wrap break-all" style="font-size: 11px; line-height: 1.8">curl {{ appUrl }}/api/demos/1</pre>
-                                </div>
-                                <p class="mt-3 mb-2 text-xs font-medium" style="color: #4d4c48">Response (contoh):</p>
-                                <div class="overflow-x-auto rounded-lg p-3 text-xs" style="background-color: #141413; color: #b0aea5; font-family: 'Fira Code', monospace; max-height: 300px; overflow-y: auto">
-<pre class="whitespace-pre-wrap" style="font-size: 10px; line-height: 1.7">{{ JSON.stringify({
+curl "{{ appUrl }}/api/demos?package=instant"</code></pre>
+                    </div>
+
+                    <div class="kcard p-5" style="background-color: #ffffff;">
+                        <div class="flex items-center gap-2">
+                            <span class="rounded px-2 py-0.5 text-[10px] font-medium text-white" style="background-color: #0a6c4d;">GET</span>
+                            <code class="text-sm" style="color: var(--kpub-ink);">{{ appUrl }}/api/demos/{id}</code>
+                        </div>
+                        <p class="mt-3 text-xs" style="color: var(--kpub-muted);">Detail satu demo berdasarkan ID.</p>
+                        <p class="mt-3 text-xs font-medium">Contoh respons</p>
+                        <pre class="mt-1.5 max-h-[280px] overflow-y-auto rounded-[10px] p-3 text-[11px] leading-relaxed" style="background-color: #0d1210; color: #cfd6d2;"><code>{{ JSON.stringify({
     id: 1,
     title: 'Nama Demo',
     url: 'https://demo.sweet.web.id',
@@ -699,48 +477,42 @@ curl "{{ appUrl }}/api/demos?package=instant"</pre>
     packages: [{ id: 1, name: 'Instant', slug: 'instant' }],
     featured_image: 'https://...',
     description: 'Deskripsi demo...'
-}, null, 2) }}</pre>
-                                </div>
-                            </div>
-                        </div>
+}, null, 2) }}</code></pre>
                     </div>
-                    </CardContent>
-                </Card>
+                </div>
             </div>
+        </section>
 
-            <!-- CTA -->
-            <div class="mt-16 text-center">
-                <Card style="background-color: #141413; border: 1px solid #30302e; border-radius: 16px; box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px">
-                    <CardContent class="py-12">
-                        <h2 class="mb-4 text-3xl font-medium" style="color: var(--primary-foreground); line-height: 1.2; font-family: Georgia, serif">
-                            Tertarik dengan Salah satu Demo?
-                        </h2>
-                        <p class="mx-auto mb-8 max-w-2xl text-base sm:text-lg" style="color: #b0aea5; line-height: 1.6">
-                            Hubungi kami untuk memulai website impian Anda berdasarkan template yang Anda pilih.
+        <section class="kcontainer py-16 md:py-24">
+            <div class="overflow-hidden rounded-[25px] px-6 py-12 sm:px-12" style="background-color: var(--kpub-deep);">
+                <div class="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
+                    <div class="max-w-lg">
+                        <h2 class="text-2xl sm:text-3xl" style="color: #ffffff;">Suka salah satu demo?</h2>
+                        <p class="mt-3 text-sm" style="color: var(--kpub-deep-ink);">
+                            Sebutkan nama demonya, kami buat versi Anda dengan logo, warna, dan isi sendiri.
                         </p>
-                        <div class="flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4">
-                            <Button asChild size="lg" class="text-lg px-6 py-4" style="background-color: var(--primary); color: var(--primary-foreground); border-radius: 12px">
-                                <a
-                                    :href="`https://wa.me/${companyWhatsapp}?text=${encodeURIComponent('Halo, saya tertarik dengan demo website di WebSweetStudio!')}`"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    Hubungi via WhatsApp
-                                </a>
-                            </Button>
-                            <Button
-                                asChild
-                                variant="outline"
-                                size="lg"
-                                class="text-lg px-6 py-4"
-                                style="background-color: #ffffff; color: #141413; border: 1px solid #30302e; border-radius: 12px"
-                            >
-                                <a href="/hosting">Lihat Paket Hosting &amp; VPS</a>
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                    <div class="flex flex-col gap-2 sm:flex-row">
+                        <a
+                            :href="`https://wa.me/${companyWhatsapp}?text=${encodeURIComponent('Halo, saya tertarik dengan demo website di WebSweetStudio!')}`"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="kbtn"
+                            style="background-color: #ffffff; color: var(--kpub-deep);"
+                        >Chat WhatsApp</a>
+                        <a href="/hosting" class="kbtn" style="border: 1px solid rgba(255, 255, 255, 0.28); color: #ffffff;">Lihat paket hosting</a>
+                    </div>
+                </div>
             </div>
         </section>
     </CustomerPublicLayout>
 </template>
+
+<style scoped>
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>

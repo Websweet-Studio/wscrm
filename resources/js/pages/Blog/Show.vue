@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
-import { ArrowRight, Calendar, Check, Clock, Eye, Facebook, Link as LinkIcon, Linkedin, Twitter, User } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { Link } from '@inertiajs/vue3';
+import { Calendar, Check, Clock, Copy, Facebook, Linkedin, Twitter } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 interface BlogCategory {
     id: number;
@@ -14,7 +12,7 @@ interface BlogCategory {
     icon?: string;
 }
 
-interface User {
+interface Penulis {
     id: number;
     name: string;
     email: string;
@@ -39,7 +37,7 @@ interface BlogPost {
     reading_time: string;
     created_at: string;
     category: BlogCategory;
-    author: User;
+    author: Penulis;
 }
 
 interface Props {
@@ -50,17 +48,8 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const otherPosts = computed(() => props.recentPosts.filter((item) => item.id !== props.post.id).slice(0, 4));
-
-const copied = ref(false);
-
-const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
-};
+const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
 const getTypeText = (type: string) => {
     switch (type) {
@@ -75,257 +64,131 @@ const getTypeText = (type: string) => {
     }
 };
 
-const sharePost = (platform: string) => {
+const sharePost = (platform: 'facebook' | 'twitter' | 'linkedin') => {
     const url = encodeURIComponent(window.location.href);
     const title = encodeURIComponent(props.post.title);
-
-    let shareUrl = '';
-
-    switch (platform) {
-        case 'facebook':
-            shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
-            break;
-        case 'twitter':
-            shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
-            break;
-        case 'linkedin':
-            shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
-            break;
-    }
-
-    if (shareUrl) {
-        window.open(shareUrl, '_blank', 'width=600,height=400');
-    }
+    const targets = {
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+        twitter: `https://twitter.com/intent/tweet?url=${url}&text=${title}`,
+        linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
+    };
+    window.open(targets[platform], '_blank', 'width=600,height=400');
 };
 
+const tautanTersalin = ref(false);
+
+/** Clipboard API butuh konteks aman; tombol tetap memberi umpan balik walau gagal. */
 const copyLink = async () => {
     try {
         await navigator.clipboard.writeText(window.location.href);
-        copied.value = true;
-        setTimeout(() => (copied.value = false), 2000);
+        tautanTersalin.value = true;
+        setTimeout(() => (tautanTersalin.value = false), 1800);
     } catch {
-        copied.value = false;
+        tautanTersalin.value = false;
     }
 };
 </script>
 
 <template>
-    <Head :title="`${post.title} - Blog WebSweetStudio`" />
-
     <CustomerPublicLayout :title="`${post.title} - Blog WebSweetStudio`">
-        <div class="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
-            <!-- Breadcrumb -->
-            <nav class="mb-8 flex items-center gap-2 text-xs tracking-wide text-muted-foreground uppercase">
-                <Link href="/blog" class="transition-colors hover:text-primary">Blog</Link>
-                <span class="text-border">/</span>
-                <span class="text-foreground/70">{{ post.category.name }}</span>
+        <article class="kcontainer pt-12 pb-16 md:pt-16 md:pb-24">
+            <nav class="text-sm" style="color: var(--kpub-muted);" aria-label="Remah roti">
+                <Link href="/blog" class="transition-colors hover:opacity-70">Blog</Link>
+                <span aria-hidden="true"> / </span>
+                <span>{{ post.category.name }}</span>
             </nav>
 
-            <div class="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14">
-                <!-- Main Content -->
-                <div class="lg:col-span-8">
-                    <article>
-                        <!-- Featured Image -->
-                        <figure v-if="post.featured_image" class="mb-8 overflow-hidden rounded-2xl ring-1 ring-border">
-                            <img :src="post.featured_image_url" :alt="post.title" class="aspect-[16/9] w-full object-cover" />
-                        </figure>
+            <header class="mt-6 max-w-3xl">
+                <div class="knum flex flex-wrap items-center gap-x-4 gap-y-1 text-xs" style="color: var(--kpub-muted);">
+                    <span class="rounded-full px-2 py-0.5" style="background-color: var(--kpub-green-soft); color: var(--kpub-green);">{{ getTypeText(post.type) }}</span>
+                    <span>{{ post.author.name }}</span>
+                    <span>{{ post.formatted_date || formatDate(post.created_at) }}</span>
+                    <span>{{ post.reading_time }}</span>
+                </div>
+                <h1 class="mt-4 text-3xl sm:text-4xl md:text-[2.75rem] md:leading-[1.12]">{{ post.title }}</h1>
+                <p v-if="post.excerpt" class="mt-4 text-lg" style="color: var(--kpub-muted);">{{ post.excerpt }}</p>
+            </header>
+        </article>
 
-                        <!-- Meta -->
-                        <div class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
-                            <span
-                                class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium"
-                                :style="{
-                                    backgroundColor: post.category.color + '12',
-                                    color: post.category.color,
-                                    borderColor: post.category.color + '33',
-                                }"
-                            >
-                                {{ post.category.name }}
-                            </span>
-                            <Badge variant="outline" class="rounded-full border-border px-3 py-1 text-xs font-medium text-muted-foreground">
-                                {{ getTypeText(post.type) }}
-                            </Badge>
+        <div class="kcontainer pb-16 md:pb-24">
+            <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_280px]">
+                <div class="min-w-0">
+                    <figure v-if="post.featured_image" class="kcard overflow-hidden">
+                        <img :src="post.featured_image_url" :alt="post.title" class="aspect-[16/9] w-full object-cover" />
+                    </figure>
+
+                    <!-- Isi artikel disimpan sebagai HTML dari editor admin -->
+                    <div class="kprose mt-10" v-html="post.content" />
+
+                    <div class="mt-10 flex flex-wrap items-center justify-between gap-4 border-t pt-6" style="border-color: var(--kpub-line);">
+                        <div class="knum text-xs" style="color: var(--kpub-muted);">
+                            {{ post.views_count }} dibaca · {{ post.likes_count }} suka
                         </div>
-
-                        <!-- Title -->
-                        <h1 class="mb-4 text-3xl leading-[1.15] font-medium tracking-tight text-foreground sm:text-4xl lg:text-[2.6rem]" style="font-family: Georgia, serif">
-                            {{ post.title }}
-                        </h1>
-
-                        <!-- Excerpt -->
-                        <p class="mb-6 max-w-[62ch] text-lg leading-relaxed text-muted-foreground">
-                            {{ post.excerpt }}
-                        </p>
-
-                        <!-- Meta bar -->
-                        <div class="flex flex-wrap items-center justify-between gap-4 border-y border-border py-4">
-                            <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-                                <span class="flex items-center gap-2 text-foreground/80">
-                                    <span class="flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-[11px] font-semibold text-secondary-foreground">
-                                        {{ post.author.name.charAt(0).toUpperCase() }}
-                                    </span>
-                                    {{ post.author.name }}
-                                </span>
-                                <span class="flex items-center gap-1.5">
-                                    <Calendar class="h-4 w-4" />
-                                    {{ post.formatted_date || formatDate(post.created_at) }}
-                                </span>
-                                <span class="flex items-center gap-1.5">
-                                    <Clock class="h-4 w-4" />
-                                    {{ post.reading_time }}
-                                </span>
-                                <span v-if="post.views_count" class="hidden items-center gap-1.5 sm:flex">
-                                    <Eye class="h-4 w-4" />
-                                    {{ post.views_count }} dilihat
-                                </span>
-                            </div>
-
-                            <!-- Share -->
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs tracking-wide text-muted-foreground uppercase">Bagikan</span>
-                                <button
-                                    v-for="item in [
-                                        { key: 'facebook', icon: Facebook, label: 'Facebook' },
-                                        { key: 'twitter', icon: Twitter, label: 'X' },
-                                        { key: 'linkedin', icon: Linkedin, label: 'LinkedIn' },
-                                    ]"
-                                    :key="item.key"
-                                    type="button"
-                                    :aria-label="`Bagikan ke ${item.label}`"
-                                    class="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
-                                    @click="sharePost(item.key)"
-                                >
-                                    <component :is="item.icon" class="h-4 w-4" />
-                                </button>
-                                <button
-                                    type="button"
-                                    aria-label="Salin tautan"
-                                    class="flex h-9 w-9 items-center justify-center rounded-full border transition-colors"
-                                    :class="copied ? 'border-primary/40 text-primary' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-primary'"
-                                    @click="copyLink"
-                                >
-                                    <Check v-if="copied" class="h-4 w-4" />
-                                    <LinkIcon v-else class="h-4 w-4" />
-                                </button>
-                            </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs" style="color: var(--kpub-muted);">Bagikan</span>
+                            <button type="button" class="kbtn kbtn-outline !px-3 !py-2" aria-label="Bagikan ke Facebook" @click="sharePost('facebook')">
+                                <Facebook class="h-4 w-4" />
+                            </button>
+                            <button type="button" class="kbtn kbtn-outline !px-3 !py-2" aria-label="Bagikan ke X" @click="sharePost('twitter')">
+                                <Twitter class="h-4 w-4" />
+                            </button>
+                            <button type="button" class="kbtn kbtn-outline !px-3 !py-2" aria-label="Bagikan ke LinkedIn" @click="sharePost('linkedin')">
+                                <Linkedin class="h-4 w-4" />
+                            </button>
+                            <button type="button" class="kbtn kbtn-outline !px-3 !py-2" aria-label="Salin tautan" @click="copyLink">
+                                <Check v-if="tautanTersalin" class="h-4 w-4" style="color: var(--kpub-green);" />
+                                <Copy v-else class="h-4 w-4" />
+                            </button>
                         </div>
+                    </div>
 
-                        <!-- Content -->
-                        <div class="prose prose-lg mt-10 max-w-none dark:prose-invert">
-                            <div v-html="post.content"></div>
-                        </div>
-
-                        <!-- Author -->
-                        <div class="mt-12 flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
-                            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-base font-semibold text-primary">
-                                {{ post.author.name.charAt(0).toUpperCase() }}
-                            </span>
-                            <div class="min-w-0">
-                                <p class="text-xs tracking-wide text-muted-foreground uppercase">Ditulis oleh</p>
-                                <h3 class="font-medium text-foreground">{{ post.author.name }}</h3>
-                                <p class="text-sm text-muted-foreground">Tim Websweet Studio</p>
-                            </div>
-                        </div>
-                    </article>
-
-                    <!-- Related Posts -->
-                    <section v-if="relatedPosts.length > 0" class="mt-14">
-                        <h2 class="mb-6 text-xl font-medium tracking-tight text-foreground">Artikel Terkait</h2>
-                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div v-if="relatedPosts.length" class="mt-14">
+                        <h2 class="text-xl sm:text-2xl">Bacaan terkait</h2>
+                        <div class="mt-5 grid gap-3 sm:grid-cols-2">
                             <Link
-                                v-for="relatedPost in relatedPosts"
-                                :key="relatedPost.id"
-                                :href="`/blog/${relatedPost.slug}`"
-                                class="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-colors hover:border-primary/30"
+                                v-for="related in relatedPosts"
+                                :key="related.id"
+                                :href="`/blog/${related.slug}`"
+                                class="kcard group flex flex-col p-5 transition-colors"
                             >
-                                <div v-if="relatedPost.featured_image" class="aspect-[16/9] overflow-hidden">
-                                    <img
-                                        :src="relatedPost.featured_image_url"
-                                        :alt="relatedPost.title"
-                                        class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                                    />
-                                </div>
-                                <div class="flex flex-1 flex-col p-5">
-                                    <span class="mb-2 text-xs font-medium" :style="{ color: relatedPost.category.color }">
-                                        {{ relatedPost.category.name }}
-                                    </span>
-                                    <h3 class="mb-2 line-clamp-2 leading-snug font-medium text-foreground transition-colors group-hover:text-primary">
-                                        {{ relatedPost.title }}
-                                    </h3>
-                                    <p class="mb-4 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{{ relatedPost.excerpt }}</p>
-                                    <span class="mt-auto text-xs text-muted-foreground">
-                                        {{ relatedPost.formatted_date || formatDate(relatedPost.created_at) }} · {{ relatedPost.reading_time }}
-                                    </span>
-                                </div>
+                                <div class="knum text-xs" style="color: var(--kpub-muted);">{{ related.category.name }} · {{ related.reading_time }}</div>
+                                <h3 class="mt-2 line-clamp-2 text-lg transition-colors group-hover:opacity-70">{{ related.title }}</h3>
+                                <p class="mt-2 line-clamp-2 text-sm" style="color: var(--kpub-muted);">{{ related.excerpt }}</p>
                             </Link>
                         </div>
-                    </section>
+                    </div>
                 </div>
 
-                <!-- Sidebar -->
-                <aside class="space-y-6 lg:col-span-4 lg:sticky lg:top-24 lg:self-start">
-                    <!-- Recent Posts -->
-                    <div v-if="otherPosts.length > 0" class="rounded-2xl border border-border bg-card p-6">
-                        <h2 class="mb-5 text-sm font-medium tracking-wide text-foreground uppercase">Artikel Lainnya</h2>
-                        <div class="space-y-5">
-                            <Link v-for="recentPost in otherPosts" :key="recentPost.id" :href="`/blog/${recentPost.slug}`" class="group flex gap-3">
-                                <div v-if="recentPost.featured_image" class="h-14 w-14 shrink-0 overflow-hidden rounded-xl">
-                                    <img
-                                        :src="recentPost.featured_image_url"
-                                        :alt="recentPost.title"
-                                        class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                    />
-                                </div>
-                                <div class="min-w-0">
-                                    <h3 class="line-clamp-2 text-sm leading-snug font-medium text-foreground transition-colors group-hover:text-primary">
-                                        {{ recentPost.title }}
-                                    </h3>
-                                    <p class="mt-1 text-xs text-muted-foreground">{{ recentPost.formatted_date || formatDate(recentPost.created_at) }}</p>
+                <aside class="space-y-8">
+                    <div v-if="recentPosts.length">
+                        <h2 class="text-sm font-medium tracking-wide uppercase" style="color: var(--kpub-muted);">Terbaru</h2>
+                        <div class="mt-4 border-t" style="border-color: var(--kpub-line);">
+                            <Link
+                                v-for="recent in recentPosts"
+                                :key="recent.id"
+                                :href="`/blog/${recent.slug}`"
+                                class="group block border-b py-4"
+                                style="border-color: var(--kpub-line);"
+                            >
+                                <h3 class="line-clamp-2 text-sm transition-colors group-hover:opacity-70">{{ recent.title }}</h3>
+                                <div class="knum mt-1.5 flex items-center gap-1.5 text-xs" style="color: var(--kpub-faint);">
+                                    <Calendar class="h-3 w-3" />
+                                    <span>{{ recent.formatted_date || formatDate(recent.created_at) }}</span>
                                 </div>
                             </Link>
                         </div>
                     </div>
 
-                    <!-- CTA -->
-                    <div class="rounded-2xl border border-border bg-card p-6">
-                        <h2 class="mb-2 text-base font-medium text-foreground">Cek harga domain terkini</h2>
-                        <p class="mb-5 text-sm leading-relaxed text-muted-foreground">
-                            Harga perpanjangan ditampilkan sejak awal, jadi tidak ada biaya kejutan di tahun berikutnya.
-                        </p>
-                        <Button as-child class="w-full">
-                            <Link href="/domains" class="flex items-center justify-center gap-2">
-                                Lihat daftar harga
-                                <ArrowRight class="h-4 w-4" />
-                            </Link>
-                        </Button>
-                        <Link
-                            href="/blog"
-                            class="mt-4 flex items-center justify-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-primary"
-                        >
-                            Semua artikel
-                            <ArrowRight class="h-3.5 w-3.5" />
-                        </Link>
+                    <div class="kcard p-5">
+                        <h2 class="text-base">Butuh hosting untuk artikel ini?</h2>
+                        <p class="mt-2 text-sm" style="color: var(--kpub-muted);">Pindahkan website Anda ke server kami, atau mulai dari paket termurah.</p>
+                        <Link href="/hosting" class="kbtn kbtn-primary mt-4 w-full">Lihat paket hosting</Link>
                     </div>
 
-                    <!-- Jelajahi layanan -->
-                    <div class="rounded-2xl border border-border bg-card p-6">
-                        <h2 class="mb-4 text-sm font-medium tracking-wide text-foreground uppercase">Jelajahi</h2>
-                        <ul class="space-y-1">
-                            <li v-for="item in [
-                                { href: '/domains', label: 'Domain & harga' },
-                                { href: '/hosting', label: 'Hosting & VPS' },
-                                { href: '/demo-web', label: 'Demo website' },
-                            ]" :key="item.href">
-                                <Link
-                                    :href="item.href"
-                                    class="group flex items-center justify-between rounded-lg px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
-                                >
-                                    {{ item.label }}
-                                    <ArrowRight class="h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
+                    <Link href="/blog" class="kbtn kbtn-outline w-full">
+                        <Clock class="h-4 w-4" />
+                        Semua artikel
+                    </Link>
                 </aside>
             </div>
         </div>
@@ -338,5 +201,118 @@ const copyLink = async () => {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+}
+
+/* Isi artikel datang sebagai HTML mentah; tipografi disamakan dengan permukaan publik. */
+.kprose {
+    color: var(--kpub-ink);
+    font-size: 1rem;
+    line-height: 1.75;
+    max-width: 68ch;
+}
+
+.kprose :deep(h1),
+.kprose :deep(h2),
+.kprose :deep(h3),
+.kprose :deep(h4) {
+    font-family: var(--kpub-display);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+}
+
+.kprose :deep(h1) {
+    font-size: 1.75rem;
+}
+.kprose :deep(h2) {
+    font-size: 1.375rem;
+}
+.kprose :deep(h3) {
+    font-size: 1.125rem;
+}
+
+.kprose :deep(p) {
+    margin-bottom: 1rem;
+}
+
+.kprose :deep(a) {
+    color: var(--kpub-green);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.kprose :deep(ul),
+.kprose :deep(ol) {
+    margin: 0 0 1rem 1.25rem;
+}
+
+.kprose :deep(ul) {
+    list-style: disc;
+}
+.kprose :deep(ol) {
+    list-style: decimal;
+}
+
+.kprose :deep(li) {
+    margin-bottom: 0.375rem;
+}
+
+.kprose :deep(blockquote) {
+    border-left: 2px solid var(--kpub-line-strong);
+    padding-left: 1rem;
+    margin: 1.5rem 0;
+    color: var(--kpub-muted);
+}
+
+.kprose :deep(img) {
+    border-radius: var(--kpub-radius);
+    margin: 1.5rem 0;
+    max-width: 100%;
+    height: auto;
+}
+
+.kprose :deep(code) {
+    background-color: var(--kpub-surface);
+    border: 1px solid var(--kpub-line);
+    border-radius: 4px;
+    padding: 0.1rem 0.3rem;
+    font-size: 0.875em;
+}
+
+.kprose :deep(pre) {
+    background-color: var(--kpub-surface);
+    border: 1px solid var(--kpub-line);
+    border-radius: var(--kpub-radius);
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+}
+
+.kprose :deep(pre code) {
+    background: none;
+    border: 0;
+    padding: 0;
+}
+
+.kprose :deep(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.9375rem;
+}
+
+.kprose :deep(th),
+.kprose :deep(td) {
+    border-bottom: 1px solid var(--kpub-line);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+}
+
+.kprose :deep(hr) {
+    border: 0;
+    border-top: 1px solid var(--kpub-line);
+    margin: 2rem 0;
 }
 </style>

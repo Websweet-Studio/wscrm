@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { AlertCircle, ArrowLeft, Check, Crown, Globe, Search, ShoppingCart, X } from 'lucide-vue-next';
+import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
+import { formatPrice } from '@/lib/utils';
+import { Link, router } from '@inertiajs/vue3';
+import { Check, Search, X } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface DomainPrice {
@@ -15,11 +13,6 @@ interface DomainPrice {
     selling_price: number;
     renewal_price_with_tax: number;
     is_active: boolean;
-    promo_active?: boolean;
-    effective_selling_price?: number;
-    promo_savings?: number | null;
-    promo_days_left?: number | null;
-    promo_ends_at?: string | null;
 }
 
 interface Props {
@@ -34,212 +27,157 @@ const props = defineProps<Props>();
 
 const newSearch = ref(props.domain);
 
-const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-    }).format(price);
-};
-
 const searchAgain = () => {
     if (newSearch.value.trim()) {
-        router.get('/domains/search', { domain: newSearch.value });
+        router.get('/domains/search', { domain: newSearch.value.trim() });
     }
 };
 
-const isPremium = (extension: string) => {
-    // Remove dot if present for comparison
-    const cleanExt = extension.replace('.', '');
-    return ['com', 'net', 'org'].includes(cleanExt);
+/** Harga per ekstensi; data bisa tersimpan dengan atau tanpa titik. */
+const priceFor = (extension: string): DomainPrice | undefined =>
+    props.domainPrices.find((d) => d.extension === extension) ??
+    props.domainPrices.find((d) => d.extension === `.${extension}`);
+
+/** Ekstensi tanpa titik terdepan: "com", "co.id". */
+const bareExtension = (fullDomain: string) => {
+    const parts = fullDomain.split('.');
+    return parts.length > 1 ? parts.slice(1).join('.') : fullDomain;
 };
 
-const requestedDomain = computed(() => {
-    return props.requestedExtension ? `${props.domain}.${props.requestedExtension}` : props.domain;
-});
-
-// Get domain availability from RNA API results
-const getDomainStatus = (extension: string) => {
-    const fullDomain = `${props.domain}.${extension}`;
-    const apiResult = props.availabilityResults[fullDomain];
-
-    if (apiResult && apiResult.success) {
+/**
+ * Satu baris per domain yang dicek. API mengembalikan kunci domain penuh
+ * ("namabisnis.com"), jadi ekstensinya diambil dari kunci itu.
+ */
+const hasil = computed(() =>
+    Object.entries(props.availabilityResults).map(([fullDomain, result]) => {
+        const extension = bareExtension(fullDomain);
+        const price = priceFor(extension);
         return {
-            available: apiResult.available,
-            status: apiResult.available ? 'available' : 'taken',
-            loading: false,
+            fullDomain,
+            extension,
+            tersedia: Boolean(result?.success && result?.available),
+            belumDiketahui: !result?.success,
+            perkiraan: Boolean(result?.fallback),
+            harga: price?.selling_price ?? 0,
+            perpanjangan: price?.renewal_price_with_tax ?? 0,
         };
-    }
+    }),
+);
 
-    // Fallback if API data not available
-    return {
-        available: false,
-        status: 'checking',
-        loading: true,
-    };
-};
+const jumlahTersedia = computed(() => hasil.value.filter((h) => h.tersedia).length);
+const punyaHarga = (extension: string) => priceFor(extension) !== undefined;
 
-const getExtensionPrice = (extension: string): number => {
-    // Try with dot prefix first
-    let domain = props.domainPrices.find((d) => d.extension === '.' + extension);
-
-    // If not found, try without dot (in case extension already has dot)
-    if (!domain) {
-        domain = props.domainPrices.find((d) => d.extension === extension);
-    }
-
-    return domain?.effective_selling_price ?? domain?.selling_price ?? 0;
-};
-
-const getExtensionRenewalPrice = (extension: string): number => {
-    // Try with dot prefix first
-    let domain = props.domainPrices.find((d) => d.extension === '.' + extension);
-
-    // If not found, try without dot (in case extension already has dot)
-    if (!domain) {
-        domain = props.domainPrices.find((d) => d.extension === extension);
-    }
-
-    return domain?.renewal_price_with_tax || 0;
+const waLink = (domain: string) => {
+    const branding = (window as any).brandingSettings || {};
+    const raw = branding.company_whatsapp || '';
+    const phone = String(raw).replace(/[^\d]/g, '');
+    if (!phone) return '';
+    return `https://wa.me/${phone}?text=${encodeURIComponent(`Halo, saya ingin daftarkan domain ${domain}.`)}`;
 };
 </script>
 
 <template>
-    <Head :title="`Hasil Pencarian untuk ${requestedDomain}`" />
-
-    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-        <!-- Navigation -->
-        <nav class="mx-auto max-w-6xl px-6 py-4">
-            <div class="flex items-center justify-between">
-                <Link href="/" class="flex items-center space-x-2">
-                    <img src="/1.png" alt="WebSweetStudio" class="h-8 w-8 object-contain" />
-                    <span class="text-xl font-bold">Ws.</span>
-                </Link>
-                <div class="flex items-center space-x-4">
-                    <Button variant="ghost" asChild>
-                        <Link href="/hosting">Hosting &amp; VPS</Link>
-                    </Button>
-                    <Button variant="ghost" asChild>
-                        <Link href="/domains">Domain</Link>
-                    </Button>
-                    <Button variant="outline" asChild>
-                        <Link href="/customer/login">Masuk</Link>
-                    </Button>
-                    <Button asChild>
-                        <Link href="/customer/register">Mulai Sekarang</Link>
-                    </Button>
-                </div>
+    <CustomerPublicLayout :title="`Hasil pencarian ${requestedDomain || domain}`">
+        <section class="kcontainer pt-16 pb-16 md:pt-20 md:pb-24">
+            <div class="max-w-2xl">
+                <h1 class="text-3xl sm:text-4xl md:text-[2.75rem] md:leading-[1.1]">
+                    <template v-if="jumlahTersedia > 0">{{ domain }} masih bisa dipakai.</template>
+                    <template v-else>Belum ada yang tersedia untuk {{ domain }}.</template>
+                </h1>
+                <p class="knum mt-3 text-base" style="color: var(--kpub-muted);">
+                    {{ hasil.length }} ekstensi dicek · {{ jumlahTersedia }} tersedia
+                </p>
             </div>
-        </nav>
 
-        <div class="mx-auto max-w-6xl px-6 py-8">
-            <!-- Header -->
-            <div class="mb-8 flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <div>
-                        <h1 class="text-3xl font-bold tracking-tight">Hasil Pencarian Domain</h1>
+            <form class="mt-8 flex max-w-2xl flex-col gap-2 sm:flex-row" @submit.prevent="searchAgain">
+                <label for="search-again" class="sr-only">Cari domain lain</label>
+                <div class="relative flex-1">
+                    <Search class="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2" style="color: var(--kpub-faint);" />
+                    <input id="search-again" v-model="newSearch" type="text" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="Coba nama lain" class="kfield kfield-icon" />
+                </div>
+                <button type="submit" class="kbtn kbtn-primary shrink-0">Cari lagi</button>
+            </form>
+
+            <!-- Hasil: satu baris per ekstensi, harga hanya untuk yang tersedia -->
+            <div v-if="hasil.length" class="kcard mt-10 overflow-hidden">
+                <div
+                    v-for="h in hasil"
+                    :key="h.fullDomain"
+                    class="flex flex-col gap-3 border-b px-6 py-5 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
+                    style="border-color: var(--kpub-line);"
+                >
+                    <div class="min-w-0">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="truncate text-base font-medium">{{ h.fullDomain }}</span>
+                            <span
+                                v-if="h.tersedia"
+                                class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium"
+                                style="background-color: var(--kpub-green-soft); color: var(--kpub-green);"
+                            >
+                                <Check class="h-3 w-3" />
+                                Tersedia
+                            </span>
+                            <span
+                                v-else-if="h.belumDiketahui"
+                                class="rounded-full px-2 py-0.5 text-[11px] font-medium"
+                                style="background-color: #f2f1ec; color: #6b6257;"
+                            >Gagal dicek</span>
+                            <span
+                                v-else
+                                class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium"
+                                style="background-color: #f4f4f4; color: #585856;"
+                            >
+                                <X class="h-3 w-3" />
+                                Sudah terdaftar
+                            </span>
+                        </div>
+                        <p v-if="h.perkiraan" class="mt-1 text-xs" style="color: var(--kpub-amber);">
+                            Hasil perkiraan — ketersediaan belum dikonfirmasi registrar.
+                        </p>
+                        <p v-else-if="!punyaHarga(h.extension)" class="mt-1 text-xs" style="color: var(--kpub-muted);">
+                            Ekstensi ini belum kami jual — tanyakan lewat WhatsApp.
+                        </p>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-6 sm:justify-end">
+                        <div v-if="h.tersedia && punyaHarga(h.extension)" class="knum text-right">
+                            <div class="text-base font-medium">{{ formatPrice(h.harga) }}</div>
+                            <div class="text-xs" style="color: var(--kpub-muted);">perpanjangan {{ formatPrice(h.perpanjangan) }}</div>
+                        </div>
+                        <a
+                            v-if="h.tersedia && waLink(h.fullDomain)"
+                            :href="waLink(h.fullDomain)"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="kbtn kbtn-primary !px-4 !py-2 !text-xs"
+                        >Pesan</a>
+                        <span v-else-if="!h.tersedia" class="text-xs" style="color: var(--kpub-faint);">tidak bisa dipesan</span>
                     </div>
                 </div>
             </div>
 
-            <!-- New Search -->
-            <Card class="mb-8">
-                <CardContent class="py-6">
-                    <div class="flex items-center space-x-2">
-                        <div class="relative max-w-md flex-1">
-                            <Globe class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
-                            <Input v-model="newSearch" placeholder="Coba domain lain..." class="pl-10" @keyup.enter="searchAgain" />
-                        </div>
-                        <Button @click="searchAgain">
-                            <Search class="mr-2 h-4 w-4" />
-                            Cari Lagi
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <!-- Requested Domain (if specific extension was searched) -->
-            <div v-if="requestedExtension" class="mb-8">
-                <h2 class="mb-4 text-2xl font-bold">Pencarian Anda</h2>
-                <Card class="border-2 border-blue-200">
-                    <CardContent class="py-6">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-4">
-                                <div class="text-2xl font-bold">{{ requestedDomain }}</div>
-                                <Badge v-if="isPremium(requestedExtension)" variant="secondary">
-                                    <Crown class="mr-1 h-3 w-3" />
-                                    Premium
-                                </Badge>
-                            </div>
-
-                            <div class="flex items-center space-x-4">
-                                <div v-if="getDomainStatus(requestedExtension).available" class="flex items-center space-x-2 text-green-600">
-                                    <Check class="h-5 w-5" />
-                                    <span class="font-semibold">Tersedia</span>
-                                </div>
-                                <div v-else class="flex items-center space-x-2 text-red-600">
-                                    <X class="h-5 w-5" />
-                                    <span class="font-semibold">Sudah Terdaftar</span>
-                                </div>
-
-                                <div v-if="getDomainStatus(requestedExtension).available" class="text-right">
-                                    <div class="text-2xl font-bold text-blue-600">
-                                        {{ formatPrice(getExtensionPrice(requestedExtension)) }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+            <div v-else class="kcard mt-10 p-10 text-center">
+                <h2 class="text-xl">Pengecekan tidak tersedia</h2>
+                <p class="mt-2 text-sm" style="color: var(--kpub-muted);">
+                    Layanan cek domain sedang tidak merespons. Coba lagi sebentar, atau hubungi kami lewat WhatsApp.
+                </p>
             </div>
 
-            <!-- Help Section -->
-            <Card class="bg-blue-50">
-                <CardContent class="pt-6">
-                    <div class="space-y-4 text-center">
-                        <div class="flex justify-center">
-                            <div class="rounded-full bg-blue-100 p-3">
-                                <AlertCircle class="h-6 w-6 text-blue-600" />
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="mb-2 text-lg font-semibold">Butuh Bantuan Memilih Domain?</h3>
-                            <p class="mb-4 text-muted-foreground">
-                                Pertimbangkan alternatif seperti menambahkan kata, menggunakan sinonim, atau mencoba ekstensi berbeda.
-                            </p>
-                            <div class="flex justify-center space-x-4">
-                                <Link href="/domains">
-                                    <Button variant="outline"> Lihat Semua Ekstensi </Button>
-                                </Link>
-                                <Link href="/hosting">
-                                    <Button> Lihat Paket Hosting &amp; VPS </Button>
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-
-        <!-- Footer -->
-        <footer class="mt-16 bg-gray-900 py-8 text-gray-300">
-            <div class="mx-auto max-w-6xl px-6">
-                <div class="flex flex-col items-center justify-between md:flex-row">
-                    <Link href="/" class="mb-4 flex items-center space-x-2 md:mb-0">
-                        <img src="/1.png" alt="WebSweetStudio" class="h-8 w-8 object-contain" />
-                        <span class="text-xl font-bold text-white">Ws.</span>
-                    </Link>
-                    <div class="flex space-x-6 text-sm">
-                        <Link href="/hosting" class="hover:text-white">Hosting &amp; VPS</Link>
-                        <Link href="/domains" class="hover:text-white">Domain</Link>
-                        <Link href="/customer/login" class="hover:text-white">Login Pelanggan</Link>
-                        <Link href="/login" class="hover:text-white">Login Admin</Link>
-                    </div>
+            <div class="mt-10 grid gap-x-8 gap-y-4 border-t pt-8 text-sm sm:grid-cols-2" style="border-color: var(--kpub-line); color: var(--kpub-muted);">
+                <div>
+                    <p class="font-medium" style="color: var(--kpub-ink);">Nama sudah dipakai?</p>
+                    <p class="mt-1">Coba tambahkan kata di depan atau belakang, ubah akhiran, atau pakai ekstensi lain seperti .id dan .my.id.</p>
                 </div>
-                <div class="mt-6 border-t border-gray-700 pt-6 text-center text-sm">
-                    <p>&copy; 2024 WebSweetStudio. Hak cipta dilindungi undang-undang.</p>
+                <div>
+                    <p class="font-medium" style="color: var(--kpub-ink);">Butuh nama yang persis?</p>
+                    <p class="mt-1">Domain premium bisa dibeli dari pemiliknya lewat jalur khusus. Hubungi kami kalau namanya penting untuk merek Anda.</p>
                 </div>
             </div>
-        </footer>
-    </div>
+
+            <div class="mt-8 flex flex-col gap-2 sm:flex-row">
+                <Link href="/domains" class="kbtn kbtn-outline">Lihat semua ekstensi</Link>
+                <Link href="/hosting" class="kbtn kbtn-ghost">Lihat paket hosting</Link>
+            </div>
+        </section>
+    </CustomerPublicLayout>
 </template>

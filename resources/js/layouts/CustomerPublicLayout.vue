@@ -16,7 +16,7 @@ withDefaults(defineProps<Props>(), {
 <template>
     <Head :title="title" />
 
-    <div class="kpub min-h-screen" style="background-color: var(--kpub-bg);">
+    <div class="kpub min-h-screen">
         <CustomerHeader />
 
         <main class="flex-1">
@@ -31,118 +31,156 @@ withDefaults(defineProps<Props>(), {
 </template>
 
 <style>
-/* Token halaman publik WebSweetStudio — satu sumber warna untuk header/isi/footer.
-   SEMUA warna diturunkan dari branding (Admin → Branding: primary / secondary / accent),
-   jadi mengubah branding langsung mengubah tampilan halaman publik tanpa sentuh CSS. */
+/*
+  Satu sumber tampilan halaman publik (landing, hosting, domain, demo, blog).
+  Netral putih dengan garis rambut; hijau hanya untuk aksi dan satu pita penutup.
+*/
 .kpub {
-    /* Brand */
-    --kpub-primary: var(--primary, #e11d48);
-    --kpub-primary-ink: var(--primary-foreground, #faf9f5);
-    --kpub-secondary: var(--secondary, #e7e7e7);
-
-    /* Permukaan terang */
-    --kpub-bg: color-mix(in srgb, var(--kpub-secondary) 45%, #ffffff);
+    --kpub-bg: #ffffff;
+    --kpub-surface: #f7f8f7;
+    --kpub-ink: #0d1210;
+    --kpub-muted: #5b6661;
+    --kpub-faint: #8b948f;
+    --kpub-line: #e6e8e6;
+    --kpub-line-strong: #d3d9d5;
     --kpub-card: #ffffff;
-    --kpub-ink: color-mix(in srgb, var(--accent, #000000) 90%, #ffffff);
-    --kpub-muted: color-mix(in srgb, var(--accent, #000000) 62%, #ffffff);
-    --kpub-line: color-mix(in srgb, var(--accent, #000000) 12%, #ffffff);
+    --kpub-green: #0a6c4d;
+    --kpub-green-hover: #085839;
+    --kpub-green-ink: #ffffff;
+    --kpub-green-soft: #edf5f1;
+    --kpub-deep: #0c2a1f;
+    --kpub-deep-ink: #e7efeb;
+    --kpub-amber: #96530a;
+    --kpub-display: 'Funnel Display', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --kpub-body: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --kpub-radius: 14px;
+    --kpub-radius-lg: 25px;
 
-    /* Permukaan gelap (panel harga, footer, bukti kerja) */
-    --kpub-deep: color-mix(in srgb, var(--kpub-primary) 20%, #0b0708);
-    --kpub-deep-ink: color-mix(in srgb, var(--kpub-primary) 5%, #ffffff);
-    --kpub-deep-text: color-mix(in srgb, var(--kpub-deep-ink) 82%, var(--kpub-deep));
-    --kpub-deep-muted: color-mix(in srgb, var(--kpub-deep-ink) 58%, var(--kpub-deep));
-    --kpub-deep-line: color-mix(in srgb, var(--kpub-deep-ink) 16%, var(--kpub-deep));
-
-    /* Aksen terang di atas permukaan gelap (harga promo, tautan) */
-    --kpub-highlight: color-mix(in srgb, var(--kpub-primary) 45%, #ffffff);
-
-    font-family: 'Bricolage Grotesque', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--kpub-bg);
     color: var(--kpub-ink);
-}
-
-.kpub .kdisplay {
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    line-height: 1.06;
-    text-wrap: balance;
-}
-
-.kpub .knum {
-    font-variant-numeric: tabular-nums;
+    font-family: var(--kpub-body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
 }
 
 .kpub h1,
 .kpub h2,
-.kpub h3 {
-    text-wrap: balance;
+.kpub h3,
+.kpub h4,
+.kpub .kdisplay {
+    font-family: var(--kpub-display);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
 }
 
-.kpub p {
-    text-wrap: pretty;
+.kpub .knum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
 }
 
-/* Tombol — kelas dipakai bersama supaya hover/focus konsisten di semua section */
+.kpub .kcontainer {
+    margin-inline: auto;
+    max-width: 1120px;
+    padding-inline: 1.25rem;
+}
+
+@media (min-width: 640px) {
+    .kpub .kcontainer {
+        padding-inline: 2rem;
+    }
+}
+
+/* Tombol: satu bentuk pil, dua bobot. */
 .kpub .kbtn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    font-weight: 600;
-    transition:
-        background-color 0.15s ease,
-        border-color 0.15s ease,
-        color 0.15s ease;
+    border-radius: 999px;
+    padding: 0.65rem 1.25rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.2;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
 }
 
 .kpub .kbtn-primary {
-    background-color: var(--kpub-primary);
-    color: var(--kpub-primary-ink);
-    border: 1px solid var(--kpub-primary);
+    background-color: var(--kpub-green);
+    color: var(--kpub-green-ink);
 }
 
 .kpub .kbtn-primary:hover {
-    background-color: color-mix(in srgb, var(--kpub-primary) 86%, #000000);
-    border-color: color-mix(in srgb, var(--kpub-primary) 86%, #000000);
+    background-color: var(--kpub-green-hover);
+}
+
+.kpub .kbtn-outline {
+    border: 1px solid var(--kpub-line-strong);
+    color: var(--kpub-ink);
+    background-color: transparent;
+}
+
+.kpub .kbtn-outline:hover {
+    border-color: var(--kpub-ink);
 }
 
 .kpub .kbtn-ghost {
-    background-color: transparent;
-    color: var(--kpub-ink);
-    border: 1px solid var(--kpub-line);
+    color: var(--kpub-muted);
 }
 
 .kpub .kbtn-ghost:hover {
-    background-color: color-mix(in srgb, var(--kpub-ink) 6%, transparent);
-    border-color: color-mix(in srgb, var(--kpub-ink) 22%, transparent);
+    color: var(--kpub-ink);
 }
 
 .kpub .klink {
-    color: var(--kpub-primary);
-    font-weight: 500;
+    color: var(--kpub-green);
     text-decoration: underline;
-    text-underline-offset: 4px;
-    transition: color 0.15s ease;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
 }
 
 .kpub .klink:hover {
-    color: color-mix(in srgb, var(--kpub-primary) 78%, #000000);
+    color: var(--kpub-green-hover);
 }
 
-.kpub .klink-on-deep {
-    color: var(--kpub-highlight);
+/* Permukaan: kartu bergaris rambut, tanpa bayangan. */
+.kpub .kcard {
+    background-color: var(--kpub-card);
+    border: 1px solid var(--kpub-line);
+    border-radius: var(--kpub-radius);
 }
 
-.kpub .klink-on-deep:hover {
-    color: var(--kpub-deep-ink);
+.kpub .kfield {
+    width: 100%;
+    border: 1px solid var(--kpub-line-strong);
+    border-radius: 999px;
+    background-color: #ffffff;
+    padding: 0.7rem 1.15rem;
+    font-size: 0.9375rem;
+    color: var(--kpub-ink);
+    outline: none;
 }
 
-/* Fokus keyboard tetap terlihat & memakai warna brand */
-.kpub a:focus-visible,
-.kpub button:focus-visible {
-    outline: 2px solid var(--kpub-primary);
+/* Bidang dengan ikon di kiri: utility pl-* kalah oleh padding .kfield di atas. */
+.kpub .kfield-icon {
+    padding-left: 2.75rem;
+}
+
+
+.kpub .kfield::placeholder {
+    color: var(--kpub-faint);
+}
+
+.kpub .kfield:focus-visible {
+    border-color: var(--kpub-green);
+    box-shadow: 0 0 0 3px var(--kpub-green-soft);
+}
+
+.kpub :focus-visible {
+    outline: 2px solid var(--kpub-green);
     outline-offset: 2px;
-    border-radius: 0.5rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -150,5 +188,13 @@ withDefaults(defineProps<Props>(), {
         transition-duration: 0.01ms !important;
         animation-duration: 0.01ms !important;
     }
+}
+/*
+  app.css mengunci html/body ke height:100% untuk shell aplikasi; halaman publik
+  memakai dokumen setinggi konten supaya bisa digulir.
+*/
+html:has(.kpub),
+body:has(.kpub) {
+    height: auto;
 }
 </style>

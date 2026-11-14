@@ -39,7 +39,7 @@ class HostingPlanController extends Controller
 
         return Inertia::render('Public/Hosting/Index', [
             'hostingPlans' => $hostingPlans,
-            'filters' => request()->only(['search']),
+            'filters' => array_merge(request()->only(['search']), ['tab' => request()->route('tab', 'hosting')]),
         ]);
     }
 }
