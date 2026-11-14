@@ -152,4 +152,16 @@ class ModelController extends Controller
 
         return redirect()->back()->with('success', 'Model AI berhasil dihapus.');
     }
+
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'distinct'],
+        ]);
+
+        $deleted = AiModel::whereIn('id', $validated['ids'])->delete();
+
+        return redirect()->back()->with('success', "{$deleted} model AI berhasil dihapus.");
+    }
 }

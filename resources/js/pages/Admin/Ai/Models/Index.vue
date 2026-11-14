@@ -11,7 +11,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { Brain, ChevronDown, Edit, Eye, Info, Plus, Search, Trash2, X } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 interface AiModel {
     id: number;
@@ -52,6 +52,36 @@ const search = ref(props.filters?.search || '');
 const providerFilter = ref(props.filters?.provider_id || '');
 const applyFilters = () => {
     router.get('/admin/ai/models', { search: search.value || undefined, provider_id: providerFilter.value || undefined }, { preserveState: true, replace: true });
+};
+
+const selectedIds = ref<number[]>([]);
+const pageIds = computed(() => (props.models?.data || []).map((m) => m.id));
+const isAllSelected = computed(() => pageIds.value.length > 0 && pageIds.value.every((id) => selectedIds.value.includes(id)));
+
+watch(
+    () => pageIds.value.join(','),
+    () => {
+        selectedIds.value = [];
+    },
+);
+
+const toggleSelectAll = () => {
+    selectedIds.value = isAllSelected.value ? [] : [...pageIds.value];
+};
+
+const toggleSelection = (id: number) => {
+    selectedIds.value = selectedIds.value.includes(id) ? selectedIds.value.filter((v) => v !== id) : [...selectedIds.value, id];
+};
+
+const clearSelection = () => {
+    selectedIds.value = [];
+};
+
+const bulkDeleting = ref(false);
+
+const bulkDelete = () => {
+    if (selectedIds.value.length === 0 || bulkDeleting.value) return;
+    openConfirm([...selectedIds.value], `Hapus ${selectedIds.value.length} model yang dipilih?`);
 };
 
 const showCreateModal = ref(false);
@@ -190,20 +220,39 @@ const submitEdit = () => {
 };
 
 const showConfirm = ref(false);
-const confirmTarget = ref<any>(null);
+const confirmTarget = ref<AiModel | number[] | null>(null);
 const confirmMessage = ref('');
 
-const openConfirm = (target: any, message: string) => {
+const openConfirm = (target: AiModel | number[], message: string) => {
     confirmTarget.value = target;
     confirmMessage.value = message;
     showConfirm.value = true;
 };
 
 const handleConfirm = () => {
+    const target = confirmTarget.value;
     showConfirm.value = false;
-    if (confirmTarget.value) {
-        router.delete(`/admin/ai/models/${confirmTarget.value.id}`, { preserveScroll: true });
+    confirmTarget.value = null;
+
+    if (!target) return;
+
+    if (Array.isArray(target)) {
+        bulkDeleting.value = true;
+        router.delete('/admin/ai/models/bulk', {
+            data: { ids: target },
+            preserveScroll: true,
+            onFinish: () => {
+                bulkDeleting.value = false;
+            },
+            onSuccess: () => {
+                clearSelection();
+            },
+        });
+
+        return;
     }
+
+    router.delete(`/admin/ai/models/${target.id}`, { preserveScroll: true });
 };
 
 const confirmDelete = (m: AiModel) => {
@@ -255,9 +304,33 @@ const previewOutput = (): string =>
                         </select>
                     </div>
 
-                    <Table>
+                    <div
+                        v-if="selectedIds.length > 0"
+                        class="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <div class="text-sm text-foreground">
+                            <span class="font-medium">{{ selectedIds.length }}</span> model dipilih
+                        </div>
+                        <div class="flex gap-2">
+                            <Button size="sm" variant="destructive" class="cursor-pointer" :disabled="bulkDeleting" @click="bulkDelete">
+                                <Trash2 class="mr-2 h-4 w-4" /> Hapus yang dipilih
+                            </Button>
+                            <Button size="sm" variant="outline" class="cursor-pointer" @click="clearSelection">Batal</Button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead class="w-10">
+                                    <input
+                                        type="checkbox"
+                                        :checked="isAllSelected"
+                                        class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                        @change="toggleSelectAll"
+                                    />
+                                </TableHead>
                                 <TableHead>Model</TableHead>
                                 <TableHead>Nama Tampilan</TableHead>
                                 <TableHead>Provider</TableHead>
@@ -269,7 +342,15 @@ const previewOutput = (): string =>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            <TableRow v-for="m in models.data" :key="m.id">
+                            <TableRow v-for="m in models.data" :key="m.id" :class="selectedIds.includes(m.id) ? 'bg-muted/40' : ''">
+                                <TableCell>
+                                    <input
+                                        type="checkbox"
+                                        :checked="selectedIds.includes(m.id)"
+                                        class="h-4 w-4 cursor-pointer rounded border border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                                        @change="toggleSelection(m.id)"
+                                    />
+                                </TableCell>
                                 <TableCell>
                                     <div class="flex items-center gap-2">
                                         <span class="font-mono font-medium">{{ m.model_key }}</span>
@@ -308,10 +389,11 @@ const previewOutput = (): string =>
                                 </TableCell>
                             </TableRow>
                             <TableRow v-if="models.data.length === 0">
-                                <TableCell colspan="8" class="py-10 text-center text-muted-foreground">Belum ada model.</TableCell>
+                                <TableCell colspan="9" class="py-10 text-center text-muted-foreground">Belum ada model.</TableCell>
                             </TableRow>
                         </TableBody>
-                    </Table>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
         </div>

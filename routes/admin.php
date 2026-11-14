@@ -163,6 +163,7 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'auth', 'verif
         Route::get('settings', [AiSettingController::class, 'index'])->name('settings.index');
         Route::patch('settings', [AiSettingController::class, 'save'])->name('settings.save');
         Route::resource('providers', AiProviderController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::delete('models/bulk', [AiModelController::class, 'bulkDestroy'])->name('models.bulk-destroy');
         Route::resource('models', AiModelController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('packages', AiPackageController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('combos', AiComboController::class)->only(['index', 'store', 'update', 'destroy']);
