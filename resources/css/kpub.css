@@ -146,6 +146,31 @@
     box-shadow: 0 0 0 3px var(--kpub-green-soft);
 }
 
+/* Tombol pixel: sudut siku + bayangan keras offset, tekan = tombol "masuk" ke bayangan. */
+.kpub .kbtn-pixel {
+    border-radius: 0;
+    box-shadow: 4px 4px 0 var(--kpub-deep);
+    transition: box-shadow 0.1s ease, transform 0.1s ease;
+}
+
+.kpub .kbtn-pixel:hover {
+    box-shadow: 2px 2px 0 var(--kpub-deep);
+    transform: translate(2px, 2px);
+}
+
+.kpub .kbtn-pixel:active {
+    box-shadow: 0 0 0 var(--kpub-deep);
+    transform: translate(4px, 4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .kpub .kbtn-pixel,
+    .kpub .kbtn-pixel:hover,
+    .kpub .kbtn-pixel:active {
+        transform: none;
+    }
+}
+
 .kpub :focus-visible {
     outline: 2px solid var(--kpub-green);
     outline-offset: 2px;

@@ -65,18 +65,18 @@ watch(mobileMenuOpen, (open) => {
 
             <div class="hidden items-center gap-2 md:flex">
                 <template v-if="isAdmin || isCustomer">
-                    <Link :href="dashboardHref" class="kbtn kbtn-outline">
+                    <Link :href="dashboardHref" class="kbtn kbtn-outline kbtn-pixel">
                         <LayoutGrid class="h-4 w-4" />
                         Dashboard
                     </Link>
-                    <button class="kbtn kbtn-ghost" @click="handleLogout">
+                    <button class="kbtn kbtn-ghost kbtn-pixel" @click="handleLogout">
                         <LogOut class="h-4 w-4" />
                         Keluar
                     </button>
                 </template>
                 <template v-else>
-                    <Link href="/login" class="kbtn kbtn-outline">Masuk</Link>
-                    <Link href="/customer/register" class="kbtn kbtn-primary">Daftar</Link>
+                    <Link href="/login" class="kbtn kbtn-outline kbtn-pixel">Masuk</Link>
+                    <Link href="/customer/register" class="kbtn kbtn-primary kbtn-pixel">Daftar</Link>
                 </template>
             </div>
 
@@ -110,12 +110,10 @@ watch(mobileMenuOpen, (open) => {
 
                     <div class="mt-6 flex flex-col gap-2">
                         <template v-if="isAdmin || isCustomer">
-                            <Link :href="dashboardHref" class="kbtn kbtn-primary w-full" @click="mobileMenuOpen = false">Dashboard</Link>
-                            <button class="kbtn kbtn-outline w-full" @click="handleLogout(); mobileMenuOpen = false">Keluar</button>
-                        </template>
-                        <template v-else>
-                            <Link href="/customer/register" class="kbtn kbtn-primary w-full" @click="mobileMenuOpen = false">Daftar</Link>
-                            <Link href="/login" class="kbtn kbtn-outline w-full" @click="mobileMenuOpen = false">Masuk</Link>
+                            <Link :href="dashboardHref" class="kbtn kbtn-primary kbtn-pixel w-full" @click="mobileMenuOpen = false">Dashboard</Link>
+                            <button class="kbtn kbtn-outline kbtn-pixel w-full" @click="handleLogout(); mobileMenuOpen = false">Keluar</button>
+                            <Link href="/customer/register" class="kbtn kbtn-primary kbtn-pixel w-full" @click="mobileMenuOpen = false">Daftar</Link>
+                            <Link href="/login" class="kbtn kbtn-outline kbtn-pixel w-full" @click="mobileMenuOpen = false">Masuk</Link>
                         </template>
                     </div>
                 </nav>
