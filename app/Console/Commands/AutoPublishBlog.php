@@ -565,10 +565,6 @@ class AutoPublishBlog extends Command
         $hijau = imagecolorallocate($img, 10, 108, 77);
         $hijauTua = imagecolorallocate($img, 12, 42, 31);
         imagefill($img, 0, 0, $putih);
-
-        // Pita hijau di atas, seperti aksen halaman publik.
-        imagefilledrectangle($img, 0, 0, $lebar, 14, $hijau);
-
         mt_srand(crc32($slug));
 
         // Ambient piksel renggang & pucat di seluruh bidang.
