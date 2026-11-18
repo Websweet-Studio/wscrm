@@ -14,9 +14,9 @@ const props = withDefaults(defineProps<{
     /** Tick per detik. */
     fps?: number;
 }>(), {
-    cell: 10,
-    flip: 0.025,
-    fps: 7,
+    cell: 6,
+    flip: 0.02,
+    fps: 3,
 });
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -29,6 +29,23 @@ let timer: ReturnType<typeof setInterval> | null = null;
 let observer: ResizeObserver | null = null;
 let cssWidth = 0;
 let cssHeight = 0;
+
+// Posisi kursor terakhir dalam koordinat kanvas; -1 saat di luar.
+const mouse = { x: -1, y: -1 };
+const JARI_JARI = 90; // px CSS di sekitar kursor yang bereaksi
+
+function onMouseMove(e: PointerEvent): void {
+    const canvas = canvasRef.value;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = e.clientX - rect.left;
+    mouse.y = e.clientY - rect.top;
+    if (mouse.x < 0 || mouse.y < 0 || mouse.x > cssWidth || mouse.y > cssHeight) {
+        mouse.x = -1;
+        mouse.y = -1;
+    }
+}
+
 
 function draw(): void {
     if (!ctx) return;
@@ -52,12 +69,34 @@ function tick(): void {
     if (!total) return;
     // Seluruhan bidang meluruh pelan, lalu sebagian kecil piksel menyala ulang.
     for (let i = 0; i < total; i++) {
-        states[i] *= 0.72;
+        states[i] *= 0.88;
     }
     const nyala = Math.max(1, Math.round(total * props.flip));
     for (let n = 0; n < nyala; n++) {
         const i = (Math.random() * total) | 0;
         states[i] = 0.25 + Math.random() * 0.75;
+    }
+
+    // Piksel di sekitar kursor menyala lebih terang, meluruh mengikuti tick.
+    if (mouse.x >= 0) {
+        const sel = JARI_JARI / props.cell;
+        const cr = Math.floor(mouse.y / props.cell);
+        const cc = Math.floor(mouse.x / props.cell);
+        const r1 = Math.max(0, cr - Math.ceil(sel));
+        const r2 = Math.min(rows - 1, cr + Math.ceil(sel));
+        const c1 = Math.max(0, cc - Math.ceil(sel));
+        const c2 = Math.min(cols - 1, cc + Math.ceil(sel));
+        for (let r = r1; r <= r2; r++) {
+            for (let c = c1; c <= c2; c++) {
+                const jarak = Math.hypot((r - cr) * props.cell, (c - cc) * props.cell);
+                if (jarak > JARI_JARI) continue;
+                const kuat = 1 - jarak / JARI_JARI;
+                const i = r * cols + c;
+                if (Math.random() < kuat * 0.85) {
+                    states[i] = Math.max(states[i], 0.35 + kuat * 0.65 * Math.random());
+                }
+            }
+        }
     }
     draw();
 }
@@ -87,6 +126,7 @@ function resize(): void {
 
 onMounted(() => {
     resize();
+    window.addEventListener('pointermove', onMouseMove, { passive: true });
     const reduksiGerak = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!reduksiGerak) {
         timer = setInterval(tick, 1000 / props.fps);
@@ -100,6 +140,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
     if (timer) clearInterval(timer);
     observer?.disconnect();
+    window.removeEventListener('pointermove', onMouseMove);
 });
 </script>
 
