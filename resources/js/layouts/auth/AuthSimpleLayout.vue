@@ -22,18 +22,14 @@ defineProps<{
         <div class="pointer-events-none absolute inset-x-0 top-0 h-1" style="background-color: var(--kpub-green);"></div>
 
         <div class="w-full max-w-md">
-            <!-- Logo + nama aplikasi, sama seperti header publik. -->
-            <div class="mb-8 flex items-center justify-center gap-2.5">
-                <Link :href="home()" class="flex items-center gap-2.5">
+            <div class="mb-8 flex items-center justify-center">
+                <Link :href="home()" class="flex items-center">
                     <span
-                        class="flex h-9 w-9 items-center justify-center rounded-lg"
+                        class="flex h-11 w-11 items-center justify-center rounded-xl"
                         style="background-color: var(--kpub-deep);"
                     >
-                        <img v-if="appLogo" :src="appLogo" :alt="appName" class="h-5 w-5 object-contain" />
-                        <AppLogoIcon v-else class="h-5 w-5" style="color: var(--kpub-green-ink);" />
-                    </span>
-                    <span class="kdisplay text-lg" style="font-weight: 500; letter-spacing: -0.01em;">
-                        {{ appName }}
+                        <img v-if="appLogo" :src="appLogo" :alt="appName" class="h-6 w-6 object-contain" />
+                        <AppLogoIcon v-else class="h-6 w-6" style="color: var(--kpub-green-ink);" />
                     </span>
                 </Link>
             </div>
