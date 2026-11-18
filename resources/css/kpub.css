@@ -157,55 +157,18 @@
     );
 }
 
-/*
-  Varian outline/ghost: border 1px tak bisa mengikuti potongan tangga (clip
-  memotongnya di sudut). Border digambar dua lapis: lapisan luar = warna garis,
-  pseudo ::before (inset 2px, clip sama) = bidang dalam.
-*/
-.kpub .kbtn-pixel {
-    position: relative;
-}
-
+/* Varian outline/ghost pixel: blok abu tipis, tanpa border (border 1px tak
+   mengikuti potongan tangga). Hover bernuansa hijau lembut. */
 .kpub .kbtn-outline.kbtn-pixel,
 .kpub .kbtn-ghost.kbtn-pixel {
     border-color: transparent;
-    background-color: var(--kpub-ink);
+    background-color: var(--kpub-surface);
 }
 
-.kpub .kbtn-outline.kbtn-pixel::before {
-    content: "";
-    position: absolute;
-    inset: 2px;
-    z-index: -1;
-    background-color: #ffffff;
-    clip-path: polygon(
-        0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0,
-        calc(100% - 8px) 0, calc(100% - 8px) 4px, calc(100% - 4px) 4px, calc(100% - 4px) 8px, 100% 8px,
-        100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%,
-        8px 100%, 8px calc(100% - 4px), 4px calc(100% - 4px), 4px calc(100% - 8px), 0 calc(100% - 8px)
-    );
-}
-
-.kpub .kbtn-ghost.kbtn-pixel::before {
-    content: "";
-    position: absolute;
-    inset: 2px;
-    z-index: -1;
-    background-color: var(--kpub-bg);
-    clip-path: polygon(
-        0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0,
-        calc(100% - 8px) 0, calc(100% - 8px) 4px, calc(100% - 4px) 4px, calc(100% - 4px) 8px, 100% 8px,
-        100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%,
-        8px 100%, 8px calc(100% - 4px), 4px calc(100% - 4px), 4px calc(100% - 8px), 0 calc(100% - 8px)
-    );
-}
-
-.kpub .kbtn-outline.kbtn-pixel:hover {
-    background-color: var(--kpub-green);
-}
-
-.kpub .kbtn-outline.kbtn-pixel:hover::before {
-    background-color: var(--kpub-green-ink);
+.kpub .kbtn-outline.kbtn-pixel:hover,
+.kpub .kbtn-ghost.kbtn-pixel:hover {
+    border-color: transparent;
+    background-color: var(--kpub-green-soft);
 }
 
 /* Cincin fokus di dalam: outline biasa ikut terpotong clip-path. */
