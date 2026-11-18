@@ -25,7 +25,6 @@ class AutoPublishBlog extends Command
     /** Tema rotasi + motif thumbnail-nya. AI memilih judul & sudut pandang baru tiap kali. */
     private const TEMA = [
         ['theme' => 'memilih hosting untuk website UMKM pemula', 'category' => 'hosting-domain', 'motif' => 'keranjang'],
-        ['theme' => 'cara membeli dan mengelola domain .my.id untuk bisnis kecil', 'category' => 'hosting-domain', 'motif' => 'globe'],
         ['theme' => 'perbedaan shared hosting, VPS, dan cloud hosting untuk pemilik website', 'category' => 'hosting-domain', 'motif' => 'server'],
         ['theme' => 'memindahkan website WordPress ke hosting baru tanpa downtime', 'category' => 'tutorial', 'motif' => 'pindah'],
         ['theme' => 'membuat email bisnis dengan nama domain sendiri', 'category' => 'tutorial', 'motif' => 'email'],
@@ -41,7 +40,7 @@ class AutoPublishBlog extends Command
         ['theme' => 'domain vs hosting: analogi sederhana untuk pemula', 'category' => 'hosting-domain', 'motif' => 'server'],
         ['theme' => 'perpanjangan domain: biaya, tenggat, dan cara menghindari domain hangus', 'category' => 'hosting-domain', 'motif' => 'kalender'],
         ['theme' => 'membuat landing page promo yang konversi untuk usaha kecil', 'category' => 'tips-trik', 'motif' => 'grafik'],
-        ['theme' => 'memanfaatkan WhatsApp Business bersama website untuk menerima pesanan', 'category' => 'tips-trik', 'motif' => 'chat'],
+        ['theme' => 'cara membeli dan mengelola domain .my.id untuk bisnis kecil', 'category' => 'hosting-domain', 'motif' => 'myid'],
         ['theme' => 'perbedaan .com, .id, dan .co.id untuk bisnis Indonesia', 'category' => 'hosting-domain', 'motif' => 'globe'],
         ['theme' => 'cara membaca statistik pengunjung website tanpa pusing', 'category' => 'tips-trik', 'motif' => 'grafik'],
         ['theme' => 'persiapan website sebelum musim ramai (Ramadhan, tahun baru, tanggal kembar)', 'category' => 'tips-trik', 'motif' => 'kalender'],
@@ -71,6 +70,21 @@ class AutoPublishBlog extends Command
             '......GGGGGGGGG.....',
             '.....GG........GG...',
             '....GGGG......GGGG..',
+        ],
+        'myid' => [
+            '..................................................GGG',
+            '..................................................GGG',
+            '..................................................GGG',
+            '......GGG.GGG.GGG...GGG.....GGG.......GGG...GGG...GGG',
+            '......GGG.GGG.GGG...GGG.....GGG.............GGG...GGG',
+            '......GGG.GGG.GGG...GGG.....GGG.......GGG...GGG...GGG',
+            '......GGGGGGGGGGG...GGG.....GGG.......GGG...GGG...GGG',
+            '......GGGGGGGGGGG....GGGGGGGGG........GGG...GGG...GGG',
+            'GGG...GGG.GGG.GGG.........GGGG..GGG...GGG...GGG...GGG',
+            'GGG...GGG.GGG.GGG.........GGG...GGG...GGG...GGGGGGGGG',
+            'GGG...GGG.GGG.GGG.........GGG...GGG...GGG....GGGGGGGG',
+            '.........................GGG.........................',
+            '........................GGG..........................',
         ],
         'server' => [
             '.GGGGGGGGGGGGGGGGGG.',
@@ -576,7 +590,8 @@ class AutoPublishBlog extends Command
         // Motif pixel-art besar di tengah, sedikit di atas garis tengah.
         $baris = self::MOTIF[$motif] ?? self::MOTIF['server'];
         $kolom = strlen($baris[0]);
-        $selMotif = 26;
+        // Motif lebar (mis. teks ".my.id") menyusut otomatis agar tetap muat.
+        $selMotif = min(26, (int) floor(1000 / $kolom));
         $motifLebar = $kolom * $selMotif;
         $motifTinggi = count($baris) * $selMotif;
         $awalX = (int) round(($lebar - $motifLebar) / 2);
