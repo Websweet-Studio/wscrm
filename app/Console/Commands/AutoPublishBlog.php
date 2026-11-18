@@ -52,12 +52,17 @@ class AutoPublishBlog extends Command
 
     protected $signature = 'blog:auto-publish
         {--count=2 : Jumlah artikel per eksekusi}
-        {--force : Abaikan cek interval 2 hari}';
+        {--force : Abaikan cek interval 2 hari}
+        {--backfill : Buatkan thumbnail untuk artikel auto yang belum punya gambar}';
 
     protected $description = 'Terbitkan artikel blog otomatis (AI), sekali per 2 hari';
 
     public function handle(): int
     {
+        if ($this->option('backfill')) {
+            return $this->backfillThumbnail();
+        }
+
         if (! $this->option('force') && ! $this->jatuhTempo()) {
             $this->line('SKIP: artikel otomatis terakhir belum berumur ' . self::INTERVAL_JAM . ' jam.');
 
@@ -83,6 +88,7 @@ class AutoPublishBlog extends Command
             try {
                 $data = $this->generateArtikel($client, $tema, $judulAda);
                 $post = $this->simpan($data, $tema, $penulisId);
+                $this->tempelThumbnail($post, $tema['category']);
             } catch (\Throwable $e) {
                 $this->error("Gagal membuat artikel (tema: {$tema['theme']}): " . $e->getMessage());
 
@@ -278,5 +284,111 @@ class AutoPublishBlog extends Command
         $id = \Illuminate\Support\Facades\DB::table('blog_categories')->where('slug', $slug)->value('id');
 
         return $id ?: 4; // fallback: Hosting & Domain
+    }
+
+    /** Buatkan thumbnail untuk semua artikel auto yang belum punya gambar. */
+    private function backfillThumbnail(): int
+    {
+        $posts = BlogPost::where('meta_data->auto_generated', true)
+            ->where(fn ($q) => $q->whereNull('featured_image')->orWhere('featured_image', ''))
+            ->get();
+
+        if ($posts->isEmpty()) {
+            $this->line('Semua artikel otomatis sudah punya thumbnail.');
+
+            return self::SUCCESS;
+        }
+
+        foreach ($posts as $post) {
+            $kategori = optional($post->category)->slug ?? 'hosting-domain';
+            try {
+                $path = $this->tempelThumbnail($post, $kategori);
+                $this->info("Thumbnail: {$post->slug} → {$path}");
+            } catch (\Throwable $e) {
+                $this->error("Gagal thumbnail {$post->slug}: " . $e->getMessage());
+            }
+        }
+
+        return self::SUCCESS;
+    }
+
+    /** Lampirkan thumbnail pixel-art ke artikel; kembalikan path relatif di disk public. */
+    private function tempelThumbnail(BlogPost $post, string $kategoriSlug): string
+    {
+        $label = \Illuminate\Support\Facades\DB::table('blog_categories')->where('slug', $kategoriSlug)->value('name') ?? 'Artikel';
+        $path = $this->buatThumbnail($post->slug, $label);
+
+        // Hapus thumbnail lama bila diganti (path lokal disk public saja).
+        $lama = (string) $post->featured_image;
+        if ($lama !== '' && $lama !== $path && ! Str::startsWith($lama, ['http://', 'https://'])) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($lama);
+        }
+
+        $post->update(['featured_image' => $path]);
+
+        return $path;
+    }
+
+    /** Thumbnail 1200x675: mosaic piksel hijau deterministik dari slug + chip kategori. */
+    private function buatThumbnail(string $slug, string $label): string
+    {
+        $lebar = 1200;
+        $tinggi = 675;
+        $img = imagecreatetruecolor($lebar, $tinggi);
+
+        $putih = imagecolorallocate($img, 255, 255, 255);
+        $hijau = imagecolorallocate($img, 10, 108, 77);
+        $hijauTua = imagecolorallocate($img, 12, 42, 31);
+        imagefill($img, 0, 0, $putih);
+
+        // Pita hijau di atas, seperti aksen halaman publik.
+        imagefilledrectangle($img, 0, 0, $lebar, 14, $hijau);
+
+        // Mosaic piksel: seeded dari slug supaya thumbnail sama untuk slug yang sama.
+        mt_srand(crc32($slug));
+        $sel = 15;
+        for ($y = $sel * 2; $y < $tinggi - $sel; $y += $sel) {
+            for ($x = 0; $x < $lebar; $x += $sel) {
+                $undian = mt_rand(1, 100);
+                if ($undian <= 75) {
+                    continue; // sebagian besar bidang kosong
+                }
+                $alpha = mt_rand(30, 90);
+                if ($undian <= 88) {
+                    $warna = imagecolorallocatealpha($img, 10, 108, 77, 127 - (int) round($alpha * 0.22));
+                } elseif ($undian <= 96) {
+                    $warna = imagecolorallocatealpha($img, 12, 42, 31, 127 - (int) round($alpha * 0.4));
+                } else {
+                    $warna = $hijau; // beberapa piksel solid sebagai aksen
+                }
+                $besar = mt_rand(1, 100) <= 12 ? $sel * 2 : $sel;
+                imagefilledrectangle($img, $x, $y, min($x + $besar - 1, $lebar - 1), min($y + $besar - 1, $tinggi - 1), $warna);
+            }
+        }
+
+        // Chip kategori di kiri bawah: kotak hijau tua + teks putih.
+        $font = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
+        $ukuranFont = 26;
+        $bbox = imagettfbbox($ukuranFont, 0, $font, strtoupper($label));
+        $teksLebar = abs($bbox[4] - $bbox[0]);
+        $teksTinggi = abs($bbox[5] - $bbox[1]);
+        $paddingX = 22;
+        $paddingY = 14;
+        $chipTinggi = $teksTinggi + $paddingY * 2;
+        $chipX = 40;
+        $chipY = $tinggi - 40 - $chipTinggi;
+        imagefilledrectangle($img, $chipX, $chipY, $chipX + $teksLebar + $paddingX * 2, $chipY + $chipTinggi, $hijauTua);
+        imagettftext($img, $ukuranFont, 0, $chipX + $paddingX, $chipY + $paddingY + $teksTinggi, imagecolorallocate($img, 231, 239, 235), $font, strtoupper($label));
+
+        ob_start();
+        imagepng($img, null, 6);
+        $biner = (string) ob_get_clean();
+        imagedestroy($img);
+
+        // Nama file ber-hash konten: aman untuk cache immutable 30 hari di /storage/.
+        $path = 'blog/images/' . $slug . '-' . substr(md5($biner), 0, 8) . '.png';
+        \Illuminate\Support\Facades\Storage::disk('public')->put($path, $biner);
+
+        return $path;
     }
 }
