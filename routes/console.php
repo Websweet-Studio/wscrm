@@ -22,6 +22,8 @@ Artisan::command('inspire', function () {
 |   - invoice:generate-renewals    02:30 WIB
 |   - ai-credits:expire            03:00 WIB
 |   - services:expire              04:00 WIB (invoice → overdue, layanan → expired)
+|   (blog:auto-publish: 2 artikel tiap 2 hari, 09:30 WIB — /etc/cron.d/wscrm-blog;
+|    cadensi nyata dijaga di dalam perintah, min 47 jam antar terbit)
 |   (harga & status domain RDash: /etc/cron.d/wscrm-rdash, 01:15 WIB)
 |
 | Log semua tugas: storage/logs/cron-jobs.log
