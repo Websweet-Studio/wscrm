@@ -14,7 +14,7 @@ const props = withDefaults(defineProps<{
     /** Tick per detik. */
     fps?: number;
 }>(), {
-    cell: 16,
+    cell: 10,
     flip: 0.025,
     fps: 7,
 });
