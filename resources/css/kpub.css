@@ -146,29 +146,15 @@
     box-shadow: 0 0 0 3px var(--kpub-green-soft);
 }
 
-/* Tombol pixel: sudut siku + bayangan keras offset, tekan = tombol "masuk" ke bayangan. */
+/* Tombol pixel: sudut bertangga (staircase) tanpa bayangan. */
 .kpub .kbtn-pixel {
     border-radius: 0;
-    box-shadow: 4px 4px 0 var(--kpub-deep);
-    transition: box-shadow 0.1s ease, transform 0.1s ease;
-}
-
-.kpub .kbtn-pixel:hover {
-    box-shadow: 2px 2px 0 var(--kpub-deep);
-    transform: translate(2px, 2px);
-}
-
-.kpub .kbtn-pixel:active {
-    box-shadow: 0 0 0 var(--kpub-deep);
-    transform: translate(4px, 4px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .kpub .kbtn-pixel,
-    .kpub .kbtn-pixel:hover,
-    .kpub .kbtn-pixel:active {
-        transform: none;
-    }
+    clip-path: polygon(
+        0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0,
+        calc(100% - 8px) 0, calc(100% - 8px) 4px, calc(100% - 4px) 4px, calc(100% - 4px) 8px, 100% 8px,
+        100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%,
+        8px 100%, 8px calc(100% - 4px), 4px calc(100% - 4px), 4px calc(100% - 8px), 0 calc(100% - 8px)
+    );
 }
 
 .kpub :focus-visible {
