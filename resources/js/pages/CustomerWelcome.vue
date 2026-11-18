@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
+import PixelField from '@/components/PixelField.vue';
 import CustomerPublicLayout from '@/layouts/CustomerPublicLayout.vue';
 import { ArrowRight } from 'lucide-vue-next';
 import { computed } from 'vue';
@@ -144,20 +145,23 @@ const waUrl = computed(() => {
 
 <template>
     <CustomerPublicLayout title="Hosting, Domain & Website untuk Bisnis Anda">
-        <!-- Hero: satu klaim, satu pasang aksi -->
-        <section class="kcontainer pt-20 pb-14 sm:pt-24 md:pt-28 md:pb-20">
-            <h1 class="mx-auto max-w-3xl text-center text-4xl sm:text-5xl md:text-[3.5rem] md:leading-[1.08]">
-                Website bisnis Anda, dari domain sampai online.
-            </h1>
-            <p class="mx-auto mt-5 max-w-xl text-center text-base sm:text-lg" style="color: var(--kpub-muted);">
-                Hosting dan domain dengan harga tertera di muka, plus jasa pembuatan website kalau Anda tidak mau repot. Semua bisa dipesan lewat WhatsApp.
-            </p>
-            <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <Link href="/hosting" class="kbtn kbtn-primary w-full sm:w-auto">
-                    Lihat paket hosting
-                    <ArrowRight class="h-4 w-4" />
-                </Link>
-                <Link href="/domains" class="kbtn kbtn-outline w-full sm:w-auto">Cek harga domain</Link>
+        <!-- Hero: satu klaim, satu pasang aksi; animasi piksel di belakangnya -->
+        <section class="relative overflow-hidden">
+            <PixelField class="absolute inset-0" />
+            <div class="kcontainer relative pt-20 pb-14 sm:pt-24 md:pt-28 md:pb-20">
+                <h1 class="mx-auto max-w-3xl text-center text-4xl sm:text-5xl md:text-[3.5rem] md:leading-[1.08]">
+                    Website bisnis Anda, dari domain sampai online.
+                </h1>
+                <p class="mx-auto mt-5 max-w-xl text-center text-base sm:text-lg" style="color: var(--kpub-muted);">
+                    Hosting dan domain dengan harga tertera di muka, plus jasa pembuatan website kalau Anda tidak mau repot. Semua bisa dipesan lewat WhatsApp.
+                </p>
+                <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                    <Link href="/hosting" class="kbtn kbtn-primary w-full sm:w-auto">
+                        Lihat paket hosting
+                        <ArrowRight class="h-4 w-4" />
+                    </Link>
+                    <Link href="/domains" class="kbtn kbtn-outline w-full sm:w-auto">Cek harga domain</Link>
+                </div>
             </div>
         </section>
 
