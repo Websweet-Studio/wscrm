@@ -16,64 +16,47 @@ defineProps<{
 </script>
 
 <template>
-    <div
-        class="relative flex min-h-svh flex-col items-center justify-center overflow-hidden p-4 md:p-8 lg:p-12"
-        style="background-color: #f5f4ed;"
-    >
-        <!-- Subtle dot pattern overlay -->
-        <div
-            class="pointer-events-none absolute inset-0"
-            style="background-image: radial-gradient(circle, rgba(201,100,66,0.04) 1px, transparent 1px); background-size: 20px 20px;"
-        ></div>
+    <!-- Sama dengan bahasa visual halaman publik: putih, garis rambut, hijau untuk aksi. -->
+    <div class="kpub relative flex min-h-svh flex-col items-center justify-center overflow-hidden p-4 md:p-8">
+        <!-- Pita hijau tipis di atas, seperti aksen halaman publik. -->
+        <div class="pointer-events-none absolute inset-x-0 top-0 h-1" style="background-color: var(--kpub-green);"></div>
 
-        <!-- Warm ambient glow -->
-        <div
-            class="pointer-events-none absolute -top-48 left-1/2 h-96 w-[36rem] -translate-x-1/2 opacity-30"
-            style="background: radial-gradient(ellipse at center, rgba(201,100,66,0.12) 0%, transparent 70%);"
-        ></div>
-
-        <div class="relative w-full max-w-sm">
-            <div class="flex flex-col gap-8">
-                <!-- Logo area -->
-                <div class="flex flex-col items-center gap-4">
-                    <Link :href="home()" class="group flex flex-col items-center gap-3">
-                        <div
-                            class="flex h-14 w-14 items-center justify-center rounded-2xl transition-shadow duration-300"
-                            style="background-color: #e8e6dc;"
-                        >
-                            <img
-                                v-if="appLogo"
-                                :src="appLogo"
-                                :alt="appName"
-                                class="h-8 w-8 object-contain"
-                            />
-                            <AppLogoIcon v-else class="h-8 w-8" style="color: var(--primary);" />
-                        </div>
-                    </Link>
-                    <div class="space-y-2 text-center">
-                        <h1
-                            class="text-2xl font-medium tracking-tight"
-                            style="color: #141413; font-family: Georgia, serif; line-height: 1.25;"
-                        >
-                            {{ title }}
-                        </h1>
-                        <p
-                            class="text-sm"
-                            style="color: #5e5d59;"
-                        >
-                            {{ description }}
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Card -->
-                <div
-                    class="animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out"
-                    style="background-color: #faf9f5; border: 1px solid #f0eee6; border-radius: 18px; box-shadow: 0 4px 24px rgba(0,0,0,0.04), 0 1px 4px rgba(0,0,0,0.02); padding: 2rem;"
-                >
-                    <slot />
-                </div>
+        <div class="w-full max-w-md">
+            <!-- Logo + nama aplikasi, sama seperti header publik. -->
+            <div class="mb-8 flex items-center justify-center gap-2.5">
+                <Link :href="home()" class="flex items-center gap-2.5">
+                    <span
+                        class="flex h-9 w-9 items-center justify-center rounded-lg"
+                        style="background-color: var(--kpub-deep);"
+                    >
+                        <img v-if="appLogo" :src="appLogo" :alt="appName" class="h-5 w-5 object-contain" />
+                        <AppLogoIcon v-else class="h-5 w-5" style="color: var(--kpub-green-ink);" />
+                    </span>
+                    <span class="kdisplay text-lg" style="font-weight: 500; letter-spacing: -0.01em;">
+                        {{ appName }}
+                    </span>
+                </Link>
             </div>
+
+            <div class="kcard p-6 sm:p-8" style="border-radius: var(--kpub-radius-lg); padding: 2rem 1.75rem;">
+                <div class="mb-7 space-y-2 text-center">
+                    <h1 class="text-3xl" style="color: var(--kpub-ink);">
+                        {{ title }}
+                    </h1>
+                    <p class="text-[0.9375rem]" style="color: var(--kpub-muted);">
+                        {{ description }}
+                    </p>
+                </div>
+
+                <slot />
+            </div>
+
+            <p class="mt-6 text-center text-sm" style="color: var(--kpub-faint);">
+                <Link :href="home()" class="hover:underline" style="color: var(--kpub-muted);">
+                    {{ appName }}
+                </Link>
+                — hosting, domain, dan pembuatan website untuk bisnis di Indonesia.
+            </p>
         </div>
     </div>
 </template>
