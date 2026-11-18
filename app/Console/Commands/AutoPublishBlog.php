@@ -16,35 +16,241 @@ use Illuminate\Support\Str;
  * Sumber konten: AI (AiClient; endpoint/model dari env atau /admin/ai/settings).
  * Setiap artikel ditandai meta_data.auto_generated = true supaya cadensi
  * bisa dihitung dari artikel otomatis terakhir.
+ *
+ * Thumbnail: pixel-art motif sesuai tema (keranjang, globe, server, dollar, ...)
+ * digambar GD — pola deterministik dari slug, tanpa teks, tanpa logo.
  */
 class AutoPublishBlog extends Command
 {
-    /** Tema rotasi: AI memilih judul & sudut pandang baru tiap kali. */
+    /** Tema rotasi + motif thumbnail-nya. AI memilih judul & sudut pandang baru tiap kali. */
     private const TEMA = [
-        ['theme' => 'memilih hosting untuk website UMKM pemula', 'category' => 'hosting-domain'],
-        ['theme' => 'cara membeli dan mengelola domain .my.id untuk bisnis kecil', 'category' => 'hosting-domain'],
-        ['theme' => 'perbedaan shared hosting, VPS, dan cloud hosting untuk pemilik website', 'category' => 'hosting-domain'],
-        ['theme' => 'memindahkan website WordPress ke hosting baru tanpa downtime', 'category' => 'tutorial'],
-        ['theme' => 'membuat email bisnis dengan nama domain sendiri', 'category' => 'tutorial'],
-        ['theme' => 'memasang SSL gratis Let\'s Encrypt di hosting', 'category' => 'tutorial'],
-        ['theme' => 'menghubungkan domain ke website: DNS, A record, dan nameserver', 'category' => 'tutorial'],
-        ['theme' => 'cara cepat website: image, cache, dan hosting', 'category' => 'tips-trik'],
-        ['theme' => 'checklist sebelum website bisnis online ke publik', 'category' => 'tips-trik'],
-        ['theme' => 'memilih nama domain yang baik untuk bisnis Indonesia', 'category' => 'tips-trik'],
-        ['theme' => 'website bisnis wajib mobile-friendly: cara mengecek dan memperbaiki', 'category' => 'tips-trik'],
-        ['theme' => 'kenapa website bisnis perlu backup rutin dan cara melakukannya', 'category' => 'tips-trik'],
-        ['theme' => 'SSL/HTTPS dan keamanan dasar website untuk pemilik usaha', 'category' => 'teknologi'],
-        ['theme' => 'apa itu uptime dan kenapa penting untuk toko online', 'category' => 'teknologi'],
-        ['theme' => 'domain vs hosting: analogi sederhana untuk pemula', 'category' => 'hosting-domain'],
-        ['theme' => 'perpanjangan domain: biaya, tenggat, dan cara menghindari domain hangus', 'category' => 'hosting-domain'],
-        ['theme' => 'membuat landing page promo yang konversi untuk usaha kecil', 'category' => 'tips-trik'],
-        ['theme' => 'memanfaatkan WhatsApp Business bersama website untuk menerima pesanan', 'category' => 'tips-trik'],
-        ['theme' => 'perbedaan .com, .id, dan .co.id untuk bisnis Indonesia', 'category' => 'hosting-domain'],
-        ['theme' => 'cara membaca statistik pengunjung website tanpa pusing', 'category' => 'tips-trik'],
-        ['theme' => 'persiapan website sebelum musim ramai (Ramadhan, tahun baru, tanggal kembar)', 'category' => 'tips-trik'],
-        ['theme' => 'apa yang terjadi pada website saat hosting penuh: resource limits dijelaskan', 'category' => 'teknologi'],
-        ['theme' => 'membuat halaman about us yang dipercaya pembeli', 'category' => 'tips-trik'],
-        ['theme' => 'mengapa ada hosting yang sangat murah: apa yang perlu dicek sebelum membeli', 'category' => 'hosting-domain'],
+        ['theme' => 'memilih hosting untuk website UMKM pemula', 'category' => 'hosting-domain', 'motif' => 'keranjang'],
+        ['theme' => 'cara membeli dan mengelola domain .my.id untuk bisnis kecil', 'category' => 'hosting-domain', 'motif' => 'globe'],
+        ['theme' => 'perbedaan shared hosting, VPS, dan cloud hosting untuk pemilik website', 'category' => 'hosting-domain', 'motif' => 'server'],
+        ['theme' => 'memindahkan website WordPress ke hosting baru tanpa downtime', 'category' => 'tutorial', 'motif' => 'pindah'],
+        ['theme' => 'membuat email bisnis dengan nama domain sendiri', 'category' => 'tutorial', 'motif' => 'email'],
+        ['theme' => 'memasang SSL gratis Let\'s Encrypt di hosting', 'category' => 'tutorial', 'motif' => 'shield'],
+        ['theme' => 'menghubungkan domain ke website: DNS, A record, dan nameserver', 'category' => 'tutorial', 'motif' => 'globe'],
+        ['theme' => 'cara cepat website: image, cache, dan hosting', 'category' => 'tips-trik', 'motif' => 'speed'],
+        ['theme' => 'checklist sebelum website bisnis online ke publik', 'category' => 'tips-trik', 'motif' => 'checklist'],
+        ['theme' => 'memilih nama domain yang baik untuk bisnis Indonesia', 'category' => 'tips-trik', 'motif' => 'globe'],
+        ['theme' => 'website bisnis wajib mobile-friendly: cara mengecek dan memperbaiki', 'category' => 'tips-trik', 'motif' => 'ponsel'],
+        ['theme' => 'kenapa website bisnis perlu backup rutin dan cara melakukannya', 'category' => 'tips-trik', 'motif' => 'database'],
+        ['theme' => 'SSL/HTTPS dan keamanan dasar website untuk pemilik usaha', 'category' => 'teknologi', 'motif' => 'shield'],
+        ['theme' => 'apa itu uptime dan kenapa penting untuk toko online', 'category' => 'teknologi', 'motif' => 'speed'],
+        ['theme' => 'domain vs hosting: analogi sederhana untuk pemula', 'category' => 'hosting-domain', 'motif' => 'server'],
+        ['theme' => 'perpanjangan domain: biaya, tenggat, dan cara menghindari domain hangus', 'category' => 'hosting-domain', 'motif' => 'kalender'],
+        ['theme' => 'membuat landing page promo yang konversi untuk usaha kecil', 'category' => 'tips-trik', 'motif' => 'grafik'],
+        ['theme' => 'memanfaatkan WhatsApp Business bersama website untuk menerima pesanan', 'category' => 'tips-trik', 'motif' => 'chat'],
+        ['theme' => 'perbedaan .com, .id, dan .co.id untuk bisnis Indonesia', 'category' => 'hosting-domain', 'motif' => 'globe'],
+        ['theme' => 'cara membaca statistik pengunjung website tanpa pusing', 'category' => 'tips-trik', 'motif' => 'grafik'],
+        ['theme' => 'persiapan website sebelum musim ramai (Ramadhan, tahun baru, tanggal kembar)', 'category' => 'tips-trik', 'motif' => 'kalender'],
+        ['theme' => 'apa yang terjadi pada website saat hosting penuh: resource limits dijelaskan', 'category' => 'teknologi', 'motif' => 'server'],
+        ['theme' => 'membuat halaman about us yang dipercaya pembeli', 'category' => 'tips-trik', 'motif' => 'chat'],
+        ['theme' => 'mengapa ada hosting yang sangat murah: apa yang perlu dicek sebelum membeli', 'category' => 'hosting-domain', 'motif' => 'dollar'],
+    ];
+
+    /**
+     * Bitmap motif pixel-art. Karakter: 'G' hijau, 'D' hijau tua, '.' kosong.
+     * Semua baris harus sama panjang. Digambar besar di tengah thumbnail.
+     */
+    private const MOTIF = [
+        'keranjang' => [
+            '......GGGGGGGG......',
+            '.....G........G.....',
+            '..GGGGGGGGGGGGGGG...',
+            '..GDDDDDDDDDDDDDG...',
+            '...GGGGGGGGGGGGG....',
+            '....GGGGGGGGGGG.....',
+            '.....GGGGGGGGG......',
+            '......GGGGGGG.......',
+            '.......GGGGG........',
+            '........GGG.........',
+            '.......G.....G......',
+            '......GG.....GG.....',
+            '.....GGG.....GGG....',
+        ],
+        'globe' => [
+            '......GGGGGGGG......',
+            '....GGGGGGGGGGGG....',
+            '...GGG..GGGG..GGG...',
+            '..GG....GGGG....GG..',
+            '.GG.....GGGG.....GG.',
+            '.GGG..GGGGGGGG..GGG.',
+            'GDDDDDDDDDDDDDDDDDDG',
+            '.GGG..GGGGGGGG..GGG.',
+            '.GG.....GGGG.....GG.',
+            '..GG....GGGG....GG..',
+            '...GGG..GGGG..GGG...',
+            '....GGGGGGGGGGGG....',
+            '......GGGGGGGG......',
+        ],
+        'server' => [
+            '.GGGGGGGGGGGGGGGGGG.',
+            '.G................G.',
+            '.G..GG...........GG.',
+            '.G................G.',
+            '.GGGGGGGGGGGGGGGGGG.',
+            '.G................G.',
+            '.G..GG...........GG.',
+            '.G................G.',
+            '.GGGGGGGGGGGGGGGGGG.',
+            '.G................G.',
+            '.G..GG...........GG.',
+            '.G................G.',
+            '.GGGGGGGGGGGGGGGGGG.',
+        ],
+                'dollar' => [
+            '.........GG.........',
+            '.........GG.........',
+            '......GGGGGGGGG.....',
+            '....GGGGGGGGGGGGG...',
+            '...GGGG.....GGGGG...',
+            '...GG........GGGG...',
+            '....GGGGGGGGGGG.....',
+            '.......GGGGGGGG.....',
+            '..........GGGGGG....',
+            '.....GG.......GGG...',
+            '....GGGGGGGGGGGGG...',
+            '......GGGGGGGGG.....',
+            '.........GG.........',
+            '.........GG.........',
+        ],
+        'shield' => [
+            '...GGGGGGGGGGG......',
+            '..GGGGGGGGGGGGG.....',
+            '.GGGGGGGGGGGGGGG....',
+            '.GGGGGGGGGGGGGGG....',
+            '.GGGG.GGGG.GGGGG....',
+            '.GGGGG.GG.GGGGGG....',
+            '..GGGGG.GGGGGGG.....',
+            '..GGGGGG.GGGGG......',
+            '...GGGGGGGGGG.......',
+            '....GGGGGGGG........',
+            '.....GGGGGG.........',
+            '......GGGG..........',
+            '.......GG...........',
+        ],
+        'speed' => [
+            '....GGGGGGGGGGGG....',
+            '..GG..........GG....',
+            '.G..............G...',
+            '.G............DD....',
+            'G............DD.....',
+            'G...........DD......',
+            'G.........DD........',
+            'G........DD.........',
+            '.G.....DD...........',
+            '.GGGGGGGGGGGGGG.....',
+            '..GGGGGGGGGGGG......',
+        ],
+        'database' => [
+            '...GGGGGGGGGGGGG....',
+            '..GGGGGGGGGGGGGGG...',
+            '.GGGGGGGGGGGGGGGGG..',
+            '.GG.............GG..',
+            '.GG.............GG..',
+            '.GGGGGGGGGGGGGGGGG..',
+            '.GG.............GG..',
+            '.GG.............GG..',
+            '.GGGGGGGGGGGGGGGGG..',
+            '.GG.............GG..',
+            '.GG.............GG..',
+            '..GGGGGGGGGGGGGGG...',
+            '...GGGGGGGGGGGGG....',
+        ],
+        'email' => [
+            '.GGGGGGGGGGGGGGGGGG.',
+            '.GG............GG...',
+            '.GGG..........GGG...',
+            '.GGGG........GGGG...',
+            '.GGGGG......GGGGG...',
+            '.GGGGGG....GGGGGG...',
+            '.GGGGGGG..GGGGGGG...',
+            '.GGGGGGGGGGGGGGGGG..',
+            '.G...............G..',
+            '.G...............G..',
+            '.GGGGGGGGGGGGGGGGGG.',
+        ],
+        'chat' => [
+            '..GGGGGGGGGGGGGG....',
+            '.GGGGGGGGGGGGGGGG...',
+            '.GGGDGDGDGDGGGGGG...',
+            '.GGGGGGGGGGGGGGGG...',
+            '.GGGGGGGGGGGGGGGG...',
+            '.GGGGGGGGGGGGGGGG...',
+            '.GGGGGGGGGGGGGGGG...',
+            '..GGGGGGGGGGGGGG....',
+            '...GGGGGGGGGGGG.....',
+            '....GGG.............',
+            '...GG...............',
+            '..GG................',
+        ],
+        'checklist' => [
+            '..GGGGGGGGGGGGGG....',
+            '..GGGGGGGGGGGGGG....',
+            '..G............G....',
+            '..G.GG..........G...',
+            '..G..GGGGGG....G....',
+            '..G...GGGGG....G....',
+            '..G............G....',
+            '..G.GG..........G...',
+            '..G..GGGGGGG...G....',
+            '..G...GGGGG....G....',
+            '..G............G....',
+            '..GGGGGGGGGGGGGG....',
+        ],
+        'ponsel' => [
+            '.....GGGGGGGGGG.....',
+            '.....GGGGGGGGGG.....',
+            '.....G........G.....',
+            '.....G........G.....',
+            '.....G..DDDD..G.....',
+            '.....G..DDDD..G.....',
+            '.....G..DDDD..G.....',
+            '.....G..DDDD..G.....',
+            '.....G........G.....',
+            '.....G........G.....',
+            '.....GGGGGGGGGG.....',
+        ],
+        'kalender' => [
+            '..GGGGGGGGGGGGGG....',
+            '..GGGGGGGGGGGGGG....',
+            '..G............G....',
+            '..G............G....',
+            '..GGGGGGGGGGGGGG....',
+            '..G............G....',
+            '..G..GG..GG....G....',
+            '..G............G....',
+            '..G..GG..GG....G....',
+            '..G............G....',
+            '..G..GG........G....',
+            '..GGGGGGGGGGGGGG....',
+        ],
+        'grafik' => [
+            '..........GG........',
+            '..........GG...GGG..',
+            '.....GG...GG...GGG..',
+            '.....GG...GG...GGG..',
+            '.GG..GG...GG...GGG..',
+            '.GG..GG...GG...GGG..',
+            '.GG..GG...GG...GGG..',
+            '.GG..GG...GG...GGG..',
+            '.GGGGGGGGGGGGGGGGG..',
+            '.GGGGGGGGGGGGGGGGG..',
+        ],
+        'pindah' => [
+            '..GGGGG.............',
+            '..GGGGG.............',
+            '..GGGGG..GGG........',
+            '..GGGGG...GGG.......',
+            '..GGGGG....GGG......',
+            '..GGGGG..GGGGGGGGG..',
+            '..GGGGG....GGG......',
+            '..GGGGG...GGG.......',
+            '..GGGGG..GGG........',
+            '..GGGGG.............',
+        ],
     ];
 
     /** Interval minimum antar eksekusi otomatis (jam). Cron jalan tiap 2 hari. */
@@ -88,7 +294,7 @@ class AutoPublishBlog extends Command
             try {
                 $data = $this->generateArtikel($client, $tema, $judulAda);
                 $post = $this->simpan($data, $tema, $penulisId);
-                $this->tempelThumbnail($post, $tema['category']);
+                $this->tempelThumbnail($post, $tema['motif']);
             } catch (\Throwable $e) {
                 $this->error("Gagal membuat artikel (tema: {$tema['theme']}): " . $e->getMessage());
 
@@ -170,6 +376,7 @@ class AutoPublishBlog extends Command
             0.75,
             8000,
         );
+
         $data = $this->decodeJson($isi);
         if ($data === null) {
             // Coba sekali lagi: minta JSON ulang yang valid dan lengkap.
@@ -239,6 +446,7 @@ class AutoPublishBlog extends Command
         return is_array($data) ? $data : null;
     }
 
+    /** Buang tag/atribut berbahaya dari HTML hasil AI sebelum disimpan untuk v-html. */
     private function bersihkanHtml(string $html): string
     {
         $html = preg_replace('#<\s*(script|style|iframe|object|embed|form|input)[^>]*>.*?<\s*/\s*\1\s*>#is', '', $html) ?? '';
@@ -300,9 +508,9 @@ class AutoPublishBlog extends Command
         }
 
         foreach ($posts as $post) {
-            $kategori = optional($post->category)->slug ?? 'hosting-domain';
+            $motif = $this->motifUntukArtikel($post);
             try {
-                $path = $this->tempelThumbnail($post, $kategori);
+                $path = $this->tempelThumbnail($post, $motif);
                 $this->info("Thumbnail: {$post->slug} → {$path}");
             } catch (\Throwable $e) {
                 $this->error("Gagal thumbnail {$post->slug}: " . $e->getMessage());
@@ -312,11 +520,23 @@ class AutoPublishBlog extends Command
         return self::SUCCESS;
     }
 
-    /** Lampirkan thumbnail pixel-art ke artikel; kembalikan path relatif di disk public. */
-    private function tempelThumbnail(BlogPost $post, string $kategoriSlug): string
+    /** Motif dari tema tersimpan di meta_data; fallback server. */
+    private function motifUntukArtikel(BlogPost $post): string
     {
-        $label = \Illuminate\Support\Facades\DB::table('blog_categories')->where('slug', $kategoriSlug)->value('name') ?? 'Artikel';
-        $path = $this->buatThumbnail($post->slug, $label);
+        $tema = (string) ($post->meta_data['tema'] ?? '');
+        foreach (self::TEMA as $entri) {
+            if ($entri['theme'] === $tema) {
+                return $entri['motif'];
+            }
+        }
+
+        return 'server';
+    }
+
+    /** Lampirkan thumbnail pixel-art ke artikel; kembalikan path relatif di disk public. */
+    private function tempelThumbnail(BlogPost $post, string $motif): string
+    {
+        $path = $this->buatThumbnail($post->slug, $motif);
 
         // Hapus thumbnail lama bila diganti (path lokal disk public saja).
         $lama = (string) $post->featured_image;
@@ -329,8 +549,12 @@ class AutoPublishBlog extends Command
         return $path;
     }
 
-    /** Thumbnail 1200x675: mosaic piksel hijau deterministik dari slug + chip kategori. */
-    private function buatThumbnail(string $slug, string $label): string
+    /**
+     * Thumbnail 1200x675: motif pixel-art sesuai tema di tengah, ambient piksel
+     * renggang di belakang. Pola deterministik dari slug + nama file ber-hash
+     * konten (aman untuk cache immutable nginx).
+     */
+    private function buatThumbnail(string $slug, string $motif): string
     {
         $lebar = 1200;
         $tinggi = 675;
@@ -344,41 +568,46 @@ class AutoPublishBlog extends Command
         // Pita hijau di atas, seperti aksen halaman publik.
         imagefilledrectangle($img, 0, 0, $lebar, 14, $hijau);
 
-        // Mosaic piksel: seeded dari slug supaya thumbnail sama untuk slug yang sama.
         mt_srand(crc32($slug));
+
+        // Ambient piksel renggang & pucat di seluruh bidang.
         $sel = 15;
         for ($y = $sel * 2; $y < $tinggi - $sel; $y += $sel) {
             for ($x = 0; $x < $lebar; $x += $sel) {
                 $undian = mt_rand(1, 100);
-                if ($undian <= 75) {
-                    continue; // sebagian besar bidang kosong
-                }
-                $alpha = mt_rand(30, 90);
                 if ($undian <= 88) {
-                    $warna = imagecolorallocatealpha($img, 10, 108, 77, 127 - (int) round($alpha * 0.22));
-                } elseif ($undian <= 96) {
-                    $warna = imagecolorallocatealpha($img, 12, 42, 31, 127 - (int) round($alpha * 0.4));
-                } else {
-                    $warna = $hijau; // beberapa piksel solid sebagai aksen
+                    continue;
                 }
-                $besar = mt_rand(1, 100) <= 12 ? $sel * 2 : $sel;
-                imagefilledrectangle($img, $x, $y, min($x + $besar - 1, $lebar - 1), min($y + $besar - 1, $tinggi - 1), $warna);
+                $alpha = mt_rand(30, 70);
+                $warna = $undian <= 96
+                    ? imagecolorallocatealpha($img, 10, 108, 77, 127 - (int) round($alpha * 0.14))
+                    : imagecolorallocatealpha($img, 12, 42, 31, 127 - (int) round($alpha * 0.22));
+                imagefilledrectangle($img, $x, $y, min($x + $sel - 1, $lebar - 1), min($y + $sel - 1, $tinggi - 1), $warna);
             }
         }
 
-        // Chip kategori di kiri bawah: kotak hijau tua + teks putih.
-        $font = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
-        $ukuranFont = 26;
-        $bbox = imagettfbbox($ukuranFont, 0, $font, strtoupper($label));
-        $teksLebar = abs($bbox[4] - $bbox[0]);
-        $teksTinggi = abs($bbox[5] - $bbox[1]);
-        $paddingX = 22;
-        $paddingY = 14;
-        $chipTinggi = $teksTinggi + $paddingY * 2;
-        $chipX = 40;
-        $chipY = $tinggi - 40 - $chipTinggi;
-        imagefilledrectangle($img, $chipX, $chipY, $chipX + $teksLebar + $paddingX * 2, $chipY + $chipTinggi, $hijauTua);
-        imagettftext($img, $ukuranFont, 0, $chipX + $paddingX, $chipY + $paddingY + $teksTinggi, imagecolorallocate($img, 231, 239, 235), $font, strtoupper($label));
+        // Motif pixel-art besar di tengah, sedikit di atas garis tengah.
+        $baris = self::MOTIF[$motif] ?? self::MOTIF['server'];
+        $kolom = strlen($baris[0]);
+        $selMotif = 26;
+        $motifLebar = $kolom * $selMotif;
+        $motifTinggi = count($baris) * $selMotif;
+        $awalX = (int) round(($lebar - $motifLebar) / 2);
+        $awalY = (int) round(($tinggi - $motifTinggi) / 2) - 20;
+
+        foreach ($baris as $r => $barisTeks) {
+            for ($c = 0; $c < $kolom; $c++) {
+                $karakter = $barisTeks[$c];
+                if ($karakter === '.') {
+                    continue;
+                }
+                // ~12% sel motif memakai hijau tua sebagai tekstur.
+                $warna = $karakter === 'D' || mt_rand(1, 100) <= 12 ? $hijauTua : $hijau;
+                $x = $awalX + $c * $selMotif;
+                $y = $awalY + $r * $selMotif;
+                imagefilledrectangle($img, $x + 1, $y + 1, $x + $selMotif - 2, $y + $selMotif - 2, $warna);
+            }
+        }
 
         ob_start();
         imagepng($img, null, 6);
